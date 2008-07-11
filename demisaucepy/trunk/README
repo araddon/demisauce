@@ -1,0 +1,13 @@
+Demisaucepy is the python library for interfacing with the Demisauce
+    xml web services for use within a python app.   It is also used 
+    for extensively testing the api itself, more so than the dotnet lib.
+    
+Installation and Setup
+======================
+requires elementtree (for xml parsing)
+
+
+
+
+nosetests -s test_poll.py
+

@@ -1,0 +1,20 @@
+#
+# demisauce - Pylons testing environment configuration
+#
+# The %(here)s variable will be replaced with the parent directory of this file
+#
+[MAIN]
+debug = true
+# Uncomment and replace with the address which should receive any error reports
+#email_to = you@yourdomain.com
+email_from = YourName <demisauce@yourdomain.com>
+smtp_server = smtp.yourdomain.com
+smtp_username = demisauce
+error_email_from = paste@localhost
+
+
+# connection information for install of DemiSauce:  http://www.demisauce.org
+demisauce.url = http://localhost:4950
+demisauce.apikey = 8d16c23t214cbeac25e53c9baab32570b31422af
+demisauce.cache = beaker
+demisauce.cacheduration = 5
