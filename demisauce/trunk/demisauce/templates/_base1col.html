@@ -1,0 +1,20 @@
+<%inherit file="_base.html"/>
+
+<body class="yui-skin-sam">
+${self.header()}
+<div id="doc2" class="yui-t7">
+    <div id="bd">
+        <div id="yui-main">
+            <div class="yui-b">
+                ${self.messages()}
+                <!-- Body -->
+                ${next.body()}
+                <!-- /Body -->
+            </div>
+        </div>
+    </div>
+    ${self.footer()}
+    ${self.ds_help_overlay()}
+</div>
+</body>
+</html>

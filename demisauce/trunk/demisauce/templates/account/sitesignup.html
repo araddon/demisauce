@@ -1,0 +1,48 @@
+<%inherit file="../_base1col.html"/>
+
+<%def name="title()">Demisuace Account signup</%def>
+
+
+
+<div id="dialog" style="margin-top: 50px;" class="dialog">
+    <div id="dialogHead"><h2>Welcome To demisauce</h2></div>
+
+
+    ${h.form(h.url(action='site_signup'),  class_="small", id="signupform")}
+        <input type="hidden" id="invitecode" name="invitecode" value="${c.invitecode}" />
+        <h3 style="margin:0px;" >Verify your Invitation</h3>
+            <div class="instructions"><b>Welcome!</b>To set up your site you need to provide
+                a little more info, and select a password!</div>
+        <fieldset style="margin-top:0px;" class="small">
+            <div class="required">
+                <label for="displayname">Display Name</label>
+                ${h.text_field('displayname', value='', size=40)}
+            </div>
+            <div class="required">
+                <label for="sitename">Name of your site</label>
+                ${h.text_field('sitename', size=40)}
+            </div>
+            <div class="required">
+                <label for="password">Password</label>
+                ${h.text_field('password', type="password", size=40)}
+            </div>
+            <div class="required">
+                <label for="password2">Verify Password</label>
+                ${h.text_field('password2', type="password", size=40)}
+            </div>
+        </fieldset>
+        <div class="actions">
+            <input type="submit" class="primaryAction" id="submit" value="Create Account &#187;">    &nbsp;&nbsp;
+            <a href="/" id="cancel">cancel</a>
+        </div>
+    ${h.end_form()}
+    <br />
+</div>
+
+
+<div class="yui-g">
+    <div class="yui-g first">
+    <div class="yui-g">
+
+    </div>
+</div>

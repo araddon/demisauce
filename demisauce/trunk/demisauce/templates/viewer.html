@@ -1,0 +1,26 @@
+<%namespace name="mns_cms" file="cms_bits.html"/>
+<%inherit file="_base1col.html"/>
+
+
+<%def name="title()"></%def>
+
+<%def name="sidebar_top()">
+
+% for item in c.cmsitems:
+    % if item and item.id:
+    <div id="cmsitem_${item.id}">
+        <b>${item.title}</b>
+    </div>
+    % endif
+% endfor
+
+</%def>
+
+
+
+<div class="cmsitems">
+${h.remote_html(routes_dict='key',append_path=True)}
+</div>
+
+
+

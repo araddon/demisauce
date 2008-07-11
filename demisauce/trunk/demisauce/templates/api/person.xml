@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<demisauce>
+% for item in c.persons:
+    <person id="${item.id}" user_uniqueid="${item.user_uniqueid}">
+        <displayname>${item.displayname}</displayname>
+        <created>${item.created}</created>
+        <email>${item.email}</email>
+        <hashedemail>${item.hashedemail}</hashedemail>
+        <url>${item.url}</url>
+        <authn>${item.authn}</authn>
+        % if item.groups != None and len(item.groups) > 0:
+        <groups>
+            % for grp in item.groups:
+            <group id="${grp.id}">${grp.name}</group>
+            % endfor
+        </groups> 
+        % endif
+    </person>
+% endfor
+</demisauce>

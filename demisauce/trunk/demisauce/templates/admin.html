@@ -1,0 +1,70 @@
+<%namespace name="site" file="site_bits.html"/>
+<%inherit file="_base1col.html"/>
+
+
+<%def name="title()">Sysadmin </%def>
+
+
+
+
+<div id="sitecontent" >
+% if c.items:
+
+    ${site.sitelist(c.items)}
+
+% elif c.item:
+    <div class="bar1">
+        <h3>Site Settings Page</h3>
+    </div>
+    <div class="yui-g">
+        <div class="yui-u first">
+            <div class="box boxc">
+
+                ${site.siteview(c.item)}
+
+            </div>
+        </div>
+
+
+
+        <div class="yui-u">
+            <div class="box box2">
+                <h3 style="">Users</h3>
+                % if c.item and c.item.users:
+                    % for user in c.item.users:
+                        <div>${h.link_to(user.displayname,h.url("/account/view/%s" % user.id))}, ${(user.verified and "Verified") or 'Not Verified'} </div>
+                    % endfor
+                % endif
+                % if c.item.id == c.user.site.id:
+                <div id="inviteusersformdiv"></div>
+                <div class="actionbar" id="actionbarusers" style="height:34px; ">
+                    <div class="boxlinks right"  style="margin-top:-4px;">
+                        <ul>
+                            <li><a href="javascript:void(0)" id="inviteusers" objid="${(item and item.id) or '0'}">
+                                <img  alt="Invite users" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                                Invite Users</a></li>
+                        </ul>
+                        <script type="text/javascript">
+                            $(document).ready(function(){
+                                $("#inviteusers").click(function() {
+                                    $("#inviteusersformdiv").show();
+                                    $("#actionbarusers").hide();
+                                    $.get("/account/inviteusers" ,function(data){
+                                        $("#inviteusersformdiv").html(data);
+                                        $("#inviteusersformdiv").show();
+                                    });
+                                });
+                            });
+                        </script>
+                    </div>
+                </div>
+                % endif
+            </div>
+        </div>
+    </div>
+% endif
+</div>
+
+<%def name="sidebar_top()">
+    ${mns_us.item_actions(c.item)}
+</%def>

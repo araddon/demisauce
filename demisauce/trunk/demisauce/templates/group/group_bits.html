@@ -1,0 +1,176 @@
+<%def name="actions()">
+    <div class="actionbar" style="height:34px; ">
+        <div class="right boxlinks_action boxlinks"  style="margin-top:-4px;">
+            <ul>
+                <li><a href="/groupadmin/edit" id="addgroup" objid="0">
+                    <img  alt="Add New Group" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                    Add New Group</a></li>
+            </ul>
+        </div>
+    </div>
+</%def>
+<%def name="list(items)">
+    % if items:
+    % for item in items:
+
+        <div id="item_${item.id}" class="nodedisplay clearfix">
+            ${h.link_to(item.name, h.url(controller="groupadmin",action="edit", id=item.id), class_="title")}
+            ${h.link_to('Edit', h.url(controller="groupadmin",action="edit", id=item.id), class_="title")}, 
+            ${h.link_to('View Xml', "/api/xml/group/%s" % item.id)}
+            <p class="description">
+                ${h.simple_format(item.description)}
+            </p>
+        </div>
+
+    % endfor
+    % endif
+</%def>
+<%def name="view(item)">
+    % if item:
+        <div id="item_${item.id}" class="nodedisplay clearfix">
+            <p class="description">
+                ${item.name}, members: ${item.email_list}
+            </p>
+        </div>
+    % endif
+</%def>
+
+<%def name="form(item,mode='admin')">
+
+    <script type="text/javascript">
+    $(document).ready(function() {
+        $('#name').focus();
+        function findValueCallback(event, data, formatted) {
+            $("<li>").html( !data ? "No match!" : "Selected: " + formatted).appendTo("#result");
+        }
+        function formatItem(row) {
+            return row[0] + " (<strong>id: " + row[1] + "</strong>)";
+        }
+        function formatResult(row) {
+            return row[1].replace(/(<.+?>)/gi, '');
+        }
+        $("#members").autocomplete('/groupadmin/ajaxget', {
+            width: 300,
+            multiple: true,
+            mustMatch: false,
+            selectFirst: false,
+            matchContains: false,
+            formatItem: formatItem,
+            formatResult: formatResult
+        });
+        $(":text, textarea").result(findValueCallback).next().click(function() {
+            $(this).prev().search();
+        });
+        $("#members").result(function(event, data, formatted) {
+            //var hidden = $(this).parent().next().find(">:input");
+            var hidden = $('#member_list');
+            hidden.val( (hidden.val() ? hidden.val() + ";" : hidden.val()) + data[1]);
+        });
+        $("#clear").click(function() {
+            $(":input").unautocomplete();
+        });
+        $("#ds_popup_group").click(function() {
+            //jQuery.facebox({div: '#group_popup_content'});
+            //jQuery.facebox({ ajax: 'remote.html' });
+            jQuery.facebox({ ajax: '${c.base_url}/groupadmin/popup' });
+        });
+    });
+    </script>
+    
+% if mode == 'popup':
+    <div id="group_popup_content" style="display:;">
+        ${h.form(h.url(action='popup'),  class_="cccsmall", method='post',id="demisauce_groupadin_popupform")}
+    
+        <div class="base_form small_form" id="FormWrapper">
+            <div>
+                <div style="margin:12px 12px">
+                    <input type="hidden" id="group_id" name="group_id" value="${(item and item.id) or '0'}">
+                    <h3>Group Add Edit</h3>
+                   <div class="required">
+                        <label for="name">Group Name</label>
+                        ${h.text_field('name', value=(item and item.name) or '', size=40)}
+                    </div>
+                    <div class="optional">
+                        <label for="members">Members:</label>
+                        ${h.text_area("members", content=(item and item.email_list) or '', size="40x6")}
+                        <input type="hidden" id="member_list" name="member_list" value="${(item and item.email_list) or ''}" />
+                    </div>
+                    <div class="optional">
+                        <fieldset> 
+                            <legend>Public Group?</legend>
+                                ${h.radio_button('public', '0',checked=(item and item.public == 0))} False <br />
+                                ${h.radio_button('public', '1',checked=(item and item.public == 1))} True <br />
+                        </fieldset> 
+                    </div>
+                </div>
+            </div>
+            <div class="actions submit">
+                <input type="submit" class="primary" id="submit" value="Save &#187;">
+            </div>
+        </div>
+        ${h.end_form()}
+        <script type="text/javascript">
+        $(document).ready(function() {
+            $('#demisauce_groupadin_popupform').ajaxForm({ 
+                // target identifies the element(s) to update with the server response 
+                target: '#group_popup_content', 
+                // success identifies the function to invoke when the server response 
+                // has been received; here we apply a fade-in effect to the new content 
+                success: function() { 
+                    $('#group_popup_content').fadeIn('slow'); 
+                } 
+            });
+        });
+        </script>
+    </div>
+% else:
+    ${h.form(h.url(action='addedit'),  class_="cccsmall", method='post')}
+    <input type="hidden" id="group_id" name="group_id" value="${(item and item.id) or '0'}">
+
+    <div class="base_form main_form" id="FormWrapper">
+        <div class="yui-gc" >
+            <div class="yui-u first">
+                <div>
+                    <input type="hidden" id="objectid" name="objectid" value="item and item.id) or '0'}">
+                    <h1>Group Add Edit</h1>
+                    <strong>Bold</strong> fields are required.
+                    <div class="required">
+                        <label for="name">Group Name</label>
+                        ${h.text_field('name', value=(item and item.name) or '', size=40)}
+                    </div>
+                    <div class="required">
+                        <label for="members">Members:</label>
+                        ${h.text_area("members", content=(item and item.email_list) or '', size="40x6")}
+                        <input type="hidden" id="member_list" name="member_list" value="${(item and item.email_list) or ''}" />
+                    </div>
+                    <div class="optional">
+                        <fieldset> 
+                            <legend>Public Group?</legend>
+                            ${h.radio_button('public', '0',checked=(item and item.public == 0))} False <br />
+                            ${h.radio_button('public', '1',checked=(item and item.public == 1))} True <br />
+                        </fieldset> 
+                    </div>
+                </div>
+            </div>
+            <div class="yui-u">
+                <div>
+                    % if item:
+                        ${h.link_to('view xml', '/api/xml/group/%s' % (item and item.id) or '')}
+                    % endif
+                    <div class="box2" style="margin:10px 0px;">
+                        ${h.remote_html('root/help/group/edit')}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="actions">
+            <input type="submit" class="primaryAction" id="submit" value="Save &#187;">
+            &nbsp;&nbsp;<a href="/groupadmin" id="cancelnode">cancel</a>
+        </div>
+    </div>
+
+
+    ${h.end_form()}
+
+% endif
+</%def>

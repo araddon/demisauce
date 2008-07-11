@@ -1,0 +1,17 @@
+{{if p}}
+    {{for q in p.questions}}
+    <div id="ds-poll-question-response">
+        {{for o in q.options}}
+        <div>
+            {{o.option}}: <b>{{o.count}}</b>
+        </div>
+        {{endfor}}
+    
+    </div>
+    {{endfor}}
+{{else}}
+  no poll
+{{endif}}
+
+
+

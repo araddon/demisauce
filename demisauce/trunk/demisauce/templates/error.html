@@ -1,0 +1,13 @@
+<%inherit file="_base1col.html"/>
+
+<%def name="title()">Error</%def>
+
+<%def name="body()">
+
+    % if c.code == "404":
+        <h3>Error, page not found </h3>
+    % else:
+        <h3>Error, other </h3>
+    % endif
+
+</%def>

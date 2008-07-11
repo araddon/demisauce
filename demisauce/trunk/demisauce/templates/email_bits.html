@@ -1,0 +1,111 @@
+<%def name="item_actions(item)">
+    <div class="actionbar" style="height:34px; ">
+        <div class="right boxlinks_action boxlinks"  style="margin-top:-4px;">
+            <ul>
+                <li><a href="/email/edit" id="addemail" objid="${(item and item.id) or '0'}">
+                    <img  alt="Add New Email Template" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                    Add New Template</a></li>
+            </ul>
+        </div>
+    </div>
+</%def>
+
+
+<%def name="view(item)">
+    <div id="cmsitem_${item.id}" class="nodedisplay clearfix">
+        <div class="content_block">
+
+            ${h.link_to(item.subject, h.url(action="edit", id=item.id), class_="title")},
+            
+            ${h.link_to('view xml', '/api/xml/email/%s' % item.key)}
+
+            <p class="description">
+                ${h.simple_format(h.truncate(item.template, 50))}
+            </p>
+        </div>
+    </div>
+</%def>
+
+<%def name="list(cmsitems)">
+    % for item in cmsitems:
+
+            ${view(item)}
+
+    % endfor
+</%def>
+
+<%def name="form(item)">
+    ${h.form(h.url(action='addupdate'), method='post', id="emailform")}
+    <div class="base_form main_form" id="EmailItemFormWrapper">
+        <div class="yui-gc" >
+            <div class="yui-u first">
+                <div>
+                    <input type="hidden" id="objectid" name="objectid" value="${(item and item.id) or '0'}">
+                    <h1>Email Template Authoring</h1>
+                    <br /><strong>Bold</strong> fields are required.
+                    <div class="required">
+                        <label for="subject">Subject:</label>
+                        ${h.text_field('subject', value=(item and item.subject) or '')}
+                    </div>
+                    <div class="required" id="permalink_div" style="display:block;">
+                        <label for="slug">Permalink:</label>
+                        <span id="permalink" class="secondary">
+                
+                            <span id="editable-slug-span" title="Click to edit this part of the permalink">${(item and item.key) or ''}</span>
+                            <a href="javascript:void(0)" id="editable-slug-href">Edit</a>
+                        </span>
+                        <input type="hidden"  size="100" id="permalink"  value="${(item and item.key) or ''}" />
+                        <br />
+                        <input type="text" id="real_permalink" name="real_permalink" 
+                            value="${(item and item.key) or ''}" style="display:none;"/>
+
+                    </div>
+                    <div class="optional">
+                        <label for="template">Email template:</label>
+                        ${h.text_area("template", content=(item and item.template) or '', size="40x6")}
+                    </div>
+                    <div class="optional">
+                        <label for="from">From Name:</label>
+                        ${h.text_field('from_name', value=(item and item.from_name) or '')}
+                    </div>
+                    <div class="optional">
+                        <label for="from_email">From Email:</label>
+                        ${h.text_field('from_email', value=(item and item.from_email) or '')}
+                    </div>
+                    <div class="optional">
+                        <label for="to">To:</label>
+                        ${h.text_field('to', value=(item and item.to) or '')}
+                    </div>
+                </div>
+            </div>
+            <div class="yui-u">
+                <div>
+                    % if item:
+                        ${h.link_to('view xml', '/api/xml/email/%s' % item.key)}
+                    % endif
+                    
+                    <div class="box2" style="margin:10px 0px;">
+                        <h3 style="">This is my stuff</h3>
+                         test stuff
+                    </div>
+                    
+                    <div class="box2" style="margin:10px 0px;">
+                        ${h.remote_html('root/help/email/edit')}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="actions submit">
+            <input type="submit" class="primary" id="submit" value="Save &#187;">
+            &nbsp;&nbsp;<a href="/email" id="cancelnode">cancel</a>
+        </div>
+    </div>
+    ${h.end_form()}
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('#emailform').slugeditor({slugfrom: '#subject'});
+            $("#ContentContextTree").emailadmin();
+        });
+    </script>
+
+</%def>

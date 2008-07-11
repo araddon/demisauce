@@ -1,0 +1,16 @@
+<%inherit file="_base1col.html"/>
+
+<%def name="title()">This is a debugging environment</%def>
+
+
+
+    <h2>
+    Server info for ${request.host}
+    </h2>
+    <pre>
+    ${c.pretty_environ}
+    </pre>
+
+<table cellpadding="0" cellspacing="0" border="1" valign="top">
+    ${c.testout}
+</table>

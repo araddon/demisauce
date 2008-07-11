@@ -1,0 +1,125 @@
+<%namespace name="mns_us" file="../usersite_bits.html"/>
+<%namespace name="mns_help" file="help_bits.html"/>
+<%inherit file="../_base2col.html"/>
+
+
+<%def name="title()">Help Ticket Processing </%def>
+
+
+<%def name="help_process(item)">
+    % if item:
+        <div class="clear"></div>
+        <dl>
+            % if item.isuser:
+            <dt>Name:</dt>             <dd><a href="/account/view/${item.person_id}">${item.authorname}</a></dd>
+            % else:
+            <dt>Name:</dt>             <dd>${item.authorname}</dd>
+            % endif
+            <dt>Email:</dt>            <dd>${item.email}</dd>
+            <dt>IP:</dt>               <dd>${item.ip}</dd>
+            <dt>url:</dt>              <dd>${item.url}</dd>
+            <dt>Content:</dt>          <dd>${item.content}</dd>
+            <dt>Status:</dt>           <dd>${item.status}</dd>
+        </dl>
+        <div class="clear"></div>
+        ${h.form(h.url(action='process'), method='post')}
+            <input type="hidden" id="help_id" name="help_id" value="${(item and item.id) or '0'}" />
+            
+            <div class="base_form main_form" style="padding:10px" id="FormWrapper">
+                % if item.isuser:
+
+                % else:
+
+                % endif
+                <div class="required">
+                    <label for="title">Title of Response:</label>
+                    ${h.text_field('title', value='')}
+                </div>
+                <div class="required">
+                    <label for="response">Response:</label>
+                    ${h.text_area("response", content='', size="50x5", class_="hint")}
+                </div>
+                <div  style="margin-top:8px; min-height:75px;">
+                    <div class="required half_width">
+                        <fieldset style="padding:6px;"> 
+                            <legend>Status of this Ticket?</legend>
+                            <input type="radio" id="status" name="status" value="0 "${(((item.status == 0) and "CHECKED") or '')} /> New <br />
+                            <input type="radio" id="status" name="status" value="1" ${(((item.status == 1) and "CHECKED") or '')} /> Assigned <br />
+                            <input type="radio" id="status" name="status" value="10" ${(((item.status == 10) and "CHECKED") or '')} /> Completed <br />
+                        </fieldset> 
+                    </div>
+                    <div class="required half_width">
+                        <fieldset style="padding:6px;"> 
+                            <legend>Publish This Response to Help Repository?</legend>
+                            ${h.radio_button('publish', '1',checked=True)} Yes <br />
+                            ${h.radio_button('publish', '0',checked=False)} No 
+                        </fieldset> 
+                    </div>
+                </div>
+                <div class="actions submit">
+                <span class="submit ">
+                    <button class="button primary">Save</button>
+                </span>
+                <span class="submit ">
+                    <button class="button secondary">Close</button>
+                </span>
+                    <input type="submit" class="primaryActionxx primary" id="submit" value="Save &#187;">
+                    &nbsp;&nbsp;<a href="/helpadmin" id="cancelnode">cancel</a>
+
+                </div>
+            </div>
+            
+
+        ${h.end_form()}
+    % endif
+</%def>
+
+<div>
+    <div class="bar1">
+        <span class="h3">Help And Feedback Page</span>
+    </div>
+    ${help_process(c.item)}
+    
+</div>
+
+
+
+<%def name="sidebar_top()">
+    <div class="bar1">
+        <ul class="topnav right" style="position:relative;margin-top:-1px;font-size:83%;">
+            <li><a href="?filter=new" class="${h.is_current(['filter=new'])}">New</a></li>
+            <li><a href="?filter=completed" class="${h.is_current(['filter=completed'])}">complete</a></li>
+            <li><a href="?filter=recent" class="${h.is_current(['filter=recent'])}">recent</a></li>
+        </ul>
+        <span class="h3">&nbsp;</span>
+    </div>
+    ${mns_us.helplist(c.helptickets,showcheck=True)}
+    
+    <div class="box2" style="margin: 10px 0px;">
+        <span class="h3">Other Issues from </span>
+        <a href="/account/viewh/${(c.item and c.item.hashedemail)}">Sys Admin @Demisauce</a>
+        <div class="checkable">
+            <span class="checkable"></span>
+        Is User,
+        Wow, i really like the graphs 
+        </div>
+        <div class="checkable">
+            <span class="checkable"></span>
+        Is User and moe stuff here <b>good</b> 
+        </div>
+
+        <div class="checkable">
+            <span class="checkable"></span>
+        Not User,
+        user comment goes here 
+        </div>
+        
+    </div>
+    
+    <div class="submit">
+        <button class="button secondary">Close</button>
+    </div>
+    
+    
+</%def>
+

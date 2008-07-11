@@ -1,0 +1,81 @@
+<%def name="item_actions(item)">
+    <div class="actionbar" style="height:34px; ">
+        <div class="boxlinks right"  style="margin-top:-4px;">
+            <ul>
+                <li><a href="javascript:void(0)" id="sorttab" class="current">Sort</a></li>
+                <li><a href="/email/edit" id="addemail" objid="${(item and item.id) or '0'}">
+                    <img  alt="Add New Email Template" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                    Add New Template</a></li>
+            </ul>
+        </div>
+    </div>
+</%def>
+
+
+<%def name="view(item)">
+    <div id="cmsitem_${item.id}" class="nodedisplay clearfix">
+        <div class="content_block">
+
+            % if item.isuser:
+                ${h.link_to(item.email, '/account/viewh/%s' % item.hashedemail, class_="title")}
+            % else:
+                ${item.email}, ${item.isuser}
+            % endif
+            
+            % if item.hashedemail:
+            <img alt="" src="http://www.gravatar.com/avatar/${item.hashedemail}?s=24" class="avatar avatar-48" height="24" width="24">
+            % endif
+            
+            , IP:${item.ip}
+
+            <p class="description">
+                ${h.simple_format(item.comment)}
+            </p>
+        </div>
+    </div>
+</%def>
+
+<%def name="list(cmsitems)">
+    % for item in cmsitems:
+
+            ${view(item)}
+
+    % endfor
+</%def>
+
+<%def name="form(item)">
+
+        ${h.form(h.url(action='addupdate'), method='post', id="emailform")}
+            <input type="hidden" id="objectid" name="objectid" value="${(item and item.id) or '0'}">
+            <br />
+            <fieldset style="">
+                <legend>Comment Editing?</legend>
+                <strong>Bold</strong> fields are required.
+                <div class="instructions"><b></b> </div>
+                <div class="required">
+                    <label for="subject">Subject:</label>
+                    ${h.text_field('subject', value=(item and item.subject) or '')}
+                </div>
+                <div class="optional">
+                    <label for="template">Email template:</label>
+                    ${h.text_area("template", content=(item and item.template) or '', size="40x6")}
+                </div>
+                <div class="optional">
+                    <label for="from">From Name:</label>
+                    ${h.text_field('from_name', value=(item and item.from_name) or '')}
+                </div>
+                <div class="optional">
+                    <label for="from_email">From Email:</label>
+                    ${h.text_field('from_email', value=(item and item.from_email) or '')}
+                </div>
+                <div class="optional">
+                    <label for="to">To:</label>
+                    ${h.text_field('to', value=(item and item.to) or '')}
+                </div>
+            </fieldset>
+            <div class="actions"><input type="submit" class="primaryAction" id="submit" value="Save &#187;">
+            &nbsp;&nbsp;<a href="#" id="cancelnode">cancel</a></div>
+
+        ${h.end_form()}
+
+</%def>

@@ -1,0 +1,10 @@
+<%namespace name="mns_cms" file="cms_bits.html"/>
+
+% if c.user and c.item:
+    
+    ${mns_cms.form(c.item)}
+
+% else:
+whoops
+
+% endif

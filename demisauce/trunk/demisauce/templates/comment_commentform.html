@@ -1,0 +1,54 @@
+<%inherit file="_baseiframe.html"/>
+
+
+<%def name="title()">Help and Feedback </%def>
+    
+    <div id="ds-commentform-div">
+        ${h.form(h.url(action='commentform'), id="commentform", method='post')}
+            <input type="hidden" id="objectid" name="objectid" value="${(item and item.id) or '0'}" />
+            <input type="hidden" id="site_key" name="site_key" value="${c.site_key}" />
+            % if c.user:
+
+                Post as:  ${c.user.displayname}
+                % if c.user.hashedemail:
+                <img alt="" src="http://www.gravatar.com/avatar/${c.user.hashedemail}?s=24" class="avatar avatar-48" height="24" width="24">
+                % endif
+                <input type="hidden" id="goto" name="goto" value="${c.goto_url}" />
+                ${h.hidden_field('authorname', value=(c.user and c.user.displayname) or '')}
+                ${h.hidden_field('email', value=(c.user and c.user.email) or '')}
+                <div>
+                    ${h.text_area("comment", content=(c.item and c.item.comment) or 'type your comment here', size="50x5", class_="hint", tabindex=1)}
+                </div>
+                <div>
+                    <input name="submit" type="submit" id="submit" tabindex="2" value="Submit Comment" />
+                </div>
+            % else:
+                <input type="hidden" id="goto" name="goto" value="${c.goto_url}" />
+                <div>
+                    ${h.text_field('authorname', value=(c.item and c.item.authorname) or 'your displayname', size=22, class_="hint", tabindex=1)}
+                    <label for="authorname">(required)</label>
+                </div>
+                <div>
+                    <input type="text" name="email" id="email" value='Email'  class="hint" size="22" tabindex="2" />
+                    <label for="email">(Required), will not be visible, used for <a href="http://www.gravatar.com/check">Gravatar</a></label>
+                </div>
+                <div>
+                    <input type="text" name="blog" id="blog" size="22" tabindex="3" value="your blog url" class="hint" />
+                    <label for="blog"></label>
+                </div>
+                <div>
+                    ${h.text_area("comment", content=(c.item and c.item.comment) or 'type your comment here', size="50x5", class_="hint", tabindex=4)}
+                </div>
+                <div>
+                    <input name="submit" type="submit" id="submit" tabindex="5" value="Submit Comment" />
+                </div>
+            % endif
+
+        ${h.end_form()}
+
+</div>
+<script type="text/javascript">
+$(document).ready(function(){
+    $('#commentform').dshints();
+});
+</script>

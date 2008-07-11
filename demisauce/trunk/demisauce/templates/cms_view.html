@@ -1,0 +1,28 @@
+<%namespace name="mns_cms" file="cms_bits.html"/>
+
+% if c.user and c.item and c.item.id > 0 and (c.item.item_type == "folder" or c.item.item_type == "root"):
+
+    ${mns_cms.item_actions(c.item)}
+
+    <br />
+    <span class="h2">${c.item.title}</span>
+    <div id="cmsformtarget">
+    % if c.item.children and len(c.item.children) > 0:
+        <ul id="nodechildrenlist" objid="${c.item.id}" style="list-style-position: inside; height: 30px; cursor: hand; cursor: pointer;">
+        % for itemassoc in c.item.children:
+
+            <li objid="${itemassoc.item.id}" style='floatxxx: leftxx; padding: 5px; border: 1px solid #bbb; margin: 3px; background: #fff;'>
+                ${itemassoc.item.title}</li>
+
+        % endfor
+        </ul>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                //alert('in sub page list');
+            });
+        </script>
+    % endif
+    </div>
+% else:
+whooops
+% endif

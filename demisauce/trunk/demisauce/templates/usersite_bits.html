@@ -1,0 +1,174 @@
+<%def name="item_actions(item)">
+    <div class="actionbar" style="height:34px; ">
+        <div class="boxlinks right"  style="margin-top:-4px;">
+            <ul>
+                <li><a href="javascript:void(0)" id="sorttab" class="current">Sort</a></li>
+                <li><a href="/email/edit" id="addemail" objid="${(item and item.id) or '0'}">
+                    <img  alt="Add New Site" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                    Add New Site</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</%def>
+
+<%def name="helplist(tickets,showcheck=False)">
+    % if tickets:
+        % for tkt in tickets:
+            <div class="checkable">
+            % if showcheck:
+                <span class="checkable"><input type="checkbox" name="chk_${tkt.id}" /></span>
+            % endif
+            ${h.link_to(tkt.authorname,h.url("/helpadmin/process/%s" % str(tkt.id)))}, 
+            ${(tkt.isuser and "Is User") or 'Not User'},
+            ${tkt.clean_content} 
+            </div>
+        % endfor
+        <script type="text/javascript">
+
+            $(document).ready(function(){
+                $("div span.checkable").parent().hover(function() {
+                    $(this).addClass('checkablehover');
+                },function(){
+                    $(this).removeClass('checkablehover');
+                });
+                $("span.checkable").parent().click(function() {
+                    if (!$(this).children('span:first').hasClass('checkableselected')){
+                        $(this).children('span:first').addClass('checkableselected');
+                    } else {
+                        $(this).children('span:first').removeClass('checkableselected');
+                    }
+                });
+            });
+
+        </script>
+    % endif
+</%def>
+<%def name="activities(person)">
+    <style type="text/css" media="screen"> 
+        .ds-comment-event {background-color: #E4F2FD;margin:8px;} 
+        .ds-comment-odd {background-color: #ccc;margin:8px;} 
+    </style>
+    % for item in person.recent_activities:
+        <div class="${h.cycle("ds-comment-event", "ds-comment-odd") }">
+        ${item.activity}: on ${item.created.strftime("%b %d, %Y %I:%M %p")}
+        </div>
+    % endfor
+</%def>
+
+<%def name="commentlist(comments)">
+    <style type="text/css" media="screen"> 
+        .ds-comment-event {background-color: #E4F2FD;margin:8px;} 
+        .ds-comment-odd {background-color: #ccc;margin:8px;} 
+    </style>
+    % for item in comments:
+        <div class="${h.cycle("ds-comment-event", "ds-comment-odd") }">
+        % if item.hashedemail:
+            <img alt="" src="http://www.gravatar.com/avatar/${item.hashedemail}?s=24" class="avatar avatar-48" height="24" width="24">
+        % endif
+        % if item.isuser:
+            <a href="/account/viewh/${item.hashedemail}" >${item.authorname}</a>
+        % else:
+            ${item.authorname}
+        %endif
+        on ${item.created.strftime("%b %d, %Y")}
+        <br /> ${item.comment}
+        </div>
+    % endfor
+</%def>
+
+
+<%def name="personview(person)">
+    <div id="profilesettingsform"></div>
+    <div id="profilesettings">
+        <div class="actionbar">
+            <span class="h3">Profile Settings</span>
+            % if c.person.id == c.user.id:
+                <div class="boxlinks right"  style="margin-top:-27px;margin-right:-13px;height:25px;">
+                    <a id="profile${person.id}" href="/account/edit">Edit</a>
+                </div>
+                <script type="text/javascript">
+                    $(document).ready(function(){
+                        $("#NOTprofile${person.id}").click(function() {
+                            $.get("/account/settings/" ,function(data){
+                                $("#profilesettingsform").html(data);
+                                $("#profilesettings").hide();
+                            });
+                        });
+                    });
+                </script>
+            % endif
+
+        </div>
+        <div class="clear"></div>
+        <dl>
+            <dt>Name:</dt>             <dd>${(c.person and c.person.displayname) or ''}</dd>
+            <dt>Email:</dt>                 <dd>${(c.person and c.person.email) or '' }</dd>
+            <dt>Site:</dt>                  <dd>${h.link_to((person.site and person.site.name) or '','/site/view/%s' % person.site.id)}</dd>
+            <dt>My Website:</dt>            <dd>${h.link_to_unless(c.person.url == None, c.person.url ,h.url('%s' % str(c.person.url)))}</dd>
+            <dt>Member Since:</dt>          <dd>${(c.person and c.person.created).strftime("%b %d, %Y") or ''}</dd>
+            <dt>Is Admin:</dt>             <dd>${(c.person and c.person.isadmin) or 'False'}</dd>
+            % if c.user and c.user.issysadmin:
+            <dt>Is SysAdmin:</dt>          <dd>${(c.person and c.person.issysadmin) or 'False'}</dd>
+            % endif
+            % if c.user and ((c.user.site_id == c.person.site_id) or (c.user.issysadmin)):
+            <dt>AuthN:</dt>          <dd>${(c.person and c.person.authn) or ''}</dd>
+            <dt>Xml WS:</dt>          <dd><a href="/api/xml/person/${(c.person and c.person.hashedemail) or ''}">View XML</a></dd>
+            % endif
+            <dt><a href="http://www.gravatar.com/emails">Gravatar</a>:</dt>             
+                                            <dd>
+                                            % if c.person and c.person.hashedemail:
+                                            <img alt="" src="http://www.gravatar.com/avatar/${c.person.hashedemail}?s=48" class="avatar avatar-48" height="48" width="48">
+                                            % endif
+                                            </dd>
+
+        </dl>
+        <div class="clear"></div>
+
+    </div>
+</%def>
+
+
+
+
+<%def name="activity_graph(person,activities,showsort=True)">
+
+    % if showsort:
+    <div class="bar1">
+        <ul class="topnav right" style="position:relative;margin-top:-1px;font-size:83%;">
+            <li><a href="?filter=new" class="${h.is_current(['filter=new'])}">recent</a></li>
+            <li><a href="?filter=completed" class="${h.is_current(['filter=completed'])}">All</a></li>
+            <li><a href="?filter=recent" class="${h.is_current(['filter=recent'])}"></a></li>
+        </ul>
+        <span class="h4"><a href="/activity/index/${person.id}">Activities</a></span>
+    </div>
+    % endif
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["areachart"]});
+      google.setOnLoadCallback(function () {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Date');
+        data.addColumn('number', 'Activities');
+        % if len(activities) > 0:
+            data.addRows(${len(activities)});
+            <%
+                activityct = 0
+            %>
+            % for a in activities:
+                data.setValue(${activityct}, 0, '${'%s-%s %s' % (a[2],a[1], a[3])}');
+                data.setValue(${activityct}, 1, ${a[0]});
+                <%
+                    activityct += 1
+                %>
+            % endfor
+
+            var chart = new google.visualization.AreaChart(document.getElementById('activity_by_day_div'));
+            chart.draw(data, {width: 400, height: 240, lineSize: 3, pointSize: 4, 
+                borderColor: {stroke:'white', fill:'#fff', strokeSize: 1}, 
+                focusBorderColor: '#ffffff', legend: 'bottom', title: 'Activities for ${person.displayname}'});
+        % endif
+      });
+    </script>
+    <div id="activity_by_day_div" style="width: 400px; height: 240px;"></div>
+
+</%def>

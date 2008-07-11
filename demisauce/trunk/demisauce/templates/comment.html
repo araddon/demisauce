@@ -1,0 +1,25 @@
+<%namespace name="mns_comment" file="comment_bits.html"/>
+<%inherit file="_base2col.html"/>
+
+
+<%def name="title()">Comment Templates </%def>
+
+
+
+
+<div id="ContentContextTree" >
+% if c.items:
+
+    ${mns_comment.list(c.items)}
+
+% endif
+</div>
+
+
+<%def name="sidebar_top()">
+
+
+
+
+
+</%def>

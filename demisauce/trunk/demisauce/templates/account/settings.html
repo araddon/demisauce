@@ -1,0 +1,78 @@
+<%namespace name="mns_us" file="../usersite_bits.html"/>
+<%inherit file="../_base1col.html"/>
+
+<%def name="title()">Personal Profile configuration page</%def>
+
+
+
+<div class="bar1">
+    <h3>Your Personal Profile Page</h3>
+</div>
+<div class="yui-g">
+    <div class="yui-u first">
+        <div class="box boxc">
+
+            % if c.person:
+                ${mns_us.personview(c.person)}
+            % endif
+
+        </div>
+        <div class="box box2">
+            <h3 style="">Groups</h3>
+            % if c.person.id == c.user.id:
+                <div class="boxlinks right"  style="margin-top:-27px;margin-right:-13px;height:25px;">
+                    <a id="group_popup_admin" href="javascript:void(0);">Add Group</a>
+                </div>
+                <script type="text/javascript">
+                    $(document).ready(function(){
+                        $("#group_popup_admin").click(function() {
+                            //jQuery.facebox({ ajax: '${c.base_url}/groupadmin/popup' });
+                            $.ds.faceboxmanager.groupac();
+                            //jQuery.facebox('pretend this is a group autocomplete tool');
+                        });
+                    });
+                </script>
+            % endif
+            % if c.person:
+                % for group in c.person.groups:
+                    <div>${h.link_to(group.name,h.url("/groupadmin/view/%s" % group.id))} </div>
+                % endfor
+
+            % endif
+        </div>
+    </div>
+
+
+
+    <div class="yui-u">
+        <div class="box box2">
+            <h3 style="">Comments</h3>
+            ${mns_us.commentlist(c.comments)}
+        </div>
+        <div class="box box2">
+            <h3 style="">Help/Feedback/Support Tickets</h3>
+            ${mns_us.helplist(c.helptickets)}
+        </div>
+        <div  class="box box2">
+            <span class="h3"><a href="/activity/index/${c.person.id}">Activities</a></span>
+        </div>
+        <div class="box box2">
+            <h3 style="">Recent Activities</h3>
+            % if c.person:
+                ${mns_us.activities(c.person)}
+            % else:
+                why not?
+            % endif
+        </div>
+        <div class="box box2">
+            <h3 style="">Activity by Day</h3>
+            % if c.person:
+                ${mns_us.activity_graph(c.person, c.activities_by_day,false)}
+            % else:
+                no person?
+            %endif
+        </div>
+
+    </div>
+</div>
+

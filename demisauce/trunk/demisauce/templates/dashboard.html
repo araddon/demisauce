@@ -1,0 +1,49 @@
+<%namespace name="mns_us" file="usersite_bits.html"/>
+<%inherit file="_base1col.html"/>
+
+
+<%def name="title()">Dashboard </%def>
+
+
+<div id="dashboard" >
+    <div class="bar1">
+        <h3>Dashboard </h3>
+    </div>
+    <div class="yui-g">
+        <div class="yui-u first">
+            <div class="box box2">
+                <h3 style="">Approvals (error's, new site's etc)</h3>
+            </div>
+            <div class="box box2">
+                <h3 style=""><a href="/helpadmin/process">Feedback/Support from Users (${c.new_ticket_ct} new)</a></h3>
+                ${mns_us.helplist(c.helptickets)}
+            </div>
+        </div>
+
+        <div class="yui-u">
+            <div class="box box2">
+                <h3 style=""><a href="/comment">Recent Comments</a></h3>
+                ${mns_us.commentlist(c.comments)}
+            </div>
+            
+        </div>
+    </div>
+    <!--
+    <div>
+        <div class="box box2">
+            <h3>Wide Column</h3>
+        </div>
+        
+    </div>
+    -->
+</div>
+
+<script type="text/javascript">
+$(document).ready(function(){
+    //$.ds.dsactivity({activity:'dashboard'})
+});
+</script>
+
+<%def name="sidebar_top()">
+    ${mns_us.item_actions(c.item)}
+</%def>
