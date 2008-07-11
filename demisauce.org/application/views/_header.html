@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+    <title><?=$title?> on Demisauce</title>
+    <link rel="stylesheet" href="/static/local.css" />
+    <script type="text/javascript" src="<?php echo $base_url;?>/js/jquery-1.2.6.pack.js"></script>
+    <script type="text/javascript" src="<?php echo $base_url;?>/js/ds.base.js"></script>
+    <script type="text/javascript" >
+        jQuery(document).ready(function($) {
+            $.ds.defaults.site_slug = 'demisauce.org';
+            $.ds.defaults.base_url = '<?php echo $base_url;?>';
+            //<?php echo $base_url;?>
+        })
+    </script>
+</head>
+<body class="yui-skin-sam">
+<div id="hd">
+    <div class="header-wrapper">
+        <div>
+            <div id="topnav">
+                <h1><a href="/">DemiSauce</a></h1>
+                <ul style="margin: 25px 0px 0px 0px;padding:10px 0 0;" class="topnav">
+                    <?php foreach($nav_array as $cmsitem):?>
+                    <li><a href="<?php echo $path.$cmsitem->attributes()->rid.'">'.$cmsitem->title;?></a></li>
+                    <?php endforeach;?>
+                    <li><a href="http://aaronspotlatch.appspot.com/tag/demisauce" class="" >Blog</a></li>
+                </ul>
+            </div>
+            <div id="topnav-aux">
+                <div>
+                    <form id="search" action="" name="searchform">
+                        <input id="searchGadget" class="oc-input-typeText" type="text" accesskey="4" title="Search site" size="10" name="search_for"/>
+                    </form>
+                </div>
+                <div id="topnav-aux-menu">
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <a href="/account/signup">Signup</a> |
+                    <a href="/account/signin">Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="subnav" >
+    <div class="header-wrapper">
+        <ul class="topnav">
+                <li><a href="/dashboard" class="">Dashboard</a></li>
+                <li><a href="/helpadmin" class="current">Help/Feedback</a></li>
+        </ul>
+    </div>
+</div>
+
+
+    
+

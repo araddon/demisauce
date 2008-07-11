@@ -1,0 +1,64 @@
+
+<div id="ft">
+    <div id="ft-content">
+        <ul id="footer-nav">
+            <li><a href="#">Project</a>
+              <ul>
+                <li><a href="/c/about">About</a></li>
+                <li><a href="http://demisauce.googlecode.com">Community</a></li>
+                <li><a href="/account/signin">Admin Login</a></li>
+              </ul>
+            </li>
+            <li><a href="/c/features">Features</a>
+              <ul>
+                <li><a href="/">Home</a></li>
+                % if c.user and c.user.isadmin:
+                <li><a href="/cms">Cms Admin</a></li>
+                <li><a href="/email/">Email Admin</a></li>
+                <li><a href="/environment">environment</a></li>
+                <li><a href="/home/csscolors">css colors</a></li>
+                <li><a href="/home/cssform">css form</a></li>
+                <li><a href="/home/cssdialog">css Dialog form</a></li>
+                % endif
+
+
+              </ul>
+            </li>
+            <li><a href="#">Blogs</a>
+              <ul>
+                <li><a href="http://apotlatch.wordpress.com/category/demisauce/">Aaron</a></li>
+                <li><a href="/"></a></li>
+              </ul>
+                <a href="#">Links</a>
+                <ul>
+                  <li><a href="http://developer.mozilla.org/en/docs/Core_JavaScript_1.5_Guide">Mozilla JS</a></li>
+                  <li><a href="http://www.jquery.com">JQuery</a></li>
+                  <li><a href="#" class="test_humanmsg">Show Test Message</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Links</a>
+              <ul>
+                <li><a href="http://www.makotemplates.org/docs/syntax.html">Mako</a></li>
+                <li><a href="http://pylonshq.com/WebHelpers/module-index.html">WebHelpers</a></li>
+                <li><a href="http://www.formencode.org/htmlfill.html">formencode.org</a></li>
+                <li><a href="http://www.sqlalchemy.org/docs/04/">sqlalchemy</a></li>
+                <li><a href="http://www.makotemplates.org/docs/syntax.html">Mako</a></li>
+                <li><a href="http://wiki.pylonshq.com/display/pylonscookbook/Home">Pylons Cookbook</a></li>
+                <li><a href="http://workaround.org/pylons/pylons-cheatsheet.html">Pylons Cheatsheet</a></li>
+              </ul>
+            </li>
+            <li><a href="#">Support</a>
+              <ul>
+                <li><a href="#" rel="facebox" id="facebox_show_href">Help</a></li>
+                <li><a href="#" id="test_humanmsg">Msg</a></li>
+                <li><a href="#" id="test_activity">post activity</a></li>
+                <li><a href="#" class="ds_activity" activity="wow, it worked">activity2</a></li>
+                <li><a href="http://www.google.com" class="ds_activity">google url activity</a></li>
+                <li><a href="#" id="view-source">view source</a></li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div>
+    </body>
+</html>
