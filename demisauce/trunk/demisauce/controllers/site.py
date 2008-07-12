@@ -33,7 +33,7 @@ class SiteController(NeedsadminController):
             c.item = meta.DBSession.query(Site).get(id)
         else:
             c.item = Site.get(-1,c.user.site_id)
-        return render('/admin.html')
+        return render('/site/admin.html')
         
     def cmntconfig(self):
         c.item = Site.get(-1,c.user.site_id)
@@ -55,7 +55,7 @@ class SiteController(NeedsadminController):
         elif id > 0 and c.user.issysadmin:
             c.item = meta.DBSession.query(Site).get(id)
         c.base_url = config['demisauce.url']
-        return render('/admin_edit.html')
+        return render('/site/site_edit.html')
     
     @validate(schema=SiteValidation(), form='edit')
     def edit_POST(self,id = 0):

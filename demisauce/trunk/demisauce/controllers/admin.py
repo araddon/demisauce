@@ -22,7 +22,7 @@ class AdminController(NeedsadminController):
     def index(self):
         if c.user and c.user.issysadmin:
             c.items = meta.DBSession.query(Site).all()
-            return render('/admin.html')
+            return render('/site/site.html')
         else:
             return self.view(c.user.site_id)
     
