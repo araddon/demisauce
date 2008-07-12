@@ -5,25 +5,25 @@
 <%def name="title()">Poll Add/Edit </%def>
 
 
-<div >
-    <div class="bar1">
-        <h3>Poll Admin Page</h3>
-    </div>
-    <div>
-    % if c.item:
-        <br />
-        ${poll.form(c.item)}
-    % else:
-        <div class="yui-gc" >
-            <div class="yui-u first">
-                ${poll.list(c.items)}
-            </div>
-            <div class="yui-u">
-                ${poll.actions(c.item)}
-            </div>
-        </div>
-        
-    % endif
-    </div>
+
+<div class="bar1">
+    <h3>Poll Admin Page</h3>
 </div>
+
+% if c.item:
+    <br />
+    ${poll.form(c.item)}
+% else:
+    <div class="yui-ge" >
+        <div class="yui-u first">
+            ${poll.table(c.items)}
+        </div>
+        <div class="yui-u">
+            ${poll.actions(c.item)}
+        </div>
+    </div>
+    
+% endif
+
+
 

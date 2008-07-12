@@ -86,6 +86,7 @@ class PollController(SecureController):
         if 'poll_id' in request.POST:
             if request.POST['poll_id'] == "0":
                 item = Poll(c.site_id, sanitize(request.POST['name']))
+                item.person_id = c.user.id
                 if c.user:
                     item.person_id = c.user.id
             else:

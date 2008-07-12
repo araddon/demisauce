@@ -62,7 +62,7 @@ mapper(Comment, comment_table, properties={
     'site':relation(Site, backref='comments')
 })
 # -----   Poll's
-mapper(Poll, poll_table, properties={
+mapper(Poll, poll_table, order_by=poll_table.c.created.desc(), properties={
     'site':relation(Site, backref='polls'),
     'author':relation(Person,backref='polls')
 })

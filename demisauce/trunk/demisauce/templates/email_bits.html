@@ -26,7 +26,7 @@
     </div>
 </%def>
 
-<%def name="table(cmsitems)">
+<%def name="table(items)">
 <table class="dsadmin">
     <thead>
         <tr >
@@ -37,7 +37,7 @@
         </tr>
     </thead>
     <tbody>
-    % for item in cmsitems:
+    % for item in items:
         <tr class="${h.cycle("", "alternate") }">
             <td><input type="checkbox"/></td>
             <td>${h.link_to(h.truncate(item.subject, 30), h.url(action="edit", id=item.id), class_="title")}</td>

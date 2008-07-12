@@ -25,6 +25,31 @@
     % endfor
     % endif
 </%def>
+<%def name="table(items)">
+<table class="dsadmin">
+    <thead>
+        <tr>
+            <th>View</th>
+            <th>Xml</th>
+            <th></th>
+            <th>Date</th>
+            <th>Author</th>
+        </tr>
+    </thead>
+    <tbody>
+    % for item in items:
+        <tr class="${h.cycle("", "alternate") }">
+            <td>${h.link_to(item.name, h.url(controller="poll",action="view", id=item.key), class_="xtitle")}</td>
+            <td>${h.link_to('View Xml', "/api/xml/poll/%s" % item.key)}</td>
+            <td>${h.link_to('Edit', h.url(controller="poll",action="edit", id=item.id), class_="title")}</td>
+            <td>${(item.created).strftime("%b %d, %Y") or ''}</td>
+            <td>${h.link_to(item.author.displayname, h.url(controller="account",action="viewh", id=item.author.hashedemail))}</td>
+        </tr>
+        
+    % endfor
+    </tbody>
+</table>
+</%def>
 <%def name="view(item)">
     % if item:
         <div id="poll_${item.id}" class="ds-poll">
