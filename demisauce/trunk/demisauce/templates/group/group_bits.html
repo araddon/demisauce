@@ -9,6 +9,29 @@
         </div>
     </div>
 </%def>
+<%def name="table(items)">
+<table class="dsadmin">
+    <thead>
+        <tr >
+            <th>Group</th>
+            <th></th>
+            <th>Date</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    % for item in items:
+        <tr class="${h.cycle("", "alternate") }">
+            <td>${h.link_to(item.name, h.url(controller="groupadmin",action="edit", id=item.id))}</td>
+            <td>${h.link_to('View Xml', "/api/xml/group/%s" % item.id)}</td>
+            <td>${(item.created).strftime("%b %d, %Y %H:%m") or ''}</td>
+            <td>${h.simple_format(h.truncate(item.description, 50))}</td>
+        </tr>
+        
+    % endfor
+    </tbody>
+</table>
+</%def>
 <%def name="list(items)">
     % if items:
     % for item in items:
@@ -54,7 +77,7 @@
             multiple: true,
             mustMatch: false,
             selectFirst: false,
-            matchContains: false,
+            matchContains: true,
             formatItem: formatItem,
             formatResult: formatResult
         });
@@ -70,8 +93,6 @@
             $(":input").unautocomplete();
         });
         $("#ds_popup_group").click(function() {
-            //jQuery.facebox({div: '#group_popup_content'});
-            //jQuery.facebox({ ajax: 'remote.html' });
             jQuery.facebox({ ajax: '${c.base_url}/groupadmin/popup' });
         });
     });
@@ -164,7 +185,7 @@
             </div>
         </div>
         <div class="actions">
-            <input type="submit" class="primaryAction" id="submit" value="Save &#187;">
+            <input type="submit" class="primary" id="submit" value="Save &#187;">
             &nbsp;&nbsp;<a href="/groupadmin" id="cancelnode">cancel</a>
         </div>
     </div>

@@ -4,25 +4,20 @@
 
 <%def name="title()">Group Add/Edit </%def>
 
-<div >
-    <div class="bar1">
-        <h3>Group Admin Page</h3>
-    </div>
-    <div>
-    % if c.item:
-        <br />
-        ${group.form(c.item)}
-    % else:
-        <div class="yui-gc" >
-            <div class="yui-u first">
-                ${group.list(c.groups)}
-            </div>
-            <div class="yui-u">
-                ${group.actions()}
-            </div>
-        </div>
-        
-    % endif
-    </div>
+<div class="bar1">
+    <h3>Group Admin Page</h3>
 </div>
-
+% if c.item:
+    <br />
+    ${group.form(c.item)}
+% else:
+    <div class="yui-gc" >
+        <div class="yui-u first">
+            ${group.table(c.groups)}
+        </div>
+        <div class="yui-u">
+            ${group.actions()}
+        </div>
+    </div>
+    
+% endif

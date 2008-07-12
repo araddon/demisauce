@@ -16,6 +16,7 @@ from demisauce.model import person
 group_table = Table("group", meta.metadata,
         Column("id", Integer, primary_key=True),
         Column("site_id", Integer, ForeignKey('site.id')),
+        Column("author_id", Integer, nullable=True,default=0),
         Column("created", DateTime,default=datetime.now()),
         Column("group_type", DBString(30), default='groups'),
         Column("name", DBString(255), nullable=False),
