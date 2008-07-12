@@ -110,9 +110,9 @@ ul.topnav a {text-decoration:none;-x-system-font:none;display:block;font-family:
 .boxlinks2 {font-size: 85%;margin-top:-24px; margin-right:-11px;background-color:#ffffff;}
 .boxlinks2 a {border: 1px solid #235C9D;text-decoration: none;padding: 3px 5px;}
 .boxlinks li {list-style-type:none;}
-.boxlinks_tabs a {float:left;}
+.boxlinks_tabs a,.boxlinks_tabs span {float:left;}
 .boxlinks a, .boxlinks span {margin-top:2px; display: block;vertical-align: bottom; padding: 0.2em 0.5em;margin-right: 0.15em;}
-.boxlinks span.current {border: 1px solid #235C9D;font-weight: bold;background: #235C9D;color: #fff;}
+.boxlinks span.current {border: 1px solid #116092;font-weight: bold;background: #116092;color: #fff;}
 div.boxlinks a.current {background:#E1ECF9;}
 div.boxlinks_tabs a.current {border-bottom: 1px solid #E1ECF9;;background:#E1ECF9;}
 .boxlinks a {border: 1px solid #235C9D;text-decoration: none;}

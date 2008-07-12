@@ -5,6 +5,9 @@ from pylons import config
 from formencode import Invalid, validators
 from formencode.validators import *
 import formencode
+import webhelpers.paginate
+
+from demisauce.lib import helpers as h
 
 from demisauce.lib.base import *
 from demisauce import model
@@ -41,9 +44,18 @@ class GroupadminController(SecureController):
         filter = 'all'
         if 'filter' in request.params:
             filter = request.params['filter']
-        
-        c.groups = Group.by_site(c.user.site_id,20)
-        c.groups = [g for g in c.groups]
+        c.groups = Group.by_site(c.user.site_id)
+        temp = """
+        page = 1
+        if 'page' in request.params:
+            page = int(request.params['page'])
+        c.groups = webhelpers.paginate.Page(
+                Group.by_site(c.user.site_id),
+                page=page,items_per_page=5)
+                
+        ${h.dspager(c.groups)}
+        """
+        c.groups = h.dspager(c.groups)
         
         return render('/group/group_admin.html')
     

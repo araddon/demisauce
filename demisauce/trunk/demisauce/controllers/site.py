@@ -33,7 +33,7 @@ class SiteController(NeedsadminController):
             c.item = meta.DBSession.query(Site).get(id)
         else:
             c.item = Site.get(-1,c.user.site_id)
-        return render('/site/admin.html')
+        return render('/site/site.html')
         
     def cmntconfig(self):
         c.item = Site.get(-1,c.user.site_id)

@@ -103,4 +103,4 @@ class Group(object,ModelBase):
     def by_site(cls,site_id=0,ct=15,filter='new'):
         """Class method to get groups"""
         return meta.DBSession.query(Group).filter_by(
-            site_id=site_id).order_by(group_table.c.created.desc()).limit(ct)
+            site_id=site_id).order_by(group_table.c.created.desc()) #.limit(ct)

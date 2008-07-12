@@ -12,6 +12,41 @@ from pylons import cache, session, c
 from demisaucepy.pylons_helper import *
 import urllib, hashlib
 
+from webhelpers.rails import *
+from routes import url_for
+from pylons.controllers.util import redirect_to
+import webhelpers.paginate
+
+
+def dspager(qry):
+    temp = """
+    <div class="boxlinks boxlinks_tabs">
+    <span class="nextprev">&#171; Previous</span>
+    <span class="current">1</span>
+    <a title="Go to page 2" href="/news/page2">2</a>
+    <a title="Go to page 3" href="/news/page3">3</a>
+    <a title="Go to page 4" href="/news/page4">4</a>
+    <a title="Go to page 5" href="/news/page5">5</a>
+    <a title="Go to page 6" href="/news/page6">6</a>
+    <a title="Go to page 7" href="/news/page7">7</a>
+    <a title="Go to page 8" href="/news/page8">8</a>
+    <a title="Go to page 9" href="/news/page9">9</a>
+    <a title="Go to page 10" href="/news/page10">10</a>
+    <span></span>
+    <a title="Go to page 163" href="/news/page163">163</a>
+    <a title="Go to page 164" href="/news/page164">164</a>
+    <a class="nextprev" title="Go to Next Page" href="/news/page2">Next &#187;</a>
+    </div>
+    ${c.groups.pager('Page $page: $link_previous ~4~ ',symbol_next='',symbol_previous='< Prev ')}
+    """
+    page = 1
+    if 'page' in request.params:
+        page = int(request.params['page'])
+    return webhelpers.paginate.Page(qry,page=page,items_per_page=5)
+
+def dspager2(pgr):
+    return pgr.pager('''<div class="boxlinks boxlinks_tabs">$link_previous ~4~ $link_next </div>''',
+        symbol_next=' Next >> ',symbol_previous='< Prev ', curpage_attr={'class': 'current'})
 
 def route_url(includeaction=True):
     """ Returns the url minus id, so controller/action typically"""
