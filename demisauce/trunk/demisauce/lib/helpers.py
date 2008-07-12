@@ -45,8 +45,10 @@ def dspager(qry):
     return webhelpers.paginate.Page(qry,page=page,items_per_page=5)
 
 def dspager2(pgr):
-    return pgr.pager('''<div class="boxlinks boxlinks_tabs">$link_previous ~4~ $link_next </div>''',
-        symbol_next=' Next >> ',symbol_previous='< Prev ', curpage_attr={'class': 'current'})
+    p = pgr.pager('''<div class="boxlinks boxlinks_tabs">$link_previous ~4~ $link_next </div>''',
+        symbol_next=' Next >> ',symbol_previous='<< Prev ', curpage_attr={'class': 'current'})
+    print p
+    return p.replace('&gt;&gt;','&#187;').replace('&lt;&lt;','&#171;')
 
 def route_url(includeaction=True):
     """ Returns the url minus id, so controller/action typically"""
