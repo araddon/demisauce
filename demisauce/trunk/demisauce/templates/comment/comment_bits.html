@@ -34,7 +34,39 @@
         </div>
     </div>
 </%def>
-
+<%def name="table(items)">
+<table class="dsadmin">
+    <thead>
+        <tr >
+            <th class="check-column"><input type="checkbox"/></th>
+            <th>Author</th>
+            <th>Date</th>
+            
+            <th>comment</th>
+        </tr>
+    </thead>
+    <tbody>
+    % for item in items:
+        <tr class="${h.cycle("", "alternate") }">
+            <td><input type="checkbox"/></td>
+            <td>
+                % if item.isuser:
+                    ${h.link_to(item.email, '/account/viewh/%s' % item.hashedemail, class_="title")}
+                % else:
+                    ${item.email}, ${item.isuser}
+                % endif
+                % if item.hashedemail:
+                <img alt="" src="http://www.gravatar.com/avatar/${item.hashedemail}?s=24" class="avatar avatar-48" height="24" width="24">
+                % endif
+            </td>
+            <td>${(item.created).strftime("%b %d, %Y %H:%m") or ''}</td>
+            <td>${h.simple_format(h.truncate(item.comment, 50))}</td>
+        </tr>
+        
+    % endfor
+    </tbody>
+</table>
+</%def>
 <%def name="list(cmsitems)">
     % for item in cmsitems:
 

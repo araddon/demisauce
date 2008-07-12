@@ -56,6 +56,31 @@
     </div>
 </%def>
 
+<%def name="table(items)">
+<table class="dsadmin">
+    <thead>
+        <tr >
+            <th scope="col">Site</th>
+            <th scope="col">Enabled</th>
+            <th scope="col"></th>
+            <th scope="col">Date</th>
+            <th scope="col"></th>
+        </tr>
+    </thead>
+    <tbody>
+    % for item in items:
+        <tr class="${h.cycle("", "alternate") }">
+            <td>${h.link_to(item.name, h.url(controller="site",action="view", id=item.id), class_="title")}</td>
+            <td>${item.enabled}</td>
+            <td>${h.link_to('Edit', h.url(controller="site",action="edit", id=item.id), class_="title")}</td>
+            <td>${(item.created).strftime("%b %d, %Y") or ''}</td>
+            <td>${h.simple_format(h.truncate(item.description, 30))}</td>
+        </tr>
+        
+    % endfor
+    </tbody>
+</table>
+</%def>
 <%def name="sitelist(items)">
     % for item in items:
 

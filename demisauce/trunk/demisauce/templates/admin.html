@@ -4,13 +4,25 @@
 
 <%def name="title()">Sysadmin </%def>
 
-
-
-
-<div id="sitecontent" >
 % if c.items:
-
-    ${site.sitelist(c.items)}
+    <div class="bar1">
+        <h3>Site Admin Page</h3>
+    </div>
+    <div class="yui-gc" >
+        <div class="yui-u first" id="EmailTable">
+            % if c.items:
+                ${site.table(c.items)}
+            % endif
+        </div>
+        <div class="yui-u">
+            
+            
+            <div class="box box2">
+                <h3>Recent Updates</h3>
+            </div>
+        </div>
+    </div>
+    
 
 % elif c.item:
     <div class="bar1">
@@ -19,14 +31,9 @@
     <div class="yui-g">
         <div class="yui-u first">
             <div class="box boxc">
-
                 ${site.siteview(c.item)}
-
             </div>
         </div>
-
-
-
         <div class="yui-u">
             <div class="box box2">
                 <h3 style="">Users</h3>
@@ -63,8 +70,5 @@
         </div>
     </div>
 % endif
-</div>
 
-<%def name="sidebar_top()">
-    ${mns_us.item_actions(c.item)}
-</%def>
+

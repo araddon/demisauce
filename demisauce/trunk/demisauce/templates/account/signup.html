@@ -9,17 +9,18 @@
 
     ${h.form(h.url(action='interest'),  class_="small", id="interestform")}
         
-        <div class="instructions"><b></b> We are still in private beta enter your email and we
-            will send you an invitation when they are available. </div>
+        <fieldset class="small" style="padding:10px 20px 10px 20px;">
+            <div class="instructions"><b></b> We are still in private beta enter your email and we
+                will send you an invitation when they are available. 
+            </div>
             <br /><br />
-        <fieldset class="small">
             <div class="required">
                 <label for="email">Email</label>
                 ${h.text_field('email', value=(item and item.email) or '', size=40)}
             </div>
         </fieldset>
         <div class="actions">
-            <input type="submit" class="primaryAction" id="submit" value="Submit &#187;">    &nbsp;&nbsp;
+            <input type="submit" class="primary" id="submit" value="Submit &#187;">    &nbsp;&nbsp;
             <a href="/" id="cancel">cancel</a>
         </div>
     </form>

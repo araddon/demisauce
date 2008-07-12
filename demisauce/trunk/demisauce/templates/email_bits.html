@@ -20,18 +20,34 @@
             ${h.link_to('view xml', '/api/xml/email/%s' % item.key)}
 
             <p class="description">
-                ${h.simple_format(h.truncate(item.template, 50))}
+                ${h.simple_format(h.truncate(item.template, 30))}
             </p>
         </div>
     </div>
 </%def>
 
-<%def name="list(cmsitems)">
+<%def name="table(cmsitems)">
+<table class="dsadmin">
+    <thead>
+        <tr >
+            <th class="check-column" scope="col"><input type="checkbox"/></th>
+            <th scope="col">Date</th>
+            <th scope="col"></th>
+            <th scope="col">Template</th>
+        </tr>
+    </thead>
+    <tbody>
     % for item in cmsitems:
-
-            ${view(item)}
-
+        <tr class="${h.cycle("", "alternate") }">
+            <td><input type="checkbox"/></td>
+            <td>${h.link_to(h.truncate(item.subject, 30), h.url(action="edit", id=item.id), class_="title")}</td>
+            <td>${h.link_to('view xml', '/api/xml/email/%s' % item.key)}</td>
+            <td>${h.simple_format(h.truncate(item.template, 30))}</td>
+        </tr>
+        
     % endfor
+    </tbody>
+</table>
 </%def>
 
 <%def name="form(item)">

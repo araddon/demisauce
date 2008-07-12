@@ -1,25 +1,31 @@
 <%namespace name="mns_comment" file="comment_bits.html"/>
-<%inherit file="_base2col.html"/>
+<%inherit file="../_base1col.html"/>
 
 
 <%def name="title()">Comment Templates </%def>
 
 
-
-
-<div id="ContentContextTree" >
-% if c.items:
-
-    ${mns_comment.list(c.items)}
-
-% endif
+<div class="bar1">
+    <h3>Comment Admin Page</h3>
 </div>
 
-
-<%def name="sidebar_top()">
-
-
-
-
-
-</%def>
+% if c.item:
+    <br />
+    ${mns_email.form(c.item)}
+% else:
+    <div class="yui-gc" >
+        <div class="yui-u first" id="EmailTable">
+            % if c.items:
+                ${mns_comment.table(c.items)}
+            % endif
+        </div>
+        <div class="yui-u">
+            
+            
+            <div class="box box2">
+                <h3>???</h3>
+            </div>
+        </div>
+    </div>
+    
+% endif

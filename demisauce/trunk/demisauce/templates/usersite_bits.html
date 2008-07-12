@@ -21,7 +21,8 @@
             % endif
             ${h.link_to(tkt.authorname,h.url("/helpadmin/process/%s" % str(tkt.id)))}, 
             ${(tkt.isuser and "Is User") or 'Not User'},
-            ${tkt.clean_content} 
+            
+            ${h.truncate(tkt.clean_content, 30)}
             </div>
         % endfor
         <script type="text/javascript">

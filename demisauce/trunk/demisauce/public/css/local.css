@@ -23,35 +23,13 @@ th,td {border:0px solid #000;padding:.5em;}th {font-weight:bold;text-align:cente
 
 /*  end Yahoo css and copyrights */
 /*  Color Scheme
-   green:  #97c734  border for this green #84BE58
-	lighter green: #bd8 border for this green #84BE58
-	darker blue    #235C9D;
-    #9f6523
-	lighterblue #59e
-	lighter orange (borders) #fc0
-	orange:  #fec529
-	orange darker #f60
-	brownish #dda
-	light tan background #ffc
-	
-	
-	margin: top right bottom left;
-	border: red 1px solid;
-    
-    TODO:  replace line-height pixels with .em
-	 
-	 background colors
-	 #EBEAE5;
-	 #333333
-	 #38638F;  blue
-	 #639E12 green
-	 seperator colors
-	 #EBF1D4
-	 #FFCF13
-        #88D808
-		  
-	greeen  79B837
-	blue   005099
+  dark grey:  #333333
+  lighter grey (but still dark): #666666;
+  dark blue (tabs): #116092
+  dark blue (fonts,actionborder): :#235C9D;
+  medium blue (border):  #BBD9EE;
+  grey (background boxes):  #FAFAFA
+  
 	margin: top right bottom left; 
 */
 body {text-align: center; background-color:; ; margin:0px;	padding:0px;}
@@ -200,6 +178,12 @@ input.error {font-weight:bold;background-color:#ccc;}
 .warning {color: #9F6000;background-color: #FEEFB3;background-image: url('/images/warning.png');}
 .error-message-box {color: #D8000C;background-color: #FFBABA;background-image: url('/images/error.png');}
 .validation {color: #D63301;background-color: #FFCCBA;background-image: url('/images/validation.png');}
+
+
+/* Admin tables */
+table.dsadmin  {margin:10px 0 0 0; width:100%;border:#666666 1px solid;}
+  table.dsadmin  thead {background-color:#666666;color:#fff;margin:10px 0 0 0;}
+  table.dsadmin tr.alternate {background-color:#FAFAFA;}
 
 /* Dialog - Logon, etc     border-top:none;-------------------------*/
 #dialogHead {border: 1px solid #fec529; text-align: left; background: #fec529; padding:10px; margin: auto;margin: 0px; }

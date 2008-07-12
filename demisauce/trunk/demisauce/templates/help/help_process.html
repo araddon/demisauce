@@ -57,12 +57,6 @@
                     </div>
                 </div>
                 <div class="actions submit">
-                <span class="submit ">
-                    <button class="button primary">Save</button>
-                </span>
-                <span class="submit ">
-                    <button class="button secondary">Close</button>
-                </span>
                     <input type="submit" class="primaryActionxx primary" id="submit" value="Save &#187;">
                     &nbsp;&nbsp;<a href="/helpadmin" id="cancelnode">cancel</a>
 
@@ -95,7 +89,7 @@
     </div>
     ${mns_us.helplist(c.helptickets,showcheck=True)}
     
-    <div class="box2" style="margin: 10px 0px;">
+    <div class="box2" style="margin: 10px 0px; padding:5px">
         <span class="h3">Other Issues from </span>
         <a href="/account/viewh/${(c.item and c.item.hashedemail)}">Sys Admin @Demisauce</a>
         <div class="checkable">
@@ -115,11 +109,5 @@
         </div>
         
     </div>
-    
-    <div class="submit">
-        <button class="button secondary">Close</button>
-    </div>
-    
-    
 </%def>
 

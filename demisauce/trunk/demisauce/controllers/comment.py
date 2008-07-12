@@ -59,7 +59,7 @@ class CommentController(BaseController):
             c.items = [meta.DBSession.query(Comment).get(id)]
         elif c.user:
             c.items = Comment.by_site(c.user.site_id)
-        return render('/comment.html')
+        return render('/comment/comment.html')
     
     def googleauth(self):
         """
@@ -89,11 +89,11 @@ class CommentController(BaseController):
         if 'url' in request.GET:
             url = request.GET['url']
             redirect_to(str(url))
-        return render('/comment_login.html')
+        return render('/comment/comment_login.html')
     
     def delete(self,id=0):
         if c.user and c.user.isadmin and id > 0:
-            item = meta.DBSession.query(Comment).get(id)
+            item = Comment.get(c.user.site_id,id)
             if item:
                 item.delete()
     
@@ -107,7 +107,7 @@ class CommentController(BaseController):
             else:
                 c.goto_url = 'http://www.google.com'
         
-        return render('/comment_commentform.html')
+        return render('/comment/comment_commentform.html')
     
     @validate(schema=CommentFormValidation(), form='commentform')
     def commentsubmit(self,id=''):
@@ -167,7 +167,7 @@ class CommentController(BaseController):
                         expires=datetime.today() + timedelta(hours=1))
         c.hash = hash
         #response.headers['Content-Type'] = 'text/html'
-        return render('/comment_js.js')
+        return render('/comment/comment_js.js')
     
     def logout(self):
         response.delete_cookie('userkey')
@@ -180,7 +180,7 @@ class CommentController(BaseController):
         else:
             c.return_url = 'http://www.demisauce.com'
         c.google_auth_url = google_auth_url(c.return_url)
-        return render('/comment_login.html')
+        return render('/comment/comment_login.html')
     
     @validate(schema=LogonFormValidation(), form='login')
     def loginpost(self,id=0):
@@ -191,7 +191,7 @@ class CommentController(BaseController):
             if user is None:
                 c.message = "We were not able to verify that email\
                      or password, please try again"
-                return render('/comment_login.html')
+                return render('/comment/comment_login.html')
             elif 'password' in request.POST:
                 if user.is_authenticated(request.POST['password']):
                     response.set_cookie('userkey', user.user_uniqueid,
@@ -199,13 +199,13 @@ class CommentController(BaseController):
                 else:
                     c.message = "We were not able to verify that email\
                          or password, please try again"
-                    return render('/comment_login.html')
+                    return render('/comment/comment_login.html')
             else:
                 c.message = "You did not submit a password, please try again."
-                return render('/comment_login.html')
+                return render('/comment/comment_login.html')
         else:
             c.message = "You need to enter an email and password to signin."
-            return render('/comment_login.html')
+            return render('/comment/comment_login.html')
         
         c.goto_url = request.POST['goto']
         return render('/refresh.html')
@@ -223,19 +223,12 @@ class CommentController(BaseController):
                 c.site = site
                 c.url = str(request.params['url'])
                 c.items = Comment.for_url(site,request.params['url'])
-                return render('/comment_js2.js')
+                return render('/comment/comment_js2.js')
             else:
                 print '%s not in site_url' % (url)
         else:
-            print 'crap, url not in params'
-        
+            print 'url not in params'
         
         return """document.getElementById('demisauce-comments').innerHTML = '<a href="%s/">Sorry Go to Demisauce to Comment</a>';""" % c.base_url
     
-    def edit(self,id=0):
-        #c.nodes = customer_id=c.user.customer_id)
-        c.item = meta.DBSession.query(Comment).filter_by(id=id,
-                                    site_id=c.site_id).first()
-        return c.item.uri
-        #return render('/poll_edit.mako')
-    
+

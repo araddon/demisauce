@@ -5,26 +5,30 @@
 <%def name="title()">Email Templates </%def>
 
 
-<div >
-    <div class="bar1">
-        <h3>Email Admin Page</h3>
-    </div>
-    <div>
-    % if c.item:
-        <br />
-        ${mns_email.form(c.item)}
-    % else:
-        <div class="yui-gc" >
-            <div class="yui-u first" id="ContentContextTree">
-                % if c.items:
-                    ${mns_email.list(c.items)}
-                % endif
-            </div>
-            <div class="yui-u">
-                ${mns_email.item_actions(c.item)}
+
+<div class="bar1">
+    <h3>Email Admin Page</h3>
+</div>
+
+% if c.item:
+    <br />
+    ${mns_email.form(c.item)}
+% else:
+    <div class="yui-gc" >
+        <div class="yui-u first" id="EmailTable">
+            % if c.items:
+                ${mns_email.table(c.items)}
+            % endif
+        </div>
+        <div class="yui-u">
+            ${mns_email.item_actions(c.item)}
+            
+            <div class="box box2">
+                <h3>Recent Updates</h3>
             </div>
         </div>
-        
-    % endif
     </div>
-</div>
+    
+% endif
+
+
