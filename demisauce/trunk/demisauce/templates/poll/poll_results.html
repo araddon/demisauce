@@ -1,5 +1,6 @@
-{{if p}}
-    {{for q in p.questions}}
+<div id="ds-poll-results" style="display:none;">
+{{if poll}}
+    {{for q in poll.questions}}
     <div id="ds-poll-question-response">
         {{for o in q.options}}
         <div>
@@ -10,8 +11,9 @@
     </div>
     {{endfor}}
 {{else}}
-  no poll
+  no results yet
 {{endif}}
+</div>
 
 
 

@@ -161,36 +161,52 @@
         });
     };
     $.ds.dspoll = function(el, options) {
-        var opts = $.extend({view_selector:'#ds-poll-results',
-            poll_id:0}, 
+        var opts = $.extend({view_selector:'#ds-poll-results-target',
+            poll_id:0,
+            getremote:''}, 
             $.ds.defaults, options);
         this.element = el; 
         this.poll_id = $('#poll_id').val();
         this.q_id = $('#q_id').val();
         var self = this; //Do bindings
         self.options = opts;
+        if (opts.getremote !== ''){
+            self.display(el,opts.getremote);
+        }
         $('div.ds-poll-vote a').click(function(){
-            $('div.ds-poll-vote,#ds-poll-question').hide();
-            $(opts.view_selector).show();
+            self.show_results();
         });
+        //#ds-poll-vote
         $('div.ds-poll-vote input').click(function(){
             self.vote(this);
         });
         return this;
     }
     $.extend($.ds.dspoll.prototype, {
+        show_results: function(el){
+            $('div.ds-poll-vote,#ds-poll-question').hide();
+            $(this.options.view_selector).show();
+            $(this.options.view_selector).html($('#ds-poll-results').html());
+        },
         vote: function(el) {
             var self = this;
             var opts = $('#ds-poll-question div input[@checked]').val();
-            var data = {poll_id:self.poll_id,q_id:this.q_id,
-                'options':opts};
+            var data = {poll_id:self.poll_id,q_id:this.q_id,'options':opts};
             //data: $.param(post_vals),
             var url = self.options.base_url + "/pollpublic/vote";
             $.getJSON(url + '?jsoncallback=?', data, function(json){
-                $('#ds-poll-results').html(json.html)
+                $('#ds-poll-results').empty();
+                $(self.element).after(json.html);
+                self.show_results();
             });
-            $('div.ds-poll-vote,#ds-poll-question').hide();
-            $(opts.view_selector).show();
+            
+        },
+        display: function(el,resource_id){
+            var url = this.options.base_url + "/pollpublic/display/" + resource_id;
+            $.getJSON(url + '?jsoncallback=?', {}, function(json){
+                $(el).html(json.html);
+                self.show_results();
+            });
         }
     });
     $.fn.dshints = function(el,options) {

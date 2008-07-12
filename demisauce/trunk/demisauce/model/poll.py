@@ -26,7 +26,7 @@ poll_table = Table("poll", meta.metadata,
         Column("description", DBString(500)),
         Column("css", DBString(1000)),
         Column("html", DBText),
-        Column("json", DBText),
+        Column("results", DBText),
     )
 
 question_table = Table("poll_question", meta.metadata,
@@ -107,8 +107,15 @@ class Poll(object,ModelBase):
         Gets the template by key for a site::
             
             Poll.by_key(c.site_id,'what_features_do_we_want_in_demisauce')
+            # or for public polls
+            Poll.by_key(0,'what_features_do_we_want_in_demisauce')
         """
-        return meta.DBSession.query(Poll).filter_by(site_id=site_id,key=key).first()
+        poll = None
+        if site_id == 0:
+            poll = meta.DBSession.query(Poll).filter_by(key=key).first()
+        else:
+            poll = meta.DBSession.query(Poll).filter_by(site_id=site_id,key=key).first()
+        return poll
     
     @classmethod
     def by_site(cls,site_id=0):

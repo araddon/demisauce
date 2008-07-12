@@ -69,7 +69,11 @@
 </%def>
 
 <%def name="form(item)">
-
+    <style type="text/css">
+    .formbox input {width:350px!important; }
+    textarea {width:350px!important; }
+    .formbox .actions input {width:100px!important; }
+    </style>
     <div class="formbox main_form">
         <div class="boxlinks_tabs boxlinks actionbar">
             <a href="#tab1"  class="current">Main</a>
@@ -158,7 +162,7 @@ ${h.html_encode("""<DS:CmsitemControl resource="blog" max="1" random="true" runa
                     </pre>
                     <b></b>
                 </div>
-                <div class="actions"><input type="submit" class="primaryAction" id="submit" value="Save &#187;">
+                <div class="actions"><input type="submit" class="primary" id="submit" value="Save &#187;">
                 &nbsp;&nbsp;<a href="#" id="cancelcmsform">cancel</a></div>
 
             ${h.end_form()}

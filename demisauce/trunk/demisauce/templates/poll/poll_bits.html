@@ -108,153 +108,6 @@
 <%def name="form(item,mode='admin')">
     <script type="text/javascript">
         $(document).ready(function() {
-            $.ds = $.ds || {};
-            $.fn.ds_poll_admin = function(options) {
-                return this.each(function() {
-                    if (!$(this).is(".ds-poll-admin")) new $.ds.polladmin(this, options);
-                });
-            };
-            $.ds.polladmin = function(el, options) {
-                var self = this; 
-                self.options = $.extend({isloaded:false,
-                    q_ids:[],
-                    id:0,
-                    qoption_html:'<div><label for="option"></label> \
-                                    <img src="/images/move.png" border="0" style="border:0"/> \
-                                    <input id="question_option" class="tempforjq" o_id="0" name="question_option" style="width:350px" type="text" value="" /> \
-                                    <img src="/images/cross.png" border="0" style="border:0" class="delete"/></div> ',
-                            }, options);
-                this.element = el; 
-
-                $('#name').focus();
-                self.options.q_ids = $('#q_ids').val().split(',');
-                $('#question_options div').sortable({items:'div',stop:self.option_sort_complete});
-
-                $('#question_options div div input[o_id=0]').blur(function(){
-                    if ($(this).val() != ''){
-                        self.add_option(this);
-                    } else {
-                        self.remove_option(this);
-                    }
-                });
-                $('#question_options div div[type=other] input').each(function(){
-                    $(this).attr("disabled", "disabled").next('img.delete').attr('src','');
-                });
-                $('#name,#question').each(function(){
-                    $(this).attr('originalval',$(this).val());
-                });
-
-                $('#question_options div div input').blur(function(){
-                    if ($(this).attr('originalval') != $(this).val()){
-                        self.option_update(this);
-                        $(this).attr('originalval',$(this).val());
-                    }
-                }).not('input[o_id=0]').each(function(){
-                    $(this).attr('originalval',$(this).val());
-                });
-                $('img.delete').not('input[o_id=0]').click(function(){
-                    self.delete_option(this);
-                });
-                $('#question').blur(function(){
-                    self.question_update(this);
-                });
-                $('form input[name=question_type]').click(function(){
-                    if($(this).val() == 'radiowother'){
-                        self.add_option($('#question_options div div input:last'),'other')
-                    } else if ($(this).val() == 'radio'){
-                        $('#question_options div div[type=other]').empty();
-                    } else if ($(this).val() == 'multiplechoice'){
-                        $('#question_options div div[type=other]').empty();
-                    }
-
-                });
-                $('#jq_add_question').click(function(){
-                    $('#placeholder_for_newq').before(self.options.qoption_html);
-                });
-            }
-
-            $.extend($.ds.polladmin.prototype, {
-                add_option: function(element,other) {
-                    var self = this;
-                    if (other == undefined){
-                        $(element).parent().parent().append(self.options.qoption_html);
-                    } else {
-                        $(element).parent().after(self.options.qoption_html);
-                        $('#question_options div div input.tempforjq:first').val('other').
-                            attr('disabled','disabled').parent().attr('type','other');
-                    }
-
-                    $('#question_options div').sortable({items:'div',stop:self.option_sort_complete});
-                    $('#question_options div div input.tempforjq').blur(function(){
-                        self.add_option(this);
-                    }).removeClass('tempforjq').next().click(function(){
-                        self.delete_option(this);
-                    });
-                    $(element,'~ input').focus();
-                },
-                remove_option: function(element) {
-                    $(element,'~ input').parent().empty();
-                    $('#question_options div div:last').empty();
-                },
-                option_sort_complete: function(event,ui) {
-                    var ol = Array(); 
-                    $('#question_options div div input').each(function(){
-                         ol.push('o_id='+$(this).attr('o_id'));
-                    });
-                    var d = $('#question_options div div input,#poll_id,#question_options div div input').fieldSerialize();
-                    d += '&' + ol.join('&') + '&q_id=' + $(this).parent().attr('q_id');
-                    $.post("/poll/sort/", d, function(msg){
-                        $.showmessage( "sort completed: ");
-                    }, "json");
-                },
-                option_update: function(option) {
-                    var data = { poll_id: $('#poll_id').val(), 
-                        question_option: $(option).val(),
-                        o_id: $(option).attr('o_id'),
-                        q_id: $(option).parent().parent().attr('q_id'),};
-                    $.post("/poll/optionupdate/", data, function(msg){
-                            //$.showmessage( "update completed: ");
-                            if ($(option).attr('o_id') == 0){
-                                $(option).attr('o_id',msg.o_id)
-                            }
-                    }, "json");
-                },
-                delete_option: function(option) {
-                    var oid = $(option).parent().children('input').attr('o_id');
-                    if (oid != 0){
-                        $.post("/poll/delete/", { oid: oid}, function(msg){
-                            $.showmessage( " " + msg.msg );
-                         }, "json");
-                    }
-                    $(option).parent().empty();
-                },
-                question_added: function(element,id) {
-                    $(element).attr('q_id',id);
-                    if ($.inArray(id,this.options.q_ids == -1)){
-                        this.options.q_ids.push(id);
-                        $('#q_ids').val(this.options.q_ids.toString());
-                    }
-                },
-                question_update: function(element) {
-                    var self = this;
-                    if ($(element).val() != '' && $(element).attr('originalval') != $(element).val()){
-                        var data = { poll_id: $('#poll_id').val(), 
-                            option: $('#question_option').fieldSerialize(),
-                            name: $('#name').val(),
-                            question:$('#question').val(),
-                            q_id: $(element).attr('q_id'),};
-                        $.post("/poll/postquestion/", data, function(msg){
-                            $.showmessage( "Data Saved: " + msg.poll.id );
-                            if (msg.poll.id > 0 && $('#poll_id').val() == 0){
-                                $('#poll_id').val(msg.poll.id);
-                                self.options.id = msg.poll.id;
-                                self.question_added(element,msg.poll.q_id)
-                            }
-                        }, "json");
-                    }
-                }
-            });
-
             $('body').ds_poll_admin();
         });
     </script>
@@ -313,7 +166,7 @@
                         % if item:
                             ${h.link_to('view xml', '/api/xml/poll/%s' % (item and item.key) or '')}
                             <br />
-                            ${h.link_to('view html', h.url(controller="poll",action="view", id=item.id))}
+                            ${h.link_to('view html', h.url(controller="poll",action="view", id=item.key))}
                         % endif
                         
                         <div class="optional">
@@ -328,7 +181,14 @@
                             </fieldset> 
                         </div>
                         <div class="optional">
-                            <label for="css">css:</label>
+                            <fieldset> 
+                                <legend>Is Public?</legend>
+                                ${h.radio_button('public', '0',checked=(item and item.allow_anonymous == 0))} False <br />
+                                ${h.radio_button('public', '1',checked=(item and item.allow_anonymous == 1))} True <br />
+                            </fieldset> 
+                        </div>
+                        <div class="optional">
+                            <label for="css">Custom CSS:</label>
                             ${h.text_area("css", content=(item and item.css) or '', size="30x3", _style="width=190px;")}
                         </div>
                         <div class="box2" style="margin:10px 0px;">

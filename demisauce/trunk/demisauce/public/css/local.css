@@ -204,16 +204,6 @@ span.checkableselected {
     background-image:url(/images/icon_check.png) !important;border:0px solid #fff;
     background-position: center;background-repeat:no-repeat;padding:3px 11px 3px 11px;}
     
-/* Buttons and Actions*/
-.actions input, .button {background-color:#EBE9ED;border-color:#116092;color:#235C9D;}
-.actions input, .button  {-moz-border-radius:3px;-webkit-border-radius:3px;cursor:pointer;}
-.secondary   {border-style:solid;border-width:0px;font-size:100%;line-height:1.4em;padding:4px 6px;}
-.primary    {border-style:solid;border-width:1px;font-size:120%;line-height:1.6em;padding:4px 16px;text-decoration:none;}
-form div.actions input {width:8em;}
-form .actions {padding: 10px;margin: 10px 0px 0px 0px;background-color: #ddd;border-top: 2px solid #235C9D;text-align: right;}
-form img.delete {}
-form img.delete { background:url(/images/cross.png);}
-
 
 /* Footer              -----------*/
 #ft hr{	width: 100%;}
@@ -240,7 +230,15 @@ form img.delete { background:url(/images/cross.png);}
 #footer-nav li:hover li a { color: #0060BF; }
 #footer-nav li:hover li a:hover { text-decoration: underline; }
 
-
+/* Buttons and Actions*/
+.actions input, .button {background-color:#EBE9ED;border-color:#116092;color:#235C9D;}
+.actions input, .button  {-moz-border-radius:3px;-webkit-border-radius:3px;cursor:pointer;}
+.secondary   {border-style:solid;border-width:0px;font-size:100%;line-height:1.4em;padding:4px 6px;}
+.primary    {border-style:solid;border-width:1px;font-size:120%;line-height:1.6em;padding:4px 16px;text-decoration:none;}
+form div.actions input {width:8em;}
+form .actions {padding: 10px;margin: 10px 0px 0px 0px;background-color: #ddd;border-top: 2px solid #235C9D;text-align: right;}
+form img.delete {}
+form img.delete { background:url(/images/cross.png);}
 
 /* new form */
 form input { padding:2px;font-size:1.2em;}

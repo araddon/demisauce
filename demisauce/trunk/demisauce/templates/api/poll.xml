@@ -6,7 +6,8 @@
         <created>${item.created}</created>
         <allow_anonymous>${item.allow_anonymous}</allow_anonymous>
         <description><![CDATA[${item.description}]]></description>
-        <html><![CDATA[${item.html}]]></html>
+        <html><![CDATA[${item.html}  ${item.results}]]></html>
+        <results><![CDATA[${item.results}]]></results>
         % if item.questions != None and len(item.questions) > 0:
         <questions>
             % for question in item.questions:

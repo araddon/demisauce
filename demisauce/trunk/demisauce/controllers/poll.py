@@ -16,7 +16,8 @@ from demisauce.model.poll import *
 log = logging.getLogger(__name__)
 
 def poll_html(poll):
-    return rendertf('/poll/poll_public.html',locals())
+    poll.results = rendertf('/poll/poll_results.html',locals())
+    poll.html = rendertf('/poll/poll_public.html',locals())
 
 class PollFormValidation(formencode.Schema):
     """Form validation for the poll web admin"""
@@ -76,7 +77,7 @@ class PollController(SecureController):
                 q.type = self.form_result['question_type']
             #for o in self.form_result['question_option']:
             #    q.add_or_update_option(o)
-        item.html = poll_html(item)
+        poll_html(item)
         item.save()
         h.add_alert('updated poll')
         return redirect_wsave('/poll')
@@ -117,7 +118,7 @@ class PollController(SecureController):
                 id = request.POST['q_id']
                 q = item.get_question(int(id))
                 q.question = sanitize(request.POST['question'])
-            item.html = poll_html(item)
+            poll_html(item)
             item.save()
         return '{poll:{id:%s,q_id:%s}}' % (item.id,q.id)
     
@@ -140,13 +141,14 @@ class PollController(SecureController):
                     print 'oid = %s, sort_order=%s' % (oid,sort_order)
                     q.change_sort_order(oid,sort_order)
                     sort_order += 1
+            poll_html(poll)
             poll.save()
         return '{poll:{id:%s,q_id:%s}}' % (1,2)
     
     def view(self,id=0):
         """view a poll"""
         c.item = Poll.by_key(c.user.site_id,id)
-        c.item_html = poll_html(c.item)
+        c.item_html = c.item.html
         return render('/poll/poll_view.html')
     
     def polldelete(self,id=0):
