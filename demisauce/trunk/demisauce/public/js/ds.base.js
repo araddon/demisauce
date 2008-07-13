@@ -90,7 +90,7 @@
             var ref_url = '';
             var result = $.ds.parseUri(window.location.href);
             var post_vals = {};
-            var url = '/apipublic/activity/?site_slug=' + encodeURIComponent(this.defaults.site_slug);
+            var url = this.defaults.base_url + '/apipublic/activity/?site_slug=' + encodeURIComponent(this.defaults.site_slug);
             
             if (opts.use_url == true){
                 if (opts.absolute == true) {
@@ -101,7 +101,6 @@
             url += '&activity=' + encodeURIComponent(opts.activity);
             post_vals = $.extend(post_vals,{activity:opts.activity});
             if (opts.unique_id != null) {
-                //url += '&unique_id=' + encodeURIComponent(opts.unique_id);
                 post_vals = $.extend(post_vals,{unique_id:opts.unique_id});
             };
             if (opts.category != null) {
@@ -117,15 +116,7 @@
                 post_vals = $.extend(post_vals,{'cnames':cnames});
             };
             if (opts.activity != null) {
-                //$.get(url , function(data){});
-                $.ajax({
-                    type: "POST",
-                    url: url,
-                    data: $.param(post_vals),
-                    success: function(msg){
-                      //??
-                    }
-                });
+                $.getJSON(url + '&jsoncallback=?', $.param(post_vals), function(json){});
             };
         }
     });
@@ -187,6 +178,7 @@
             $('div.ds-poll-vote,#ds-poll-question').hide();
             $(this.options.view_selector).show();
             $(this.options.view_selector).html($('#ds-poll-results').html());
+            return this;
         },
         vote: function(el) {
             var self = this;
@@ -198,14 +190,21 @@
                 $('#ds-poll-results').empty();
                 $(self.element).after(json.html);
                 self.show_results();
+                $.ds.dsactivity({activity:"User Voted On" + json.key,category:"Poll"});
             });
             
         },
         display: function(el,resource_id){
+            var self = this;
             var url = this.options.base_url + "/pollpublic/display/" + resource_id;
             $.getJSON(url + '?jsoncallback=?', {}, function(json){
-                $(el).html(json.html);
-                self.show_results();
+                $(el).append(json.html);
+                if ($.browser.safari) {
+                    $('style',$(el)).each(function(){
+                        $('head').append('<style id="injectedCss" type="text/css">' + $(this).text() + '</style>');
+                        $(this).text('');
+                    });
+                }
             });
         }
     });

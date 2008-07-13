@@ -32,12 +32,11 @@ def send_emails(email_template,recipient_list,substitution_dict=None):
     """
     #print 'in send_emails 1=%s, 2=%s, 3=%s' % (email_template,recipient_list,substitution_dict)
     from demisauce.lib import mail
-    from demisaucepy import pylons_helper, demisauce_ws_get, ensureConfig
+    from demisaucepy import pylons_helper, demisauce_ws_get
     import urllib
     
     #/api/email/html/your_slug_title_here?apikey=f3f5de7f8376daf29ce3232ca606904ff4adc929
     resource_id = urllib.quote_plus(email_template)
-    ensureConfig(config)
     emails = demisauce_ws_get('email',resource_id,format='xml')
     if emails and emails.success:
         t = emails.xml_node.email[0]
@@ -46,6 +45,7 @@ def send_emails(email_template,recipient_list,substitution_dict=None):
         template = s.substitute(substitution_dict)
         mail.send_mail_toeach((t.subject,
                 template, '%s<%s>' % (t.from_name,t.from_email), recipient_list))
+        log.debug('sent emails to %s' % recipient_list)
     elif not emails.success:
         log.debug('Invalid DS WS call')
         return 'invalid api key'

@@ -20,12 +20,14 @@ class PollpublicController(BaseController):
         p = Poll.by_key(0,id)
         data = {'success':True,'html':'%s %s' % (p.html,p.results)}
         json = simplejson.dumps(data)
+        response.headers['Content-Type'] = 'text/json'
         return '%s(%s)' % (request.params['jsoncallback'],json)
     
     def show_results(self,id=''):
         p = Poll.by_key(0,id)
         data = {'success':True,'html':p.results}
         json = simplejson.dumps(data)
+        response.headers['Content-Type'] = 'text/json'
         return '%s(%s)' % (request.params['jsoncallback'],json)
     
     def vote(self,id=''):
@@ -44,22 +46,23 @@ class PollpublicController(BaseController):
                 poll = Poll.saget(int(request.params['poll_id']))
                 q = poll.get_question(int(request.params['q_id']))
                 if c.user:
-                    response = PollResponse(c.user.id)
+                    pollresponse = PollResponse(c.user.id)
                 else:
-                    response = PollResponse(0)
+                    pollresponse = PollResponse(0)
                 for oid in request.params['options']:
                     print oid
                 oid = int(request.params['options'])
                 a = PollAnswer(q.id,oid) #TODO make work for many answers
-                response.answers.append(a)
-                poll.responses.append(response)
+                pollresponse.answers.append(a)
+                poll.responses.append(pollresponse)
                 poll.save()
-                poll.update_vote(response)
+                poll.update_vote(pollresponse)
                 poll.results = rendertf('/poll/poll_results.html',locals())
                 poll.save()
         
-        data = {'success':True,'html':poll.results}
+        data = {'success':True,'html':poll.results,'key':poll.key}
         json = simplejson.dumps(data)
+        response.headers['Content-Type'] = 'text/json'
         return '%s(%s)' % (request.params['jsoncallback'],json)
     
 

@@ -9,6 +9,20 @@
         </div>
     </div>
 </%def>
+<%def name="response_list(items)">
+    % if items:
+    % for item in items.responses:
+
+        <div id="item_${item.id}" class="nodedisplay clearfix">
+            % if item and item.person_id:
+                ${h.link_to('view user info', h.url(controller="account",action="view", id=item.id), class_="title")}
+            % endif
+            ${item.created}
+        </div>
+
+    % endfor
+    % endif
+</%def>
 <%def name="list(items)">
     % if items:
     % for item in items:

@@ -9,11 +9,28 @@
         <h3>Poll Preview Page</h3>
     </div>
     <br />
-    <div>
-
-         ${c.item.html}
-         ${c.item.results}
-
+    <div class="yui-g" >
+        <div class="yui-u first">
+            ${c.item.html}
+            <div class="box2 box">
+               ${c.item.results}
+            </div>
+            
+            <script type="text/javascript">
+            $(document).ready(function() {
+                $('#ds-poll-results').show();
+            });
+            </script>
+        </div>
+        <div class="yui-u">
+            <div class="box2 box">
+               ${poll.response_list(c.item)}
+            </div>
+            
+        </div>
     </div>
+
+
+
 </div>
 

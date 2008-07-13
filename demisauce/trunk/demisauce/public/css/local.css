@@ -29,13 +29,13 @@ th,td {border:0px solid #000;padding:.5em;}th {font-weight:bold;text-align:cente
   dark blue (fonts,actionborder): :#235C9D;
   medium blue (border):  #BBD9EE;
   grey (background boxes):  #FAFAFA
-  
+  really light grey:   background-color:#E7E7E7;
 	margin: top right bottom left; 
 */
 body {text-align: center; background-color:; ; margin:0px;	padding:0px;}
 #hd {height:65px;padding:min-width: 950px;background:#000;}
 #mainnav {height:30px;padding:min-width: 950px;background:#000;}
-#bd {min-height:500px;background-color:;}
+#bd {min-height:500px;background-color:#fff;}
 .sidebar {background:;}
 p {margin:0px 0px 0px 0px;}
 .yui-b {margin:8px 0px 0px 0px;background-color:#fff;}
@@ -276,6 +276,7 @@ form input { padding:2px;font-size:1.2em;}
   .main_form .form_2col textarea {width: 380px;}
 .small_form {margin: 0em auto 0 auto;background-color: #EBF4FA;padding: 0px;border: 10px solid #ddd;}
   .small_form {margin:8px 8px 0px;}
+
 .tiny_form {}
   .tiny_form input, .tiny_form input select, .tiny_form textarea {width: 90%;}
 

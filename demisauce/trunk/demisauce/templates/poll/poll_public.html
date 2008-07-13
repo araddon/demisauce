@@ -23,8 +23,14 @@
         <input type="hidden" id="q_id" name="q_id" value="{{q.id}}" />
         {{for o in q.options}}
         <div>
+            {{if o.type == 'other'}}
+            <label for="ds_option_{{q.id}}">{{o.option}}</label>: <br />
+            <input value="" id="ds_option_{{q.id}}" name="ds_option_{{q.id}}" class="ds-poll-radiobutton" type="other"  />
+            {{else}}
             <input value="{{o.id}}" id="ds_option_{{q.id}}" name="ds_option_{{q.id}}" class="ds-poll-radiobutton" type="radio"  />
             <label for="ds_option_{{q.id}}">{{o.option}}</label>
+            {{endif}}
+            
         </div>
         {{endfor}}
         
