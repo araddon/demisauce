@@ -28,6 +28,7 @@ help_table = Table("help", meta.metadata,
         Column("url", DBString(255), nullable=False),
         Column("blog", DBString(255), nullable=True),
         Column("authorname", DBString(100), nullable=True),
+        Column("rating_ct", Integer, default=0),
         Column("content", DBText),
     )
 
@@ -42,6 +43,7 @@ help_response_table = Table("helpresponse", meta.metadata,
         Column("created", DateTime),
         Column("url", DBString(255), nullable=True),
         Column("title", DBString(255), nullable=True),
+        Column("rating_ct", Integer, default=0),
         Column("response", DBText),
     )
 

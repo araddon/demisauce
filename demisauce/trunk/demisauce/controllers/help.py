@@ -5,6 +5,7 @@ from pylons import config
 from formencode import Invalid, validators
 from formencode.validators import *
 import formencode
+import simplejson
 
 from demisauce.lib.base import *
 from demisauce import model
@@ -12,6 +13,8 @@ from demisauce.model import meta, mapping
 from demisauce.model.person import Person
 from demisauce.model.site import Site
 from demisauce.model.help import Help
+from demisauce.model.cms import Cmsitem
+from demisauce.model.rating import Rating
 
 
 log = logging.getLogger(__name__)
@@ -28,6 +31,25 @@ class HelpController(BaseController):
     
     def index(self):
         return render('/help/help.html')
+    
+    def ratearticle(self,id=''):
+        site = Site.by_slug(str(id))
+        data = {'success':False}
+        if site and 'resource_id' in request.params:
+            userid = 0
+            #TODO:  add rating_ct to ??? (context?  help?  cms?)
+            print 'resource_id = %s' % request.params['resource_id']
+            displayname = 'anonymous'
+            if c.user:
+                userid = c.user.id
+                c.user.displayname = displayname
+            rating_val = int(request.params['rating'])
+            r = Rating(userid,'/ds/help/article',rating_val,sanitize(request.params['resource_id']),displayname)
+            r.save()
+            data = {'success':True,'html':r.id}
+        json = simplejson.dumps(data)
+        response.headers['Content-Type'] = 'text/json'
+        return '%s(%s)' % (request.params['jsoncallback'],json)
     
     @rest.dispatch_on(POST="feedbackform")
     def feedback(self,id):

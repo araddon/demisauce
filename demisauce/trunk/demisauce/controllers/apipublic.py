@@ -41,10 +41,10 @@ class ApipublicController(BaseController):
             names = [n for n in request.params['cnames'].split(',') if n != '']
             if len(names) > 0:
                 a.custom1name = names[0]
-                a.custom1val = request.POST[names[0]]
+                a.custom1val = request.params[names[0]]
             if len(names) > 1:
                 a.custom2name = names[1]
-                a.custom2val = request.POST[names[1]]
+                a.custom2val = request.params[names[1]]
         a.save()
         return a.id
     

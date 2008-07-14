@@ -15,3 +15,5 @@ But, this is more.
     :members:
 .. autoclass:: demisauce.model.site.Site
     :members:
+.. autoclass:: demisauce.model.rating.Rating
+    :members:

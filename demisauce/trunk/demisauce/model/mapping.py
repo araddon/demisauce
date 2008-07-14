@@ -17,6 +17,7 @@ from demisauce.model.activity import Activity, activity_table
 from demisauce.model.poll import Poll, Question, QuestionOption, \
     PollResponse, PollAnswer, poll_table, question_table, \
     question_option_table, poll_response_table, answer_table
+from demisauce.model.rating import Rating, rating_table
 
 mapper(Site, site_table)
 
@@ -80,3 +81,5 @@ mapper(PollAnswer, answer_table, properties={
     'option':relation(QuestionOption, backref='answers'),
     'question':relation(Question, lazy=True, backref='answers')
 })
+
+mapper(Rating, rating_table)

@@ -78,6 +78,15 @@
             $(o.input_form_selector +','+ o.logon_form_link).show();
             $(o.logon_form_selector+','+ o.logon_form_cancel).hide();
         },
+        make_url: function(action,include_url){
+            var result = $.ds.parseUri(window.location.href);
+            var url = this.defaults.base_url + action +'/' + encodeURIComponent(this.defaults.site_slug) + '?';
+            //?site_slug=
+            url += $.param({ref_url:(result.protocol + '://' + result.authority + result.relative),
+                            site_slug: this.defaults.site_slug});
+            //post_vals = $.extend({},{ref_url:(result.protocol + '://' + result.authority + result.relative)});
+            return url;
+        },
         dsactivity: function(options) {
             var opts = $.extend({
                 use_url:false,
@@ -90,8 +99,7 @@
             var ref_url = '';
             var result = $.ds.parseUri(window.location.href);
             var post_vals = {};
-            var url = this.defaults.base_url + '/apipublic/activity/?site_slug=' + encodeURIComponent(this.defaults.site_slug);
-            
+            var url = this.make_url('/apipublic/activity',true);
             if (opts.use_url == true){
                 if (opts.absolute == true) {
                     opts.activity = result.protocol + '://' + result.authority;
@@ -106,7 +114,6 @@
             if (opts.category != null) {
                 post_vals = $.extend(post_vals,{category:opts.category});
             };
-            post_vals = $.extend(post_vals,{ref_url:(result.protocol + '://' + result.authority + result.relative)});
             if (opts.custom != null) {
                 var cnames = '';
                 for (var name in opts.custom){
@@ -366,15 +373,32 @@
                 self.options.isloaded = true;
             }
             if (self.options.topinfo) {
-                $(self.options.faceboxprecontent).append(self.topinfo())
+                $(self.options.faceboxprecontent).append(self.topinfo());
             }
             if (self.options.rating) {
-                $(self.options.faceboxcontent2).append(self.rating())
+                $(self.options.faceboxcontent2).append(self.rating());
+                var isclicked = false;
+                $('.rating input',$(self.options.faceboxcontent2)).click(function(){
+                    if (isclicked === false){
+                        self.rate(this);
+                    }
+                })
             }
             if (self.options.feedback) {
-                $(self.options.faceboxcontent2).append(self.feedback())
+                $(self.options.faceboxcontent2).append(self.feedback());
                 $.ds.prepLogon($(self.options.faceboxcontent2));
             }
+        },
+        rate: function (el){
+            var self = this;
+            var rid = $('#ds-cms-collection').attr('rid');
+            var rating_val = ($(el).val() === 'Yes') ? '1': '-1';
+            alert(rating_val)
+            $(el).parent().parent().hide();
+            var url = $.ds.make_url('/help/ratearticle',true);
+            $.getJSON(url + '&jsoncallback=?', {resource_id:rid,rating:rating_val}, function(json){
+                $.ds.dsactivity({activity:"User submitted Help" ,category:"Help"});
+            });
         },
         topinfo: function() {
             return '<div class="help-header" style="float:right;"> \
@@ -384,10 +408,10 @@
         rating: function() {
             return '<div class="rating" style="text-align:right;margin:10px 0 0 0;"> \
                 <h4>Was This Information Helpful?</h4> \
-                <form  ><fieldset> \
-                        <input id="helpful_yes" class="inputRadio" type="radio"  value="yes" name="helpful"/> No \
-                        <input id="helpful_no" class="inputRadio" type="radio"  value="no" name="helpful"/> Yes \
-                </fieldset></form></div>';
+                <form>\
+                        <input id="helpful_yes" class="buttonx" type="button"  value="Yes" name="helpful"/> \
+                        <input id="helpful_no" class="buttonx" type="button"  value="No" name="helpful"/> \
+                </form></div>';
         },
         feedback: function(txt) {
             var self = this;
