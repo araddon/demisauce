@@ -15,7 +15,7 @@
     <div id="cmsitem_${item.id}" class="nodedisplay clearfix">
         <div class="content_block">
 
-            ${h.link_to(item.subject, h.url(action="edit", id=item.id), class_="title")},
+            ${h.link_to(item.subject, h.url(action="edit", id=item.id), class_="xtitle")},
             
             ${h.link_to('view xml', '/api/xml/email/%s' % item.key)}
 
@@ -40,7 +40,7 @@
     % for item in items:
         <tr class="${h.cycle("", "alternate") }">
             <td><input type="checkbox"/></td>
-            <td>${h.link_to(h.truncate(item.subject, 30), h.url(action="edit", id=item.id), class_="title")}</td>
+            <td>${h.link_to(h.truncate(item.subject, 30), h.url(action="edit", id=item.id), class_="xtitle")}</td>
             <td>${h.link_to('view xml', '/api/xml/email/%s' % item.key)}</td>
             <td>${h.simple_format(h.truncate(item.template, 30))}</td>
         </tr>

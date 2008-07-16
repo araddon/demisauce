@@ -393,8 +393,7 @@
             var self = this;
             var rid = $('#ds-cms-collection').attr('rid');
             var rating_val = ($(el).val() === 'Yes') ? '1': '-1';
-            alert(rating_val)
-            $(el).parent().parent().hide();
+              $(el).parent().parent().hide();
             var url = $.ds.make_url('/help/ratearticle',true);
             $.getJSON(url + '&jsoncallback=?', {resource_id:rid,rating:rating_val}, function(json){
                 $.ds.dsactivity({activity:"User submitted Help" ,category:"Help"});

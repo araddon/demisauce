@@ -15,7 +15,7 @@
 
         <div id="item_${item.id}" class="nodedisplay clearfix">
             % if item and item.person_id:
-                ${h.link_to('view user info', h.url(controller="account",action="view", id=item.id), class_="title")}
+                ${h.link_to('view user info', h.url(controller="account",action="view", id=item.person_id), class_="title")}
             % endif
             ${item.created}
         </div>

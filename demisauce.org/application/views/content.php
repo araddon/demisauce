@@ -18,7 +18,7 @@
             <div id="polltry2"></div>
             <script type="text/javascript">
             jQuery(document).ready(function() {
-                jQuery('#polltry2').dspoll({getremote:'aarons-third-poll--when-is-this-coming-out'});
+                jQuery('#polltry2').dspoll({getremote:'aarons-third-poll-when-is-this-coming-out'});
             });
             </script>
             

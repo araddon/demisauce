@@ -51,7 +51,7 @@
             <td><input type="checkbox"/></td>
             <td>
                 % if item.isuser:
-                    ${h.link_to(item.email, '/account/viewh/%s' % item.hashedemail, class_="title")}
+                    ${h.link_to(item.email, '/account/viewh/%s' % item.hashedemail, class_="xtitle")}
                 % else:
                     ${item.email}, ${item.isuser}
                 % endif

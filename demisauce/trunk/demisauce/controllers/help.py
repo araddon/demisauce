@@ -30,7 +30,10 @@ class HelpFormValidation(formencode.Schema):
 class HelpController(BaseController):
     
     def index(self):
-        return render('/help/help.html')
+        data = {'success':True,'help_id':1,'html':render('/help/help.html')}
+        json = simplejson.dumps(data)
+        #response.headers['Content-Type'] = 'text/json'
+        return '[%s]' % (json)
     
     def ratearticle(self,id=''):
         site = Site.by_slug(str(id))
@@ -42,7 +45,7 @@ class HelpController(BaseController):
             displayname = 'anonymous'
             if c.user:
                 userid = c.user.id
-                c.user.displayname = displayname
+                displayname = c.user.displayname
             rating_val = int(request.params['rating'])
             r = Rating(userid,'/ds/help/article',rating_val,sanitize(request.params['resource_id']),displayname)
             r.save()

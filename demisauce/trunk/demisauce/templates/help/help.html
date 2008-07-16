@@ -9,7 +9,9 @@
         <h3>Help Configuration Page</h3>
     </div>
     <div>
+    % if c.item:
     ${site.help_config(c.item)}
+    % endif
     </div>
 </div>
 
