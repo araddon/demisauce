@@ -8,7 +8,7 @@ from sqlalchemy.types import Integer, String as DBString
 from sqlalchemy.types import Text as DBText, DateTime
 from demisauce import model
 from demisauce.model import meta, ModelBase, site
-
+from demisauce.model.dsremote import DemisauceAggregator
 from datetime import datetime
 
 # Define a table.
@@ -33,6 +33,8 @@ class Email(object,ModelBase):
         self.key = self.makekey(subject)
         self.site = meta.DBSession.query(model.site.Site).get(site_id)
         self.from_email = self.site.email
+        print 'in email init'
+        self.dsremote = DemisauceAggregator()
     
     def __str__(self):
         return 'email subject=%s key = %s' % (self.subject,self.key)
