@@ -18,12 +18,21 @@ import datetime
 import logging
 import time
 import urlparse
+from demisaucepy import demisauce_ws, hash_email, \
+    Comment, Person as DemisaucePerson
 DSDEBUG = False
 _modeltype_map = {}
+log = logging.getLogger(__name__)
+
+class RetrievalError(Exception):
+    """No result?"""
+
 class MappingError(Exception):
     """what?"""
+
 class ConfigurationError(Exception):
     """Raised when the config key is improperly configured."""
+
 class DuplicateMapping(Exception):
     """Raised when the same demisauce entity type is declared for 
     a class or inheritied class with the same name."""
@@ -35,9 +44,15 @@ class Aggregate(object):
     local_key (optional, defaults to id) used for joins
     lazy = (true/false) optional, defaults to True
     """
-    def __init__(self, name,lazy=True,local_key="id"):
+    def __init__(self, name='',lazy=True,local_key="id"):
         super(Aggregate, self).__init__()
         self.name = name
+        self.lazy = lazy
+        self._loaded = False
+        self.islist = True
+        print 'local_key = %s' % local_key
+        
+        self.local_key = local_key
     
     def __get__(self, model_instance, model_class):
         """Returns the entity collection/item appropriate
@@ -46,14 +61,36 @@ class Aggregate(object):
         or this article:
         http://pythonisito.blogspot.com/2008/07/restfulness-in-turbogears.html
         """
-        print 'in __get__  %s' % (model_instance)
         if model_instance is None:
             return self
-
+        
         try:
+            # lazy load it?
+            if self.lazy and not self._loaded:
+                print '68 about to get lazy loaded %s' % (self.name)
+                print model_instance
+                print self.local_key
+                key = getattr(model_instance, self.local_key)
+                print 'key = %s' % key
+                dsitem = demisauce_ws(self.name,key,format='xml')
+                if dsitem.success == True:
+                    print dsitem.data
+                    return dsitem.xml_node._xmlhash[self.name]
+                else:
+                    raise RetrievalError('no result %s' % dsitem.data)
+                setattr(model_instance, self._attr_name(), [])
             return getattr(model_instance, self._attr_name())
         except AttributeError:
             return None
+    
+    def __set__(self, model_instance, value):
+        """Sets the value for this property on the given model instance.
+        
+        See http://docs.python.org/ref/descriptors.html for a description of
+        the arguments to this class and what they mean.
+        """
+        value = self.validate(value)
+        setattr(model_instance, self._attr_name(), value)
     
     def _attr_name(self):
         """internal name for demisauce entities"""
@@ -68,11 +105,23 @@ class Aggregate(object):
         model_class: Local model which remote demisauce entity model will belong to
         model_name: Name of model
         """
+        self.model_name = model_name
         self.model_class = model_class
-        if self.name is None:
-            self.name = '_%s' % model_name
     
 
+class has_a(Aggregate):
+    """Has a single"""
+    def __init__(self, name,**kwargs):
+        super(has_a, self).__init__(name,**kwargs)
+        self.islist = False
+    
+
+class has_many(Aggregate):
+    """Has many"""
+    def __init__(self, name,**kwargs):
+        super(has_many, self).__init__(name,kwargs)
+        self.islist = True
+    
 
 class AggregatorMeta(type):
     def __init__(cls, classname, bases, dict_):
@@ -127,7 +176,7 @@ def aggregator_callable(cls=object):
     class InternalBase(cls):
         __metaclass__ = AggregatorMeta
         def __init__(self, **kwargs):
-            print 'in ds_aggregator_callable Base inner cls=%s' % cls
+            pass
         
         @classmethod
         def kind(cls):
@@ -142,41 +191,11 @@ def aggregator_callable(cls=object):
     
     return InternalBase
 
-class YourCustomClass(object):
-    def __init__(self, arg):
-        super(YourCustomClass, self).__init__()
-        self.arg = arg
-    
-
-AggregatorCallableCustomInheritanceTest = aggregator_callable(YourCustomClass)
 Base = aggregator_callable()
+
 class Aggregagtor(Base):
-    #__metaclass__ = AggregatorMeta
-    pass
-
-
-class Person(Aggregagtor):
-    """
-    Demo person class, showing direct inheritance implementation
-    of Demisauce Aggregate Functions
-    """
-    comments = Aggregate('comments',lazy=True)
-    def __init__(self, displayname, email):
-        super(Person, self).__init__()
-        self.displayname = displayname
-        self.email = email
-    
-class TestCustomInheritance(AggregatorCallableCustomInheritanceTest):
-    def __init__(self, arg):
-        super(TestCustomInheritance, self).__init__()
-        self.arg = arg
-
+    def __init__(self,**kwargs):
+        super(Aggregagtor, self).__init__()
 
 if __name__ == "__main__":
-    print 'before ()'
-    t2 = Person('aaron','email@email.com')
-    t2.att2 = 'att2'
-    t3 = TestCustomInheritance('myarg')
-    t3.fake = 'good'
-    print t2.comments
-    assert t2.comments
+    print 'hello'

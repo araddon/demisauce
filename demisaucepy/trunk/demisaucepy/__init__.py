@@ -112,6 +112,26 @@ class Person(api_object):
             return None
     
 
+class Comment(api_object):
+    """
+    The Comment class
+    """
+    @classmethod
+    def by_name(cls,name=''):
+        """
+        Returns the comments record's
+        """
+        name = urllib.quote_plus(name)
+        dsitem = demisauce_ws('comment',name,format='xml')
+        if dsitem.success == True:
+            poll = dsitem.xml_node.comment
+            poll._xml = dsitem.data
+            return poll
+        else:
+            print dsitem.data
+            return None
+
+
 class Poll(api_object):
     """
     The Poll class

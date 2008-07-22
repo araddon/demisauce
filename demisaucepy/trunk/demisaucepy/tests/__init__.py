@@ -13,7 +13,6 @@ def load_config():
     cfg.CFG = LoadConfig("test.ini")
     from demisaucepy import pylons_helper as h
     h.CFG = cfg.CFG
-    print cfg.CFG
 
 load_config()
 
