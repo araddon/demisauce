@@ -7,6 +7,7 @@ from demisauce.model.activity import Activity
 from demisauce.model.person import Person, PersonValidation, \
     GuestValidation, PersonEditValidation, InviteValidation
 from demisauce.model.comment import Comment
+from demisauce.model.activity import Activity
 from formencode import Invalid, validators
 from formencode.validators import *
 import formencode, urllib
@@ -46,9 +47,8 @@ class AccountController(BaseController):
             delay = 4
             from demisauce.lib import scheduler
             for email in emails.split(','):
-                email = email.strip()
-                user = meta.DBSession.query(Person).filter_by(
-                        email=email).first()
+                email = email.strip().lower()
+                user = Person.by_email(c.user.site_id,email)
                 
                 if user is None:
                     user = Person(c.site_id,email, email)
@@ -59,6 +59,10 @@ class AccountController(BaseController):
                     dnew['link'] = '%s/account/verify?unique=%s&node=%s&return_url=%s' %\
                         (base_url(),user.user_uniqueid,user.id,url2)
                     dnew['from'] = c.user.displayname
+                    a = Activity(user.site_id,user.id,'sending email invite')
+                    a.ref_url = 'account admin invite'
+                    a.category = 'account'
+                    a.save()
                     scheduler.add_interval_task(send_emails,0,('invitation_to_demisauce',[user.email],dnew) , initialdelay=delay)
                     delay += 3
                 

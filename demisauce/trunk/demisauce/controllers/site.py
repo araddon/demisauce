@@ -34,7 +34,7 @@ class SiteController(NeedsadminController):
         else:
             c.item = Site.get(-1,c.user.site_id)
         return render('/site/site.html')
-        
+    
     def cmntconfig(self):
         c.item = Site.get(-1,c.user.site_id)
         return render('/site/comment.html')
