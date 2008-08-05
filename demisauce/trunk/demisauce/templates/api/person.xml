@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <demisauce>
 % for item in c.persons:
-    <person id="${item.id}" user_uniqueid="${item.user_uniqueid}">
+    <person id="${item.id}" foreign_id="${item.foreign_id}" user_uniqueid="${item.user_uniqueid}">
         <displayname>${item.displayname}</displayname>
         <created>${item.created}</created>
         <email>${item.email}</email>

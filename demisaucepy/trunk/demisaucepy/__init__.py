@@ -198,8 +198,9 @@ def demisauce_ws(method,resource_id,verb='get',data={},cfgl={},format='html'):
     useragent = 'DemisaucePY/1.0'
     try: 
         log.debug('url = %s' % item.url)
+        print item.url
         item.params = openanything.fetch(item.url, data=data,agent=useragent)
-        #print item.params['data']
+        #print item.params['status']
         if item.params['status'] == 500:
             item.message = 'there was an error on the demisauce server, \
                     no content was returned'

@@ -5,7 +5,7 @@ from demisaucepy.tests import *
 from demisaucepy import demisauce_ws, hash_email, \
     demisauce_ws_get, Comment, Person as DemisaucePerson
 from demisaucepy.declarative import Aggregagtor, has_a, \
-    has_many, aggregator_callable
+    has_many, aggregator_callable, AggregateView
 
 
 class AthletePerson(object):
@@ -22,9 +22,10 @@ class Person(Aggregagtor):
     of Demisauce Aggregate Functions
     """
     personext = has_a('person',lazy=True,local_key='hashed_email')
-    comments = has_many('comment',lazy=True)
+    comments = has_many('comment',lazy=True,local_key='id')
     def __init__(self, displayname, email):
         super(Person, self).__init__()
+        self.id = 145
         self.displayname = displayname
         self.email = email
         self.hashed_email = hash_email(email)
@@ -42,9 +43,13 @@ class test_aggregator(TestDSBase):
     Test aggregation
     """
     def test_aggregator_hasa(self):
-        p = Person('aaron','admin@demisauce.org')
+        p = Person('aaron','sysadmin@demisauce.org')
         assert type(p.personext) != None
-        assert p.personext.email == 'admin@demisauce.org'
-    
+        assert p.personext.model.email == 'sysadmin@demisauce.org'
+        assert p.comments.model != None
+        print 'p.__metaclass = %s' % p.__metaclass__.__name__
+        views = AggregateView(p.comments,['summary','detail'])
+        print 'views = %s' % views.views
+        print 'views.summary %s' % (views.views.summary) 
 
 

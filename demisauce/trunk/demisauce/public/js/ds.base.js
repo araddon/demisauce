@@ -45,7 +45,7 @@
             input_form_selector: '#ds-inputform-div',
             current_url : '',
             base_url: 'http://localhost:4950',
-            site_slug: 'enter your id here' // unique id for usage, set in admin panel
+            site_slug: 'enter your site id here' // unique id for usage, set in admin panel
         },
         prepLogon : function(el) {
             $(el).append('<div id="ds-logonform-div" style="display:none;"></div> \
@@ -250,18 +250,12 @@
         });
     }
     $.ds.comments = function(el, o) {
-        var options = {
-            base_url: '',
-            site_slug: ''
-        };
+        var options = {};
         $.ds.defaults.current_url = window.location.href;
-        o = o || {}; $.extend(options, o); //Extend and copy options
+        o = o || {}; $.extend(options, $.ds.defaults, o); //Extend and copy options
         this.element = el; var self = this; //Do bindings
         $.data(this.element, "ds-comments", this);
         self.options = options;
-        if (options.base_url != ''){
-            $.ds.defaults.base_url = options.base_url;
-        }
         $.ds.prepLogon(this.element);
     }
     
@@ -290,8 +284,6 @@
             resizable: true,
             script: false,
             content: {},
-            site_slug     : 'demisauce.org',
-            base_url     : 'http://localhost:4950',
             use_current_url: false,
             source_url:  '',
             url: '', // original url of click
@@ -319,7 +311,7 @@
             var qs = 'site_key&' + $.ds.defaults.site_slug; 
             qs += '&url=' + self.defaults.url; 
             return '<div id="ds-inputform-div"><iframe width="100%" height="390" frameborder="0" \
-            src="' + self.defaults.base_url + '/groupadmin/popup/' + self.defaults.site_slug +'?' + qs + '"  \
+            src="' + $.ds.defaults.base_url + '/groupadmin/popup/' + $.ds.defaults.site_slug +'?' + qs + '"  \
             allowtransparency="true" vspace="0" hspace="0" marginheight="0" marginwidth="0" \
             name="ds-input-form"></iframe></div>';
         },
@@ -331,7 +323,7 @@
             if (opts.use_current_url == true){
                 opts.script = true,
                 result = $.ds.parseUri(window.location.href);
-                opts.source_url = opts.base_url + opts.help_url + result.relative;
+                opts.source_url = $.ds.defaults.base_url + opts.help_url + result.relative;
                 opts.url = result.relative;
             }
             if (typeof($.hotkeys) != 'undefined'){
@@ -417,7 +409,7 @@
             var qs = 'site_key&' + $.ds.defaults.site_slug; 
             qs += '&url=' + self.options.url; 
             return '<div id="ds-inputform-div"><iframe width="100%" height="200" frameborder="0" \
-            src="' + self.options.base_url + '/help/feedback/' + self.options.site_slug +'?' + qs + '"  \
+            src="' + $.ds.defaults.base_url + '/help/feedback/' + $.ds.defaults.site_slug +'?' + qs + '"  \
             allowtransparency="true" vspace="0" hspace="0" marginheight="0" marginwidth="0" \
             name="ds-input-form"></iframe></div>';
         },

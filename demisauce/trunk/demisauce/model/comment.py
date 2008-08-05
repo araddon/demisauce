@@ -73,7 +73,10 @@ class Comment(object,ModelBase):
     @classmethod
     def for_url(cls,site,url):
         """Class method to get recent comments
-        for a specific site and url"""
+        for a specific site and url::
+            
+            Comment.for_url('http://www.example.com')
+        """
         return meta.DBSession.query(Comment).filter_by(site_id=site.id,
             uri=str(url).lower()).all()
         

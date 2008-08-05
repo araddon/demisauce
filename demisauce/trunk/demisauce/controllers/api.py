@@ -11,6 +11,7 @@ from demisauce.lib.base import *
 from demisauce import model
 from demisauce.model import meta, help, cms, person, \
     group, poll
+from demisauce.model.comment import Comment
 from demisauce.model.email import Email
 from paste.httpexceptions import HTTPException
 from paste.wsgiwrappers import WSGIResponse
@@ -115,12 +116,38 @@ class ApiController(BaseController):
         c.resource_id = id
         return render('/api/cmsjs.js')
     
-    def comment(self,format='html',id=''):
-        from demisauce.model.comment import Comment
-        c.items = meta.DBSession.query(Comment).all()
-        for comment in c.items:
-            print comment.uri
-        return 'hello'
+    def comment(self,format='json',id=''):
+        if not 'api.site' in request.environ:
+            return self.nokey()
+        
+        site = request.environ['api.site']
+        c.len = 0
+        if id != '' and id != None:
+            rid = urllib.unquote_plus(id)
+            print 'rid = %s' % rid
+            c.comments = Comment.for_url(site,rid)
+        else:
+            c.comments = Comment.all(site.id)
+        
+        c.resource_id = id
+        if c.comments == []:
+            log.debug('404, no comments rid=%s' % id)
+            abort(404, 'No items found')
+        
+        if format == 'html':
+            return render('/api/comment.html')
+        elif format == 'xml':
+            response.headers['Content-Type'] = 'application/xhtml+xml'
+            c.len = len(c.comments)
+            return render('/api/comment.xml')
+        elif format == 'view':
+            response.headers['Content-Type'] = 'application/xhtml+xml'
+            c.len = len(c.comments)
+            return render('/api/commentview.xml')
+        elif format == 'json':
+            return render('/api/comment.js')
+        else:
+            raise 'not implemented'
     
     def email(self,format='html',id=''):
         if not 'api.site' in request.environ:

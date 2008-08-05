@@ -12,7 +12,7 @@ Events and Mappings::
                     lazy=true,views=['summary','list','details'])
         def newuser_setup(entity):
             # your logic here
-
+            
 """
 import datetime
 import logging
@@ -50,9 +50,51 @@ class Aggregate(object):
         self.lazy = lazy
         self._loaded = False
         self.islist = True
-        print 'local_key = %s' % local_key
-        
         self.local_key = local_key
+        self.local_key_val = None
+    
+    def get_views(self,views=[]):
+        try:
+            print '58 about to get views %s' % (self.name)
+            print 'local_key = %s' % self.local_key
+            key = self.local_key_val
+            print 'key = %s' % (key)
+            dsitem = demisauce_ws(self.name,key,format='view')
+            if dsitem.success == True:
+                return dsitem.xml_node._xmlhash[self.name]
+            else:
+                raise RetrievalError('no result %s' % dsitem.data)
+            setattr(model_instance, self._attr_name(), [])
+            return getattr(model_instance, self._attr_name())
+        except AttributeError:
+            return None
+            
+    
+    def get_model(self):
+        """Returns the entity collection/item appropriate
+        """
+
+        try:
+            # lazy load it?
+            if self.lazy and not self._loaded:
+                print '79 about to get model lazy loaded %s' % (self.name)
+                print 'local_key = %s' % self.local_key
+                key = self.local_key_val
+                print 'key = %s' % key
+                dsitem = demisauce_ws(self.name,key,format='xml')
+                if dsitem.success == True:
+                    #setattr(model_instance, self._attr_name(), dsitem.xml_node._xmlhash[self.name])
+                    setattr(self, self._attr_name(), dsitem.xml_node._xmlhash[self.name])
+                    self._loaded = True
+                else:
+                    setattr(self, self._attr_name(), [])
+                    raise RetrievalError('no result %s' % dsitem.data)
+
+            #return getattr(model_instance, self._attr_name())
+            return getattr(self, self._attr_name())
+        except AttributeError:
+            return None
+    model = property(get_model)
     
     def __get__(self, model_instance, model_class):
         """Returns the entity collection/item appropriate
@@ -61,24 +103,26 @@ class Aggregate(object):
         or this article:
         http://pythonisito.blogspot.com/2008/07/restfulness-in-turbogears.html
         """
+        self.local_key_val = getattr(model_instance, self.local_key)
+        return self
         if model_instance is None:
             return self
         
         try:
             # lazy load it?
             if self.lazy and not self._loaded:
-                print '68 about to get lazy loaded %s' % (self.name)
-                print model_instance
-                print self.local_key
+                print '109 about to get lazy loaded %s' % (self.name)
+                print 'local_key = %s' % self.local_key
                 key = getattr(model_instance, self.local_key)
                 print 'key = %s' % key
                 dsitem = demisauce_ws(self.name,key,format='xml')
                 if dsitem.success == True:
-                    print dsitem.data
-                    return dsitem.xml_node._xmlhash[self.name]
+                    setattr(model_instance, self._attr_name(), dsitem.xml_node._xmlhash[self.name])
+                    self._loaded = True
                 else:
+                    setattr(model_instance, self._attr_name(), [])
                     raise RetrievalError('no result %s' % dsitem.data)
-                setattr(model_instance, self._attr_name(), [])
+            
             return getattr(model_instance, self._attr_name())
         except AttributeError:
             return None
@@ -126,7 +170,7 @@ class has_many(Aggregate):
 class AggregatorMeta(type):
     def __init__(cls, classname, bases, dict_):
         if DSDEBUG:
-            print 'in ds DemisauceDeclarativeMeta init classname = %s \n \
+            print 'in ds AggregatorMeta init classname = %s \n \
             bases = %s \n \
             dict_ = %s \n \
             cls = %s' % (classname, bases, dict_,cls)
@@ -196,6 +240,13 @@ Base = aggregator_callable()
 class Aggregagtor(Base):
     def __init__(self,**kwargs):
         super(Aggregagtor, self).__init__()
+        
+        
+class AggregateView(object):
+    def __init__(self,meta,views=[]):
+        # use metaclass info
+        self.views = meta.get_views(views)
+
 
 if __name__ == "__main__":
     print 'hello'

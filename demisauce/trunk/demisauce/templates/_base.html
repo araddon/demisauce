@@ -170,7 +170,7 @@
     </div>
     <script>
         jQuery(document).ready(function() {
-            
+
             //alert($.ds.gears)
             $.ds.gears.init({debug:false});
             
@@ -231,6 +231,7 @@
     <script type="text/javascript" >
         jQuery(document).ready(function($) {
             $.ds.defaults.site_slug = 'demisauce.org';
+            $.ds.defaults.base_url = '${c.base_url}';
         })
     </script>
     <script type="text/javascript" src="/js/ds.slugeditor.js"></script>

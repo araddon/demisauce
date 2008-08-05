@@ -93,6 +93,15 @@ class ModelBase:
         meta.DBSession.commit()
     
     @classmethod
+    def all(cls,site_id=0):
+        """Class method to get all
+        using the native SqlAlchemy get instead of site_id specific one"""
+        if site_id == -1:
+            return meta.DBSession.query(cls).all()
+        else:
+            return meta.DBSession.query(cls).filter_by(site_id=site_id,id=id).all()
+    
+    @classmethod
     def get(cls,site_id=0,id=0):
         """Class method to get by id
         using the native SqlAlchemy get instead of site_id specific one"""

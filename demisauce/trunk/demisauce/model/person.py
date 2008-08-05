@@ -20,6 +20,7 @@ from datetime import datetime
 person_table = Table("person", meta.metadata,
         Column("id", Integer, primary_key=True),
         Column("site_id", Integer, ForeignKey('site.id')),
+        Column("foreign_id", Integer, default=0),
         Column("email", DBString(255)),
         Column("displayname", DBString(50)),
         Column("created", DateTime,default=datetime.now()),
@@ -100,6 +101,7 @@ class Person(object,ModelBase):
     :url:  url to blog or site of user
     :authn:  local, google, openid, etc (which authN method to use)
     :user_uniqueid: uniqueid of user (random) for use in querystring's instead of id
+    :foreign_id:  id (number) of user within your system
     
     .. _Gravatar: http://www.gravatar.com/
     """
@@ -196,7 +198,6 @@ class Person(object,ModelBase):
                 site_id=self.site_id, hashedemail=self.hashedemail
                 ).order_by(model.comment.Comment.created.desc()).all()
     
-    
     def get_recent_activities(self,ct=5):
         return self.activities.order_by(Activity.created.desc()).limit(ct)
     recent_activities = property(get_recent_activities)
@@ -221,20 +222,6 @@ class Person(object,ModelBase):
     def __str__(self):
         return "id=%s, email=%s" % (self.id,self.email)
     
-    @classmethod
-    def get_by_sitexx(cls,site_id=0,id=0):
-        """
-        Class method to get person by, similar to Person.get()
-        except it ensures in the same site as user for 
-        in case they are munging with querystring etc.
-        
-        site_id
-            the id of site of current user
-        
-        id
-            id# of the person to get
-        """
-        return meta.DBSession.query(Person).filter_by(site_id=site_id,id=id).first()
     
     @classmethod
     def by_site(cls,site_id=0):
