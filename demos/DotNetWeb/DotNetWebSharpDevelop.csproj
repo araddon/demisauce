@@ -1,0 +1,58 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{AA5CAA33-5532-44B9-8D79-28FFEF0E50F4}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <RootNamespace>DotNetWeb</RootNamespace>
+    <AssemblyName>DotNetWeb</AssemblyName>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>Full</DebugType>
+    <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>False</DebugSymbols>
+    <DebugType>None</DebugType>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cmsitem.aspx" />
+    <None Include="index.aspx" />
+    <None Include="features.aspx" />
+    <None Include="blog.aspx" />
+    <None Include="peace.Master" />
+    <None Include="public\callout-bg.jpg" />
+    <None Include="public\nav-link-bg.jpg" />
+    <None Include="public\nav-link-hover-bg.jpg" />
+    <None Include="public\slogan-bamboo.jpg" />
+    <None Include="public\slogan-bg.jpg" />
+    <None Include="public\style.css" />
+    <None Include="public\top-link-bg.jpg" />
+    <None Include="public\whats-new.jpg" />
+    <None Include="simple.aspx" />
+    <None Include="Web.config" />
+    <Compile Include="peace.Master.cs" />
+    <Compile Include="peace.Master.designer.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="public" />
+    <ProjectReference Include="..\..\dotnet\library\Demisauce.csproj">
+      <Project>{8C4D99DF-784C-4321-AF53-430866245665}</Project>
+      <Name>Demisauce</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

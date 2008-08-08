@@ -3,16 +3,18 @@ Demisauce
 ===========
 
 `Demisauce
-<http://demisauce.googlecode.com>`_ is a set of web services to be utilized
+<http://www.demisauce.org>`_ is a set of web services to be utilized
 within other applications.  Instead of building on top of a content management
-framework etc, you can utilize these web services.
+framework etc, you can utilize these web services.  See more at the web site.
 
 * Content Management:  Get Chunks of Content (XML, Html) for inclusion
   in the output of your pages using your templating.
 
 * Email templates:  get email template (XML) for sending of emails.
 
-* Administration pages to edit email, content items for use in your app.
+* Polls:
+
+* Comment System
 
 
 Download and Installation

@@ -16,7 +16,6 @@ from demisauce.model.help import Help
 from demisauce.model.cms import Cmsitem
 from demisauce.model.rating import Rating
 
-
 log = logging.getLogger(__name__)
 
 class RestMeta(type):
@@ -24,10 +23,11 @@ class RestMeta(type):
         cls = type.__new__(meta, name, bases, dct)
         allowed_methods = cls.allowed_methods = {}
         for name, value in dct.items():
-            print name, value
+            #print name, value
             if callable(value) and getattr(value, 'exposed', False):
                 allowed_methods[name] = value
         return cls
+
 class ExposedDescriptor(object):
     def __get__(self, obj, cls=None):
         if cls is None: cls = obj
@@ -36,6 +36,7 @@ class ExposedDescriptor(object):
         if methodname not in allowed_methods:
             raise 'hello'
         return True
+
 class RestMethod(object):
     __metaclass__ = RestMeta
     exposed = ExposedDescriptor()
@@ -47,6 +48,14 @@ class RestMethod(object):
     def __iter__(self):
         return iter(self.result)
     
+
+def make_restful(func):
+    """??"""
+    def wrapper(*arg):
+        print 'in make_restful.wrapper %s' % func
+        return func.inner1
+    return wrapper
+
 
 
 class HelpFormValidation(formencode.Schema):
@@ -71,11 +80,20 @@ class HelpController(BaseController):
         # NOT exposed, for some reason
         def delete(self, **kw):
             return dict(method='DELETE', args=kw)
+    
     def index(self):
         data = {'success':True,'help_id':1,'html':render('/help/help.html')}
         json = simplejson.dumps(data)
         #response.headers['Content-Type'] = 'text/json'
         return '[%s]' % (json)
+    
+    @make_restful
+    def aaron(self,id=''):
+        def inner1(*arg):
+            return 'hello1'
+        def inner2(*arg):
+            return 'hello2'
+        
     
     def ratearticle(self,id=''):
         site = Site.by_slug(str(id))

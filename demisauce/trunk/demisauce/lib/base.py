@@ -86,6 +86,19 @@ def print_timing(func):
         return res
     
     return wrapper
+    
+def requires(func):
+    """demands a """
+    def wrapper(*arg):
+        t2 = time.clock()
+        res = func(*arg)
+        t3 = time.clock()
+        url = request.environ['PATH_INFO']
+        method = request.environ['REQUEST_METHOD']
+        log.debug('%s %s took %0.3fms  %s, %s' % (method,url, (t3-t2)*1000.0,t3,t2))
+        return res
+
+    return wrapper
 
 
 class BaseController(WSGIController):

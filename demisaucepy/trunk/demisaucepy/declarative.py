@@ -40,9 +40,11 @@ class DuplicateMapping(Exception):
 class Aggregate(object):
     """
     An entity mapper for remote entities
-    name = comments, person, email, poll, etc
-    local_key (optional, defaults to id) used for joins
-    lazy = (true/false) optional, defaults to True
+    *construction parameters*
+    :name: comments, person, email, poll, etc 
+        (must be a demisauce entity type)
+    :lazy: (true/false) optional, defaults to True
+    :local_key: (optional, defaults to id) used for joins
     """
     def __init__(self, name='',lazy=True,local_key="id"):
         super(Aggregate, self).__init__()
@@ -56,10 +58,9 @@ class Aggregate(object):
     def get_views(self,views=[]):
         try:
             print '58 about to get views %s' % (self.name)
-            print 'local_key = %s' % self.local_key
             key = self.local_key_val
-            print 'key = %s' % (key)
-            dsitem = demisauce_ws(self.name,key,format='view')
+            #TODO:  which view's?   all or just requested?
+            dsitem = demisauce_ws(self.name,key,format='view',data={'views':views})
             if dsitem.success == True:
                 return dsitem.xml_node._xmlhash[self.name]
             else:
@@ -68,7 +69,8 @@ class Aggregate(object):
             return getattr(model_instance, self._attr_name())
         except AttributeError:
             return None
-            
+    
+    views = property(get_views)
     
     def get_model(self):
         """Returns the entity collection/item appropriate
@@ -77,7 +79,7 @@ class Aggregate(object):
         try:
             # lazy load it?
             if self.lazy and not self._loaded:
-                print '79 about to get model lazy loaded %s' % (self.name)
+                print '82 about to get model lazy loaded %s' % (self.name)
                 print 'local_key = %s' % self.local_key
                 key = self.local_key_val
                 print 'key = %s' % key
@@ -94,6 +96,7 @@ class Aggregate(object):
             return getattr(self, self._attr_name())
         except AttributeError:
             return None
+    
     model = property(get_model)
     
     def __get__(self, model_instance, model_class):
@@ -199,7 +202,7 @@ class AggregatorMeta(type):
                 cls._dsmappings[attr_name] = attr
                 attr.__ds_mapping_config__(cls, attr_name)
         
-        _modeltype_map[cls.kind()] = cls
+        #_modeltype_map[cls.kind()] = cls
         
         if not hasattr(cls, 'publishes_to'):
             cls._publishes_to = []
@@ -240,12 +243,14 @@ Base = aggregator_callable()
 class Aggregagtor(Base):
     def __init__(self,**kwargs):
         super(Aggregagtor, self).__init__()
-        
+    
+
         
 class AggregateView(object):
     def __init__(self,meta,views=[]):
         # use metaclass info
         self.views = meta.get_views(views)
+    
 
 
 if __name__ == "__main__":

@@ -14,6 +14,14 @@ __license__ = 'Python'
 import urllib2, urlparse, gzip, urllib
 from StringIO import StringIO
 
+ISGAE = False
+
+try:
+    from google.appengine.api import urlfetch
+    ISGAE = True
+except ImportError:
+    pass
+
 USER_AGENT = 'OpenAnything/%s +http://diveintopython.org/http_web_services/' % __version__
 
 class SmartRedirectHandler(urllib2.HTTPRedirectHandler):

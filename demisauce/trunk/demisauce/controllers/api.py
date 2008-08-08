@@ -22,7 +22,6 @@ log = logging.getLogger(__name__)
 class ApiController(BaseController):
     def __before__(self):
         BaseController.__before__(self)
-        #log.error('API' + request.environ["PATH_INFO"])
         # Authentication required?
         if 'apikey' in request.params:
             apikey = request.params['apikey']
@@ -124,20 +123,22 @@ class ApiController(BaseController):
         c.len = 0
         if id != '' and id != None:
             rid = urllib.unquote_plus(id)
-            print 'rid = %s' % rid
+            log.info('rid= %s' % id)
             c.comments = Comment.for_url(site,rid)
         else:
             c.comments = Comment.all(site.id)
         
         c.resource_id = id
         if c.comments == []:
-            log.debug('404, no comments rid=%s' % id)
+            log.info('404, no comments id=%s' % id)
             abort(404, 'No items found')
         
         if format == 'html':
             return render('/api/comment.html')
         elif format == 'xml':
             response.headers['Content-Type'] = 'application/xhtml+xml'
+            if 'views' in request.params:
+                c.views = request.params['views']
             c.len = len(c.comments)
             return render('/api/comment.xml')
         elif format == 'view':
