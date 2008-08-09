@@ -4,6 +4,7 @@
 ####### custom settings
 DEMISAUCE_APIKEY = 'a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202'
 DEMISAUCE_URL = 'http://localhost:4951'
+DEMISAUCE_APPNAME = 'djangodemo'
 
 ######## end custom
 DEBUG = True
@@ -21,6 +22,10 @@ DATABASE_USER = ''             # Not used with sqlite3.
 DATABASE_PASSWORD = ''         # Not used with sqlite3.
 DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
 DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
+
+#CACHE_BACKEND = 'locmem:///'
+CACHE_BACKEND = 'memcached://192.168.125.132:11211/'
+
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name

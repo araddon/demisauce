@@ -18,6 +18,7 @@ import datetime
 import logging
 import time
 import urlparse
+from demisaucepy import cfg
 from demisaucepy import demisauce_ws, hash_email, \
     Comment, Person as DemisaucePerson
 DSDEBUG = False
@@ -46,14 +47,17 @@ class Aggregate(object):
     :lazy: (true/false) optional, defaults to True
     :local_key: (optional, defaults to id) used for joins
     """
-    def __init__(self, name='',lazy=True,local_key="id"):
+    def __init__(self, name, **kwargs):
         super(Aggregate, self).__init__()
         self.name = name
-        self.lazy = lazy
+        if 'lazy' in kwargs:
+            self.lazy = kwargs['lazy']
         self._loaded = False
         self.islist = True
-        self.local_key = local_key
+        if 'local_key' in kwargs:
+            self.local_key = kwargs['local_key']
         self.local_key_val = None
+        self._model_instance = None
     
     def get_views(self,views=[]):
         try:
@@ -73,28 +77,32 @@ class Aggregate(object):
     views = property(get_views)
     
     def get_model(self):
-        """Returns the entity collection/item appropriate
-        """
-
+        """Returns the entity collection/item appropriate"""
+        #print 'in get_model lazy=%s, %s' % (self.lazy,self._model_instance._dsmodel_loaded)
+        # lazy load it?
+        if self.lazy and not self._model_instance._dsmodel_loaded:
+            #print '82 about to get model lazy loaded %s' % (self.name)
+            #print 'local_key = %s classname=%s' % (self.local_key,self.model_class_name)
+            key = '/'.join([cfg.CFG['demisauce.appname'],self.model_class_name,str(self.local_key_val)])
+            print 'key = %s' % key
+            dsitem = demisauce_ws(self.name,key,format='xml')
+            if dsitem.success == True:
+                #setattr(model_instance, self._attr_name(), dsitem.xml_node._xmlhash[self.name])
+                setattr(self._model_instance, self._attr_name(), dsitem.xml_node._xmlhash[self.name])
+                self._model_instance._dsmodel_loaded = True
+            else:
+                setattr(self._model_instance, self._attr_name(), [])
+                #raise RetrievalError('no result %s' % dsitem.data)
+        
+        else:
+            print '95:  is loaded'
+        
+        #return getattr(model_instance, self._attr_name())
+        return getattr(self._model_instance, self._attr_name())
         try:
-            # lazy load it?
-            if self.lazy and not self._loaded:
-                print '82 about to get model lazy loaded %s' % (self.name)
-                print 'local_key = %s' % self.local_key
-                key = self.local_key_val
-                print 'key = %s' % key
-                dsitem = demisauce_ws(self.name,key,format='xml')
-                if dsitem.success == True:
-                    #setattr(model_instance, self._attr_name(), dsitem.xml_node._xmlhash[self.name])
-                    setattr(self, self._attr_name(), dsitem.xml_node._xmlhash[self.name])
-                    self._loaded = True
-                else:
-                    setattr(self, self._attr_name(), [])
-                    raise RetrievalError('no result %s' % dsitem.data)
-
-            #return getattr(model_instance, self._attr_name())
-            return getattr(self, self._attr_name())
+            pass
         except AttributeError:
+            print 'in error'
             return None
     
     model = property(get_model)
@@ -106,29 +114,12 @@ class Aggregate(object):
         or this article:
         http://pythonisito.blogspot.com/2008/07/restfulness-in-turbogears.html
         """
+        if not hasattr(model_instance,'_dsmodel_loaded'):
+            setattr(model_instance, '_dsmodel_loaded', False)
+        #print 'in __get__ %s, class=%s,  name=%s' %(model_instance,model_class,self.name)
+        self._model_instance = model_instance
         self.local_key_val = getattr(model_instance, self.local_key)
         return self
-        if model_instance is None:
-            return self
-        
-        try:
-            # lazy load it?
-            if self.lazy and not self._loaded:
-                print '109 about to get lazy loaded %s' % (self.name)
-                print 'local_key = %s' % self.local_key
-                key = getattr(model_instance, self.local_key)
-                print 'key = %s' % key
-                dsitem = demisauce_ws(self.name,key,format='xml')
-                if dsitem.success == True:
-                    setattr(model_instance, self._attr_name(), dsitem.xml_node._xmlhash[self.name])
-                    self._loaded = True
-                else:
-                    setattr(model_instance, self._attr_name(), [])
-                    raise RetrievalError('no result %s' % dsitem.data)
-            
-            return getattr(model_instance, self._attr_name())
-        except AttributeError:
-            return None
     
     def __set__(self, model_instance, value):
         """Sets the value for this property on the given model instance.
@@ -136,14 +127,14 @@ class Aggregate(object):
         See http://docs.python.org/ref/descriptors.html for a description of
         the arguments to this class and what they mean.
         """
-        value = self.validate(value)
+        print 'in set attr %s' % (value)
         setattr(model_instance, self._attr_name(), value)
     
     def _attr_name(self):
         """internal name for demisauce entities"""
         return '_' + self.name
     
-    def __ds_mapping_config__(self, model_class, model_name):
+    def __ds_mapping_config__(self, model_class, model_class_name, attr_name):
         """Configure mapping, relating a demisauce remote
         entity model to its local python class.  The local python
         model name forms part of the type
@@ -152,7 +143,7 @@ class Aggregate(object):
         model_class: Local model which remote demisauce entity model will belong to
         model_name: Name of model
         """
-        self.model_name = model_name
+        self.model_class_name = model_class_name
         self.model_class = model_class
     
 
@@ -166,7 +157,7 @@ class has_a(Aggregate):
 class has_many(Aggregate):
     """Has many"""
     def __init__(self, name,**kwargs):
-        super(has_many, self).__init__(name,kwargs)
+        super(has_many, self).__init__(name,**kwargs)
         self.islist = True
     
 
@@ -179,10 +170,10 @@ class AggregatorMeta(type):
             cls = %s' % (classname, bases, dict_,cls)
         
         super(AggregatorMeta, cls).__init__(classname, bases, dict_)
-        
         cls._dsmappings = {}
         defined = set()
         for base in bases:
+            #print 'base %s' % (base)
             if hasattr(base, '_dsmappings'):
                 dsmappings_keys = base._dsmappings.keys()
                 duplicate_mappings = defined.intersection(dsmappings_keys)
@@ -200,7 +191,7 @@ class AggregatorMeta(type):
                     raise DuplicateMapping('Duplicate mapping: %s' % attr_name)
                 defined.add(attr_name)
                 cls._dsmappings[attr_name] = attr
-                attr.__ds_mapping_config__(cls, attr_name)
+                attr.__ds_mapping_config__(cls, classname,attr_name)
         
         #_modeltype_map[cls.kind()] = cls
         

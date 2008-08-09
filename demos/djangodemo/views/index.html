@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% load cache %}
+
+
+
 
 {% block title %}hello, title{% endblock %}
 
@@ -7,22 +11,29 @@
 {% block content %}
 {% if entry_list %}
     
+    {% cache 50000 sidebar %}
+        .. cached item with changesffaaa aaa ..
+    {% endcache %}
     {% for entry in entry_list %}
     <div class="post">
         <h1 class="title"><a href="/blog/view/{{ entry.id }}">{{ entry.title }}</a></h1>
         <p class="byline"><small>Posted on {{ entry.pub_date|date:"F d, Y" }} 
             by <a href="#">admin</a> | <a href="#">Edit</a></small></p>
         <div class="entry">
-    		{{ entry.content }}
-    		
-    		{% if entry.comments %}
-    		<br /><br />
-    		has comments  {{ entry.comments.model.created }}
-    		{% else %}
-    		no comments
-    		{% endif %}
-    	</div>
-    	<p class="meta"><a href="#" class="more">Read More</a> &nbsp;&nbsp;&nbsp; <a href="#" class="comments">Comments (33)</a></p>
+            {{ entry.content }}
+            
+
+        </div>
+        <p class="meta"><a href="#" class="more">Read More</a> &nbsp;&nbsp;&nbsp; <a href="#" class="comments">Comments (33)</a></p>
+        {% if show_comments %}
+            {% if entry.comments %}
+                {% for comment in entry.comments.model %}
+                    <br />{{ comment.comment }}
+                {% endfor %}
+            {% else %}
+            no comments
+            {% endif %}
+        {% endif %}
     </div>
     {% endfor %}
     

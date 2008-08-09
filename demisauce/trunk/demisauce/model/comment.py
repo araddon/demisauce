@@ -77,8 +77,9 @@ class Comment(object,ModelBase):
             
             Comment.for_url('http://www.example.com')
         """
-        return meta.DBSession.query(Comment).filter_by(site_id=site.id,
+        qry = meta.DBSession.query(Comment).filter_by(site_id=site.id,
             uri=str(url).lower()).all()
+        return qry
         
     
 

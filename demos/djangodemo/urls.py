@@ -18,6 +18,7 @@ urlpatterns = patterns('',
     #(r'^blog/(.*)', djangodemo.blog.views),
     (r'^blog/$', 'djangodemo.blog.views.index'),
     (r'^blog/view/(?P<id>\d+)', 'djangodemo.blog.views.view'),
+    (r'^status/cache/$', 'djangodemo.blog.memcached_status.view'),
     
     
 
