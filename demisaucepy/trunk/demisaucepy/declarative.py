@@ -60,21 +60,27 @@ class Aggregate(object):
         self._model_instance = None
     
     def get_views(self,views=[]):
+        print '58 about to get views %s' % (self.name)
+        key = self.key()
+        #TODO:  which view's?   all or just requested?
+        dsitem = demisauce_ws(self.name,key,format='view',data={'views':views})
+        if dsitem.success == True:
+            return dsitem.xml_node._xmlhash[self.name]
+        else:
+            pass
+            #raise RetrievalError('no result %s' % dsitem.data)
+        setattr(self._model_instance, self._attr_name(), [])
+        return getattr(self._model_instance, self._attr_name())
+        
         try:
-            print '58 about to get views %s' % (self.name)
-            key = self.local_key_val
-            #TODO:  which view's?   all or just requested?
-            dsitem = demisauce_ws(self.name,key,format='view',data={'views':views})
-            if dsitem.success == True:
-                return dsitem.xml_node._xmlhash[self.name]
-            else:
-                raise RetrievalError('no result %s' % dsitem.data)
-            setattr(model_instance, self._attr_name(), [])
-            return getattr(model_instance, self._attr_name())
+            pass
         except AttributeError:
             return None
     
     views = property(get_views)
+    
+    def key(self):
+        return '/'.join([cfg.CFG['demisauce.appname'],self.model_class_name,str(self.local_key_val)])
     
     def get_model(self):
         """Returns the entity collection/item appropriate"""
@@ -83,7 +89,7 @@ class Aggregate(object):
         if self.lazy and not self._model_instance._dsmodel_loaded:
             #print '82 about to get model lazy loaded %s' % (self.name)
             #print 'local_key = %s classname=%s' % (self.local_key,self.model_class_name)
-            key = '/'.join([cfg.CFG['demisauce.appname'],self.model_class_name,str(self.local_key_val)])
+            key = self.key()
             print 'key = %s' % key
             dsitem = demisauce_ws(self.name,key,format='xml')
             if dsitem.success == True:
@@ -94,15 +100,10 @@ class Aggregate(object):
                 setattr(self._model_instance, self._attr_name(), [])
                 #raise RetrievalError('no result %s' % dsitem.data)
         
-        else:
-            print '95:  is loaded'
-        
-        #return getattr(model_instance, self._attr_name())
         return getattr(self._model_instance, self._attr_name())
         try:
             pass
         except AttributeError:
-            print 'in error'
             return None
     
     model = property(get_model)

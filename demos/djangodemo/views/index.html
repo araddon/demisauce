@@ -11,7 +11,7 @@
 {% block content %}
 {% if entry_list %}
     
-    {% cache 50000 sidebar %}
+    {% cache 50 sidebar %}
         .. cached item with changesffaaa aaa ..
     {% endcache %}
     {% for entry in entry_list %}

@@ -18,6 +18,7 @@ from demisauce.model import mapping, meta
 from demisauce.model.person import Person
 import tempita
 
+
 log = logging.getLogger(__name__)
 
 # create scheduler
@@ -51,8 +52,31 @@ def send_emails(email_template,recipient_list,substitution_dict=None):
         return 'invalid api key'
 
 
-
 base_url = h.base_url
+
+def get_current_user():
+    """get current user"""
+    user = None
+    if 'user' in session and type(session['user']) == Person:
+        user = session['user']
+    elif 'userkey' in request.cookies:
+        user = Person.by_unique(request.cookies['userkey'].lower())
+    return user
+
+
+def requires_role(role):
+    def wrapper(target):
+        user = users.get_current_user()
+        if not user:
+            self.redirect(users.create_login_url(self.request.uri))
+            return
+            raise self.error(403)
+        elif not users.is_current_user_admin():
+            return self.error(403)
+        else:
+            return target
+    return wrapper
+
 
 def rendertf(filename,vars=[]):
     """Render a Tempita File"""
@@ -117,29 +141,22 @@ class BaseController(WSGIController):
             request.cookies['userkey']
             session['current_user_person'] = user
         """
+        c.form_errors = c.form_errors or {}
+        c.user = get_current_user()
+        if c.user:
+            c.site_id = c.user.site_id
+        c.base_url = h.base_url()
+        c.help_url = h.help_url()
+        c.adminsite_slug = 'demisauce.org'
+        
         # Authentication required?
-        if self.requires_auth and 'user' not in session:
+        if self.requires_auth and c.user == None:
             # Remember where we came from so that the user can be sent there
             # after a successful login
             session['return_url'] = request.path_info
             session.save()
             return redirect_to(h.url_for(controller='account',action='signin'))
         
-        c.form_errors = c.form_errors or {}
-        c.user = None
-        c.base_url = h.base_url()
-        c.help_url = h.help_url()
-        c.adminsite_slug = 'demisauce.org'
-        if 'user' in session and type(session['user']) == Person:
-            c.user = session['user']
-            c.site_id = c.user.site_id
-        elif 'userkey' in request.cookies:
-            user = meta.DBSession.query(Person).filter_by(
-                    user_uniqueid=request.cookies['userkey'].lower()).first()
-            if user:
-                c.user = user # per request user for comment system, not not authed
-        else:
-            pass
     
     @print_timing
     def __call__(self, environ, start_response):

@@ -58,6 +58,7 @@ class PollController(SecureController):
     def addupdate(self,id=0):
         if self.form_result['poll_id'] == "0":
             item = Poll(c.site_id, self.form_result['name'])
+            item.author = model.person.Person.get(c.site_id,c.user.id)
         else:
             id = self.form_result['poll_id']
             item = Poll.get(c.site_id,id)
@@ -71,6 +72,7 @@ class PollController(SecureController):
             item.css = self.form_result['css']
         item.save()
         q2 = sanitize(self.form_result['question'])
+        print 'q_ids %s' % self.form_result['q_ids']
         for qid in [t for t in self.form_result['q_ids'].strip().split(',') if t != '']:
             q = item.get_question(int(qid))
             if 'question_type' in self.form_result:
@@ -88,6 +90,7 @@ class PollController(SecureController):
             if request.POST['poll_id'] == "0":
                 item = Poll(c.site_id, sanitize(request.POST['name']))
                 item.person_id = c.user.id
+                item.key = request.POST['key']
                 if c.user:
                     item.person_id = c.user.id
             else:

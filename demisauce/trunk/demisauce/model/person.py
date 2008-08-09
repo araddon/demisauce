@@ -231,6 +231,11 @@ class Person(object,ModelBase):
         return meta.DBSession.query(Person).filter_by(site_id=site_id).all()
     
     @classmethod
+    def by_unique(self,user_unique=''):
+        """Get the user by Unique ID"""
+        return meta.DBSession.query(Person).filter_by(user_uniqueid=user_unique).first()
+        
+    @classmethod
     def by_hashedemail(self,site_id=0,hash=''):
         """Get the user by hashed email"""
         return meta.DBSession.query(Person).filter_by(site_id=site_id,hashedemail=hash).first()
