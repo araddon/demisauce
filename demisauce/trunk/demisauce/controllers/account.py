@@ -237,6 +237,7 @@ class AccountController(BaseController):
     
     @rest.dispatch_on(POST="signin_POST")
     def signin(self):
+        log.info('made it to account signin?' )
         if c.user:
             redirect_to(controller="home", action='index')
         elif 'userkey' in request.cookies:

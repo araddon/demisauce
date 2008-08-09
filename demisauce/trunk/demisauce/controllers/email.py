@@ -25,6 +25,7 @@ class EmailFormValidation(formencode.Schema):
 class EmailController(SecureController):
     requires_auth = True
     
+    #@requires_role('admin')
     @rest.dispatch_on(POST="addupdate")
     def index(self,id=0):
         if id > 0:
@@ -63,4 +64,10 @@ class EmailController(SecureController):
         if c.item == None and (id == None or id == 0):
             c.item = Email(c.site_id,'')
         return render('/email.html')
+        
+    @requires_role('abogusrolefortesting')
+    def testsecurity(self,id=0):
+        """This is only for unit tests to ensure we don't have
+        access as it requires a non existent role"""
+        return 'failed test security'
     

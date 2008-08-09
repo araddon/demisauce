@@ -17,7 +17,7 @@ import demisauce.model as model
 from demisauce.model import mapping, meta
 from demisauce.model.person import Person
 import tempita
-
+from functools import wraps
 
 log = logging.getLogger(__name__)
 
@@ -64,18 +64,49 @@ def get_current_user():
     return user
 
 
-def requires_role(role):
-    def wrapper(target):
-        user = users.get_current_user()
-        if not user:
-            self.redirect(users.create_login_url(self.request.uri))
-            return
-            raise self.error(403)
-        elif not users.is_current_user_admin():
-            return self.error(403)
+# TODO:  cleanup, this isn't used?
+def requires_admin(method):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        user = get_current_user()
+        if not user or user.has_role(['admin','sysadmin']) == False:
+            session['return_url'] = request.path_info
+            session.save()
+            log.info('403, current user doesnt have role=%s' % ('admin'))
+            if user:
+                h.add_alert('Not Authorized')
+                return self.redirect(h.url_for(controller='dashboard',action='index'))
+            else:
+                h.add_alert('Must Sign In')
+                return self.redirect(h.url_for(controller='account',action='signin'))
         else:
-            return target
+            return method(self, *args)
     return wrapper
+
+def requires_role(role):
+    def decorator(target):
+        def wrapper(self, *args, **kwargs):
+            user = get_current_user()
+            if not user or user.has_role(role) == False:
+                session['return_url'] = request.path_info
+                session.save()
+                #abort(403, 'Not authorized')
+                if user and (not request.environ['pylons.routes_dict']['controller'] == 'dashboard'):
+                    h.add_alert('Not Authorized')
+                    log.info('403, current user doesnt have role=%s redirect to dashboard' % (role))
+                    #redirect_to(h.url_for(controller='dashboard',action='index'))
+                    return self.redirect(h.url_for(controller='dashboard',action='index'))
+                else:
+                    h.add_alert('Must Sign In')
+                    log.info('not logged in or wrong role, about to redirect to signin' )
+                    #redirect_to(h.url_for(controller='account',action='signin'))
+                    return self.redirect(h.url_for(controller='account',action='signin'))
+            else:
+                log.info('wow, it is in else' )
+                #return target
+                return target(self, *args)
+        return wrapper
+    return decorator
 
 
 def rendertf(filename,vars=[]):
@@ -128,6 +159,11 @@ def requires(func):
 class BaseController(WSGIController):
     requires_auth = False
     
+    def redirect(self,url):
+        """docstring for redirect"""
+        log.info('sweet, made it to redirect' )
+        redirect_wsave(url)
+    
     def start_session(self,user):
         if user:
             session['user'] = user
@@ -148,15 +184,6 @@ class BaseController(WSGIController):
         c.base_url = h.base_url()
         c.help_url = h.help_url()
         c.adminsite_slug = 'demisauce.org'
-        
-        # Authentication required?
-        if self.requires_auth and c.user == None:
-            # Remember where we came from so that the user can be sent there
-            # after a successful login
-            session['return_url'] = request.path_info
-            session.save()
-            return redirect_to(h.url_for(controller='account',action='signin'))
-        
     
     @print_timing
     def __call__(self, environ, start_response):
@@ -175,17 +202,17 @@ class BaseController(WSGIController):
 class SecureController(BaseController):
     requires_auth = True
     
-class NeedsadminController(BaseController):
-    requires_auth = True
+    @requires_role('admin')
     def __before__(self):
         BaseController.__before__(self)
-        # Sys Admin Level Access Required
-        if not c.user:
-            return redirect_to(h.url_for(controller='account',action='signin'))
-        if not c.user.isadmin:
-            # Get Out Of Here
-            return redirect_to(h.url_for(controller='home',action='index'))
-        
+    
+
+class NeedsadminController(BaseController):
+    requires_auth = True
+    
+    @requires_role('sysadmin')
+    def __before__(self):
+        BaseController.__before__(self)
     
 
 

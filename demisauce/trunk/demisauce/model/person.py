@@ -102,6 +102,8 @@ class Person(object,ModelBase):
     :authn:  local, google, openid, etc (which authN method to use)
     :user_uniqueid: uniqueid of user (random) for use in querystring's instead of id
     :foreign_id:  id (number) of user within your system
+    :issysadmin:  is user a sysadmin (admin for all sites)
+    :isadmin:   is user an admin for current site
     
     .. _Gravatar: http://www.gravatar.com/
     """
@@ -222,6 +224,23 @@ class Person(object,ModelBase):
     def __str__(self):
         return "id=%s, email=%s" % (self.id,self.email)
     
+    
+    def has_role(self,role):
+        """returns true/false if a user has a specific role
+        or accepts a list of roles and if user has any of those roles"""
+        roles = []
+        if self.isadmin:
+            roles.append('admin')
+        if self.issysadmin:
+            roles.append('sysadmin')
+        if type(role) == list:
+            for r in role:
+                if r in roles:
+                    return True
+        else:
+            if role in roles:
+                return True
+        return False
     
     @classmethod
     def by_site(cls,site_id=0):

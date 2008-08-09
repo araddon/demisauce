@@ -1,3 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}me{% endblock %}
+
+
+{% block content %}
+
 <h1>cache status</h1>
 
 <ul>
@@ -37,3 +44,6 @@ bytes_read            {{ stats.bytes_read }}
 bytes_written         {{ stats.bytes_written }}
 limit_maxbytes        {{ stats.limit_maxbytes }}
 </pre>
+
+
+{% endblock %}
