@@ -68,33 +68,13 @@ class Aggregate(object):
             print '67 key = %s' % key
             dsitem = demisauce_ws(self.name,key,format='view')
             if dsitem.success == True:
-                #setattr(model_instance, self._attr_name(), dsitem.xml_node._xmlhash[self.name])
-                #setattr(self._model_instance, attr_instance_key, dsitem.data)
                 self.set_loaded(view_key,dsitem.data)
             else:
-                #setattr(self._model_instance, self._attr_name(), [])
                 self.set_loaded(view_key,[])
                 #raise RetrievalError('no result %s' % dsitem.data)
         else:
             print 'eh?  loaded? %s' % self._model_instance
-        #return getattr(self._model_instance, attr_instance_key)
         return self.get_loaded(view_key)
-        
-        
-        
-        
-        print '58 about to get views %s' % (self.name)
-        key = self.key()
-        #TODO:  which view's?   all or just requested?
-        #TODO:  lazy load
-        dsitem = demisauce_ws(self.name,key,format='view')
-        if dsitem.success == True:
-            return dsitem.data
-        else:
-            pass
-            #raise RetrievalError('no result %s' % dsitem.data)
-        setattr(self._model_instance, self._attr_name(), [])
-        return getattr(self._model_instance, self._attr_name())
         
         try:
             pass
@@ -130,19 +110,15 @@ class Aggregate(object):
             #print '82 about to get model lazy loaded %s' % (self.name)
             #print 'local_key = %s classname=%s' % (self.local_key,self.model_class_name)
             key = self.key()
-            print '93 key = %s' % key
+            print '113 key = %s' % key
             dsitem = demisauce_ws(self.name,key,format='xml')
             if dsitem.success == True:
-                #setattr(model_instance, self._attr_name(), dsitem.xml_node._xmlhash[self.name])
-                #setattr(self._model_instance, self._attr_name(), dsitem.xml_node._xmlhash[self.name])
                 self.set_loaded('model',dsitem.xml_node._xmlhash[self.name])
             else:
-                #setattr(self._model_instance, self._attr_name(), [])
                 self.set_loaded('model',[])
                 #raise RetrievalError('no result %s' % dsitem.data)
         else:
             print 'eh?  loaded? %s' % self._model_instance
-        #return getattr(self._model_instance, self._attr_name())
         return self.get_loaded('model')
         try:
             pass

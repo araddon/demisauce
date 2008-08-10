@@ -11,9 +11,7 @@
     </div>
     <div class="yui-g">
         <div class="yui-u first">
-            <div class="box box2">
-                <h3 style="">Approvals (error's, new site's etc)</h3>
-            </div>
+
             <div class="box box2">
                 <h3 style=""><a href="/helpadmin/process">Feedback/Support from Users (${c.new_ticket_ct} new)</a></h3>
                 ${mns_us.helplist(c.helptickets)}
@@ -25,7 +23,9 @@
                 <h3 style=""><a href="/comment">Recent Comments</a></h3>
                 ${mns_us.commentlist(c.comments)}
             </div>
-            
+            <div class="box box2">
+                <h3 style="">Approvals (error's, new site's etc)</h3>
+            </div>
         </div>
     </div>
     <!--
