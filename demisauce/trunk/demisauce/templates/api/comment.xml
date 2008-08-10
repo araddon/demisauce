@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<demisauce>
+% for item in c.comments:
+    <comment id="${item.id}">
+        <email>${item.email}</email>
+        <created>${item.created}</created>
+        <comment><![CDATA[${item.comment}]]></comment>
+    </comment>
+% endfor
+</demisauce>

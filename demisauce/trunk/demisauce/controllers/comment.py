@@ -5,7 +5,7 @@ from formencode import Invalid, validators
 from formencode.validators import *
 import formencode
 from demisauce.lib.base import *
-import demisauce.lib.sanitize
+#import demisauce.lib.sanitize
 from demisauce import model
 from demisauce.model import meta, mapping
 from demisauce.model.comment import *
@@ -106,6 +106,12 @@ class CommentController(BaseController):
     
     @rest.dispatch_on(POST="commentsubmit")
     def commentform(self,slug=0):
+        c.source = 'js'
+        if 'source' in request.params:
+            c.source = request.params['source']
+        c.resource_id = ''
+        if 'rid' in request.params:
+            c.resource_id = request.params['rid']
         if request.GET.has_key('url'):
             c.goto_url =  request.GET['url']
         else:
@@ -125,10 +131,10 @@ class CommentController(BaseController):
             if c.user:
                 item.set_user_info(c.user)
             else:
-                item.authorname = sanitize.Sanitize(self.form_result['authorname'])
-                item.blog = sanitize.Sanitize(self.form_result['blog'])
+                item.authorname = sanitize(self.form_result['authorname'])
+                item.blog = sanitize(self.form_result['blog'])
                 if self.form_result.has_key('email'):
-                    item.set_email(sanitize.Sanitize(self.form_result['email']))
+                    item.set_email(sanitize(self.form_result['email']))
                 if item.blog == "your blog url":
                     item.blog = ''
             if 'HTTP_X_FORWARDED_FOR' in request.environ:
@@ -136,9 +142,9 @@ class CommentController(BaseController):
             elif 'REMOTE_ADDR' in request.environ:
                 item.ip = request.environ['REMOTE_ADDR']
             
-            item.comment = sanitize.Sanitize(self.form_result['comment'])
+            item.comment = sanitize(self.form_result['comment'])
             if self.form_result.has_key('type'):
-                item.type = sanitize.Sanitize(self.form_result['type'])
+                item.type = sanitize(self.form_result['type'])
             else:
                 item.type = 'blogentry'
             
@@ -150,6 +156,9 @@ class CommentController(BaseController):
             else:
                 #TODO panic?
                 return
+                
+            if 'rid' in self.form_result:
+                item.uri = self.form_result['rid'].lower()
             
             item.save()
             
@@ -160,7 +169,17 @@ class CommentController(BaseController):
             scheduler.add_interval_task(send_emails,0,('comment-notification',[c.site.email],dnew) , initialdelay=4)
             # TODO  '?#demisauce-comments'
             c.goto_url = dest
-            return render('/refresh.html')
+            c.resource_id = ''
+            if 'rid' in self.form_result:
+                c.resource_id = self.form_result['rid']
+            source = 'js'
+            if 'source' in self.form_result:
+                source = self.form_result['source']
+            if source == 'js':
+                return render('/refresh.html')
+            else:
+                c.items = [item]
+                return render('/api/comment.html')
         else:
             #TODO panic?
             pass

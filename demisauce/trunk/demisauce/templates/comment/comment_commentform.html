@@ -7,6 +7,8 @@
         ${h.form(h.url(action='commentform'), id="commentform", method='post')}
             <input type="hidden" id="objectid" name="objectid" value="${(item and item.id) or '0'}" />
             <input type="hidden" id="site_key" name="site_key" value="${c.site_key}" />
+            <input type="hidden" id="source" name="source" value="${c.source}" />
+            <input type="hidden" id="rid" name="rid" value="${c.resource_id}" />
             % if c.user:
 
                 Post as:  ${c.user.displayname}
@@ -50,5 +52,6 @@
 <script type="text/javascript">
 $(document).ready(function(){
     $('#commentform').dshints();
+
 });
 </script>

@@ -68,6 +68,14 @@ TEMPLATE_LOADERS = (
 #     'django.template.loaders.eggs.load_template_source',
 )
 
+# DEMISAUCE MODS:  need context to add shared across all views
+TEMPLATE_CONTEXT_PROCESSORS = ("django.core.context_processors.auth",
+"django.core.context_processors.debug",
+"django.core.context_processors.i18n",
+"django.core.context_processors.media",
+"demisaucepy.django_helper.demisauce_vars")
+
+
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

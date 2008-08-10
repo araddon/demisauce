@@ -22,14 +22,16 @@
         <div class="entry">
             {{ entry.content }}
             
-
         </div>
-        <p class="meta"><a href="#" class="more">Read More</a> &nbsp;&nbsp;&nbsp; <a href="#" class="comments">Comments (33)</a></p>
+        <p class="meta">
+            <a href="#" class="more">Read More</a> &nbsp;&nbsp;&nbsp; 
+            <a href="#" class="comments">Comments (33)</a></p>
         {% if show_comments %}
             {% if entry.comments %}
-                {% for view in entry.comments.view %}
-                    <br />{{ comment.comment }}
-                {% endfor %}
+                {% autoescape off %}
+                {{ entry.comments.views }}
+                {% endautoescape %}
+                
             {% else %}
             no comments
             {% endif %}

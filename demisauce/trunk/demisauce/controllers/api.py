@@ -129,21 +129,21 @@ class ApiController(BaseController):
             c.comments = Comment.all(site.id)
         
         c.items = c.comments
-        c.resource_id = id
-        if c.comments == []:
-            log.info('404, no comments id=%s' % id)
-            abort(404, 'No items found')
+        c.resource_id = urllib.quote_plus(id)
         
         if format == 'html':
             return render('/api/comment.html')
         elif format == 'xml':
             response.headers['Content-Type'] = 'application/xhtml+xml'
-            if 'views' in request.params:
-                c.views = request.params['views']
+            if c.comments == []:
+                log.info('404, no comments id=%s' % id)
+                abort(404, 'No items found')
             c.len = len(c.comments)
             return render('/api/comment.xml')
         elif format == 'view':
             #response.headers['Content-Type'] = 'application/xhtml+xml'
+            c.show_form = True
+            c.source = 'remote_html'
             c.len = len(c.comments)
             return render('/api/comment.html')
         elif format == 'json':
