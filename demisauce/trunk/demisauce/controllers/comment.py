@@ -60,7 +60,7 @@ class CommentController(BaseController):
         elif c.user:
             c.items = Comment.by_site(c.user.site_id)
         return render('/comment/comment.html')
-        
+    
     def add(self,id=0):
         cmt = Comment(1)
         cmt.set_user_info(c.user)

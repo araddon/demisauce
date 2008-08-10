@@ -28,5 +28,8 @@ def make_map():
     #map.connect(':controller/:action/:id')
     map.connect(':controller/:action/:id')
     map.connect('*url', controller='template', action='view')
+    
+    #map.resource('message', 'messages')
+    
 
     return map

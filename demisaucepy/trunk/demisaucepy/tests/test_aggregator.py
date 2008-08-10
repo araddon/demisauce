@@ -47,9 +47,10 @@ class test_aggregator(TestDSBase):
         assert type(p.personext) != None
         assert p.personext.model.email == 'sysadmin@demisauce.org'
         assert p.comments.model != None
-        print 'p.__metaclass = %s' % p.__metaclass__.__name__
-        views = AggregateView(p.comments,['summary','detail'])
-        print 'views = %s' % views.views
-        print 'views.summary %s' % (views.views.summary) 
+        assert p.comments.view != None
+        assert 'Comments' in p.comments.views
+        print '%s' % p.comments.views
+        #TODO writes tests for aggregate view
+        #views = AggregateView(p.comments,['summary','detail'])
 
 

@@ -1,5 +1,5 @@
 
-CFG = {}
+CFG = {'demisauce.appname':'app'}
 
 
 

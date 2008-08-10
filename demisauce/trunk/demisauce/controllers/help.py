@@ -18,6 +18,8 @@ from demisauce.model.rating import Rating
 
 log = logging.getLogger(__name__)
 
+
+# http://pythonisito.blogspot.com/2008/07/restfulness-in-turbogears.html
 class RestMeta(type):
     def __new__(meta,name,bases,dct):
         cls = type.__new__(meta, name, bases, dct)
@@ -56,8 +58,6 @@ def make_restful(func):
         return func.inner1
     return wrapper
 
-
-
 class HelpFormValidation(formencode.Schema):
     """Form validation for the comment web admin"""
     allow_extra_fields = True
@@ -86,14 +86,6 @@ class HelpController(BaseController):
         json = simplejson.dumps(data)
         #response.headers['Content-Type'] = 'text/json'
         return '[%s]' % (json)
-    
-    @make_restful
-    def aaron(self,id=''):
-        def inner1(*arg):
-            return 'hello1'
-        def inner2(*arg):
-            return 'hello2'
-        
     
     def ratearticle(self,id=''):
         site = Site.by_slug(str(id))

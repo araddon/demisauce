@@ -27,7 +27,7 @@
         <p class="meta"><a href="#" class="more">Read More</a> &nbsp;&nbsp;&nbsp; <a href="#" class="comments">Comments (33)</a></p>
         {% if show_comments %}
             {% if entry.comments %}
-                {% for comment in entry.comments.model %}
+                {% for view in entry.comments.view %}
                     <br />{{ comment.comment }}
                 {% endfor %}
             {% else %}
