@@ -16,28 +16,43 @@ from demisauce.model.email import Email
 from paste.httpexceptions import HTTPException
 from paste.wsgiwrappers import WSGIResponse
 
-
 log = logging.getLogger(__name__)
+
+def requires_site(target):
+    """A decorator to protect the API methods to be able to
+    accept api by either apikey or logged on user, in future oath?
+    """
+    def decorator(self,*args):
+        site = get_current_site() 
+        if not site:
+            log.info('403, api call ' )
+            return self.nokey()
+        else:
+            return target(self,*args)
+    return decorator
+
+def requires_site_slug(target):
+    """allows access with only a slug which identifies a site
+    but isn't really secure  """
+    def decorator(self,*args):
+        site = get_current_site() 
+        if not site:
+            log.info('403, api call ' )
+            return self.nokey()
+        else:
+            return target(self,*args)
+    return decorator
 
 class ApiController(BaseController):
     def __before__(self):
         BaseController.__before__(self)
         # Authentication required?
-        if 'apikey' in request.params:
-            apikey = request.params['apikey']
-            site = meta.DBSession.query(model.site.Site).filter_by(key=apikey).first()
-            if site and site.id > 0:
-                request.environ['api.isauthenticated'] = 'true'
-                request.environ['api.site'] = site
-            c.site = site
-        elif c.user:
-            request.environ['api.site'] = c.user.site
+        if self.site and self.site.id > 0:
             request.environ['api.isauthenticated'] = 'true'
-            c.site = c.user.site
+            request.environ['site'] = self.site
         else:
             log.debug('no apikey or c.user')
         
-        c.demisauce_url = config['demisauce.url']
     
     def nokey(self):
         """
@@ -54,15 +69,14 @@ class ApiController(BaseController):
             'connected, valid api key' if api key is valid
             'invalid api key but connected' if api key isn't valid
         """
-        apikey = request.params['apikey']
-        site = meta.DBSession.query(model.site.Site).filter_by(key=apikey).first()
-        if site and site.id > 0:
+        if self.site and self.site.id > 0:
             return 'connected, valid api key'
         else:
             return 'invalid api key but connected'
     
+    @requires_site
     def cms(self,format='html',id=''):
-        if not 'api.site' in request.environ:
+        if not 'site' in request.environ:
             return self.nokey()
         
         c.len = 0
@@ -93,10 +107,8 @@ class ApiController(BaseController):
         else:
             raise 'not implemented'
     
+    @requires_site
     def help(self,format='script',id=''):
-        if not 'api.site' in request.environ:
-            return self.nokey()
-        
         if id != '' and id != None:
             rid = urllib.unquote_plus(id)
             c.cmsitems = meta.DBSession.query(cms.Cmsitem).filter_by(rid=rid).all()
@@ -104,7 +116,6 @@ class ApiController(BaseController):
                 (c.cmsitems[0].item_type == "folder" or \
                 c.cmsitems[0].item_type == 'root'):
                 c.cmsitems = [itemassoc.item for itemassoc in c.cmsitems[0].children]
-        
         
         if c.site and c.site.id:
             url = id.replace('root/help','')
@@ -115,11 +126,9 @@ class ApiController(BaseController):
         c.resource_id = id
         return render('/api/cmsjs.js')
     
+    @requires_site
     def comment(self,format='json',id=''):
-        if not 'api.site' in request.environ:
-            return self.nokey()
-        
-        site = request.environ['api.site']
+        site = request.environ['site']
         c.len = 0
         if id != '' and id != None:
             rid = urllib.unquote_plus(id)
@@ -151,12 +160,10 @@ class ApiController(BaseController):
         else:
             raise 'not implemented'
     
+    @requires_site
     def email(self,format='html',id=''):
-        if not 'api.site' in request.environ:
-            return self.nokey()
-        
         if id != '' and id != None:
-            site = request.environ['api.site']
+            site = request.environ['site']
             c.emailtemplates = meta.DBSession.query(Email).filter_by(
                 site_id=site.id,key=id).all()
             
@@ -165,37 +172,39 @@ class ApiController(BaseController):
             else:
                 print 'argh, no email template, siteid = %s' % site.id
         else:
-            site = request.environ['api.site']
+            site = request.environ['site']
             c.emailtemplates = meta.DBSession.query(Email).filter_by(
                 site_id=site.id).all()
         
         if c.emailtemplates and 'api.isauthenticated' in request.environ:
-            if c.emailtemplates[0].site.key == request.environ['api.site'].key:
+            if c.emailtemplates[0].site.key == request.environ['site'].key:
                 response.headers['Content-Type'] = 'application/xhtml+xml'
                 return render('/api/email.mako')
             else:
                 print 'c.emaltemplates.key=%s   site.key=%s' % (c.emailtemplates[0].site.key,
-                    request.environ['api.site'].key)
+                    request.environ['site'].key)
                 abort(401, 'Invalid API Key')
         
         #TODO be a bit nicer with valid xml and error codes
         return "not correct key"
     
+    @requires_site
     def send_email(self,format='xml',id=''):
         """
         Sends an email, accepts dictionary of info
         that it will hash into email to send
         """
-        if not 'api.site' in request.environ:
+        if not 'site' in request.environ:
             return self.nokey()
         
         if id != '' and id != None:
-            site = request.environ['api.site']
+            site = request.environ['site']
             email = Email.by_key(site.id,id)
             if email:
                 c.item = email
             
     
+    @requires_site
     def person(self,format='xml',id=''):
         if c.site:
             verb = request.environ['REQUEST_METHOD'].lower()
@@ -233,6 +242,7 @@ class ApiController(BaseController):
             print 'person no site key %s' % (c.site)
             return 'no site key'
     
+    @requires_site
     def group(self,format='xml',id=''):
         if c.site:
             verb = request.environ['REQUEST_METHOD'].lower()
@@ -266,6 +276,7 @@ class ApiController(BaseController):
         else:
             return 'no site key'
     
+    @requires_site
     def poll(self,format='xml',id=''):
         if c.site:
             if id != '' and id != None:

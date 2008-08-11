@@ -43,6 +43,7 @@
                     <li><a href="/email" class="${h.is_current(['/email'])}" >Email Templates</a></li>
                     <li><a href="/comment" class="${h.is_current(['/comment'])}" >Comment's</a></li>
                     <li><a href="/site/view" class="${h.is_current(['/site','/account','/groupadmin','/poll'])}" >Account</a></li>
+                    <li><a href="/service" class="${h.is_current(['/service'])}" >Service's</a></li>
                     % if c.user.issysadmin:
                     <li><a href="/admin" class="${h.is_current(['/admin'])}" >Admin</a></li>
                     % endif
@@ -172,7 +173,7 @@
         jQuery(document).ready(function() {
 
             //alert($.ds.gears)
-            $.ds.gears.init({debug:false});
+            //$.ds.gears.init({debug:false});
             
             jQuery('#test_humanmsg').click(function() {
                 $.ds.humanMsg.displayMsg('<strong>Success:</strong> <span class="indent">You clicked \''+jQuery(this).text()+'\'</span>');

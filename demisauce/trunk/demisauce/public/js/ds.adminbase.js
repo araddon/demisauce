@@ -16,8 +16,15 @@
             });
         }
     });
+
+
+    $(document).ready(function() {
+        $('.demisauce_help_tip').tooltip({ track: true, delay: 0, showURL: false, 
+            showBody: " - ", opacity: 0.90,width: 260});
+        $('form').dshints();
+    });
     
-    
+        
     /*
      * Generic Default static add UI message
      */
@@ -62,6 +69,25 @@
             }
         }
     });
+    $.fn.ds_tabs = function(options) {
+        return this.each(function() {
+            if (!$(this).is(".ds-tab")) new $.ds.tab(this, options);
+        });
+    };
+    $.ds.tab = function(el, options) {
+        $('a',$(el)).click(function() {
+            //var currentTab = '#tab1';
+            $(this).parent().children('.current').each(function(i) {
+                currentTab = this.hash;
+            });
+            $(this).parent().children().each(function(i) {
+                $(this).removeClass('current');
+            });
+            $(currentTab).hide();
+            $(this.hash).show();
+            $(this).addClass('current');
+        });
+    }
     $.fn.ds_poll_admin = function(options) {
         return this.each(function() {
             if (!$(this).is(".ds-poll-admin")) new $.ds.polladmin(this, options);

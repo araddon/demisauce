@@ -39,9 +39,6 @@
         <div class="clear"></div>
         <script type="text/javascript">
             $(document).ready(function() {
-                $('.demisauce_help_tip').tooltip({ track: true, delay: 0, showURL: false, 
-                    showBody: " - ", opacity: 0.85,width: 260});
-                
                 $("#enablesite").click(function() {
                     var siteid = $(this).attr('siteid');
                     $.ajax({type: "POST",url: "/admin/enablesite/" + siteid ,

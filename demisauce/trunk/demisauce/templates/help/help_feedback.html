@@ -47,6 +47,10 @@
 <script type="text/javascript">
 $(document).ready(function(){
     $('#feedbackform').dshints();
-    //$('#content').focus();
+    $('#content').focus();
+    $("#feedbackform").submit(function() {
+        $.ds.dsactivity({activity:'submit help feedback',custom:{good:'great',tag1:'is a tag'},category:'help'})
+    });
+    
 });
 </script>

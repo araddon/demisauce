@@ -62,26 +62,19 @@ def get_current_user():
     elif 'userkey' in request.cookies:
         user = Person.by_unique(request.cookies['userkey'].lower())
     return user
-
-
-# TODO:  cleanup, this isn't used?
-def requires_admin(method):
-    @wraps(method)
-    def wrapper(self, *args, **kwargs):
+    
+def get_current_site():
+    """gets site for current request"""
+    site = None
+    
+    if 'apikey' in request.params:
+        site = model.site.Site.by_apikey(request.params['apikey'])
+    else:
         user = get_current_user()
-        if not user or user.has_role(['admin','sysadmin']) == False:
-            session['return_url'] = request.path_info
-            session.save()
-            log.info('403, current user doesnt have role=%s' % ('admin'))
-            if user:
-                h.add_alert('Not Authorized')
-                return self.redirect(h.url_for(controller='dashboard',action='index'))
-            else:
-                h.add_alert('Must Sign In')
-                return self.redirect(h.url_for(controller='account',action='signin'))
-        else:
-            return method(self, *args)
-    return wrapper
+        if user:
+            site = model.site.Site.get(-1,user.site_id)
+    return site
+
 
 def requires_role(role):
     def decorator(target):
@@ -94,16 +87,12 @@ def requires_role(role):
                 if user and (not request.environ['pylons.routes_dict']['controller'] == 'dashboard'):
                     h.add_alert('Not Authorized')
                     log.info('403, current user doesnt have role=%s redirect to dashboard' % (role))
-                    #redirect_to(h.url_for(controller='dashboard',action='index'))
                     return self.redirect(h.url_for(controller='dashboard',action='index'))
                 else:
                     h.add_alert('Must Sign In')
                     log.info('not logged in or wrong role, about to redirect to signin' )
-                    #redirect_to(h.url_for(controller='account',action='signin'))
                     return self.redirect(h.url_for(controller='account',action='signin'))
             else:
-                log.info('wow, it is in else' )
-                #return target
                 return target(self, *args)
         return wrapper
     return decorator
@@ -161,7 +150,6 @@ class BaseController(WSGIController):
     
     def redirect(self,url):
         """docstring for redirect"""
-        log.info('sweet, made it to redirect' )
         redirect_wsave(url)
     
     def start_session(self,user):
@@ -178,12 +166,16 @@ class BaseController(WSGIController):
             session['current_user_person'] = user
         """
         c.form_errors = c.form_errors or {}
-        c.user = get_current_user()
+        self.user = get_current_user()
+        self.site = get_current_site()
+        c.user = self.user
+        c.site = self.site
         if c.user:
             c.site_id = c.user.site_id
         c.base_url = h.base_url()
         c.help_url = h.help_url()
         c.adminsite_slug = 'demisauce.org'
+        c.demisauce_url = config['demisauce.url']
     
     @print_timing
     def __call__(self, environ, start_response):

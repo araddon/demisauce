@@ -17,9 +17,10 @@ body{text-align:center;}#ft{clear:both;}#doc,#doc2,#doc3,#doc4,.yui-t1,.yui-t2,.
 /*base-min.css */
 h1{font-size:138.5%;}h2{font-size:123.1%;}h3{font-size:108%;}h1,h2,h3{margin:1em 0;}h1,h2,h3,h4,h5,h6,strong{font-weight:bold;}
 abbr,acronym{border-bottom:1px dotted #000;cursor:help;}em{font-style:italic;}blockquote,ul,ol,dl{margin:1em;}
-ol,ul,dl{margin-left:2em;}ol li{list-style: decimal outside;}ul li{list-style: disc outside;}dl dd{margin-left:1em;}
+
 th,td {border:0px solid #000;padding:.5em;}th {font-weight:bold;text-align:center;}caption {margin-bottom:.5em;text-align:center;}p,fieldset,table {margin-bottom:1em;}
 
+li{list-style:none;margin:0;}
 
 /*  end Yahoo css and copyrights */
 /*  Color Scheme
@@ -114,12 +115,15 @@ ul.topnav a {text-decoration:none;-x-system-font:none;display:block;font-family:
 .boxlinks a, .boxlinks span {margin-top:2px; display: block;vertical-align: bottom; padding: 0.2em 0.5em;margin-right: 0.15em;}
 .boxlinks span.current {border: 1px solid #116092;font-weight: bold;background: #116092;color: #fff;}
 div.boxlinks a.current {background:#E1ECF9;}
-div.boxlinks_tabs a.current {border-bottom: 1px solid #E1ECF9;;background:#E1ECF9;}
+div.boxlinks_tabs a.current {border-bottom: 1px solid #DDDDDD;background:#DDDDDD;}
 .boxlinks a {border: 1px solid #235C9D;text-decoration: none;}
 .boxlinks a:hover {background:#E1ECF9;}
 .boxlinks a.nextprev {font-weight: bold;}
 .boxlinks span.nextprev {color: #666;}
 .boxlinks span.nextprev {border: 1px solid #ddd;color: #999;}
+
+/* Tag selections */
+.tag_selections a {border: 1px solid #235C9D;text-decoration: none;padding: 3px 5px;}
 
 .tab-spacer{background:#E1ECF9;border:0px solid #8db2e3;border-top:0 none;height:2px;font-size:1px;line-height:1px;}
 div.formbox {border:1px solid #8db2e3;margin-top:20px;}
@@ -239,7 +243,7 @@ form div.actions input {width:8em;}
 form .actions {padding: 10px;margin: 10px 0px 0px 0px;background-color: #ddd;border-top: 2px solid #235C9D;text-align: right;}
 form img.delete {}
 form img.delete { background:url(/images/cross.png);}
-
+.hint {color: #ccc;}
 /* new form */
 form input { padding:2px;font-size:1.2em;}
 .base_formxx {margin: 0em auto 0 auto;background-color: #EBF4FA;padding: 1em 1em 1em 1em;border: 10px solid #ddd;}
@@ -249,7 +253,7 @@ form input { padding:2px;font-size:1.2em;}
   .base_form p.note {color: #a00;}
   .base_form form {}
     .base_form label,
-    .base_form .label {font-size: 110%;color: #666;display: block;margin: 0;margin-top: .4em;}
+    .base_form .label {font-size: 110%;color: #666;display: block;margin: 0;margin-top: .4em;padding: 2px;}
       .base_form label a {font-size: 90%;}
       .base_form label.error {color: #a00;}
       .base_form label.required {font-weight:bold;}

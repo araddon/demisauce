@@ -13,6 +13,7 @@ from demisaucepy.pylons_helper import *
 import urllib, hashlib
 
 from webhelpers.rails import *
+from webhelpers.html.tags import select
 from routes import url_for
 from pylons.controllers.util import redirect_to
 import webhelpers.paginate

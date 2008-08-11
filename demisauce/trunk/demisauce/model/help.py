@@ -6,6 +6,7 @@ from sqlalchemy.types import Integer, String as DBString, DateTime, \
 #from sqlalchemy.types import 
 from demisauce.model import ModelBase, meta
 from demisauce.model import site
+from demisauce.model.person import Person
 
 import logging
 import formencode
@@ -18,8 +19,9 @@ helpstatus = {'new':0,'assigned':1,'completed':10}
 help_table = Table("help", meta.metadata,
         Column("id", Integer, primary_key=True),
         Column("site_id", Integer, ForeignKey('site.id')),
+        Column('tag_id', None, ForeignKey('tag_map.id')),
         Column("status", Integer, default=0),
-        Column("created", DateTime),
+        Column("created", DateTime,default=datetime.now()),
         Column("isuser", Boolean, default=False),
         Column("person_id", Integer, nullable=True),
         Column("ip", DBString(24), nullable=True),
@@ -80,6 +82,32 @@ class Help(object,ModelBase):
         return self.content.replace('\n','<br />').replace('\r','').replace('\\','')
     clean_content = property(get_content)
     
+    def get_user(self):
+        '''grabs person record for submitter'''
+        if self.person_id and self.person_id > 0:
+            if not hasattr(self,'_person'):
+                temp = Person.get(-1,self.person_id)
+                if temp:
+                    self._person = temp
+                else:
+                    self._person = None
+        return self._person
+    person = property(get_user)
+    
+    def get_others(self):
+        '''grabs previous from this user'''
+        if self.person_id and self.person_id > 0:
+            if not hasattr(self,'_others_from_this_user'):
+                temp = meta.DBSession.query(Help).filter_by(person_id=self.person_id
+                    ).order_by(help_table.c.created.desc()).limit(10)
+                
+                if temp:
+                    self._others_from_this_user = temp
+                else:
+                    self._others_from_this_user = []
+        return self._others_from_this_user
+    others = property(get_others)
+    
     @classmethod
     def by_site(cls,site_id=0,ct=15,filter='new'):
         """Class method to get recent new unprocessed items"""
@@ -98,7 +126,7 @@ class Help(object,ModelBase):
         """Class method to get recent feedbabck items"""
         return meta.DBSession.query(Help).filter_by(site_id=site_id
             ).order_by(help_table.c.created.desc()).limit(ct)
-            
+    
     @classmethod
     def for_url(cls,site,url):
         """Class method to get recent help tickets
@@ -113,10 +141,8 @@ class HelpResponse(object,ModelBase):
     """
     def __init__(self, help_id,user):
         self.help_id = help_id
-        self.site = user.site
-        self.person = user
-        from datetime import datetime
-        self.created = datetime.today()
+        self.site_id = user.site_id
+        self.person_id = user.id
     
     @classmethod
     def by_site(cls,site_id=0,ct=15,filter='new'):

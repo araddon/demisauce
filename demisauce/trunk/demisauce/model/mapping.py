@@ -18,6 +18,9 @@ from demisauce.model.poll import Poll, Question, QuestionOption, \
     PollResponse, PollAnswer, poll_table, question_table, \
     question_option_table, poll_response_table, answer_table
 from demisauce.model.rating import Rating, rating_table
+from demisauce.model.service import App, app_table, Service, service_table
+from demisauce.model.tag import Tag, TagAssoc, taggable, tag_table, \
+    tag_map_table
 
 mapper(Site, site_table)
 
@@ -47,6 +50,12 @@ mapper(Person, person_table, properties={
                         backref='members'),
     'activities':dynamic_loader(Activity)
 })
+mapper(Tag, tag_table)
+
+mapper(TagAssoc, tag_map_table, properties={
+    'tags':relation(Tag, backref='association'),
+})
+
 mapper(Help, help_table, properties={
     'site':relation(Site, lazy=True, order_by=help_table.c.created.desc(),
         backref='helptickets')
@@ -56,6 +65,8 @@ mapper(HelpResponse, help_response_table, properties={
         backref='helpreponses'),
     'person':relation(Person, lazy=True, backref='helpreponses'),
 })
+taggable(Help, 'tags', uselist=True)
+
 mapper(Email, emailitem_table, properties={
     'site':relation(site.Site),
 })
@@ -83,3 +94,14 @@ mapper(PollAnswer, answer_table, properties={
 })
 
 mapper(Rating, rating_table)
+
+mapper(App, app_table, properties={
+    'site':relation(Site, backref='apps'),
+    'owner':relation(Person, lazy=True, backref='apps'),
+})
+
+mapper(Service, service_table, properties={
+    'site':relation(Site, backref='services'),
+    'owner':relation(Person, lazy=True, backref='services'),
+    'app':relation(App, backref='services')
+})

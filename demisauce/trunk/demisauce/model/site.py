@@ -53,6 +53,11 @@ class Site(object,ModelBase):
     
     @classmethod
     def by_slug(cls,slug):
-        """Class method to get site by slug"""
+        """get site by slug"""
         return meta.DBSession.query(Site).filter_by(slug=slug).first()
+    
+    @classmethod
+    def by_apikey(cls,apikey):
+        """get site by apikey"""
+        return meta.DBSession.query(Site).filter_by(key=apikey).first()
     

@@ -48,10 +48,13 @@ def view(request):
         setattr(stats, key, value)
 
     host.close_socket()
-
+    if stats.cmd_get == 0:
+        hit_rate = 'na'
+    else:
+        hit_rate = 100 * stats.get_hits / stats.cmd_get
     return render_to_response(
         'memcached_status.html', dict(
             stats=stats,
-            hit_rate=100 * stats.get_hits / stats.cmd_get,
+            hit_rate=hit_rate,
             time=datetime.datetime.now(), # server time
         ))

@@ -43,6 +43,8 @@ class HelpadminController(SecureController):
                 c.item = c.helptickets[0]
         elif id > 0:
             c.item = Help.get(c.user.site_id,id)
+            
+
         
         return render('/help/help_process.html')
     
