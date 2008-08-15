@@ -62,7 +62,7 @@ answer_table = Table("poll_answer", meta.metadata,
     )
 
 
-class Poll(object,ModelBase):
+class Poll(ModelBase):
     """
     Poll (or survey), a collection of questions to be asked, either
     to known people or anonymously
@@ -135,7 +135,7 @@ class Poll(object,ModelBase):
         return q
     
 
-class Question(object,ModelBase):
+class Question(ModelBase):
     """
     A poll has one or more questions
     
@@ -188,7 +188,7 @@ class Question(object,ModelBase):
         return o
     
 
-class QuestionOption(object,ModelBase):
+class QuestionOption(ModelBase):
     """
     Each question has a list of choices(options)
     
@@ -200,7 +200,7 @@ class QuestionOption(object,ModelBase):
         self.type = option_type
     
 
-class PollResponse(object,ModelBase):
+class PollResponse(ModelBase):
     """
     The response by person (or anonymous), will have a collection of answers
     """
@@ -208,12 +208,12 @@ class PollResponse(object,ModelBase):
         self.person_id = person_id
     
 
-class PollAnswer(object,ModelBase):
+class PollAnswer(ModelBase):
     """
     Each person (optionally) answer's each qustion
     """
-    def __init__(self,question_id,option_id,other=''):
-        super(PollAnswer, self).__init__()
+    def __init__(self,question_id,option_id,other='',**kwargs):
+        super(PollAnswer, self).__init__(**kwargs)
         self.question_id = question_id
         self.option_id = option_id
         self.other = other

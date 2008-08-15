@@ -124,7 +124,7 @@ class HelpController(BaseController):
         #print 'feedbackform = %s' % id
         if site:
             c.site = site
-            help = Help(site.id,sanitize(self.form_result['email']))
+            help = Help(site_id=site.id,email=sanitize(self.form_result['email']))
             if c.user:
                 help.set_user_info(c.user)
             else:

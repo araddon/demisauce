@@ -7,7 +7,7 @@
         gears: {},
         debug_selector:'#debug_output',
         message: function(msg) {
-            $(this.debug_selector).html(msg);
+            $(this.debug_selector).append(msg);
         }
     })
     
@@ -23,74 +23,113 @@
             var opts = {
                 debug: false
             };
-            options = options || {}; $.extend(opts, options); //Extend and copy options
+            this.loaded = false;
+            this.gears_installed = false;
+            this.gears_enabled = false; //for this site
+            this.options = options || {}; $.extend(opts, options); //Extend and copy options
             if (!window.google || !google.gears) {
-                 //location.href = "http://gears.google.com/?action=install&message=Welcome To Demisauce&return=http://localhost:4950";
+                // not installed
             } else {
-                if (!google.gears.factory.hasPermission){
-                    google.gears.factory.getPermission('Demisauce', '/images/info.png', 'Help speed up this site with with Gears!')
+                this.gears_installed = true;
+                $.ds.message("Yeay, Gears is already installed.");
+                if (google.gears.factory.hasPermission){
+                    this.load_db();
+                    this.gears_enabled = true;
                 }
-                this.local_server = google.gears.factory.create("beta.localserver");
-                this.resource_store = this.local_server.openStore(this.resource_store_name);
-                //this.managed_store = this.local_server.createManagedStore(this.managed_store_name);
-                
-                this.loaded = true;
                 if (opts.debug) this.init_debug();
-                
             }
         },
+        install_gears: function(){
+            var url = window.location.href;
+            location.href = "http://gears.google.com/?action=install&message=Welcome To Demisauce&return=" + url;
+        },
+        enable_gears: function(){
+            // unser initiated event to install
+            if (!google.gears.factory.hasPermission){
+                google.gears.factory.getPermission('Demisauce', '/images/info.png', 'Help speed up this site with with Gears!')
+                if (google.gears.factory.hasPermission){
+                    this.load_db();
+                    this.create_store();
+                }
+            } else {
+                this.load_db();
+                this.create_store();
+            }
+        },
+        load_db: function(){
+            this.local_server = google.gears.factory.create("beta.localserver");
+            this.resource_store = this.local_server.openStore(this.resource_store_name);
+            //this.managed_store = this.local_server.createManagedStore(this.managed_store_name);
+            this.loaded = true;
+        },
         init_debug: function () {
-            $('body').append('<style type="text/css"> \
-                .gears_info{position:absolute;background-color:#134275;bottom:0;left:0;width:100%;height:40px;} \
+            var self = this;
+            var out_html = '<style type="text/css"> \
+                .gears_info{position:absolute;background-color:#134275;bottom:0;left:0;width:100%;height:60px;} \
                 div.gears_info p {color: #fff;font-style: italic;font-weight: bold;font-size: large;} \
                 div.gears_info span {color: yellow;font-style: italic;font-weight: bold;font-size: large;} \
                 body>div#footer{position:fixed;} \
-            </style><div class="gears_info"><p>Resource \
-            Store Status: <span id="resourceStatus" class="style3"></span></p></div>');
-            $.ds.message("Yeay, Gears is already installed.");
+            </style><div class="gears_info"><span id="debug_output"></span><p>Resource \
+            Store Status: <span id="resourceStatus" class="style3"></span>'
+            if (!this.loaded) 
+                out_html += '<a href="#" id="gears_create_store">Create Store</a>';
+            if (!this.gears_installed) 
+                out_html += '<a href="#" id="gears_install">Install Gears for Turbo</a>';
+            if (!this.gears_enabled) 
+                out_html += '<a href="#" id="gears_enable">Turbo!</a>';
+            //out_html += '<a href="#" id="gears_whats_instore">Whats In Store?</a>'
+            out_html += '</p></div>'
+            $('body').append(out_html);
+            $('#gears_create_store').click(function(){
+                self.create_store();
+            });
+            $('#gears_install').click(function(){
+                self.install_gears();
+            });
+            $('#gears_enable').click(function(){
+                self.enable_gears();
+            });
+            $('#gears_whats_instore').click(function(){
+                //self.create_store();
+            });
+            
             if (!this.resource_store){
                 $('#resourceStatus').html('nope, not created');
             } else {
                 $('#resourceStatus').html('yup, resource store exists');
             }
         },
+        show_store: function(){
+            
+        },
         create_store: function(){
-            if (!this.loaded) return;
+            //if (!this.loaded) return;
             
             //this.managed_store.manifestUrl = this.managed_store_manifest;
             //this.managed_store.checkForUpdate();
             this.resource_store = this.local_server.createStore(this.resource_store_name);
             var self = this;
             var out_msg = 'now available offline:';
-            $('img,script').each(function (){
-                self.resource_store.capture(this.src,function (url,success,captureId){
-                    out_msg += ', ' + url;
-                });
+            //$('img,script')
+            var files_to_capture = [];
+            $('script[gears=true]').each(function (){
+                alert(this.src);
+                files_to_capture.push(this.src);
             });
+            alert('before capture' + files_to_capture[0])
+            self.resource_store.capture(files_to_capture,function (url,success,captureId){
+                alert('in capture ' + url + + (success ? 'succeeded' : 'failed'))
+                out_msg += ', ' + url;
+            });
+            //alert(out_msg);
+            /*
             $('link[rel*=stylesheet]').each(function (){
                 self.resource_store.capture(this.href,function (url,success,captureId){
                     out_msg += ', ' + url;
                 });
             });
-            if (opts.debug) $.ds.message(out_msg);
-            
-            /*  
-            var timerId = window.setInterval(function() {
-                // When the currentVersion property has a value, all of the resources
-                // listed in the manifest file for that version are captured. There is
-                // an open bug to surface this state change as an event.
-                if ($.ds.gears.managed_store.currentVersion) {
-                    window.clearInterval(timerId);
-                    $.ds.message("The documents are now available offline.\n" + 
-                            "With your browser offline, load the document at " +
-                            "its normal online URL to see the locally stored " +
-                                  "version. The version stored is: " + 
-                            $.ds.gears.managed_store.currentVersion);
-                    } else if ($.ds.gears.managed_store.updateStatus == 3) {
-                    $.ds.message("Error: " + $.ds.gears.managed_store.lastErrorMessage);
-                }
-            }, 500);
             */
+            if (opts.debug) $.ds.message(out_msg);
         },
         remove_store: function(){
             if (!this.loaded) return;

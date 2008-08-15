@@ -51,7 +51,7 @@ class AccountController(BaseController):
                 user = Person.by_email(c.user.site_id,email)
                 
                 if user is None:
-                    user = Person(c.site_id,email, email)
+                    user = Person(site_id=c.site_id,email=email, displayname=email)
                     user.save()
                     #send emails
                     url2 = urllib.quote_plus('/account/viewh/%s' % (user.hashedemail))
@@ -210,8 +210,8 @@ class AccountController(BaseController):
             if user is None:
                 site = Site(self.form_result['email'],self.form_result['email'])
                 site.save()
-                user = Person(site.id,self.form_result['email'],
-                              self.form_result['email'])
+                user = Person(site_id=site.id,email=self.form_result['email'],
+                              displayname=self.form_result['email'])
                 user.slug = user.hashedemail
                 user.save()
                 #TODO:  refactor/extract email send to trigger event api

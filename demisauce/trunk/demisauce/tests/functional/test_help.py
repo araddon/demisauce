@@ -9,7 +9,7 @@ class TestHelpController(BaseAdminController):
     @classmethod
     def setupAll(cls):
         print 'in TestHelpPublicController.class_setup'
-        h = help.Help(1,'sysadmin@demisauce.org')
+        h = help.Help(site_id=1,email='sysadmin@demisauce.org')
         h.url = 'http://www.google.com'
         h.content = 'user comment goes here'
         h.save()

@@ -7,21 +7,23 @@ from demisauce.tests import *
 from demisauce import model
 from demisauce.model import mapping, meta
 from demisauce.model import cms, site, email, person, \
-    help, group, poll
+    help, group, poll, tag
 from demisauce.model.help import helpstatus
 
 class TestModels(TestController):
     def test_person(self):
         email = person.Person.create_random_email()
-        p = person.Person(1,email,'Demisauce Web','admin')
+        p = person.Person(site_id=1,email=email,
+            displayname='Demisauce Web',raw_password='admin')
         p.url = 'http://www.google.com'
         p.save()
         p2 = person.Person.get(1,p.id)
         assert p2.email == email
         assert p.id == p2.id
         assert p2.id > 0
-        # this should be a duple
-        p = person.Person(1,'guest@demisauce.org','Demisauce Web','admin')
+        # this should be a dupe
+        p = person.Person(site_id=1,email='sysadmin@demisauce.org',
+            displayname='Demisauce Web',raw_password='admin')
         p.url = 'http://www.google.com'
         nose.tools.assert_raises(IntegrityError, p.save)
         meta.DBSession.rollback()
@@ -69,26 +71,6 @@ class TestModels(TestController):
         assert s.key == s2.key
         assert len(s.key) > 20  #decently long unique key
     
-    def test_help(self):
-        h = help.Help(1,'guest@demisauce.org')
-        h.url = '/yourfolder/path'
-        h.content = 'user comment goes here'
-        h.save()
-        print 'h.id = %s, h.email=%s' % (h.id, h.email)
-        h2 = help.Help.get(1,h.id)
-        assert h.id == h2.id
-        p = person.Person.get(1,1)
-        hr = help.HelpResponse(h.id, p)
-        hr.status = helpstatus['completed']
-        hr.url = h.url
-        hr.title = 'title of response'
-        hr.response = 'testing response'
-        hr.save()
-        assert hr.id > 0, 'should have saved'
-        hr2 = help.HelpResponse.get(1,hr.id)
-        assert hr2.response == 'testing response'
-        assert hr2.url == '/yourfolder/path'
-    
     def test_group(self):
         """
         Test to ensure we can create groups, add users to groups
@@ -122,6 +104,7 @@ class TestModels(TestController):
     
     def test_poll(self):
         p = poll.Poll(1,'test poll','poll description')
+        p.key = 'test-poll'
         p.save()
         meta.DBSession.flush()
         p2 = poll.Poll.get(1,p.id)
@@ -146,10 +129,10 @@ class TestModels(TestController):
         assert len(p3.questions[0].options) == 3
         assert p3.questions[0].options[0].option == 'because its sweet!'
         assert p3.questions[0].options[1].option == 'because its bitter!'
-        responder = person.Person.by_email(1,'guest@demisauce.org')
+        responder = person.Person.by_email(1,'admin@demisauce.org')
         assert responder > 0
         response = poll.PollResponse(responder.id)
-        response.answers.append(poll.PollAnswer(o.id))
+        response.answers.append(poll.PollAnswer(q.id,o.id))
         p3.responses.append(response)
         p3.save()
         assert len(p3.responses) == 1
@@ -164,6 +147,5 @@ class TestModels(TestController):
         assert len(p3.responses) == 2
         assert p4.responses[1].person_id == responder2.id
         assert p4.responses[1].answers[0].other == 'text answer'
-        assert p4.responses[1].question.id == q.id
     
 

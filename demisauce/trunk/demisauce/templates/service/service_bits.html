@@ -1,0 +1,151 @@
+<%def name="actions()">
+    <div class="actionbar" style="height:34px; ">
+        <div class="right boxlinks_action boxlinks"  style="margin-top:-4px;">
+            <ul>
+                <li><a href="/service/edit/" id="addapp" objid="0">
+                    <img  alt="Add New App" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                    Add New App</a></li>
+            </ul>
+        </div>
+    </div>
+</%def>
+<%def name="form(item,app,mode='admin')">
+
+    <br />
+    ${h.form(h.url(action='edit'),  class_="", method='post', id="service_form")}
+        <input type="hidden" id="app_id" name="app_id" value="${(item and item.id) or '0'}">
+        
+        <div class="base_form main_form" id="FormWrapper">
+            <div class="yui-gc" >
+                <div class="yui-u first">
+                    <div>
+                        <input type="hidden" id="objectid" name="objectid" value="item and item.id) or '0'}">
+                        <h1>Service Add/Edit</h1>
+                        <strong>Bold</strong> fields are required.
+                        <div class="required">
+                            <label for="name">Service Name</label>
+                            ${h.text_field('name', value=(item and item.name) or '', size=40)}
+                        </div>
+                        <div class="required" id="permalink_div" style="display:block;">
+                            <label for="slug">Permalink:</label>
+                            <span id="permalink" class="secondary">
+                                <span id="editable-slug-span" title="Click to edit this part of the permalink">${(item and item.key) or ''}</span>
+                                <a href="javascript:void(0)" id="editable-slug-href">Edit</a>
+                            </span>
+                            <input type="hidden"  size="100" id="permalink"  value="${(item and item.key) or ''}" />
+                            <br />
+                            <input type="text" id="real_permalink" name="real_permalink" 
+                                value="${(item and item.key) or ''}" style="display:none;"/>
+                        </div>
+                        <div class="optional">
+                            <label for="description">Description:</label>
+                            ${h.text_area("description", content=(item and item.description) or '', size="30x3", _style="width=190px;")}
+                        </div>
+                        <div class="optional">
+                            <label for="app">app:</label>
+                            ${h.select("app", c.app_list[0][0],c.app_list )} <a href="javascript:void(0);" id="add_new_app" objid="0">Add New App</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="yui-u">
+                    <div class="tiny_form">
+                        % if item:
+                            ${h.link_to('view xml', '/api/xml/service/%s' % (item and item.key) or '')}
+                            <br />
+                            ${h.link_to('view html', h.url(controller="services",action="view", id=item.id))}
+                        % endif
+                        
+
+                        <div class="optional">
+                            <fieldset> 
+                                <legend>Auth Method?</legend>
+                                ${h.radio_button('authn', '0',checked=(app and app.authn == 0))} demisauce <br />
+                                ${h.radio_button('authn', '1',checked=(app and app.authn == 1))} oauth <br />
+                            </fieldset> 
+                        </div>
+                        <div class="box2" style="margin:10px 0px;">
+                            ${h.remote_html('root/help/services/edit')}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="actions">
+                <input type="submit" class="primary" id="submit" value="Save &#187;">
+                &nbsp;&nbsp;<a href="/poll" id="cancelnode">cancel</a>
+            </div>
+        </div>
+    
+    ${h.end_form()}
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('#service_form').slugeditor({slugfrom: '#name'});
+            $('#add_new_app').click(function(){
+                jQuery.facebox($('#hidden_app_div').html());
+            });
+        });
+    </script>
+    <div id="hidden_app_div" style="display:none">
+        ${app_form(app)}
+    </div>
+</div>
+
+</%def>
+<%def name="app_form(item)">
+    ${h.form(h.url(action='appedit'),  class_="", method='post', id="app_form")}
+    <div class="base_form small_form" id="FormWrapper">
+        <div>
+            <div style="margin:12px 12px">
+                <input type="hidden" id="group_id" name="group_id" value="${(item and item.id) or '0'}">
+                <h3>App Add/Edit</h3>
+               <div class="required">
+                    <label for="name">App Name</label>
+                    ${h.text_field('name', value=(item and item.name) or '', size=40)}
+                </div>
+                <div class="optional">
+                    <label for="description">description:</label>
+                    ${h.text_area("description", content=(item and item.description) or '', size="45x3")}
+                </div>
+                <div class="optional">
+                    <fieldset> 
+                        <legend>Auth Method?</legend>
+                        ${h.radio_button('authn', '0',checked=(item and item.authn == 0))} demisauce <br />
+                        ${h.radio_button('authn', '1',checked=(item and item.authn == 1))} oauth <br />
+                        ${h.radio_button('authn', '2',checked=(item and item.authn == 2))} CAS <br />
+                    </fieldset> 
+                </div>
+            </div>
+        </div>
+        <div class="actions submit">
+            <input type="submit" class="primary" id="submit" value="Save &#187;">
+        </div>
+    </div>
+    ${h.end_form()}
+</%def>
+
+
+<%def name="table(items)">
+<table class="dsadmin">
+    <thead>
+        <tr>
+            <th>View</th>
+            <th>Xml</th>
+            <th></th>
+            <th>Date</th>
+            <th>Author</th>
+        </tr>
+    </thead>
+    <tbody>
+    % for item in items:
+        <tr class="${h.cycle("", "alternate") }">
+            <td>${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}</td>
+            <td>${h.link_to('View Xml', "/api/xml/service/%s" % item.id)}</td>
+            <td>${h.link_to('Edit', h.url(controller="service",action="edit", id=item.id), class_="title")}</td>
+            <td>${(item.created).strftime("%b %d, %Y") or ''}</td>
+            <td>${h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}</td>
+        </tr>
+        
+    % endfor
+    </tbody>
+</table>
+</%def>

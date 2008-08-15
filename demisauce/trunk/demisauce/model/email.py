@@ -25,7 +25,7 @@ emailitem_table = Table("email", meta.metadata,
         Column("created", DateTime,default=datetime.now()),
     )
 
-class Email(object,ModelBase):
+class Email(ModelBase):
     def __init__(self,site_id, subject, from_email=None, to=None, template=None):
         self.to = to
         self.subject = subject
@@ -33,8 +33,6 @@ class Email(object,ModelBase):
         self.key = self.makekey(subject)
         self.site = meta.DBSession.query(model.site.Site).get(site_id)
         self.from_email = self.site.email
-        print 'in email init'
-        #self.dsremote = DemisauceAggregator()
     
     def __str__(self):
         return 'email subject=%s key = %s' % (self.subject,self.key)

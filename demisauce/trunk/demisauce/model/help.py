@@ -7,6 +7,7 @@ from sqlalchemy.types import Integer, String as DBString, DateTime, \
 from demisauce.model import ModelBase, meta
 from demisauce.model import site
 from demisauce.model.person import Person
+from demisauce.model.tag import Tag
 
 import logging
 import formencode
@@ -42,23 +43,21 @@ help_response_table = Table("helpresponse", meta.metadata,
         Column("person_id", Integer, ForeignKey('person.id')),
         Column("status", Integer, default=1),
         Column("publish", Boolean, default=0),
-        Column("created", DateTime),
+        Column("created", DateTime,default=datetime.now()),
         Column("url", DBString(255), nullable=True),
         Column("title", DBString(255), nullable=True),
         Column("rating_ct", Integer, default=0),
         Column("response", DBText),
     )
 
-class Help(object,ModelBase):
+class Help(ModelBase):
     """
     Help is the Support/Help/Feedback form
     """
-    def __init__(self, site_id=1,email=None,isuser=False):
-        self.site_id = site_id
-        if email:
-            self.set_email(email)
-        self.created = datetime.now()
-        #,default=datetime.now()
+    def __init__(self, **kwargs):
+        super(Help, self).__init__(**kwargs)
+        if 'email' in kwargs:
+            self.set_email(kwargs['email'])
     
     def set_email(self,email):
         import hashlib
@@ -80,6 +79,7 @@ class Help(object,ModelBase):
     def get_content(self):
         '''clean up the content'''
         return self.content.replace('\n','<br />').replace('\r','').replace('\\','')
+    
     clean_content = property(get_content)
     
     def get_user(self):
@@ -92,7 +92,22 @@ class Help(object,ModelBase):
                 else:
                     self._person = None
         return self._person
+    
     person = property(get_user)
+    
+    def get_tags(self):
+        '''comma delimted list of tags'''
+        return ','.join([tag.value for tag in self.tags])
+    
+    def set_tags(self, tags, person=None):
+        if tags:
+            curtags = [tag.value for tag in self.tags]
+            tagstemp = [tag.strip() for tag in tags.split(',')]
+            tagsnew = [tag for tag in tagstemp if not tag in curtags]
+            for tag in tagsnew:
+                self.tags.append(Tag(tag=tag,person=person))
+    
+    tagswcommas = property(get_tags,set_tags)
     
     def get_others(self):
         '''grabs previous from this user'''
@@ -135,14 +150,12 @@ class Help(object,ModelBase):
             uri=str(url).lower()).all()
     
 
-class HelpResponse(object,ModelBase):
+class HelpResponse(ModelBase,object):
     """
     Response from an admin to feedback entry
     """
-    def __init__(self, help_id,user):
-        self.help_id = help_id
-        self.site_id = user.site_id
-        self.person_id = user.id
+    def __init__(self,**kwargs):
+        super(HelpResponse, self).__init__(**kwargs)
     
     @classmethod
     def by_site(cls,site_id=0,ct=15,filter='new'):

@@ -22,13 +22,18 @@ def requires_site(target):
     """A decorator to protect the API methods to be able to
     accept api by either apikey or logged on user, in future oath?
     """
-    def decorator(self,*args):
+    def decorator(self,*args,**kwargs):
         site = get_current_site() 
         if not site:
             log.info('403, api call ' )
             return self.nokey()
         else:
-            return target(self,*args)
+            if 'format' in kwargs and 'id' in kwargs:
+                return target(self,format=kwargs['format'], id=kwargs['id'])
+            elif 'format' in kwargs:
+                return target(self,format=kwargs['format'])
+            else:
+                return 'bad decorator'
     return decorator
 
 def requires_site_slug(target):
@@ -224,7 +229,7 @@ class ApiController(BaseController):
                     print 'p not none %s' % p
                 else:
                     print 'p is none %s' % id
-                    p = person.Person(c.site.id,request.params['email'])
+                    p = person.Person(site_id=c.site.id,email=request.params['email'])
                 if 'authn' in request.params:
                     p.authn = request.params['authn']
                 if 'displayname' in request.params:
@@ -243,13 +248,13 @@ class ApiController(BaseController):
             return 'no site key'
     
     @requires_site
-    def group(self,format='xml',id=''):
+    def group(self,format='xml',id=0, **kwargs):
         if c.site:
             verb = request.environ['REQUEST_METHOD'].lower()
             g = group.Group.get(c.site.id,id)
-            if not g.site_id == c.site.id:
-                g = None
-                return
+            if not g or not g.site_id == c.site.id:
+                #g = None
+                return 'crap %s' % id
             if verb == 'get':
                 pass
             elif verb == 'post' or verb == 'put':

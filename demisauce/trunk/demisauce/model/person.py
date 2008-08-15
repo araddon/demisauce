@@ -88,7 +88,7 @@ class PersonEditValidation(formencode.Schema):
                            validators.String(not_empty=True))
     displayname = formencode.All(validators.String(not_empty=True))
 
-class Person(object,ModelBase):
+class Person(ModelBase):
     """
     User/Person, base identity and user object
     
@@ -108,18 +108,20 @@ class Person(object,ModelBase):
     .. _Gravatar: http://www.gravatar.com/
     """
     __jsonkeys__ = ['email','displayname','url','site_id', 'raw_password','created']
-    def __init__(self, site_id, email, displayname=None, raw_password=None):
-        self.site_id = site_id
-        self.set_email(email)
-        self.displayname = displayname
-        if displayname == None:
-            self.displayname = email
+    def __init__(self, **kwargs):
+        super(Person, self).__init__(**kwargs)
+        if 'site_id' in kwargs:
+            self.site_id = kwargs['site_id']
+        if 'email' in kwargs:
+            self.set_email(kwargs['email'])
+        if self.displayname == None:
+            self.displayname = self.email
         self.create_user_salt()
         self.user_uniqueid = Person.create_userunique()
-        if raw_password != None: 
-            self.set_password(raw_password)
-        self.hashedemail = Person.create_hashed_email(email)
-        self.raw_password = raw_password # note, this doesn't persist to db, temp
+        if 'raw_password' in kwargs and kwargs['raw_password'] != None: 
+            self.set_password(kwargs['raw_password'])
+        if self.email != None:
+            self.hashedemail = Person.create_hashed_email(self.email)
     
     def create_password(self, size=7):
         """
@@ -203,23 +205,6 @@ class Person(object,ModelBase):
     def get_recent_activities(self,ct=5):
         return self.activities.order_by(Activity.created.desc()).limit(ct)
     recent_activities = property(get_recent_activities)
-    
-    def to_json(self,indents=2):
-        """converts to json string, converting non serializeable fields
-        to some other format or ignoring them"""
-        d = self.__dict__#.copy()
-        # cs = time.mktime(self.created.timetuple()) # convert to seconds
-        # to get back:  datetime.datetime.fromtimestamp(cs)
-        import time, simplejson, datetime
-        dout = {}
-        
-        for key in self.__class__.__jsonkeys__:
-            if type(self.__dict__[key]) == datetime.datetime:
-                dout.update({key:time.mktime(self.__dict__[key].timetuple())})
-            else:
-                dout.update({key:self.__dict__[key]})
-        
-        return simplejson.dumps(dout,indent=indents)
     
     def __str__(self):
         return "id=%s, email=%s" % (self.id,self.email)

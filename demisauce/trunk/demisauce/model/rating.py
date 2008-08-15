@@ -19,7 +19,7 @@ rating_table = Table("rating", meta.metadata,
         Column("type", DBString(255)),
     )
 
-class Rating(object,ModelBase):
+class Rating(ModelBase):
     """
     rating allow 
     

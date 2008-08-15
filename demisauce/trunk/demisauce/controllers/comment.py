@@ -88,7 +88,7 @@ class CommentController(BaseController):
         user = meta.DBSession.query(Person).filter_by(
                     email=email.lower()).first()
         if not user:
-            user = Person(1,email,name)
+            user = Person(site_id=1,email=email,displayname=name)
             user.authn = 'google'
             user.save()
         response.set_cookie('userkey', user.user_uniqueid,

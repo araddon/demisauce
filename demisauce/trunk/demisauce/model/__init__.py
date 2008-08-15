@@ -1,12 +1,15 @@
 """
 """
 import logging
+import time, simplejson, datetime
 from pylons import config
 from sqlalchemy import Column, MetaData, Table, types
 from sqlalchemy import engine, orm
 from sqlalchemy.orm import mapper, relation
 from sqlalchemy.orm import scoped_session, sessionmaker
 from demisauce.model import meta
+
+log = logging.getLogger(__name__)
 
 def init_model(enginelocal):
     """
@@ -65,25 +68,71 @@ def reverse_key(key):
     """
     import urllib
     return urllib.quote_plus(key.replace(' ','_'))
-    
-class ModelBase:
+
+class ModelBase(object):
     """
     Abstract base class implementing some shortcuts
     """
     __tjsonkeys__ = []
-    def __init__(self):
-        pass
+    def __init__(self,*args,**kwargs):
+        for key in kwargs:
+            if hasattr(self,key):
+                setattr(self,key,kwargs[key])
     
     def makekey(self,key):
         """
         Converts a string title to a url safe key that is unique per site
         """
         return make_key(key)
-
+    
+    @classmethod
+    def from_json(cls,json):
+        """Converts from a json string back to a populated object::
+        
+            peep = Person.from_json(json_string)
+        """
+        pydict = simplejson.loads(json)
+        cls_def = pydict['class']
+        module = __import__(cls_def[:cls_def.rfind('.')], globals(), 
+            locals(), [cls_def[cls_def.rfind('.')+1:]], -1)
+        cls = getattr(module, cls_def[cls_def.rfind('.')+1:])
+        attrs = pydict['dict']
+        
+        if 'id' in attrs and 'site_id' in attrs:
+            classobj = cls.get(attrs['site_id'],attrs['id'])
+        else:
+            classobj = cls()
+        
+        for key in attrs:
+            if key.find('datetime_') == 0:
+                attr = key[:]
+                setattr(classobj,key[9:],datetime.datetime.fromtimestamp(attrs[key]))
+            else:
+                log.debug('setting %s = %s' % (key,attrs[key]))
+                setattr(classobj,key,attrs[key])
+        return classobj
+    
+    def to_json(self,indents=2):
+        """converts to json string, converting non serializeable fields
+        to some other format or ignoring them"""
+        # cs = time.mktime(self.created.timetuple()) # convert to seconds
+        # to get back:  datetime.datetime.fromtimestamp(cs)
+        dout = {}
+        
+        for key in self.c._data:
+            if type(getattr(self,key)) == datetime.datetime:
+                dout.update({'datetime_%s' % key:time.mktime(getattr(self,key).timetuple())})
+            else:
+                dout.update({key:getattr(self,key)})
+        cls = str(self.__class__)
+        cls = cls[cls.find('\'')+1:cls.rfind('\'')]
+        cls_out = {'class':cls,'dict':dout}
+        return simplejson.dumps(cls_out,sort_keys=True,indent=indents)
+    
     def delete(self):
         meta.DBSession.delete(self)
         meta.DBSession.commit()
-
+    
     def save(self):
         if self.id > 0:
             meta.DBSession.update(self)
@@ -109,7 +158,9 @@ class ModelBase:
         if site_id == -1:
             return meta.DBSession.query(cls).get(id)
         else:
-            return meta.DBSession.query(cls).filter_by(site_id=site_id,id=id).first()
+            qry = meta.DBSession.query(cls).filter_by(site_id=site_id,id=id)
+            log.debug('in get: %s' % str(qry))
+            return qry.first()
     
     @classmethod
     def saget(cls,id=0):

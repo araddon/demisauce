@@ -45,7 +45,7 @@ class Cmsassoc(object):
         self.item = child
     
 
-class Cmsitem(object,ModelBase):
+class Cmsitem(ModelBase):
     """
     
         >>> c = Cmsitem('test docstring title', 'some mixed<b>content</b>',1)

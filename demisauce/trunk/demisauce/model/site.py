@@ -24,7 +24,7 @@ site_table = Table("site", meta.metadata,
         Column("public", Boolean, default=False),
     )
 
-class Site(object,ModelBase):
+class Site(ModelBase):
     """
     Container for different user's and distinct sets of data.  Each Site 
     does not share anything with other site's.  Users in a site can be in 

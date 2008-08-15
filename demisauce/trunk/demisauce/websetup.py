@@ -95,7 +95,8 @@ random one:\n%s, \nyou can enter it into your ini file:\n%s' % (key,newkey,ini_f
     user = meta.DBSession.query(person.Person).filter_by(site_id=s.id,id=1).first()
     if not user:
         pwd = 'admin'
-        user = person.Person(s.id, 'sysadmin@demisauce.org','Sys Admin @Demisauce',pwd)
+        user = person.Person(site_id=s.id, email='sysadmin@demisauce.org',
+            displayname='Sys Admin @Demisauce',raw_password=pwd)
         user.isadmin = True
         user.verified = True
         user.waitinglist = False
@@ -103,11 +104,13 @@ random one:\n%s, \nyou can enter it into your ini file:\n%s' % (key,newkey,ini_f
         user.save()
         print  '\ndemisauce sysadmin username = %s' % user.email
         print 'password = %s\n' % pwd
+        print 'site_id = %s' % s.id
     
     adminuser = meta.DBSession.query(person.Person).filter_by(site_id=s.id,email='admin@demisauce.org').first()
     if not adminuser:
         pwd = 'admin'
-        adminuser = person.Person(s.id, 'admin@demisauce.org','Admin @Demisauce',pwd)
+        adminuser = person.Person(site_id=s.id, email= 'admin@demisauce.org',
+            displayname='Admin @Demisauce',raw_password=pwd)
         adminuser.verified = True
         adminuser.waitinglist = False
         adminuser.isadmin = True

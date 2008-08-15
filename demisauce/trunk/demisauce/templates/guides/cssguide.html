@@ -1,0 +1,241 @@
+<%inherit file="../_base1col.html"/>
+
+<%def name="title()">Css Guide</%def>
+
+<%def name="body()">
+
+<style type="text/css">
+
+.bigcolorblock {width:450px;height=30px;padding:4px;margin: 5px;}
+#bc1 {border: 1px solid #9c9; background: #060;padding:4px;margin: 5px;width: 450px; }
+#rp1 {border: 1px solid #84BE58; background: #CBEAA8;padding:4px;margin: 5px;width: 450px; }
+
+#osw1 {border: 1px solid #84BE58; background: #85C329;padding:4px;margin: 5px;width: 450px; }
+#osw2 {border: 1px solid #84BE58; background: #fec529;padding:4px;margin: 5px;width: 450px; }
+#st1 {border: 1px solid #84BE58; background: #399DCF;padding:4px;margin: 5px;width: 450px; }
+#st2 {border: 1px solid #399DCF; background: #A9CC4C;padding:4px;margin: 5px;width: 450px; }
+#share1 {border: 1px solid #84BE58; background: #97c734;padding:4px;margin: 5px;width: 450px; }
+#nets1 {border: 1px solid #99cc33; background: #99cc33;padding:4px;margin: 5px;width: 450px; }
+#nets2 {border: 1px solid #9cbc74; background: #9cbc74;padding:4px;margin: 5px;width: 450px; }
+#bd8 {border: 1px solid #bd8; background: #bd8;padding:4px;margin: 5px;width: 450px; }
+
+
+</style>
+
+  <h1>This is an H1</h1>
+  <h1 style="color: #235C9D;">This is an H1 w #235C9D font color</h1>
+  <h1 style="color: #134783;">This is an H1 w #134783 font color</h1>
+  <h2>This is an H2</h2>
+  <h3>This is an H3</h3>
+  <h4>This is an H4</h4>
+  <h5>This is an H5</h5>
+  <ul>this is ul
+    <li>an item
+    <li>another
+  </ul>
+  
+  <style type="text/css">
+  #header {
+  border-top:4px solid #666666;
+  background-color:#333333;
+  height:45px;
+  }
+  #header ul {height:30px;list-style-image:none;list-style-position:outside;
+    list-style-type:none;margin:0;padding:10px 0 0;position:absolute;}
+  #header ul li {display:inline;float:left;}
+  #header ul a.current{
+  -moz-border-radius-bottomleft:3px;
+  -moz-border-radius-bottomright:3px;
+  -moz-border-radius-topleft:3px;
+  -moz-border-radius-topright:3px;
+  background-color:#116092;
+  color:#FFFFFF;
+  }
+  #header ul a.current {
+    margin:0pt 16px 0pt 17px;
+  }
+  #header ul a {
+  -moz-border-radius-bottomleft:3px;
+  -moz-border-radius-bottomright:3px;
+  -moz-border-radius-topleft:3px;
+  -moz-border-radius-topright:3px;
+  padding:3px 11px;
+  
+  }
+  #header ul a:hover {
+    -moz-border-radius-bottomleft:3px;
+    -moz-border-radius-bottomright:3px;
+    -moz-border-radius-topleft:3px;
+    -moz-border-radius-topright:3px;
+    background-color:#116092;
+    color:#FFFFFF;
+    }
+  #header ul a {
+  -x-system-font:none;
+  color:#FFFFFF;
+  display:block;
+  font-family:Trebuchet MS,Arial,sans-serif;
+  font-size:1.1em;
+  font-size-adjust:none;
+  font-stretch:normal;
+  font-style:normal;
+  font-variant:normal;
+  font-weight:600;
+  line-height:normal;
+  text-transform:uppercase;
+  text-decoration:none;
+  }
+  </style>
+  <div id="header">
+
+  <ul>
+  	<li><a href="#" class="current">Home</a></li>
+  	<li><a href="#">Email</a></li>
+  	<li><a href="#">Email</a></li>
+  	<li><a href="#">Email</a></li>
+  </ul></div>
+  <br />
+  <style type="text/css">
+  .crnrblue_box {
+     background: #116092;
+  }
+  .crnrblue_span {
+     background: #116092;
+     width:100px;
+  }
+  .crnrblue_top div {
+     background: url(/images/crnrblue_tl.png) no-repeat top left;
+  }
+  .crnrblue_top {
+     background: url(/images/crnrblue_tr.png) no-repeat top right;
+  }
+  .crnrblue_bottom div {
+     background: url(/images/crnrblue_bl.png) no-repeat bottom left;
+  }
+  .crnrblue_bottom {
+     background: url(/images/crnrblue_br.png) no-repeat bottom right;
+  }
+
+  .crnrblue_top div, .crnrblue_top, 
+  .crnrblue_bottom div, .crnrblue_bottom {
+     width: 100%;
+     height: 6px;
+     font-size: 1px;
+     
+  }
+  .crnrblue_content { margin: 0 6px; color:#fff; font-size:1.4em;font-weight:800;}
+  </style>
+  <div style="padding: 8px;background:#404040;"
+  <div class="crnrblue_box">
+     <div class="crnrblue_top"><div></div></div>
+        <div class="crnrblue_content">
+           Lorem ipsum dolor sit amet, consectetur 
+           adipisicing elit, sed do eiusmod 
+        </div>
+     <div class="crnrblue_bottom"><div></div></div>
+  </div>
+  </div>
+  
+  <div class="boxlinks boxlinks_tabs">
+      <span class="nextprev">&#171; Previous</span>
+      <span class="current">1</span>
+      <a href="/news/page2" title="Go to page 2">2</a>
+      <a href="/news/page3" title="Go to page 3">3</a><a href="/news/page4" title="Go to page 4">4</a>
+      <a href="/news/page5" title="Go to page 5">5</a><a href="/news/page6" title="Go to page 6">6</a>
+      <a href="/news/page7" title="Go to page 7">7</a><a href="/news/page8" title="Go to page 8">8</a>
+      <a href="/news/page9" title="Go to page 9">9</a><a href="/news/page10" title="Go to page 10">10</a>
+      <span>&#8230;.</span>
+      <a href="/news/page163" title="Go to page 163">163</a><a href="/news/page164" title="Go to page 164">164</a>
+      <a href="/news/page2" class="nextprev" title="Go to Next Page">Next &#187;</a>
+  </div>
+  <div class="clear"></div>
+  
+  <p>a paragraph of content, to test out hte ability for it to break etc.  Designed for humans
+    unless those happens don't happen to be able to read this, in which case the
+    best laid plans of mice and men have disintegrated.
+  </p>
+  <div class="box boxb">
+    <h3>div class="box boxb"</h3>
+    Having strategic goals
+    <a href="http://www.colorschemer.com/schemes/?start=20">http://www.colorschemer.com</a>
+  </div>
+  <div class="box box2">
+    <h3>div class="box box2"</h3>
+    Having strategic goals
+    <a href="http://www.colorschemer.com/schemes/?start=20">http://www.colorschemer.com</a>
+  </div>
+  <div class="box boxo">
+    <h3>div class="box boxo"</h3>
+    Having strategic goals
+    <a href="http://www.colorschemer.com/schemes/?start=20">http://www.colorschemer.com</a>
+  </div>
+  <div class="box boxbb">
+    <h3>div class="box boxbb"</h3>
+    Having strategic goals
+    <a href="http://www.colorschemer.com/schemes/?start=20">http://www.colorschemer.com</a>
+  </div>
+  <div class="box boxc">
+    <h3>div class="box boxc"</h3>
+    Having strategic goals
+    <a href="http://www.colorschemer.com/schemes/?start=20">http://www.colorschemer.com</a>
+  </div>
+  <div class="bar1">
+    <h3>div class="box boxc"</h3>
+    Having strategic goals
+    <a href="http://www.colorschemer.com/schemes/?start=20">http://www.colorschemer.com</a>
+  </div>
+  <div class="barg">
+    <h3>div class="box boxc"</h3>
+    Having strategic goals
+    <a href="http://www.colorschemer.com/schemes/?start=20">http://www.colorschemer.com</a>
+  </div>
+<br /><br />
+These 3 colors were "harmonious" from here:  http://www.colorschemegenerator.com/index-black.htm
+    <div class="bigcolorblock" style="background-color:#8F3838">&nbsp;#8F3838</div>
+    <div class="bigcolorblock" style="background-color:#388F63">&nbsp;#388F63</div>
+    <div class="bigcolorblock" style="background-color:#38638F">&nbsp;#38638F</div>
+Background Colors:
+    <div class="bigcolorblock" style="background-color:#FAFAFA">&nbsp;#FAFAFA</div>
+    <div class="bigcolorblock" style="background-color:#F8F8EC">&nbsp;#F8F8EC</div>
+    others misc
+
+    <div class="bigcolorblock" style="background-color:#EBF1D4">&nbsp;#EBF1D4</div>
+    <div class="bigcolorblock" style="background-color:#c0c0e0">&nbsp;#c0c0e0</div>
+    <div class="bigcolorblock" style="background-color:#59e">&nbsp;#59e</div>
+    <div class="bigcolorblock" style="background-color:#97c734">&nbsp;#97c734</div>
+    <div class="bigcolorblock" style="background-color:#fec529">&nbsp;#fec529</div>
+
+    <div class="bigcolorblock" style="background-color:#84BE58">&nbsp;#84BE58</div>
+    <div class="bigcolorblock" style="background-color:#f60">&nbsp;#f60</div>
+    <div class="bigcolorblock" style="background-color:#ffc">&nbsp;#ffc</div>
+    <div class="bigcolorblock" style="background: #bd8;">#bd8;
+      <span style="background-color: #D8FB97;">hover #D8FB97</span> </div>
+    <div class="bigcolorblock" style="background-color:#dda">&nbsp;#dda</div>
+    <br />
+
+    <div class="bigcolorblock" style="background-color:#dd5">&nbsp;#dd5</div>
+    <div class="bigcolorblock" style="border: 1px solid #9c9; background: #060;">9c9</div>
+    <div class="bigcolorblock" style="border: 1px solid #84BE58; background: #CBEAA8;">#CBEAA8 border 84BE58</div>
+    <div class="bigcolorblock" style="border: 1px solid #84BE58; background: #85C329;">oswd bg 85C329</div>
+    <div class="bigcolorblock" style="border: 1px solid #84BE58; background: #fec529;">share1 bg fec529</div>
+    <div class="bigcolorblock" style="background-color:#FFCF13">&nbsp;#FFCF13</div>
+    <div class="bigcolorblock" style="border: 1px solid #99cc33; background: #99cc33;">netsquared color:#99cc33;  </div>
+    <div class="bigcolorblock" style="border: 1px solid #9cbc74; background: #9cbc74;">netsquared color:#9cbc74;  </div>
+    <div class="bigcolorblock" style="background: #bd8;">#bd8; <span style="background-color: #D8FB97;">hover #D8FB97</span> </div>
+    <div class="bigcolorblock" style="border: 1px solid #84BE58; background: #399DCF;">bg 399DCF</div>
+    <div class="bigcolorblock" style="border: 1px solid #399DCF; background: #A9CC4C;">bg A9CC4C</div>
+    <div class="bigcolorblock" style="border: 1px solid #84BE58; background: #97c734;">share1 bg 97c734</div>
+    <div class="bigcolorblock" style="background-color:#963">&nbsp;#963</div>
+    <div class="bigcolorblock" style="background-color:#f60">&nbsp;#f60</div>
+    <div class="bigcolorblock" style="background-color:#fc0">&nbsp;#fc0</div>
+    <div class="bigcolorblock" style="background-color:#59e">&nbsp;#59e</div>
+    <div class="bigcolorblock" style="background-color:#dd1">&nbsp;#dd1</div>
+    <div class="bigcolorblock" style="background-color:#dda">&nbsp;#dda</div>
+    <div class="bigcolorblock" style="background-color:#134783">&nbsp;#134783</div>
+    <div class="bigcolorblock" style="background-color:#64A6F3">&nbsp;#64A6F3</div>
+    <div class="bigcolorblock" style="background-color:#93BB3A">&nbsp;#93BB3A</div>
+    <div class="bigcolorblock" style="background-color:#ffd">&nbsp;#ffd</div>
+    <div class="bigcolorblock" style="background-color:#DAECF3">&nbsp;#DAECF3</div>
+    <div class="bigcolorblock" style="background-color:#feb">&nbsp;#feb</div>
+
+</%def>

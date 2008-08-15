@@ -31,7 +31,7 @@ comment_table = Table("comment", meta.metadata,
         Column("comment", DBText),
     )
 
-class Comment(object,ModelBase):
+class Comment(ModelBase):
     """
     Comment is a comment someone makes (may be anonymous) 
     about something. the "Something" is the type, so type=blog or

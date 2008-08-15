@@ -10,7 +10,7 @@ class TestPersonGroupController(BaseAdminController):
     @classmethod
     def setupAll(cls):
         print 'in TestPersonController.setupAll'
-        p = person.Person(1,'guest@demisauce.org','Demisauce Web','admin')
+        p = person.Person(site_id=1,email='guest@demisauce.org',displayname='Demisauce Web',raw_password='admin')
         p.url = 'http://www.google.com'
         p.save()
         TestPersonGroupController.personitem = p
@@ -35,8 +35,11 @@ class TestPersonGroupController(BaseAdminController):
         assert 'name of new group' in response
     
     def test_group_webservice(self):
-        response = self.app.get(url_for('/api/xml/group/%s' % (
-            TestPersonGroupController.groupitem.id)))
+        assert TestPersonGroupController.groupitem.id > 0
+        url = url_for('/api/xml/group/%s' % (TestPersonGroupController.groupitem.id))
+        print url
+        response = self.app.get(url)
+        print response
         assert 'testing group creation setupall' in response, 'should have xml of name of group'
         assert 'afakeemail@demisauce.org' in response, 'should have members list'
     

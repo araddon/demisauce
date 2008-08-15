@@ -21,12 +21,12 @@ tag_table = Table("tag", meta.metadata,
         Column("id", Integer, primary_key=True),
         Column('site_id', None, ForeignKey('site.id')),
         Column('assoc_id', None, ForeignKey('tag_map.id')),
+        Column('person_id', None, ForeignKey('person.id')),
         Column("value", DBString(40), nullable=False),
     )
 ## map table
 tag_map_table = Table("tag_map", meta.metadata,
     Column('id', Integer, primary_key=True),
-    Column('person_id', None, ForeignKey('person.id')),
     Column('type', DBString(50), nullable=False),
     Column('version', Integer, default=0),
 )
@@ -62,20 +62,29 @@ class TagExt(MapperExtension):
         return EXT_PASS
 """
 
-class Tag(object):
+class Tag(ModelBase):
     """
     :tag: tag (no whitespace or illegal character)
-    :person:  perosn object
+    :person:  person
     """
-    def __init__(self, tag, person):
-        self.value = tag
-        self.person_id = person_id
-        self.username = person.displayname
-        self.site_id = person.site_id
+    def __init__(self,**kwargs):
+        super(Tag, self).__init__(**kwargs)
+        if 'tag' in kwargs:
+            self.value = kwargs['tag']
+        if 'person' in kwargs:
+            person = kwargs['person']
+            self.person_id = person.id
+            self.username = person.displayname
+            self.site_id = person.site_id
     
     member = property(lambda self: getattr(self.association, '_backref_%s' % self.association.type))
 
 class TagAssoc(object):
+    """
+    :type: the table/type this is associated with
+        since this can relate to multiple table/entity types, 
+        this lists which type this is related to
+    """
     def __init__(self, name):
         self.type = name
     

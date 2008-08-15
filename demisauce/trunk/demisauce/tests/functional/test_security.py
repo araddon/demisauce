@@ -12,7 +12,7 @@ class TestSecurityController(TestController):
         assert admin.has_role('sysadmin') == True, 'should have sysadmin role'
         assert admin.has_role('fakerole') == False
         test_page = self.app.get('/email/testsecurity')
-         assert '302 Found' in test_page, 'should get a 302 redirect to dashboard'
+        assert '302 Found' in test_page, 'should get a 302 redirect to dashboard'
         assert not ('failed test security' in test_page)
     
 

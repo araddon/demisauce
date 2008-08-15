@@ -23,7 +23,7 @@
             <dt>Status:</dt>           <dd>${item.status}</dd>
         </dl>
         <div class="clear"></div>
-        ${h.form(h.url(action='process'), method='post')}
+        ${h.form(h.url(action='process'), method='post',id='help_process_form')}
             <input type="hidden" id="help_id" name="help_id" value="${(item and item.id) or '0'}" />
 
              <div id="form_tabs_div" class="boxlinks_tabs boxlinks actionbar">
@@ -39,32 +39,14 @@
                 <div id="tab1" style="display:show">
                     <div class="required">
                         <label for="tags">tagging:</label>
-                        <div class="tag_selections" style="height:26px; margin-left:0px;">
-                        <a href="#" >tag1</a> <a href="#" >tag1</a> <a href="#" >tag1</a> 
+                        <style type="text/css"> 
+                            a.tagged {background-color:#ccc;}
+                        </style>
+                        <div id="tag_list_div" class="tag_selections" style="height:26px; margin-left:0px;">
+                            <a href="#">tag1</a> <a href="#">tag2</a> <a href="#" >tag3</a> 
                         </div>
                         ${h.text_field('tags', value='enter tags separated by commas', class_="hint")}
-                        <br ?>
-                    </div>
-                    <div  style="margin-top:8px; min-height:75px;">
-                        <div class="required half_width">
-                            <fieldset style="padding:6px;"> 
-                                <legend>Status of this Ticket<img alt="help?" title="Status determine's if this shows in the list needing work" 
-                                    src="/images/icon_help.png" class="demisauce_help_tip" /></legend>
-                                <input type="radio" id="status" name="status" value="0 "${(((item.status == 0) and "CHECKED") or '')} /> New <br />
-                                <input type="radio" id="status" name="status" value="1" ${(((item.status == 1) and "CHECKED") or '')} /> Assigned <br />
-                                <input type="radio" id="status" name="status" value="10" ${(((item.status == 10) and "CHECKED") or '')} /> Completed <br />
-                            </fieldset> 
-                        </div>
-                        <div class="required half_width">
-                            <fieldset style="padding:6px;"> 
-                                <legend>Publish This Response to Help Repository
-                                    <img alt="help?" title="This will be publicly visible to other users viewing help on page this was received from" 
-                                        src="/images/icon_help.png" class="demisauce_help_tip" />
-                                </legend>
-                                ${h.radio_button('publish', '1',checked=True)} Yes <br />
-                                ${h.radio_button('publish', '0',checked=False)} No 
-                            </fieldset> 
-                        </div>
+                        <br />
                     </div>
                 </div>
                 <div id="tab2" style="display:none;">
@@ -77,35 +59,54 @@
                         ${h.text_area("response", content='enter your response here', size="50x5", class_="hint")}
                     </div>
                     <div  style="margin-top:8px; min-height:75px;">
-                        <div class="required half_width">
-                            <fieldset style="padding:6px;"> 
-                                <legend>Status of this Ticket
-                                    <img alt="help?" title="Status determine's if this shows in the list needing work" 
-                                        src="/images/icon_help.png" class="demisauce_help_tip" />
-                                </legend>
-                                <input type="radio" id="status" name="status" value="0 "${(((item.status == 0) and "CHECKED") or '')} /> New <br />
-                                <input type="radio" id="status" name="status" value="1" ${(((item.status == 1) and "CHECKED") or '')} /> Assigned <br />
-                                <input type="radio" id="status" name="status" value="10" ${(((item.status == 10) and "CHECKED") or '')} /> Completed <br />
-                            </fieldset> 
-                        </div>
-                        <div class="required half_width">
+                        <div class="required">
                             <fieldset style="padding:6px;"> 
                                 <legend>Publish This Response to Help Repository?</legend>
-                                ${h.radio_button('publish', '1',checked=True)} Yes <br />
+                                ${h.radio_button('publish', '1',checked=True)} Yes 
                                 ${h.radio_button('publish', '0',checked=False)} No 
                             </fieldset> 
                         </div>
                     </div>
                 </div>
+                <div  style="margin-top:8px; min-height:75px;">
+                    <div class="required half_width">
+                        <fieldset style="padding:6px;"> 
+                            <legend>Status of this Ticket<img alt="help?" title="Status determine's if this shows in the list needing work" 
+                                src="/images/icon_help.png" class="demisauce_help_tip" /></legend>
+                                <input type="radio" id="status" name="status" value="0" ${(((item.status == 0) and "CHECKED") or '')} /> New <br />
+                                <input type="radio" id="status" name="status" value="1" ${(((item.status == 1) and "CHECKED") or '')} /> Assigned <br />
+                                <input type="radio" id="status" name="status" value="10" ${(((item.status == 10) and "CHECKED") or '')} /> Completed <br />
+                        </fieldset> 
+                    </div>
+                </div>
                 <div class="actions submit">
-                    <input type="submit" class="primaryActionxx primary" id="submit" value="Save &#187;">
+                    <input type="submit" class="primary" id="submit" value="Save and Next &#187;">
                     &nbsp;&nbsp;<a href="/helpadmin" id="cancelnode">cancel</a>
                 </div>
             </div>
             <script type="text/javascript">
             $(document).ready(function(){
                 $('#form_tabs_div').ds_tabs();
-                
+                var self = this;
+                var first_tag = true;
+                $('#tag_list_div a').click(function(){
+                    if (first_tag === true){
+                        $('#tags').focus();
+                    } else {
+                        alert('hello')
+                    }
+                    var taghref = this;
+                    //var help_id = $('#help_id').val();
+                    //var data = {help_id:help_id,'tag':$(this).html()};
+                    //data: $.param(post_vals),
+                    //var url = $.ds.defaults.base_url + "/helpadmin/tag_help";
+                    $(this).addClass('tagged');
+                    var sep = ',';
+                    if ($('#tags').val() == '') sep = '';
+                    $('#tags').val($('#tags').val() + sep + $(this).html());
+                    //$.getJSON(url + '?jsoncallback=?', data, function(json){
+                    //  });
+                });
             });
             </script>
         ${h.end_form()}

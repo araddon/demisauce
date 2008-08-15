@@ -18,7 +18,7 @@ app_table = Table("app", meta.metadata,
         Column("description", DBText),
     )
 
-class App(object,ModelBase):
+class App(ModelBase):
     """
     Application is collection of services, or pre-done integration
     usually apps share authentication, base_url etc.
@@ -50,7 +50,7 @@ service_table = Table("service", meta.metadata,
         Column("description", DBText),
     )
 
-class Service(object,ModelBase):
+class Service(ModelBase):
     """
     Service is either a Demisauce, or "plug_in" service
     

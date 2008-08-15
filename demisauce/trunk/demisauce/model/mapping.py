@@ -42,28 +42,30 @@ mapper(Activity, activity_table, properties={
     'site':relation(Site, lazy=True, order_by=activity_table.c.created.desc(),
         backref='activities'),
 })
+mapper(Tag, tag_table)
+
+mapper(TagAssoc, tag_map_table, properties={
+    'tags':relation(Tag, backref='association'),
+})
 mapper(Person, person_table, properties={
     'site':relation(Site, backref='users'),
     'groups':relation(Group, lazy=True, secondary=groupperson_table,
             primaryjoin=person_table.c.id==groupperson_table.c.person_id,
             secondaryjoin=and_(groupperson_table.c.group_id==group_table.c.id), 
                         backref='members'),
-    'activities':dynamic_loader(Activity)
-})
-mapper(Tag, tag_table)
-
-mapper(TagAssoc, tag_map_table, properties={
-    'tags':relation(Tag, backref='association'),
+    'activities':dynamic_loader(Activity),
+    'tags':relation(Tag,lazy=True,backref='users')
 })
 
 mapper(Help, help_table, properties={
     'site':relation(Site, lazy=True, order_by=help_table.c.created.desc(),
-        backref='helptickets')
+        backref='helptickets'),
 })
 mapper(HelpResponse, help_response_table, properties={
     'site':relation(Site, lazy=True, order_by=help_response_table.c.created.desc(),
         backref='helpreponses'),
     'person':relation(Person, lazy=True, backref='helpreponses'),
+    'helpticket':relation(Help, backref='helpresponses'),
 })
 taggable(Help, 'tags', uselist=True)
 

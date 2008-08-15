@@ -30,7 +30,7 @@ groupperson_table = Table('person_group', meta.metadata,
 )
 
 
-class Group(object,ModelBase):
+class Group(ModelBase):
     """
     group
     
@@ -46,7 +46,7 @@ class Group(object,ModelBase):
         self.site_id = site_id
         #self.__members = []
         self.group_type == 'node'
-        
+    
     def get_email_list(self):
          return ', '.join(['%s' % m.email.strip(string.whitespace).lower() for m in self.members])
     email_list = property(get_email_list)
@@ -96,7 +96,7 @@ class Group(object,ModelBase):
         if p and p.id > 0:
             self.members.append(p)
         else:
-            self.members.append(person.Person(self.site_id,newemail))
+            self.members.append(person.Person(site_id=self.site_id,email=newemail))
             return newemail
     
     @classmethod
