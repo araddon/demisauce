@@ -124,6 +124,7 @@ div.boxlinks_tabs a.current {border-bottom: 1px solid #DDDDDD;background:#DDDDDD
 
 /* Tag selections */
 .tag_selections a {border: 1px solid #235C9D;text-decoration: none;padding: 3px 5px;}
+a.tagged {background-color:#ccc;}
 
 .tab-spacer{background:#E1ECF9;border:0px solid #8db2e3;border-top:0 none;height:2px;font-size:1px;line-height:1px;}
 div.formbox {border:1px solid #8db2e3;margin-top:20px;}

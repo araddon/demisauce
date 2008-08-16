@@ -1,6 +1,6 @@
 from pylons import config
 from sqlalchemy import Column, MetaData, ForeignKey, Table
-from sqlalchemy.sql import and_
+from sqlalchemy.sql import and_, select, func
 from sqlalchemy.types import Integer, String as DBString, \
     DateTime, Text as DBText, Boolean
 from sqlalchemy.orm import mapper, relation, MapperExtension, EXT_PASS
@@ -30,37 +30,6 @@ tag_map_table = Table("tag_map", meta.metadata,
     Column('type', DBString(50), nullable=False),
     Column('version', Integer, default=0),
 )
-temp = """ 
-change_table = Table("changes", metadata,
-        Column("id", Integer, primary_key=True),
-        Column('assoc_id', None, ForeignKey('change_associations.assoc_id')),
-        Column("change", DBString(255), nullable=False),
-        Column("site_id", Integer),
-        Column("person_id", Integer, ForeignKey('person.id')),
-        Column("link", DBString(255), default=''),
-        Column("created", DateTime,default=func.now()),
-        Column("node_id", Integer),
-        Column("username", DBString(50), default=''),
-    )
-## association table
-change_associations_table = Table("change_associations", metadata,
-    Column('assoc_id', Integer, primary_key=True),
-    Column('type', DBString(50), nullable=False),
-    Column('version', Integer, default=0),
-)
-class TagExt(MapperExtension):
-    def before_update(self, mapper, connection, instance):
-        #connection.execute(member_table.delete(member_table.c.org_id==instance.org_id))
-        #print 'in before update, does this hit inserts?'
-        instance._dochanges()
-        return EXT_PASS
-
-    def before_insert(self, mapper, connection, instance):
-        #connection.execute(member_table.delete(member_table.c.org_id==instance.org_id))
-        print 'in before insert, does this hit updates? type=%s' % dir(instance)
-        instance._dochanges()
-        return EXT_PASS
-"""
 
 class Tag(ModelBase):
     """
@@ -78,6 +47,26 @@ class Tag(ModelBase):
             self.site_id = person.site_id
     
     member = property(lambda self: getattr(self.association, '_backref_%s' % self.association.type))
+    
+    @classmethod
+    def by_key(self,site_id=0,tag_type=None):
+        """get all tags for a specific type"""
+        s = select([tag_table.c.value],
+            from_obj=[tag_table.join(tag_map_table, tag_map_table.c.type=='help')],
+            whereclause=(tag_table.c.assoc_id == tag_map_table.c.id),
+            distinct=True)
+        tag_list = meta.engine.execute(s)
+        return [row[0] for row in tag_list]
+    
+    @classmethod
+    def by_cloud(self,site_id=0,tag_type=None):
+        """get all tags for a specific type"""
+        s = select([tag_table.c.value, func.count(tag_table.c.value)],
+            from_obj=[tag_table.join(tag_map_table, tag_map_table.c.type=='help')],
+            whereclause=(tag_table.c.assoc_id == tag_map_table.c.id),
+            group_by=[tag_table.c.value])
+        tag_list = meta.engine.execute(s)
+        return [row for row in tag_list]
 
 class TagAssoc(object):
     """
@@ -95,7 +84,9 @@ def taggable(cls, name, uselist=True):
     import demisauce.model.person
     mapper = class_mapper(cls)
     table = mapper.local_table
-    mapper.add_property('tag_rel', relation(TagAssoc, backref='_backref_%s' % table.name))
+    mapper.add_property('tag_rel', relation(TagAssoc, 
+        cascade="save-update, merge,refresh-expire",
+        backref='_backref_%s' % table.name))
 
     if uselist:
         # list based property decorator

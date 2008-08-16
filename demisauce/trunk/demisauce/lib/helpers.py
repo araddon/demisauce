@@ -17,6 +17,7 @@ from webhelpers.html.tags import select
 from routes import url_for
 from pylons.controllers.util import redirect_to
 import webhelpers.paginate
+import math
 
 
 def dspager(qry):
@@ -135,12 +136,56 @@ def isdemisauce_admin():
     print 'not demisauce admin %s' % c.user.email
     return False
 
-def tag_links(tags):
+def tag_links(site_id=0,tag_type=None,tags=tags,cachetime=180):
     """
     Converts a list of tags to a list of links
+    :tag_type: the type since tags can refer to many things
+    
     """
-    if tags == None: return ""
-    return '  '.join(["<a href=\"/node/tag/%s\">%s</a>" % (tag,tag)  for tag in tags.split()])
+    selected_tags = tags
+    def tag_make():
+        from demisauce.model.tag import Tag
+        alltags = Tag.by_key(site_id=site_id,tag_type=tag_type)
+        tag_links = []
+        for tag in alltags:
+            if tag in selected_tags:
+                tag_links.append("<a href=\"#\" id=\"tag_%s\" class=\"tagged\">%s</a>" % (tag,tag))
+            else:
+                tag_links.append("<a href=\"#\" id=\"tag_%s\">%s</a>" % (tag,tag))
+        return '  '.join(tag_links)
+    
+    mycache = cache.get_cache('demisauce.tags' )
+    # Get the value, this will create the cache copy the first time
+    # and any time it expires (in seconds, so 3600 = one hour)
+    myvalue = mycache.get_value('tag.%s.linklist' % (tag_type), 
+        createfunc=tag_make,expiretime=cachetime)
+    return myvalue
+
+def tag_weight(x):
+    if x==None or x==0:
+         x = 1
+    return 80 + 25 * math.log(x, math.e)
+
+def tag_cloud(site_id=0,tag_type=None,cachetime=180):
+    """tag cloud"""
+    def tag_make():
+        from demisauce.model.tag import Tag
+        alltags = Tag.by_cloud(site_id=site_id,tag_type=tag_type)
+        tag_links = []
+        tagct = [t[1] for t in alltags]
+        #  max size = 150%, min size = 50%
+        # if 100 tags, max = 20, min =1
+        for row in alltags:
+            tag_links.append('''<a href="#" id="tag_%s" class="tagged" 
+                style="font-size:%s%s">%s</a>''' % (row[0],tag_weight(row[1]),'%',row[0]))
+        return '  '.join(tag_links)
+
+    mycache = cache.get_cache('demisauce.tagss' )
+    # Get the value, this will create the cache copy the first time
+    # and any time it expires (in seconds, so 3600 = one hour)
+    myvalue = mycache.get_value('tag.%s.linkcloud' % (tag_type), 
+        createfunc=tag_make,expiretime=cachetime)
+    return myvalue
 
 def add_alert(msg):
     """

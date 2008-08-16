@@ -1,6 +1,6 @@
 from pylons import config
 from sqlalchemy import Column, MetaData, ForeignKey, Table
-from sqlalchemy.sql import and_
+from sqlalchemy.sql import and_, select
 from sqlalchemy.types import Integer, String as DBString, DateTime, \
     Boolean, Text as DBText
 #from sqlalchemy.types import 
@@ -58,6 +58,7 @@ class Help(ModelBase):
         super(Help, self).__init__(**kwargs)
         if 'email' in kwargs:
             self.set_email(kwargs['email'])
+        self.all_tags = None
     
     def set_email(self,email):
         import hashlib
@@ -129,6 +130,10 @@ class Help(ModelBase):
         return meta.DBSession.query(Help).filter_by(
             site_id=site_id,status=helpstatus[filter]
             ).order_by(help_table.c.created.desc()).limit(ct)
+    
+    @classmethod
+    def tag_keys(cls,site_id=0):
+        return Tag.by_key(site_id,'help')
     
     @classmethod
     def new_tickets_ct(cls,site_id):

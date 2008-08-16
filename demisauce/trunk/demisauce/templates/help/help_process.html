@@ -20,7 +20,7 @@
             <dt>IP:</dt>               <dd>${item.ip}</dd>
             <dt>url:</dt>              <dd>${item.url}</dd>
             <dt>Content:</dt>          <dd>${item.content}</dd>
-            <dt>Status:</dt>           <dd>${item.status}</dd>
+            <!--<dt>Status:</dt>           <dd>${item.status}</dd>-->
         </dl>
         <div class="clear"></div>
         ${h.form(h.url(action='process'), method='post',id='help_process_form')}
@@ -31,21 +31,13 @@
                 <a href="#tab2">Respond</a>
              </div>
             <div class="base_form main_form" style="padding:10px" id="FormWrapper">
-                % if item.isuser:
-
-                % else:
-
-                % endif
                 <div id="tab1" style="display:show">
                     <div class="required">
                         <label for="tags">tagging:</label>
-                        <style type="text/css"> 
-                            a.tagged {background-color:#ccc;}
-                        </style>
-                        <div id="tag_list_div" class="tag_selections" style="height:26px; margin-left:0px;">
-                            <a href="#">tag1</a> <a href="#">tag2</a> <a href="#" >tag3</a> 
+                        <div id="tag_list_div" class="tag_selections" style="line-height:2.2em; margin-left:0px;">
+                        ${h.tag_links(site_id=c.site_id,tag_type='help',tags=[],cachetime=-5)}
                         </div>
-                        ${h.text_field('tags', value='enter tags separated by commas', class_="hint")}
+                        ${h.text_field('tags', value=c.tags_value, class_="hint")}
                         <br />
                     </div>
                 </div>
@@ -80,33 +72,43 @@
                     </div>
                 </div>
                 <div class="actions submit">
-                    <input type="submit" class="primary" id="submit" value="Save and Next &#187;">
+                    <input type="submit" class="primary" id="submit" value="Save &amp; Next &#187;">
                     &nbsp;&nbsp;<a href="/helpadmin" id="cancelnode">cancel</a>
                 </div>
             </div>
             <script type="text/javascript">
             $(document).ready(function(){
                 $('#form_tabs_div').ds_tabs();
-                var self = this;
-                var first_tag = true;
-                $('#tag_list_div a').click(function(){
-                    if (first_tag === true){
-                        $('#tags').focus();
-                    } else {
-                        alert('hello')
+                
+                $.fn.dstags = function(options) {
+                    var opts = $.extend({
+                        tag_div_selector: '#tag_list_div',
+                        tagged_class: 'tagged',
+                        tags:[]},options);
+                    var first_tag = true;
+                    var tags = opts.tags;
+                    for (var i=0; i < opts.tags.length; i++) {
+                        var first_tag = false;
+                        $('#tag_' + opts.tags[i]).addClass('tagged');
                     }
-                    var taghref = this;
-                    //var help_id = $('#help_id').val();
-                    //var data = {help_id:help_id,'tag':$(this).html()};
-                    //data: $.param(post_vals),
-                    //var url = $.ds.defaults.base_url + "/helpadmin/tag_help";
-                    $(this).addClass('tagged');
-                    var sep = ',';
-                    if ($('#tags').val() == '') sep = '';
-                    $('#tags').val($('#tags').val() + sep + $(this).html());
-                    //$.getJSON(url + '?jsoncallback=?', data, function(json){
-                    //  });
-                });
+                    var self = this;
+                    $('a',$(this)).click(function(){
+                        if (first_tag === true){
+                            $('#tags').focus();
+                            first_tag = false;
+                        }
+                        tags[tags.length] = $(this).html();
+                        $(this).addClass('tagged');
+                        var sep = ',';
+                        if ($('#tags').val() == '') sep = '';
+                        $('#tags').val($('#tags').val() + sep + $(this).html());
+                    });
+                };
+                <%
+                    c.tag_jsarray = ','.join(['"%s"' % tag.value for tag in item.tags])
+                %>
+                $('#tag_list_div').dstags({tags:[${c.tag_jsarray}]});
+
             });
             </script>
         ${h.end_form()}
@@ -116,6 +118,9 @@
 <div>
     <div class="bar1">
         <span class="h3">Help And Feedback Page</span>
+        <span >
+            Feedback 22 of 45 <a href="#" id="tag_javascript">&#171; Previous</a>  <a href="#" id="tag_python">Next &#187;</a>
+        </span>
     </div>
     ${help_process(c.item)}
     
@@ -125,7 +130,12 @@
 
 <%def name="sidebar_top()">
     <div class="bar1">
+        <span class="h3">Filter By</span>
+    </div>
+    <br />
+    <div class="bar1">
         <ul class="topnav right" style="position:relative;margin-top:-1px;font-size:83%;">
+            <li><a href="/helpadmin/cloud" class="${h.is_current(['helpadmin/cloud'])}">Cloud</a></li>
             <li><a href="?filter=new" class="${h.is_current(['filter=new'])}">New</a></li>
             <li><a href="?filter=completed" class="${h.is_current(['filter=completed'])}">complete</a></li>
             <li><a href="?filter=recent" class="${h.is_current(['filter=recent'])}">recent</a></li>

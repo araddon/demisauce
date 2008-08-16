@@ -123,7 +123,9 @@
                 post_vals = $.extend(post_vals,{'cnames':cnames});
             };
             if (opts.activity != null) {
-                $.getJSON(url + '&jsoncallback=?', $.param(post_vals), function(json){});
+                $.getJSON(url + '&jsoncallback=?', $.param(post_vals), function(json){
+                    alert('success or failure?' + json)
+                });
             };
         }
     });
@@ -226,8 +228,10 @@
             $(this).attr('hint',$(this).val());
         });
         $(opts.hint_selector,this).focus(function(){
-            if ($(this).hasClass(opts.hint_class)) {
-                $(this).val('').removeClass(opts.hint_class);
+            if ($(this).hasClass(opts.hint_class) &&
+                    ($(this).val() == $(this).attr('hint'))) {
+                $(this).val('');
+                $(this).removeClass(opts.hint_class);
             }
         });
         $(opts.hint_selector,this).blur(function(){

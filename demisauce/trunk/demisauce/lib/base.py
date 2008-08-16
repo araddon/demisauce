@@ -18,6 +18,7 @@ from demisauce.model import mapping, meta
 from demisauce.model.person import Person
 import tempita
 from functools import wraps
+from decorator import decorator
 
 log = logging.getLogger(__name__)
 
@@ -77,25 +78,28 @@ def get_current_site():
 
 
 def requires_role(role):
-    def decorator(target):
-        def wrapper(self, *args, **kwargs):
-            user = get_current_user()
-            if not user or user.has_role(role) == False:
-                session['return_url'] = request.path_info
-                session.save()
-                #abort(403, 'Not authorized')
-                if user and (not request.environ['pylons.routes_dict']['controller'] == 'dashboard'):
+    def wrapper(func,*args,**kwargs):
+        user = get_current_user()
+        if not user or user.has_role(role) == False:
+            session['return_url'] = request.path_info
+            session.save()
+            #abort(403, 'Not authorized')
+            if user:
+                if request.environ['pylons.routes_dict']['controller'] == 'dashboard':
                     h.add_alert('Not Authorized')
-                    log.info('403, current user doesnt have role=%s redirect to dashboard' % (role))
-                    return self.redirect(h.url_for(controller='dashboard',action='index'))
+                    log.info('403, current user doesnt have role=%s redirect to public page' % (role))
+                    redirect_wsave(h.url_for(controller='home',action='index'))
                 else:
-                    h.add_alert('Must Sign In')
-                    log.info('not logged in or wrong role, about to redirect to signin' )
-                    return self.redirect(h.url_for(controller='account',action='signin'))
+                    h.add_alert('Not Authorized')
+                    log.info('not authorized' )
+                    redirect_wsave(h.url_for(controller='dashboard',action='index'))
             else:
-                return target(self, *args)
-        return wrapper
-    return decorator
+                h.add_alert('Must Sign In')
+                log.info('not logged in or wrong role, about to redirect to signin' )
+                redirect_wsave(h.url_for(controller='account',action='signin'))
+        else:
+            return func(*args, **kwargs)
+    return decorator(wrapper)
 
 
 def rendertf(filename,vars=[]):

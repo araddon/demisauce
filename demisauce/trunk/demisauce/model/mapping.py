@@ -42,7 +42,9 @@ mapper(Activity, activity_table, properties={
     'site':relation(Site, lazy=True, order_by=activity_table.c.created.desc(),
         backref='activities'),
 })
-mapper(Tag, tag_table)
+mapper(Tag, tag_table, properties={
+    'site':relation(Site, lazy=True, backref='tags'),
+})
 
 mapper(TagAssoc, tag_map_table, properties={
     'tags':relation(Tag, backref='association'),
@@ -54,7 +56,7 @@ mapper(Person, person_table, properties={
             secondaryjoin=and_(groupperson_table.c.group_id==group_table.c.id), 
                         backref='members'),
     'activities':dynamic_loader(Activity),
-    'tags':relation(Tag,lazy=True,backref='users')
+    'tags':relation(Tag,lazy=True,backref='taggers')
 })
 
 mapper(Help, help_table, properties={

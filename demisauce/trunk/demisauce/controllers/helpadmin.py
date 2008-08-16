@@ -30,10 +30,15 @@ class HelpadminController(SecureController):
     def index(self):
         return self.viewlist()
     
+    def cloud(self,id=0):
+        return render('/help/help_cloud.html')
+    
     @requires_role('admin')
     def viewlist(self,id=0):
         c.item = None
         filter = 'new'
+        c.all_tags = Tag.by_key(site_id=c.site_id,tag_type='help')
+        c.tags_value = 'enter tags separated by commas'
         if 'filter' in request.params:
             filter = request.params['filter']
         
@@ -47,7 +52,8 @@ class HelpadminController(SecureController):
                 c.item = c.helptickets[0]
         elif id > 0:
             c.item = Help.get(c.user.site_id,id)
-        
+        if c.item:
+            c.tags_value = ','.join(['%s' % tag.value for tag in c.item.tags])
         return render('/help/help_process.html')
     
     @requires_role('admin')
