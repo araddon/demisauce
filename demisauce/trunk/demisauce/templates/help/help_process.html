@@ -120,81 +120,6 @@
                     $('div',$(this)).show();
                     return false;
                 });
-                $.fn.dstags = function(options) {
-                    return this.each(function() {
-                         if (!$(this).is(".ds-tag-helper")) new $.ds.tag_helper(this, options);
-                    });
-                };
-                $.ds.tag = {
-                    defaults: {
-                        tag_div_selector: '#tag_list_div',
-                        tagged_class: 'tagged_wdelete',
-                        tag_input: '#tags',
-                        id: "tbd"
-                    }
-                };
-                $.ds.tag_helper = function(el,options) {
-                    var self = this;
-                    options = $.extend({tags:[],tagd:{}}, $.ds.tag.defaults, options);
-                    self.first_tag = true;
-                    self.element = el; 
-                    self.options = options;
-                    $.data(this.element, ".ds-tag-helper", this);
-                    var tags = options.tags;
-                    for (var i=0; i < tags.length; i++) {
-                        self.add_tag(tags[i]);
-                    }
-                    var self = this;
-                    $('a',$(el)).click(function(){
-                        self.click_tag($(this).html());
-                    });
-                };
-                $.extend($.ds.tag_helper.prototype, {
-                    add_tag: function(tag){
-                        var self = this;
-                        //remove hint
-                        if (self.first_tag === true){
-                            $(self.options.tag_input).focus();
-                            self.first_tag = false;
-                        }
-                        // highlight tag
-                        if (tag.indexOf(':') > 0){
-                            $('#tag_' + tag.replace(':','')).addClass(self.options.tagged_class);
-                        } else {
-                            $('#tag_' + tag).addClass(self.options.tagged_class);
-                        }
-                        
-                        // add to selected list
-                        if (!(tag in self.options.tagd)){
-                            self.options.tagd[tag] = tag;
-                            self.options.tags[self.options.length] = tag;
-                        }
-                        // add to input box
-                        var sep = ',';
-                        var jqTagInput = $(self.options.tag_input).val();
-                        if (jqTagInput == '') sep = '';
-                        $(self.options.tag_input).val(jqTagInput + sep + tag);
-                    },
-                    click_tag: function(tag){
-                        var self = this;
-                        if (!(tag in self.options.tagd)){
-                            self.add_tag(tag);
-                        } else {
-                            // remove
-                            delete self.options.tagd[tag]
-                            var newtags = [];
-                            for (var t in self.options.tagd) newtags[newtags.length] = t;
-                            self.options.tags = newtags;
-                            // remove highlight tag
-                            if (tag.indexOf(':') > 0){
-                                $('#tag_' + tag.replace(':','')).removeClass(self.options.tagged_class);
-                            } else {
-                                $('#tag_' + tag).removeClass(self.options.tagged_class);
-                            }
-                            $(self.options.tag_input).val(newtags.join(','));
-                        }
-                    }
-                });
                 $('#tag_list_div').dstags({tags:[${c.tag_jsarray}]});
                 
                 $.tooltip.defaults.width = '400';
@@ -206,22 +131,6 @@
                    extraClass: 'miniwin',
                    showURL: false
                 });
-                /*
-                bodyHandler: function() {
-                    var html = '';
-                    var url = "/account/view_mini/" + $('#ticket_person_details').attr('person_id');
-                    $.get(url, function(person_details){
-                        //alert(person_details)
-                        //person_details = data;
-                        return person_details;
-                    });
-                    //alert(person_details)
-                    //return person_details;
-                },
-                bodyHandlerxxx: function() {
-                  return $('#ticket_details_body').html();
-                },
-                */
             });
             </script>
         ${h.end_form()}
