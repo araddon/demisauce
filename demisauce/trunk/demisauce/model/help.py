@@ -14,7 +14,8 @@ import formencode
 from formencode import validators
 from datetime import datetime
 
-helpstatus = {'new':0,'assigned':1,'completed':10}
+helpstatus = {0:'new',1:'assigned',10:'completed'}
+helpstatus_map = {'new':0,'assigned':1,'completed':10}
 
 # DB Table:  help/feedback/support ---------------------------
 help_table = Table("help", meta.metadata,
@@ -105,10 +106,19 @@ class Help(ModelBase):
             curtags = [tag.value for tag in self.tags]
             tagstemp = [tag.strip() for tag in tags.split(',')]
             tagsnew = [tag for tag in tagstemp if not tag in curtags]
+            tagsdelete = [tag for tag in curtags if not tag in tagstemp]
             for tag in tagsnew:
                 self.tags.append(Tag(tag=tag,person=person))
+            for tag in self.tags:
+                if tag.value in tagsdelete:
+                    self.tags.remove(tag)
+                
     
     tagswcommas = property(get_tags,set_tags)
+    
+    def get_status_text(self):
+        return helpstatus[self.status]
+    status_text = property(get_status_text)
     
     def get_others(self):
         '''grabs previous from this user'''
@@ -128,7 +138,7 @@ class Help(ModelBase):
     def by_site(cls,site_id=0,ct=15,filter='new'):
         """Class method to get recent new unprocessed items"""
         return meta.DBSession.query(Help).filter_by(
-            site_id=site_id,status=helpstatus[filter]
+            site_id=site_id,status=helpstatus_map[filter]
             ).order_by(help_table.c.created.desc()).limit(ct)
     
     @classmethod
@@ -136,10 +146,10 @@ class Help(ModelBase):
         return Tag.by_key(site_id,'help')
     
     @classmethod
-    def new_tickets_ct(cls,site_id):
+    def new_tickets_ct(cls,site_id=0,filter=None):
         """Class method to get count of how many new query tickets 
         there are"""
-        return meta.DBSession.query(Help).filter_by(status=helpstatus['new'],site_id=site_id).count()
+        return meta.DBSession.query(Help).filter_by(status=helpstatus_map['new'],site_id=site_id).count()
     
     @classmethod
     def recent(cls,site_id=0,ct=15,filter='recent'):

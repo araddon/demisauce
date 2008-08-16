@@ -37,11 +37,10 @@ class HelpadminController(SecureController):
     def viewlist(self,id=0):
         c.item = None
         filter = 'new'
-        c.all_tags = Tag.by_key(site_id=c.site_id,tag_type='help')
-        c.tags_value = 'enter tags separated by commas'
+        #c.all_tags = Tag.by_key(site_id=c.site_id,tag_type='help')
         if 'filter' in request.params:
             filter = request.params['filter']
-        
+        temp = """
         if filter in helpstatus:
             c.helptickets = Help.by_site(c.user.site_id,20,filter)
         elif filter == 'recent':
@@ -51,9 +50,12 @@ class HelpadminController(SecureController):
             if c.helptickets.count() > 0:
                 c.item = c.helptickets[0]
         elif id > 0:
-            c.item = Help.get(c.user.site_id,id)
+            pass
         if c.item:
             c.tags_value = ','.join(['%s' % tag.value for tag in c.item.tags])
+        """
+        if id > 0:
+            c.item = Help.get(c.user.site_id,id)
         return render('/help/help_process.html')
     
     @requires_role('admin')
@@ -69,9 +71,22 @@ class HelpadminController(SecureController):
         response.headers['Content-Type'] = 'text/json'
         return '%s(%s)' % (request.params['jsoncallback'],json)
     
+    def tag(self,id=''):
+        c.item = None
+        if id != None:
+            qry = meta.DBSession.query(Help)
+            qry = qry.join(['tag_rel']).filter_by(type='help')
+            c.helptickets = qry
+        return render('/help/help_process.html')
+            
     @requires_role('admin')
     @rest.dispatch_on(POST="help_process_submit")
     def process(self,id=0):
+        return self.viewlist(id)
+        
+    def next(self,id=0):
+        # use existing filter to grab next
+        
         return self.viewlist(id)
     
     @requires_role('admin')

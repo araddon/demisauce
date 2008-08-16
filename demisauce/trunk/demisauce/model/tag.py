@@ -64,7 +64,8 @@ class Tag(ModelBase):
         s = select([tag_table.c.value, func.count(tag_table.c.value)],
             from_obj=[tag_table.join(tag_map_table, tag_map_table.c.type=='help')],
             whereclause=(tag_table.c.assoc_id == tag_map_table.c.id),
-            group_by=[tag_table.c.value])
+            group_by=[tag_table.c.value],
+            order_by=[tag_table.c.value])
         tag_list = meta.engine.execute(s)
         return [row for row in tag_list]
 

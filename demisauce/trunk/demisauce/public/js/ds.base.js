@@ -157,7 +157,7 @@
     
     $.fn.dspoll = function(options) {
         return this.each(function() {
-               if (!$(this).is(".ds-dspoll")) new $.ds.dspoll(this, options);
+               if (!$(this).is("ds-dspoll")) new $.ds.dspoll(this, options);
         });
     };
     $.ds.dspoll = function(el, options) {
@@ -170,6 +170,7 @@
         this.q_id = $('#q_id').val();
         var self = this; //Do bindings
         self.options = opts;
+        $.data(this.element, "ds-dspoll", this);
         if (opts.getremote !== ''){
             self.display(el,opts.getremote);
         }

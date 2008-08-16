@@ -149,9 +149,9 @@ def tag_links(site_id=0,tag_type=None,tags=tags,cachetime=180):
         tag_links = []
         for tag in alltags:
             if tag in selected_tags:
-                tag_links.append("<a href=\"#\" id=\"tag_%s\" class=\"tagged\">%s</a>" % (tag,tag))
+                tag_links.append('''<a href="#" id="tag_%s" class="tagged">%s</a>''' % (tag.replace(':',''),tag))
             else:
-                tag_links.append("<a href=\"#\" id=\"tag_%s\">%s</a>" % (tag,tag))
+                tag_links.append("<a href=\"#\" id=\"tag_%s\">%s</a>" % (tag.replace(':',''),tag))
         return '  '.join(tag_links)
     
     mycache = cache.get_cache('demisauce.tags' )
@@ -166,7 +166,7 @@ def tag_weight(x):
          x = 1
     return 80 + 25 * math.log(x, math.e)
 
-def tag_cloud(site_id=0,tag_type=None,cachetime=180):
+def tag_cloud(site_id=0,tag_type=None,link='',cachetime=180):
     """tag cloud"""
     def tag_make():
         from demisauce.model.tag import Tag
@@ -176,8 +176,8 @@ def tag_cloud(site_id=0,tag_type=None,cachetime=180):
         #  max size = 150%, min size = 50%
         # if 100 tags, max = 20, min =1
         for row in alltags:
-            tag_links.append('''<a href="#" id="tag_%s" class="tagged" 
-                style="font-size:%s%s">%s</a>''' % (row[0],tag_weight(row[1]),'%',row[0]))
+            tag_links.append('''<a href="%s%s" id="tag_%s" class="tagged" 
+                style="font-size:%s%s">%s</a>''' % (link,row[0],row[0],tag_weight(row[1]),'%',row[0]))
         return '  '.join(tag_links)
 
     mycache = cache.get_cache('demisauce.tagss' )

@@ -268,12 +268,10 @@ class AccountController(BaseController):
             
             elif 'password' in request.POST:
                 if user.is_authenticated(request.POST['password']):
+                    remember_me = False
                     if 'remember_me' in request.POST:
-                        response.set_cookie('userkey', user.user_uniqueid,
-                                    expires=datetime.today() + timedelta(days=31))
-                        response.set_cookie('email', user.email,
-                                    expires=datetime.today() + timedelta(days=31))
-                    self.start_session(user)
+                        remember_me = True
+                    self.start_session(user,remember_me=remember_me)
                     return self.returnurl_orgoto(controller='dashboard')
                 else:
                     h.add_error("We were not able to verify that \
@@ -361,8 +359,13 @@ class AccountController(BaseController):
             person = Person.get(-1,id)
         if id > 0: # authenticated user
             person = Person.get(c.user.site_id,id)
-            
-            
+        
         return self._view(person,True)
     
+    def view_mini(self,id=0):
+        c.person = None
+        if id > 0: # authenticated user
+            person = Person.get(c.user.site_id,id)
+            c.person = person
+        return render('/account/profile_mini.html')
 

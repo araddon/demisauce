@@ -12,17 +12,41 @@
         <div class="clear"></div>
         <dl>
             % if item.isuser:
-            <dt>Name:</dt>             <dd><a href="/account/view/${item.person_id}">${item.authorname}</a></dd>
+            <dt>Name:</dt>             <dd><a href="/account/view/${item.person_id}" body="#ticket_person_details_body" id="ticket_person_details">${item.authorname}</a></dd>
             % else:
             <dt>Name:</dt>             <dd>${item.authorname}</dd>
             % endif
             <dt>Email:</dt>            <dd>${item.email}</dd>
-            <dt>IP:</dt>               <dd>${item.ip}</dd>
             <dt>url:</dt>              <dd>${item.url}</dd>
             <dt>Content:</dt>          <dd>${item.content}</dd>
+            <dt>More..:</dt>          <dd><a href="#" id="ticket_details" body="#ticket_details_body" >details</a></dd>
             <!--<dt>Status:</dt>           <dd>${item.status}</dd>-->
         </dl>
         <div class="clear"></div>
+        <div id="ticket_person_details_body" style="display:none;">
+            % if item.person:
+                ${mns_us.personview(item.person,showedit=False)}
+            % endif
+        </div>
+        <div id="ticket_details_body" style="display:none;">
+            these are more of the ticket details
+            <dl>
+                % if item.isuser:
+                <dt>Name:</dt>             <dd><a href="/account/view/${item.person_id}">${item.authorname}</a></dd>
+                % else:
+                <dt>Name:</dt>             <dd>${item.authorname}</dd>
+                % endif
+                <dt>Email:</dt>            <dd>${item.email}</dd>
+                <dt>IP:</dt>               <dd>${item.ip}</dd>
+                <dt>url:</dt>              <dd>${item.url}</dd>
+                <dt>Content:</dt>          <dd>SELECT users.id AS users_id, users.name AS users_name, users.fullname AS users_fullname, addresses_1.id AS addresses_1_id, addresses_1.user_id AS addresses_1_user_id, addresses_1.email_address AS addresses_1_email_address 
+                FROM users LEFT OUTER JOIN addresses AS addresses_1 ON users.id = addresses_1.user_id 
+                WHERE users.name = :users_name_1 AND (EXISTS (SELECT addresses_1.id 
+                FROM addresses AS addresses_1 
+                WHERE addresses_1.user_id = users.id AND addresses_1.email_address LIKE :addresses_email_address_1)) ORDER BY users.fullname DESCe </dd>
+                <dt>Status:</dt>           <dd>${item.status_text}</dd>
+            </dl>
+        </div>
         ${h.form(h.url(action='process'), method='post',id='help_process_form')}
             <input type="hidden" id="help_id" name="help_id" value="${(item and item.id) or '0'}" />
 
@@ -37,7 +61,7 @@
                         <div id="tag_list_div" class="tag_selections" style="line-height:2.2em; margin-left:0px;">
                         ${h.tag_links(site_id=c.site_id,tag_type='help',tags=[],cachetime=-5)}
                         </div>
-                        ${h.text_field('tags', value=c.tags_value, class_="hint")}
+                        ${h.text_field('tags', value='enter your comma separated tags', class_="hint")}
                         <br />
                     </div>
                 </div>
@@ -70,45 +94,134 @@
                                 <input type="radio" id="status" name="status" value="10" ${(((item.status == 10) and "CHECKED") or '')} /> Completed <br />
                         </fieldset> 
                     </div>
+                    <div class="required half_width" id="assign_ticket">
+                        <fieldset style="padding:6px;"> 
+                            <a href="" >Assign This ticket</a>
+                                <img alt="help?" title="Puts a task in their inbox and notifies them to review this ticket" 
+                                    src="/images/icon_help.png" class="demisauce_help_tip" />
+                                <div id="assign_ticket_show" style="display:none;">
+                                    stuff
+                                </div>
+                        </fieldset> 
+                    </div>
                 </div>
                 <div class="actions submit">
                     <input type="submit" class="primary" id="submit" value="Save &amp; Next &#187;">
                     &nbsp;&nbsp;<a href="/helpadmin" id="cancelnode">cancel</a>
                 </div>
             </div>
+            <%
+                c.tag_jsarray = ','.join(['"%s"' % tag.value for tag in item.tags])
+            %>
             <script type="text/javascript">
             $(document).ready(function(){
                 $('#form_tabs_div').ds_tabs();
-                
+                $('div #assign_ticket').click(function(){
+                    $('div',$(this)).show();
+                    return false;
+                });
                 $.fn.dstags = function(options) {
-                    var opts = $.extend({
-                        tag_div_selector: '#tag_list_div',
-                        tagged_class: 'tagged',
-                        tags:[]},options);
-                    var first_tag = true;
-                    var tags = opts.tags;
-                    for (var i=0; i < opts.tags.length; i++) {
-                        var first_tag = false;
-                        $('#tag_' + opts.tags[i]).addClass('tagged');
-                    }
-                    var self = this;
-                    $('a',$(this)).click(function(){
-                        if (first_tag === true){
-                            $('#tags').focus();
-                            first_tag = false;
-                        }
-                        tags[tags.length] = $(this).html();
-                        $(this).addClass('tagged');
-                        var sep = ',';
-                        if ($('#tags').val() == '') sep = '';
-                        $('#tags').val($('#tags').val() + sep + $(this).html());
+                    return this.each(function() {
+                         if (!$(this).is(".ds-tag-helper")) new $.ds.tag_helper(this, options);
                     });
                 };
-                <%
-                    c.tag_jsarray = ','.join(['"%s"' % tag.value for tag in item.tags])
-                %>
+                $.ds.tag = {
+                    defaults: {
+                        tag_div_selector: '#tag_list_div',
+                        tagged_class: 'tagged_wdelete',
+                        tag_input: '#tags',
+                        id: "tbd"
+                    }
+                };
+                $.ds.tag_helper = function(el,options) {
+                    var self = this;
+                    options = $.extend({tags:[],tagd:{}}, $.ds.tag.defaults, options);
+                    self.first_tag = true;
+                    self.element = el; 
+                    self.options = options;
+                    $.data(this.element, ".ds-tag-helper", this);
+                    var tags = options.tags;
+                    for (var i=0; i < tags.length; i++) {
+                        self.add_tag(tags[i]);
+                    }
+                    var self = this;
+                    $('a',$(el)).click(function(){
+                        self.click_tag($(this).html());
+                    });
+                };
+                $.extend($.ds.tag_helper.prototype, {
+                    add_tag: function(tag){
+                        var self = this;
+                        //remove hint
+                        if (self.first_tag === true){
+                            $(self.options.tag_input).focus();
+                            self.first_tag = false;
+                        }
+                        // highlight tag
+                        if (tag.indexOf(':') > 0){
+                            $('#tag_' + tag.replace(':','')).addClass(self.options.tagged_class);
+                        } else {
+                            $('#tag_' + tag).addClass(self.options.tagged_class);
+                        }
+                        
+                        // add to selected list
+                        if (!(tag in self.options.tagd)){
+                            self.options.tagd[tag] = tag;
+                            self.options.tags[self.options.length] = tag;
+                        }
+                        // add to input box
+                        var sep = ',';
+                        var jqTagInput = $(self.options.tag_input).val();
+                        if (jqTagInput == '') sep = '';
+                        $(self.options.tag_input).val(jqTagInput + sep + tag);
+                    },
+                    click_tag: function(tag){
+                        var self = this;
+                        if (!(tag in self.options.tagd)){
+                            self.add_tag(tag);
+                        } else {
+                            // remove
+                            delete self.options.tagd[tag]
+                            var newtags = [];
+                            for (var t in self.options.tagd) newtags[newtags.length] = t;
+                            self.options.tags = newtags;
+                            // remove highlight tag
+                            if (tag.indexOf(':') > 0){
+                                $('#tag_' + tag.replace(':','')).removeClass(self.options.tagged_class);
+                            } else {
+                                $('#tag_' + tag).removeClass(self.options.tagged_class);
+                            }
+                            $(self.options.tag_input).val(newtags.join(','));
+                        }
+                    }
+                });
                 $('#tag_list_div').dstags({tags:[${c.tag_jsarray}]});
-
+                
+                $.tooltip.defaults.width = '400';
+                $("#ticket_details").tooltip({
+                   extraClass: 'miniwin'
+                });
+                var person_details = '';
+                $('#ticket_person_details').tooltip({
+                   extraClass: 'miniwin',
+                   showURL: false
+                });
+                /*
+                bodyHandler: function() {
+                    var html = '';
+                    var url = "/account/view_mini/" + $('#ticket_person_details').attr('person_id');
+                    $.get(url, function(person_details){
+                        //alert(person_details)
+                        //person_details = data;
+                        return person_details;
+                    });
+                    //alert(person_details)
+                    //return person_details;
+                },
+                bodyHandlerxxx: function() {
+                  return $('#ticket_details_body').html();
+                },
+                */
             });
             </script>
         ${h.end_form()}
@@ -119,10 +232,16 @@
     <div class="bar1">
         <span class="h3">Help And Feedback Page</span>
         <span >
-            Feedback 22 of 45 <a href="#" id="tag_javascript">&#171; Previous</a>  <a href="#" id="tag_python">Next &#187;</a>
+            Feedback 22 of 45 <a href="/helpadmin/process/previous" id="">&#171; Previous</a>  <a href="/helpadmin/next/" id="">Next &#187;</a>
         </span>
     </div>
+    
+    % if c.item:
     ${help_process(c.item)}
+    % elif c.helptickets:
+        yes, help tickets
+    % endif
+    
     
 </div>
 
@@ -142,7 +261,12 @@
         </ul>
         <span class="h3">&nbsp;</span>
     </div>
-    ${mns_us.helplist(c.helptickets,showcheck=True)}
+    <br />
+    <div class="bar1">
+        <span class="h3">Comments on This Feedback</span>
+    </div>
+    ${h.text_area("comment", size="32x5", class_="hint")}
+    
     
     % if c.item and c.item.isuser:
     <br />

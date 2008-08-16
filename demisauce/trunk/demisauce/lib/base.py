@@ -10,7 +10,9 @@ from pylons.controllers.util import abort, etag_cache, redirect_to
 from pylons.decorators import jsonify, validate, rest
 from pylons.i18n import _, ungettext, N_
 from pylons.templating import render
+from paste.deploy.converters import asbool
 
+from demisauce.lib.filter import Filter
 import demisauce.lib.helpers as h
 import demisauce.lib.sanitize as libsanitize
 import demisauce.model as model
@@ -75,7 +77,7 @@ def get_current_site():
         if user:
             site = model.site.Site.get(-1,user.site_id)
     return site
-
+    
 
 def requires_role(role):
     def wrapper(func,*args,**kwargs):
@@ -83,11 +85,12 @@ def requires_role(role):
         if not user or user.has_role(role) == False:
             session['return_url'] = request.path_info
             session.save()
-            #abort(403, 'Not authorized')
             if user:
                 if request.environ['pylons.routes_dict']['controller'] == 'dashboard':
                     h.add_alert('Not Authorized')
                     log.info('403, current user doesnt have role=%s redirect to public page' % (role))
+                    # TODO:  switch to abort instead of redirect
+                    #abort(403, 'Not authorized')
                     redirect_wsave(h.url_for(controller='home',action='index'))
                 else:
                     h.add_alert('Not Authorized')
@@ -121,33 +124,17 @@ def redirect_wsave(*args, **kwargs):
     redirect_to(*args, **kwargs)
 
 def print_timing(func):
-    """prints how long method took
-    from http://www.daniweb.com/code/snippet452.html
-    """
+    """prints how long method took"""
     def wrapper(*arg):
         t2 = time.clock()
         res = func(*arg)
         t3 = time.clock()
         url = request.environ['PATH_INFO']
         method = request.environ['REQUEST_METHOD']
-        log.debug('%s %s took %0.3fms  %s, %s' % (method,url, (t3-t2)*1000.0,t3,t2))
+        log.info('%s %s took %0.3fms  %s, %s' % (method,url, (t3-t2)*1000.0,t3,t2))
         return res
     
     return wrapper
-    
-def requires(func):
-    """demands a """
-    def wrapper(*arg):
-        t2 = time.clock()
-        res = func(*arg)
-        t3 = time.clock()
-        url = request.environ['PATH_INFO']
-        method = request.environ['REQUEST_METHOD']
-        log.debug('%s %s took %0.3fms  %s, %s' % (method,url, (t3-t2)*1000.0,t3,t2))
-        return res
-
-    return wrapper
-
 
 class BaseController(WSGIController):
     requires_auth = False
@@ -156,12 +143,20 @@ class BaseController(WSGIController):
         """docstring for redirect"""
         redirect_wsave(url)
     
-    def start_session(self,user):
+    def start_session(self,user,remember_me=False):
         if user:
             session['user'] = user
             site = user.site
             c.user = user
             session.save()
+            if remember_me == True:
+                expire_seconds = 60*60*24*31
+                response.set_cookie('userkey', user.user_uniqueid,path='/',
+                        expires=expire_seconds, secure=True)
+                response.set_cookie('email', user.email,path='/',
+                        expires=expire_seconds, secure=True)
+                response.set_cookie('test', user.email,path='/',
+                            expires=expire_seconds, secure=True)
             log.debug('in base controller setting user ')
     
     def __before__(self):
@@ -172,6 +167,7 @@ class BaseController(WSGIController):
         c.form_errors = c.form_errors or {}
         self.user = get_current_user()
         self.site = get_current_site()
+        self.filters = Filter()
         c.user = self.user
         c.site = self.site
         if c.user:

@@ -124,13 +124,14 @@ div.boxlinks_tabs a.current {border-bottom: 1px solid #DDDDDD;background:#DDDDDD
 
 /* Tag selections */
 .tag_selections a {border: 1px solid #235C9D;text-decoration: none;padding: 3px 5px;}
-a.tagged {background-color:#ccc;}
+a.tagged {background-color:#ccc; }
+a.tagged_wdelete {padding-right:25px; background: #ccc url(/images/icon_close.png) no-repeat top right;}
 
 .tab-spacer{background:#E1ECF9;border:0px solid #8db2e3;border-top:0 none;height:2px;font-size:1px;line-height:1px;}
 div.formbox {border:1px solid #8db2e3;margin-top:20px;}
 
 dt {font-weight: bold;font-size: 85%;color: #999;float: left;clear: left;padding-right: 5px;padding-top: 1px;}
-dt {float: left;width: 100px;font-size: 85%;clear: left;padding-top: 1px;padding-right: 4px;color: #999;}
+dt {float: left;width: 100px;font-size: 85%;clear: left;padding-top: 1px;padding-right: 4px;color: #666666;}
 dd,dd {margin-left: 0;padding-bottom: 5px;}
 
 
@@ -143,7 +144,7 @@ div.boxbb {border:1px solid #BBD9EE;}
 div.boxc {border:1px solid #e0e7b8;}
 .box h2,.box h3, .box h4 {padding:0px; margin:0px;} 
 /* Info Bars */
-div.bar1 {padding: 4px 4px 4px 40px;background: #F5F5F5;border:1px solid #BBD9EE;}
+div.bar1 {padding: 4px 4px 4px 8px;background: #F5F5F5;border:1px solid #BBD9EE;}
 .bar1 h3,.bar1 h2,.bar1 h4,.barg h3,.barg h2,.barg h4 {padding:0px; margin:0px;} 
 div.barg {padding: 4px;background: #F5F5F5;}
 div.barg {padding: 4px;background: #F5F5F5;}

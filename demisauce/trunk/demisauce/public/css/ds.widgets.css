@@ -1,47 +1,6 @@
-/* Help 
-.ds-helpoverlay {background-color: white;list-style-type: none;
-    opacity: .85 ;background:#000 none repeat scroll 0%;border:1px solid #BBD9EE;
-    line-height:1.4;margin:8px 0px 8px 0px;padding:5px 10px 5px 10px;
-    color:#fff;
-}
-.ds-helpoverlay p {margin:8px 0px 8px 0px;}
-.ds-helpoverlay-header {
-	height:24px;
-}
-
-.ds-helpoverlay-header a.closeicon {background:transparent url(/images/icon_close.png) repeat scroll 0%;
-    cursor:pointer;height:24px;position:absolute;right:0pt;top:0pt;width:24px;}
-
-
-
-div.overlay {overflowxx:auto;}
-div.overlay dt {font-size: 100%;colorxx: #fff;}
-div.overlay-wrapperxytr {
-    position:fixed;
-    text-align:center;
-    colorxx:#fff;
-    font-size:132%;
-    -moz-border-radius-bottomleft:10px;
-    -moz-border-radius-bottomright:10px;
-    -moz-border-radius-topleft:10px;
-    -moz-border-radius-topright:10px;
-    background:#000000 none repeat scroll 0%;
-    opacity:0.9;
-    z-index:1500;
-    display:none;
-}
-div.overlay-wrapperabf45 {
-    background:#000000 none repeat scroll 0%;
-    opacity:0.9;
-    z-index:1500;
-}
-.help-header {height:24px;text-align:left;}
-
-.help-header a.closeicon {background:transparent url(/images/icon_close.png) repeat scroll 0%;
-    cursor:pointer;height:24px;position:absolute;right:0pt;top:0pt;width:24px;}
- */
-#tooltip {position: absolute;z-index: 3000;border: 1px solid #111;background-color: #eee;padding: 5px;opacity: 0.85;}
+#tooltip {text-align:left;position: absolute;z-index: 3000;border: 1px solid #111;background-color: #eee;padding: 5px;opacity: 0.85;}
 #tooltip h3, #tooltip div { margin: 0; }
+#tooltip.miniwin {background-color:#EBF4FA;opacity: 0.95;-moz-border-radius:5px;-webkit-border-radius:5px;border:1px solid #235C9D;}
 
 
 #facebox .b {background:url(/images/facebox/b.png);}
