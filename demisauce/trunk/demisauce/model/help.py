@@ -135,11 +135,16 @@ class Help(ModelBase):
     others = property(get_others)
     
     @classmethod
-    def by_site(cls,site_id=0,ct=15,filter='new'):
+    def apply_filter(cls,site_id=0,filter={}):
+        qry = meta.DBSession.query(Help).filter_by(site_id=site_id)
+        qry = qry
+    
+    @classmethod
+    def by_site(cls,site_id=0,ct=15,filter='new',offset=0):
         """Class method to get recent new unprocessed items"""
         return meta.DBSession.query(Help).filter_by(
             site_id=site_id,status=helpstatus_map[filter]
-            ).order_by(help_table.c.created.desc()).limit(ct)
+            ).order_by(help_table.c.created.desc()).limit(ct).offset(offset)
     
     @classmethod
     def tag_keys(cls,site_id=0):

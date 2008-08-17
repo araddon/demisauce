@@ -18,7 +18,7 @@
             % endif
             <dt>Email:</dt>            <dd>${item.email}</dd>
             <dt>url:</dt>              <dd>${item.url}</dd>
-            <dt>Content:</dt>          <dd>${item.content}</dd>
+            <dt>Content:</dt>          <dd>${h.truncate(item.content, 100)}</dd>
             <dt>More..:</dt>          <dd><a href="#" id="ticket_details" body="#ticket_details_body" >details</a></dd>
             <!--<dt>Status:</dt>           <dd>${item.status}</dd>-->
         </dl>
@@ -39,11 +39,7 @@
                 <dt>Email:</dt>            <dd>${item.email}</dd>
                 <dt>IP:</dt>               <dd>${item.ip}</dd>
                 <dt>url:</dt>              <dd>${item.url}</dd>
-                <dt>Content:</dt>          <dd>SELECT users.id AS users_id, users.name AS users_name, users.fullname AS users_fullname, addresses_1.id AS addresses_1_id, addresses_1.user_id AS addresses_1_user_id, addresses_1.email_address AS addresses_1_email_address 
-                FROM users LEFT OUTER JOIN addresses AS addresses_1 ON users.id = addresses_1.user_id 
-                WHERE users.name = :users_name_1 AND (EXISTS (SELECT addresses_1.id 
-                FROM addresses AS addresses_1 
-                WHERE addresses_1.user_id = users.id AND addresses_1.email_address LIKE :addresses_email_address_1)) ORDER BY users.fullname DESCe </dd>
+                <dt>Content:</dt>          <dd>${item.content}</dd>
                 <dt>Status:</dt>           <dd>${item.status_text}</dd>
             </dl>
         </div>
@@ -124,7 +120,7 @@
                 
                 $.tooltip.defaults.width = '400';
                 $("#ticket_details").tooltip({
-                   extraClass: 'miniwin'
+                   extraClass: 'miniwin',showURL: false
                 });
                 var person_details = '';
                 $('#ticket_person_details').tooltip({
@@ -140,43 +136,55 @@
 <div>
     <div class="bar1">
         <span class="h3">Help And Feedback Page</span>
-        <span >
-            Feedback 22 of 45 <a href="/helpadmin/process/previous" id="">&#171; Previous</a>  <a href="/helpadmin/next/" id="">Next &#187;</a>
+        <span>
+        % if c.item:
+            % if c.filters and ('help' in c.filters) and ('count' in c.filters['help']):
+                Feedback ${c.filters['help']['offset']} of ${c.filters['help']['count']} 
+                <!--<a href="/helpadmin/process/previous" id="">&#171; Previous</a>-->
+            % endif
+        % endif
+            <a href="/helpadmin/next/" id="">Next &#187;</a>
         </span>
+
     </div>
     
     % if c.item:
     ${help_process(c.item)}
     % elif c.helptickets:
-        yes, help tickets
+        ${mns_us.helplist(c.helptickets,showcheck=False)}
     % endif
     
     
 </div>
 
-
-
 <%def name="sidebar_top()">
     <div class="bar1">
         <span class="h3">Filter By</span>
     </div>
+    <span class="h4">Status</span>
+    <ul class="filter" style="position:relative;margin-top:-1px;font-size:100%;">
+        <li><a href="/helpadmin/status/new" class="${h.is_current_filter(filter='status',value='new')}">New</a></li>
+        <li><a href="/helpadmin/status/completed" class="${h.is_current_filter(filter='status',value='completed')}">complete</a></li>
+        <li><a href="/helpadmin/status/recent" class="${h.is_current_filter(filter='newness',value='recent')}">recent</a></li>
+    </ul>
+    <span class="h4">Tag</span>
+    <div id="tag_cloud_div" class="tag_cloud" style="margin:4px;font-size:100%;">
+         ${h.tag_cloud(site_id=c.site_id,tag_type='help',link='/helpadmin/tag/',cachetime=-5)}
+     </div>
     <br />
-    <div class="bar1">
-        <ul class="topnav right" style="position:relative;margin-top:-1px;font-size:83%;">
-            <li><a href="/helpadmin/cloud" class="${h.is_current(['helpadmin/cloud'])}">Cloud</a></li>
-            <li><a href="?filter=new" class="${h.is_current(['filter=new'])}">New</a></li>
-            <li><a href="?filter=completed" class="${h.is_current(['filter=completed'])}">complete</a></li>
-            <li><a href="?filter=recent" class="${h.is_current(['filter=recent'])}">recent</a></li>
-        </ul>
-        <span class="h3">&nbsp;</span>
-    </div>
-    <br />
-    <div class="bar1">
-        <span class="h3">Comments on This Feedback</span>
-    </div>
-    ${h.text_area("comment", size="32x5", class_="hint")}
+    % if c.item:
+        <div class="bar1">
+            <span class="h3">Comment on This Feedback</span>
+        </div>
+        ${h.text_area("comment", size="32x5", class_="hint")}
+    % endif
+
     
-    
+    % for item in c.filters:
+        <!----><div class="${h.cycle("ds-comment-event", "ds-comment-odd") }">
+            context=${item}, value=${c.filters[item]}
+        </div>
+    % endfor
     % if c.item and c.item.isuser:
     <br />
     <div class="box2" style="margin: 10px 0px; padding:5px">

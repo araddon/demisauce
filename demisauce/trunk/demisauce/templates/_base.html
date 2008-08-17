@@ -119,6 +119,13 @@
                     <li><a href="/account/signin">Admin Login</a></li>
                     <li><a href="file:///Users/aaron/Dropbox/demisauce/demisauce/trunk/docs/.build/html/index.html">Documentation</a></li>
                   </ul>
+                  <a href="#">Support</a>
+                    <ul>
+                      <li><a href="#" id="test_humanmsg">Msg</a></li>
+                      <li><a href="#" id="test_activity">post activity</a></li>
+                      <li><a href="#" class="ds_activity" activity="wow, it worked">activity2</a></li>
+                      <li><a href="http://www.google.com" class="ds_activity">google url activity</a></li>
+                    </ul>
                 </li>
                 <li><a href="/c/features">Features</a>
                   <ul>
@@ -157,14 +164,24 @@
                     <li><a href="http://pythonpaste.org/tempita/">tempita</a></li>
                   </ul>
                 </li>
-                <li><a href="#">Support</a>
-                  <ul>
-                    <li><a href="#" rel="facebox" id="facebox_show_href">Help</a></li>
-                    <li><a href="#" id="test_humanmsg">Msg</a></li>
-                    <li><a href="#" id="test_activity">post activity</a></li>
-                    <li><a href="#" class="ds_activity" activity="wow, it worked">activity2</a></li>
-                    <li><a href="http://www.google.com" class="ds_activity">google url activity</a></li>
-                  </ul>
+                <style type="text/css" media="screen">
+                    li.help-feedback {height:150px;font-weight: bold;}
+                    li.help-feedback div {text-align:center;padding:9px 0px 9px 4px;}
+                    #ds-submit-idea {background-color:#C9E39C;}
+                    #ds-report-problem {background-color:#E58829;}
+                    #ds-give-feedback {background-color:#5093CD;}
+                    #feedback-powered-bydemisauce {background-color:#666;font-size:75%;color:#fff;font-weight:500;}
+                </style>
+                <li class="help-feedback" style="text-align:center;"><a >Feedback</a>
+                    <div id="ds-submit-idea">
+                        <a href="" helptype="idea" rel="facebox" id="facebox_show_href">Submit an Idea</a>
+                    </div>
+                    <div id="ds-report-problem"><a href="#" rel="facebox" id="facebox_show_href">Report a Problem</a></div>
+                    <div id="ds-give-feedback"><a href="#" rel="facebox" id="facebox_show_href">Give Feedback</a></div>
+                    <div id="feedback-powered-bydemisauce">
+                        <a href="http://www.demisauce.com" style="color:#fff;" >Powerd By Demisauce</a>
+                    </div>
+                  
                 </li>
             </ul>
         </div>

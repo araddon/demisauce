@@ -168,6 +168,7 @@ class BaseController(WSGIController):
         self.user = get_current_user()
         self.site = get_current_site()
         self.filters = Filter()
+        request.environ['filters'] = self.filters
         c.user = self.user
         c.site = self.site
         if c.user:

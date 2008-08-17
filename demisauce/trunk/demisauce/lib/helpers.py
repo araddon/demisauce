@@ -81,7 +81,17 @@ def current_url(includeaction=True):
     if includeaction and 'action' in request.environ['pylons.routes_dict']:
         url += '/%s' % request.environ['pylons.routes_dict']['action']
     return url
-    
+
+def is_current_filter(filter='',value=''):
+    filters = request.environ['filters']
+    toreturn = 'current'
+    if filter == None or filters == None or filters.context == '':
+        return ''
+    fltr = filters[filters.context]
+    if filter == fltr['name'] and str(fltr['value']) == value:
+        return toreturn
+    return ''
+
 def is_current(matchlist,toreturn="current"):
     """
     Determines if current http request uri matches the passed in nav item
@@ -164,7 +174,7 @@ def tag_links(site_id=0,tag_type=None,tags=tags,cachetime=180):
 def tag_weight(x):
     if x==None or x==0:
          x = 1
-    return 80 + 25 * math.log(x, math.e)
+    return 70 + 32 * math.log(x, math.e)
 
 def tag_cloud(site_id=0,tag_type=None,link='',cachetime=180):
     """tag cloud"""
@@ -179,7 +189,7 @@ def tag_cloud(site_id=0,tag_type=None,link='',cachetime=180):
             tag_links.append('''<a href="%s%s" id="tag_%s" class="tagged" 
                 style="font-size:%s%s">%s</a>''' % (link,row[0],row[0],tag_weight(row[1]),'%',row[0]))
         return '  '.join(tag_links)
-
+    
     mycache = cache.get_cache('demisauce.tagss' )
     # Get the value, this will create the cache copy the first time
     # and any time it expires (in seconds, so 3600 = one hour)

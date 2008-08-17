@@ -73,7 +73,6 @@ class ModelBase(object):
     """
     Abstract base class implementing some shortcuts
     """
-    __tjsonkeys__ = []
     def __init__(self,*args,**kwargs):
         for key in kwargs:
             if hasattr(self,key):

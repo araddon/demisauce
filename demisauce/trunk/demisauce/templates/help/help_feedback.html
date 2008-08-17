@@ -1,5 +1,8 @@
 <%inherit file="../_baseiframe.html"/>
 
+<%def name="head_more()">
+    <script type="text/javascript" src="/js/jquery.form.js"></script>
+</%def>
 
 <%def name="title()">Help and Feedback </%def>
 
@@ -10,6 +13,7 @@
         ${h.form(h.url(action='feedback'), id="feedbackform", method='post')}
             <input type="hidden" id="objectid" name="objectid" value="${(item and item.id) or '0'}" />
             <input type="hidden" id="slug" name="slug" value="${c.site_slug}" />
+            <input type="hidden" id="category" name="category" value="" />
             % if c.user:
 
                 Post as:  ${c.user.displayname}
@@ -48,9 +52,20 @@
 $(document).ready(function(){
     $('#feedbackform').dshints();
     $('#content').focus();
-    $("#feedbackform").submit(function() {
-         $.ds.dsactivity({activity:'submit help feedback',custom:{good:'great',tag1:'is a tag'},category:'help'})
+    $('#feedbackform').submit(function() { 
+        $(this).ajaxSubmit({ 
+                // target identifies the element(s) to update with the server response 
+                target: '#ds-helpfeedback-div', 
+
+                // success identifies the function to invoke when the server response 
+                // has been received; here we apply a fade-in effect to the new content 
+                success: function(responseText, statusText) { 
+                    alert('success' + responseText)
+                    $('#ds-helpfeedback-div').fadeIn('slow'); 
+                } 
+            }); 
+        $.ds.dsactivity({activity:'submit help feedback',custom:{good:'great',tag1:'is a tag'},category:'help'});
+        return false; 
     });
-    
 });
 </script>

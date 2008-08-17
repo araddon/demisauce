@@ -12,17 +12,21 @@
     </div>
 </%def>
 
-<%def name="helplist(tickets,showcheck=False)">
+<%def name="helplist(tickets,showcheck=False,truncatesize=40)">
     % if tickets:
         % for tkt in tickets:
             <div class="checkable">
             % if showcheck:
                 <span class="checkable"><input type="checkbox" name="chk_${tkt.id}" /></span>
             % endif
-            ${h.link_to(tkt.authorname,h.url("/helpadmin/process/%s" % str(tkt.id)))}, 
-            ${(tkt.isuser and "Is User") or 'Not User'},
             
-            ${h.truncate(tkt.clean_content, 30)}
+            % if tkt.isuser:
+                ${h.link_to(tkt.authorname,h.url("/helpadmin/process/%s" % str(tkt.id)))}, 
+            % else:
+                ${h.link_to(tkt.authorname,h.url("/helpadmin/process/%s" % str(tkt.id)))}, 
+            % endif
+            
+            ${h.truncate(tkt.clean_content, truncatesize)}
             </div>
         % endfor
         <script type="text/javascript">
