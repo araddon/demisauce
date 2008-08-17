@@ -293,7 +293,7 @@
             source_url:  '',
             url: '', // original url of click
             help_url: '/api/script/help/root/help',
-            faceboxprecontent: '#facebox_precontent_holder',
+            faceboxprecontent: '#facebox .content',
             faceboxcontent: '#facebox_content_holder',
             faceboxcontent2: '#facebox_content_holder2',
             isshown: false,
@@ -328,8 +328,8 @@
             if (opts.use_current_url == true){
                 opts.script = true,
                 result = $.ds.parseUri(window.location.href);
-                opts.source_url = $.ds.defaults.base_url + opts.help_url + result.relative;
-                opts.url = result.relative;
+                opts.url = $.ds.defaults.base_url + opts.help_url + result.relative.replace('#','');
+                opts.source_url = result.relative;
             }
             if (typeof($.hotkeys) != 'undefined'){
                 // hot keys for help
@@ -353,20 +353,60 @@
         this.element = el; 
         var self = this; //Do bindings
         self.options = opts;
+        var fb = null;
         if (opts.style == 'facebox'){
-            var fb = $(el).facebox(opts);
+            //var fb = $(el).facebox(opts);
+            $(el).click(function(){
+                self.load_content();
+            });
+            /*$(document).bind('beforeReveal.facebox', function() { 
+                // THIS Doesn't work, gets called once per link so if 4 help links
+                self.load_content();
+                alert('loaded_script')
+            });
+            */
         }
-        $(el).bind('loaded_script', function() { 
-            self.load_content();
-        });
+        
         return fb;
     }
     
     $.extend($.ds.help.prototype, {
-        load_content: function(resource_id) {
+        load_content: function() {
             var self = this;
+            $.facebox.settings.width = 630;
+            $.facebox.loading();
+            
+            jQuery.facebox('');
+            if (self.options.isloaded === false){
+                $.getJSON(self.options.url + '?jsoncallback=?', {}, function(json){
+                    //alert(json.html)
+                    //jQuery.facebox(json.html);
+                    //$(self.element).after(json.html);
+                });
+            }
+            
+            
+            var new_content = '<div id="facebox-content-section" style=""> \
+                          <div id="facebox_precontent_holder">pre</div> \
+                          <div id="facebox_content_holder" class="content"></div> \
+                          <div id="facebox_content_holder2"></div> \
+                        </div>';
+            var new_footerx = '<div class="footer"> \
+                                <span class="" style="float:left;text-align:left;">ESC = Close this panel</span> \
+                                <a href="#" class="close"> \
+                                   <img src="/images/facebox/closelabel.gif" title="close" class="close_image" /> \
+                               </a> \
+                             </div>';
+            var new_footer = '<span class="" style="float:left;text-align:left;">ESC = Close this panel</span>';
+
+            /*$(document).trigger('beforeReveal.facebox')
+              if (klass) $('#facebox .content').addClass(klass)
+              $('#facebox .content').append(data)
+              */
             // now populate facebox
             if (self.options.isloaded == false) {
+                $('#facebox .content').html(new_content);
+                $('#facebox .footer').prepend(new_footer);
                 self.options.isloaded = true;
             }
             if (self.options.topinfo) {

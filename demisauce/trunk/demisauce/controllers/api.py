@@ -5,6 +5,7 @@ from pylons import config
 from formencode import Invalid, validators
 from formencode.validators import *
 import formencode
+import simplejson
 from sqlalchemy.orm import eagerload
 
 from demisauce.lib.base import *
@@ -102,11 +103,11 @@ class ApiController(BaseController):
             abort(404, 'No items found')
         
         if format == 'html':
-            return render('/api/cmshtml.mako')
+            return render('/api/cms.html')
         elif format == 'xml':
             response.headers['Content-Type'] = 'application/xhtml+xml'
             c.len = len(c.cmsitems)
-            return render('/api/cmsxml.mako')
+            return render('/api/cms.xml')
         elif format == 'script':
             return render('/api/cmsjs.js')
         else:
@@ -129,7 +130,12 @@ class ApiController(BaseController):
             log.debug('url=%s, topinfo = %s' % (url,c.topinfo))
         
         c.resource_id = id
-        return render('/api/cmsjs.js')
+        results = render('/api/cms.html')
+        data = {'success':True,'html':results,'key':id}
+        json = simplejson.dumps(data)
+        response.headers['Content-Type'] = 'text/json'
+        return '%s(%s)' % (request.params['jsoncallback'],json)
+        #return render('/api/cmsjs.js')
     
     @requires_site
     def comment(self,format='json',id=''):

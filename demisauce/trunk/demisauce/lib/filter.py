@@ -7,10 +7,28 @@ from demisauce.model import mapping, meta
 from demisauce.model.person import Person
 
 log = logging.getLogger(__name__)
-
 class Filter(object):
     """
-    Filter is a tool for storing a memory using non 
+    """
+    def __init__(self,**kwargs):
+        self.context = 'context'
+        self._dict = {
+            'name':'default',
+            'value':'filtervalue',
+            'offset':0,
+            'count':0
+        }
+        self._load(self._dict)
+        self._load(kwargs)
+    
+    def _load(self,dict):
+        for a in kwargs:
+            setattr(self,a,kwargs[a])
+    
+
+class FilterList(object):
+    """
+    FilterList is a tool for storing a memory using non 
     stateless (server side, cookie, memcached etc) for persisting
     a filter against a data set.
     example::
@@ -47,7 +65,11 @@ class Filter(object):
             self.filters[context] = filter
         self.context = context
         self.save()
-        
+    
+    def current(self):
+        """Return filter for current context"""
+        return self[self.context]
+    
     def get_filter(self):
         # use context to load filter
         return self[self.context]
@@ -60,8 +82,7 @@ class Filter(object):
             session.save()
     
     def __getitem__(self, context):
-        """Indexor to find current filter"""
-        self.context = context
+        """Indexor to find a filter"""
         if context in self.filters:
             return self.filters[context]
         return None

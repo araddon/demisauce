@@ -12,7 +12,7 @@ from pylons.i18n import _, ungettext, N_
 from pylons.templating import render
 from paste.deploy.converters import asbool
 
-from demisauce.lib.filter import Filter
+from demisauce.lib.filter import FilterList
 import demisauce.lib.helpers as h
 import demisauce.lib.sanitize as libsanitize
 import demisauce.model as model
@@ -65,7 +65,7 @@ def get_current_user():
     elif 'userkey' in request.cookies:
         user = Person.by_unique(request.cookies['userkey'].lower())
     return user
-    
+
 def get_current_site():
     """gets site for current request"""
     site = None
@@ -103,7 +103,6 @@ def requires_role(role):
         else:
             return func(*args, **kwargs)
     return decorator(wrapper)
-
 
 def rendertf(filename,vars=[]):
     """Render a Tempita File"""
@@ -167,7 +166,7 @@ class BaseController(WSGIController):
         c.form_errors = c.form_errors or {}
         self.user = get_current_user()
         self.site = get_current_site()
-        self.filters = Filter()
+        self.filters = FilterList()
         request.environ['filters'] = self.filters
         c.user = self.user
         c.site = self.site

@@ -34,7 +34,9 @@ class HelpadminController(SecureController):
         self.helpfilter = self.filters.get_filter
         if self.helpfilter() == None:
             self.filters.new('help',{'name':"status",'value':"new",'offset':0,'count':0})
-            
+        if 'filterstatus' in request.params and \
+            request.params['filterstatus'] == 'refresh':
+            self.filters.new('help',{'name':"status",'value':request.params['filter'],'offset':0,'count':0})
         c.filters = self.filters.filters
     
     
