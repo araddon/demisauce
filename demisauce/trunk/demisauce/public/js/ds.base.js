@@ -282,18 +282,19 @@
     $.ds.faceboxmanager = {
         defaults : {
             style: 'facebox',
-            rating: true,
+            rating: false,
             feedback: true,
             draggable: true,
-            topinfo: true,
+            topinfo: false,
             resizable: true,
             script: false,
             content: {},
             use_current_url: false,
             source_url:  '',
             url: '', // original url of click
-            help_url: '/api/script/help/root/help',
-            faceboxprecontent: '#facebox .content',
+            help_url: '/api/json/help/root/help',
+            help_popup_url:'/help/submitfeedback',
+            faceboxprecontent: '#facebox_precontent_holder',
             faceboxcontent: '#facebox_content_holder',
             faceboxcontent2: '#facebox_content_holder2',
             isshown: false,
@@ -331,84 +332,77 @@
                 opts.url = $.ds.defaults.base_url + opts.help_url + result.relative.replace('#','');
                 opts.source_url = result.relative;
             }
-            if (typeof($.hotkeys) != 'undefined'){
-                // hot keys for help
-                $.hotkeys.add('Shift+?',{disableInInput: true,type:'keypress'}, function(){ 
-                    if ($.facebox.settings.isshown == false) {
-                        $.facebox.settings.isshown = true;
-                        $('#facebox_show_href').trigger('click');
-                        //jQuery(document).trigger('close.facebox')
-                    } else {
-                        $.facebox.settings.isshown = false;
-                        $('#facebox .close').trigger('click');
-                    }
-                });
-            }
             return opts;
         }
     };
     
     $.ds.help = function(el, options) {
-        var opts = $.extend({isloaded:false}, $.ds.faceboxmanager.defaults, options);
+        var opts = $.extend({isloaded:false,
+            hotkeys:false,showtitle:false}, $.ds.faceboxmanager.defaults, options);
         this.element = el; 
         var self = this; //Do bindings
         self.options = opts;
-        var fb = null;
-        if (opts.style == 'facebox'){
-            //var fb = $(el).facebox(opts);
+        
+        var temp = (opts.style === 'facebox');// what hack is this?  why does it fail?
+        if ((opts.style === 'facebox')){
             $(el).click(function(){
                 self.load_content();
             });
-            /*$(document).bind('beforeReveal.facebox', function() { 
-                // THIS Doesn't work, gets called once per link so if 4 help links
-                self.load_content();
-                alert('loaded_script')
+            if (opts.hotkeys === true){
+                if (typeof($.hotkeys) != 'undefined'){
+                    // hot keys for help
+                    $.hotkeys.add('Shift+?',{disableInInput: true,type:'keypress'}, function(){ 
+                        if ($.facebox.settings.isshown == false) {
+                            self.load_content();
+                        } else {
+                            $.facebox.settings.isshown = false;
+                            $('#facebox .close').trigger('click');
+                        }
+                    });
+                }
+            }
+        } else if (opts.style == 'popup'){
+            $(el).click(function(){
+                var result = $.ds.parseUri(window.location.href);
+                var url = $.ds.defaults.base_url + opts.help_popup_url +'/' + encodeURIComponent($.ds.defaults.site_slug) + '?';
+                url += $.param({ref_url:(result.protocol + '://' + result.authority + result.relative),
+                                site_slug: $.ds.defaults.site_slug});
+                 window.open (url,"mywindow","location=1,status=1,scrollbars=1,width=500,height=400");
             });
-            */
         }
-        
-        return fb;
+        return this;
     }
     
     $.extend($.ds.help.prototype, {
         load_content: function() {
             var self = this;
-            $.facebox.settings.width = 630;
             $.facebox.loading();
-            
-            jQuery.facebox('');
-            if (self.options.isloaded === false){
+            if (self.options.isloaded === false && self.options.topinfo){
                 $.getJSON(self.options.url + '?jsoncallback=?', {}, function(json){
-                    //alert(json.html)
-                    //jQuery.facebox(json.html);
-                    //$(self.element).after(json.html);
+                      self.topcontent = json.html;
+                      self.options.isloaded = true;
+                      $(self.options.faceboxprecontent).append(self.topcontent);
                 });
             }
+            jQuery.facebox('');
+            $('#facebox').draggable();
             
-            
-            var new_content = '<div id="facebox-content-section" style=""> \
-                          <div id="facebox_precontent_holder">pre</div> \
-                          <div id="facebox_content_holder" class="content"></div> \
-                          <div id="facebox_content_holder2"></div> \
-                        </div>';
-            var new_footerx = '<div class="footer"> \
-                                <span class="" style="float:left;text-align:left;">ESC = Close this panel</span> \
-                                <a href="#" class="close"> \
-                                   <img src="/images/facebox/closelabel.gif" title="close" class="close_image" /> \
-                               </a> \
-                             </div>';
-            var new_footer = '<span class="" style="float:left;text-align:left;">ESC = Close this panel</span>';
+            $(document).bind('close.facebox', function() { 
+                self.on_close();
+                $('#facebox_precontent_holder').remove();
+                $('#facebox_content_holder2').remove();
+                $('#facebook_esc_close').remove();
+            });
+            $('#facebox .content').before('<div id="facebox_precontent_holder"></div>');
+            $('#facebox .content').after('<div id="facebox_content_holder2"></div>');
+            $('#facebox .footer').prepend('<span id="facebook_esc_close" class="" style="float:left;text-align:left;">ESC = Close this panel</span>');
 
-            /*$(document).trigger('beforeReveal.facebox')
-              if (klass) $('#facebox .content').addClass(klass)
-              $('#facebox .content').append(data)
-              */
             // now populate facebox
-            if (self.options.isloaded == false) {
-                $('#facebox .content').html(new_content);
-                $('#facebox .footer').prepend(new_footer);
+            if (self.options.isloaded === false) {
                 self.options.isloaded = true;
             }
+            $('#facebox').css({left:((window.innerWidth - 670)/2),width:670});
+            $('#facebox_precontent_holder').css({width:630});
             if (self.options.topinfo) {
                 $(self.options.faceboxprecontent).append(self.topinfo());
             }
@@ -421,10 +415,17 @@
                     }
                 })
             }
+            if (self.options.showtitle) {
+                html = $(this.element).html();
+                $(self.options.faceboxprecontent).append('<h3>' + html + '</h3>');
+            }
             if (self.options.feedback) {
                 $(self.options.faceboxcontent2).append(self.feedback());
                 $.ds.prepLogon($(self.options.faceboxcontent2));
             }
+        },
+        on_close: function(el){
+            
         },
         rate: function (el){
             var self = this;
@@ -433,7 +434,7 @@
               $(el).parent().parent().hide();
             var url = $.ds.make_url('/help/ratearticle',true);
             $.getJSON(url + '&jsoncallback=?', {resource_id:rid,rating:rating_val}, function(json){
-                $.ds.dsactivity({activity:"User submitted Help" ,category:"Help"});
+                $.ds.dsactivity({activity:"User submitted a rating on help" ,category:"Help"});
             });
         },
         topinfo: function() {
@@ -453,17 +454,17 @@
             var self = this;
             var qs = 'site_key&' + $.ds.defaults.site_slug; 
             qs += '&url=' + self.options.url; 
-            return '<div id="ds-inputform-div"><iframe width="100%" height="200" frameborder="0" \
+            return '<div id="ds-inputform-div" ttestatt="fake" style="width:630;"><iframe width="100%" height="200" frameborder="0" \
             src="' + $.ds.defaults.base_url + '/help/feedback/' + $.ds.defaults.site_slug +'?' + qs + '"  \
             allowtransparency="true" vspace="0" hspace="0" marginheight="0" marginwidth="0" \
             name="ds-input-form"></iframe></div>';
         },
-        hideHelp: function() {
+        xxxhideHelp: function() {
             var self = this;
             self.options.isshown = false;
             $(self.options.helpselector).hide();
         },
-        showHelp: function() {
+        xxxxshowHelp: function() {
             var self = this;
             $(self.options.helpselector).show();
             $.hotkeys.add('Esc',{disableInInput: true}, function(){ 

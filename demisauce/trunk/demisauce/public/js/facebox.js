@@ -79,6 +79,7 @@
     settings: {
       opacity      : 0,
       overlay      : true,
+      width        : 0,
       loadingImage : '../images/facebox/loading.gif',
       closeImage   : '../images/facebox/closelabel.gif',
       imageTypes   : [ 'png', 'jpg', 'jpeg', 'gif' ],
@@ -121,9 +122,12 @@
       $('#facebox .body').children().hide().end().
         append('<div class="loading"><img src="'+$.facebox.settings.loadingImage+'"/></div>')
 
+      //if ($.facebox.settings.width > 0){
+      //    $('#facebox').css({width: $.facebox.settings.width + 40});
+      //}
       $('#facebox').css({
         top:	getPageScroll()[1] + (getPageHeight() / 10),
-        left:	385.5
+        left:	385.5        
       }).show()
 
       $(document).bind('keydown.facebox', function(e) {

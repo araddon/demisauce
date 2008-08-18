@@ -99,10 +99,11 @@
 </div>
 </%def>
 <%def name="sidebar_top()">
-    <div id="sidebartop" ></div>
+    <div id="sidebartop" >
+    </div>
 </%def>
 <%def name="sidebar(*args,**kwargs)">
-        <div class="yui-b sidebar">
+        <div class="yui-b sidebar" style="background-color:#EBF4FA;border: 1px solid #BBD9EE;">
 
             ${self.sidebar_top()}
 
@@ -119,7 +120,7 @@
                     <li><a href="/account/signin">Admin Login</a></li>
                     <li><a href="file:///Users/aaron/Dropbox/demisauce/demisauce/trunk/docs/.build/html/index.html">Documentation</a></li>
                   </ul>
-                  <a href="#">Support</a>
+                  <a href="#">testing</a>
                     <ul>
                       <li><a href="#" id="test_humanmsg">Msg</a></li>
                       <li><a href="#" id="test_activity">post activity</a></li>
@@ -170,18 +171,24 @@
                     #ds-submit-idea {background-color:#C9E39C;}
                     #ds-report-problem {background-color:#E58829;}
                     #ds-give-feedback {background-color:#5093CD;}
-                    #feedback-powered-bydemisauce {background-color:#666;font-size:75%;color:#fff;font-weight:500;}
+                    .feedback-smaller {background-color:#666;font-size:68%;color:#fff;font-weight:400;padding:4px;}
                 </style>
-                <li class="help-feedback" style="text-align:center;"><a >Feedback</a>
+                <li class="help-feedback" style="text-align:center;">
                     <div id="ds-submit-idea">
-                        <a href="#" helptype="idea" rel="facebox" id="facebox_show_href">Submit an Idea</a>
+                        <a href="#" helptype="idea" rel="dshelp" id="facebox_show_href">Submit an Idea</a>
                     </div>
-                    <div id="ds-report-problem"><a href="#" rel="facebox" id="facebox_show_href">Report a Problem</a></div>
-                    <div id="ds-give-feedback"><a href="#" rel="facebox" id="facebox_show_href">Give Feedback</a></div>
-                    <div id="feedback-powered-bydemisauce">
-                        <a href="http://www.demisauce.com" style="color:#fff;" >Powerd By Demisauce</a>
+                    <div id="ds-report-problem">
+                        <a href="#" helptype="problem" rel="dspopup" id="facebox_show_href">Report a Problem</a>
                     </div>
-                  
+                    <div id="ds-give-feedback">
+                        <a href="#" helptype="feedback" rel="dshelp" id="facebox_show_href">Give Feedback</a>
+                    </div>
+                    <div class="feedback-smaller">
+                        <a href="http://www.demisauce.com/site/demisauce.org" style="color:#fff;" >View All Feedback</a>
+                    </div>
+                    <div class="feedback-smaller">
+                         <a href="http://www.demisauce.com" style="color:#fff;" >Powerd By Demisauce</a>
+                    </div>
                 </li>
             </ul>
         </div>
@@ -214,17 +221,13 @@
 
     <script type="text/javascript" >
         jQuery(document).ready(function($) {
-            /*
-            $.fn.dshelp.rating = function(txt) {
-                return 'yup';
-            };
-            */
-            $('a[rel*=facebox]').dshelp({opacity : .1,
-                base_url: '${c.base_url}',
-                site_slug: '${c.adminsite_slug}',
-                use_current_url: true
+            $('a[rel*=facebox]').dshelp({
+                use_current_url: true,
+                topinfo:true,
+                rating:true
             });
-            
+            $('.help-feedback a[rel*=dshelp]').dshelp({showtitle:true});
+            $('.help-feedback a[rel*=dspopup]').dshelp({style:'popup'});
         })
     </script>
 

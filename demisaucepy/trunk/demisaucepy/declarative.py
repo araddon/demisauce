@@ -60,21 +60,30 @@ class Aggregate(object):
         self._model_instance = None
     
     def get_view(self,view='default'):
-        view_key = 'view%s' % view
+        class viewer(object):
+            def __init__(self,name,key):
+                self.name = name
+                self.key = key
+            
+            def __getattr__(self,view):
+                if not view in self.__dict__:
+                    dsitem = demisauce_ws(self.name,self.key,data={'views':view},format='view')
+                    if dsitem.success == True:
+                        self.__dict__[view] = dsitem.data
+                    else:
+                        self.__dict__[view] = []
+                        #raise RetrievalError('no view found')
+                return self.__dict__[view]
+            
+        
+        view_key = 'viewholder'
         if self.lazy and not self.is_loaded(view_key):
-            #print '64 about to get model lazy loaded %s' % (self.name)
-            #print 'local_key = %s classname=%s' % (self.local_key,self.model_class_name)
-            key = self.key()
-            print '67 key = %s' % key
-            dsitem = demisauce_ws(self.name,key,format='view')
-            if dsitem.success == True:
-                self.set_loaded(view_key,dsitem.data)
-            else:
-                self.set_loaded(view_key,[])
-                #raise RetrievalError('no result %s' % dsitem.data)
+            view_handler = viewer(self.name,self.key())
+            self.set_loaded(view_key,view_handler)
         else:
-            print 'eh?  loaded? %s' % self._model_instance
-        return self.get_loaded(view_key)
+            view_handler = self.get_loaded(view_key)
+            
+        return view_handler
         
         try:
             pass
@@ -118,7 +127,7 @@ class Aggregate(object):
                 self.set_loaded('model',[])
                 #raise RetrievalError('no result %s' % dsitem.data)
         else:
-            print 'eh?  loaded? %s' % self._model_instance
+            print 'eh?  loaded model? %s' % self._model_instance
         return self.get_loaded('model')
         try:
             pass

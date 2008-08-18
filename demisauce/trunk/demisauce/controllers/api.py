@@ -122,7 +122,9 @@ class ApiController(BaseController):
                 (c.cmsitems[0].item_type == "folder" or \
                 c.cmsitems[0].item_type == 'root'):
                 c.cmsitems = [itemassoc.item for itemassoc in c.cmsitems[0].children]
-        
+            for item in c.cmsitems:
+                print item.content
+            
         if c.site and c.site.id:
             url = id.replace('root/help','')
             topinfo = help.HelpResponse.for_url(c.site,url,5)
@@ -133,13 +135,18 @@ class ApiController(BaseController):
         results = render('/api/cms.html')
         data = {'success':True,'html':results,'key':id}
         json = simplejson.dumps(data)
-        response.headers['Content-Type'] = 'text/json'
-        return '%s(%s)' % (request.params['jsoncallback'],json)
+        if format == 'json':
+            response.headers['Content-Type'] = 'text/json'
+            return '%s(%s)' % (request.params['jsoncallback'],json)
+        else:
+            return results
         #return render('/api/cmsjs.js')
     
     @requires_site
     def comment(self,format='json',id=''):
         site = request.environ['site']
+        for e in request.POST:
+            print 'POST name=%s, val=%s' % (e,request.POST[e])
         c.len = 0
         if id != '' and id != None:
             rid = urllib.unquote_plus(id)

@@ -118,6 +118,15 @@ class HelpController(BaseController):
             c.current_url = 'http://www.google.com'
         return render('/help/help_feedback.html')
     
+    @rest.dispatch_on(POST="feedbackform")
+    def submitfeedback(self,id):
+        site = Site.by_slug(str(id))
+        if site:
+            c.site_slug = site.slug
+        if 'url' in request.params:
+            c.current_url = request.params['url']
+        return render('/help/help_feedback.html')
+    
     @validate(schema=HelpFormValidation(), form='feedback')
     def feedbackform(self,id=''):
         site = Site.by_slug(str(id))

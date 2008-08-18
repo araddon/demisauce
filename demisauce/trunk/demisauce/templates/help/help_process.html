@@ -134,22 +134,22 @@
 </%def>
 
 <div>
-    <div class="bar1">
+    <div class="bar1" style="height:30px;">
         <span class="h3">Help And Feedback Page</span>
-        <span>
+        <span class="right" style="margin-top:-17px;">
         % if c.item:
             % if c.filters and ('help' in c.filters) and ('count' in c.filters['help']):
                 Feedback ${c.filters['help']['offset']} of ${c.filters['help']['count']} 
                 <!--<a href="/helpadmin/process/previous" id="">&#171; Previous</a>-->
             % endif
         % endif
-            <a href="/helpadmin/next/" id="">Next &#187;</a>
+            <a href="/helpadmin/next/" id="" class="button primary">Next &#187;</a>
         </span>
 
     </div>
     
     % if c.item:
-    ${help_process(c.item)}
+        ${help_process(c.item)}
     % elif c.helptickets:
         ${mns_us.helplist(c.helptickets,showcheck=False)}
     % endif
@@ -161,22 +161,23 @@
     <div class="bar1">
         <span class="h3">Filter By</span>
     </div>
-    <span class="h4">Status</span>
-    <ul class="filter" style="position:relative;margin-top:-1px;font-size:100%;">
+    <div style="margin:8px;padding:0px;"><h4>Status</h4></div>
+    <ul class="filter" style="margin:8px;">
         <li><a href="/helpadmin/status/new" class="${h.is_current_filter(filter='status',value='new')}">New</a></li>
         <li><a href="/helpadmin/status/completed" class="${h.is_current_filter(filter='status',value='completed')}">complete</a></li>
         <li><a href="/helpadmin/status/recent" class="${h.is_current_filter(filter='newness',value='recent')}">recent</a></li>
     </ul>
-    <span class="h4">Tag</span>
-    <div id="tag_cloud_div" class="tag_cloud" style="margin:4px;font-size:100%;">
+    <div style="margin:8px;padding:0px;"><h4>Tag</h4></div>
+    <div id="tag_cloud_div" class="tag_cloud" style="margin:5px;font-size:100%;">
          ${h.tag_cloud(site_id=c.site_id,tag_type='help',link='/helpadmin/tag/',cachetime=-5)}
      </div>
     <br />
-    % if c.item:
+    % if c.item and c.item.comments:
         <div class="bar1">
             <span class="h3">Comment on This Feedback</span>
         </div>
-        ${h.text_area("comment", size="32x5", class_="hint")}
+        
+        ${c.item.comments.views.summary}
     % endif
 
     

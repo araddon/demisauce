@@ -29,7 +29,7 @@
         {% if show_comments %}
             {% if entry.comments %}
                 {% autoescape off %}
-                {{ entry.comments.views }}
+                {{ entry.comments.views.summary }}
                 {% endautoescape %}
                 
             {% else %}

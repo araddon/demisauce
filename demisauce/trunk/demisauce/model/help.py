@@ -3,12 +3,13 @@ from sqlalchemy import Column, MetaData, ForeignKey, Table
 from sqlalchemy.sql import and_, select
 from sqlalchemy.types import Integer, String as DBString, DateTime, \
     Boolean, Text as DBText
-#from sqlalchemy.types import 
 from demisauce.model import ModelBase, meta
 from demisauce.model import site
 from demisauce.model.person import Person
 from demisauce.model.tag import Tag
-
+from demisaucepy.declarative import Aggregagtor, has_a, \
+    has_many, aggregator_callable, AggregateView
+    
 import logging
 import formencode
 from formencode import validators
@@ -51,10 +52,14 @@ help_response_table = Table("helpresponse", meta.metadata,
         Column("response", DBText),
     )
 
-class Help(ModelBase):
+ModelBaseAggregator = aggregator_callable(ModelBase)
+
+class Help(ModelBaseAggregator):
     """
     Help is the Support/Help/Feedback form
     """
+    comments = has_many('comment',lazy=True,local_key='id')
+    
     def __init__(self, **kwargs):
         super(Help, self).__init__(**kwargs)
         if 'email' in kwargs:

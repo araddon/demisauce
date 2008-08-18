@@ -7,11 +7,25 @@ from demisauce.model import mapping, meta
 from demisauce.model.person import Person
 
 log = logging.getLogger(__name__)
+"""
+ok, overall design:
+
+have a controller "register" a filter (by name)
+the filter will have known methods (duck typing) that the filtermanager
+will be able to call to "implement" a filter.  So, the "Filter" would 
+be per filterable
+
+??  how to implement multiple filters?   return the qry and allow futher filtering
+to work on it?
+
+filter group's?  ie, everything within a group would share the same base SqlAlchemy selectable from statement?
+or, is there a way to do it dynamically?  add in a "from" 
+"""
 class Filter(object):
     """
     """
     def __init__(self,**kwargs):
-        self.context = 'context'
+        self.name = 'default'
         self._dict = {
             'name':'default',
             'value':'filtervalue',
@@ -33,16 +47,9 @@ class FilterList(object):
     a filter against a data set.
     example::
     
-    
         def __before__(self):
             SecureController.__before__(self)
             self.helpfilter = self.filters['helpadmin']
-            if self.helpfilter == None:
-                self.helpfilter = self.filters.new('helpadmin',{name:"new",value:""})
-        
-        def yourcontrolleraction(self,id=''):
-            filter = self.filters['helpadmin']
-            c.help_tickets = 
     """
     def __init__(self,**kwargs):
         self.filters = {}

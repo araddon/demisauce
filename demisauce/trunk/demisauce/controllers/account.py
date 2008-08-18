@@ -368,4 +368,5 @@ class AccountController(BaseController):
             person = Person.get(c.user.site_id,id)
             c.person = person
         return render('/account/profile_mini.html')
+    
 
