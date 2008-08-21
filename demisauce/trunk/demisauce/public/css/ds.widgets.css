@@ -1,6 +1,22 @@
+/**/
 #tooltip {text-align:left;position: absolute;z-index: 3000;border: 1px solid #111;background-color: #eee;padding: 5px;opacity: 0.85;}
 #tooltip h3, #tooltip div { margin: 0; }
 #tooltip.miniwin {background-color:#EBF4FA;opacity: 0.95;-moz-border-radius:5px;-webkit-border-radius:5px;border:1px solid #235C9D;}
+#tooltipx {background:transparent url(/images/bg_popup.png) repeat scroll left top;}
+#xtooltip {
+color:#FFFFFF;
+width:350px;
+z-index:13000;
+}
+#tooltip div.title {
+
+color:#9FD4FF;
+font-size:11px;
+font-weight:bold;
+margin:0;
+padding:8px 8px 4px;
+}
+
 
 
 #facebox .b {background:url(/images/facebox/b.png);}

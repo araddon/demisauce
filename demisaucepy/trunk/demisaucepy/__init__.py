@@ -175,10 +175,11 @@ class Poll(api_object):
     
 
 
-def demisauce_ws_get(method,resource_id,data={},cfgl={},format='html'):
-    return demisauce_ws(method,resource_id,verb='get',data=data,cfgl=cfgl,format=format)
+def demisauce_ws_get(method,resource_id,data={},cfgl={},format='html',extra_headers={}):
+    return demisauce_ws(method,resource_id,verb='get',data=data,
+                cfgl=cfgl,format=format,extra_headers=extra_headers)
 
-def demisauce_ws(method,resource_id,verb='get',data={},cfgl={},format='html'):
+def demisauce_ws(method,resource_id,verb='get',data={},cfgl={},format='html',extra_headers={}):
     """
     Core web service get
     api/format/method/rid?queryparams
@@ -197,9 +198,9 @@ def demisauce_ws(method,resource_id,verb='get',data={},cfgl={},format='html'):
     item = Dsws(method,resource_id,format)
     useragent = 'DemisaucePY/1.0'
     try: 
-        log.debug('url = %s' % item.url)
+        log.debug('url = %s, headers=%s' % (item.url, extra_headers))
         print item.url
-        item.params = openanything.fetch(item.url, data=data,agent=useragent)
+        item.params = openanything.fetch(item.url, data=data,agent=useragent,extra_headers=extra_headers)
         #print item.params['status']
         if item.params['status'] == 500:
             item.message = 'there was an error on the demisauce server, \

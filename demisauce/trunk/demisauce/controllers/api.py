@@ -145,9 +145,8 @@ class ApiController(BaseController):
     @requires_site
     def comment(self,format='json',id=''):
         site = request.environ['site']
-        for e in request.POST:
-            print 'POST name=%s, val=%s' % (e,request.POST[e])
         c.len = 0
+        
         if id != '' and id != None:
             rid = urllib.unquote_plus(id)
             log.info('rid= %s' % id)
@@ -172,7 +171,10 @@ class ApiController(BaseController):
             c.show_form = True
             c.source = 'remote_html'
             c.len = len(c.comments)
-            return render('/api/comment.html')
+            c.hasheader = True
+            print 'c.user = %s' % (c.user)
+            #return render('/api/comment.html')
+            return render('/comment/comment_nobody.html')
         elif format == 'json':
             return render('/api/comment.js')
         else:

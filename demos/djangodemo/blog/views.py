@@ -20,10 +20,12 @@ def view(request,id=''):
     cache.set('my_key', 'hello, world!', 120)
     print 'cache = %s' % cache.get('my_key')
     
+    #Yuck!  TODO: fix this to something more elegant. 
     for entry in entry_list:
         if entry.comments.model:
-            for comment in entry.comments.model:
-                print comment.created
+            entry.comments.add_cookies(request.COOKIES)
+    #        for comment in entry.comments.model:
+    #            print comment.created
     t = loader.get_template('index.html')
     rc = RequestContext(request,{
         'entry_list': entry_list,

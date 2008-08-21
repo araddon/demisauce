@@ -21,7 +21,7 @@ helpstatus_map = {'new':0,'assigned':1,'completed':10}
 # DB Table:  help/feedback/support ---------------------------
 help_table = Table("help", meta.metadata,
         Column("id", Integer, primary_key=True),
-        Column("site_id", Integer, ForeignKey('site.id')),
+        Column("site_id", Integer, ForeignKey('site.id'), nullable=False),
         Column('tag_id', None, ForeignKey('tag_map.id')),
         Column("status", Integer, default=0),
         Column("created", DateTime,default=datetime.now()),
@@ -58,10 +58,10 @@ class Help(ModelBaseAggregator):
     """
     Help is the Support/Help/Feedback form
     """
-    comments = has_many('comment',lazy=True,local_key='id')
+    comments = has_many('comment',proxy=True,lazy=True,local_key='id')
     
     def __init__(self, **kwargs):
-        super(Help, self).__init__(**kwargs)
+        ModelBase.__init__(self,**kwargs)
         if 'email' in kwargs:
             self.set_email(kwargs['email'])
         self.all_tags = None

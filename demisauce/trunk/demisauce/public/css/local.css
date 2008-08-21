@@ -261,13 +261,12 @@ form img.delete {}
 form img.delete { background:url(/images/cross.png);}
 .hint {color: #ccc;}
 /* new form */
-form input { padding:2px;font-size:1.2em;}
 .base_formxx {margin: 0em auto 0 auto;background-color: #EBF4FA;padding: 1em 1em 1em 1em;border: 10px solid #ddd;}
   .base_form h1 {font-size: 160%;margin: 3px 0px 5px;}
     .base_form h1 a {font-size: 70%;font-weight: normal;}
   .base_form p {margin: .5em 0;}
   .base_form p.note {color: #a00;}
-  .base_form form {}
+  .base_form form {padding:2px;font-size:1.2em;}
     .base_form label,
     .base_form .label {font-size: 110%;color: #666;display: block;margin: 0;margin-top: .4em;padding: 2px;}
       .base_form label a {font-size: 90%;}
@@ -285,7 +284,7 @@ form input { padding:2px;font-size:1.2em;}
 /* main_form is targetting a 2 column ~900 px layout left column ~600px */
 .main_form {margin: 0em auto 0 auto;background-color: #EBF4FA;padding: 0px;border: 10px solid #ddd;}
   .main_form div div div {margin:8px 8px 0px;}
-.main_form {}
+.main_form {padding:2px;font-size:1.2em;}
   .main_form input, .main_form input select {width: 35em;}
   .main_form textarea {width: 540px;}
   .main_form .first {margin-right:-4px;border-right: 4px solid #ddd;}

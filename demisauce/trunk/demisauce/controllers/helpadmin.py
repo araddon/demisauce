@@ -56,6 +56,7 @@ class HelpadminController(SecureController):
             filter = request.params['filter']
         if id > 0:
             c.item = Help.get(c.user.site_id,id)
+            c.item.comments.add_cookies(request.cookies)
         return render('/help/help_process.html')
     
     #TODO:  delete, not used
@@ -119,12 +120,12 @@ class HelpadminController(SecureController):
             self.filters.new('help',{'name':"tag",'value':id,'offset':0})
         
         return self._filter()
-            
+    
     @requires_role('admin')
     @rest.dispatch_on(POST="help_process_submit")
     def process(self,id=0):
         return self.viewlist(id)
-        
+    
     def next(self,id=0):
         # use existing filter to grab next
         return self._filter(offset=1)

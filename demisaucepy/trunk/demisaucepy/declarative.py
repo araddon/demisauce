@@ -15,6 +15,7 @@ Events and Mappings::
             
 """
 import datetime
+import urllib
 import logging
 import time
 import urlparse
@@ -58,16 +59,36 @@ class Aggregate(object):
             self.local_key = kwargs['local_key']
         self.local_key_val = None
         self._model_instance = None
+        self.extra_headers = {}
     
     def get_view(self,view='default'):
         class viewer(object):
-            def __init__(self,name,key):
+            """this is a helper method to load or cache the correct
+            view's.  This parent will defer the decision to viewer to determine
+            which view to get::
+            
+                {{ entry.comments.views.summary }}
+            
+            The above snipped will load the "summary" view.
+            """
+            def __init__(self,name,key,extra_headers={}):
                 self.name = name
                 self.key = key
+                self.extra_headers = extra_headers
             
             def __getattr__(self,view):
+                """Allows for view's unknown to this code base to be retrieved.
+                
+                entry.comments.views.summary
+                entry.comments.views.detailed
+                entry.comments.views.recent
+                
+                Would all be valid (summary,detailed,recent)
+                """
                 if not view in self.__dict__:
-                    dsitem = demisauce_ws(self.name,self.key,data={'views':view},format='view')
+                    log.debug('calling dsws %s' % view)
+                    dsitem = demisauce_ws(self.name,self.key,data={'views':view},
+                            format='view',extra_headers=self.extra_headers)
                     if dsitem.success == True:
                         self.__dict__[view] = dsitem.data
                     else:
@@ -78,13 +99,16 @@ class Aggregate(object):
         
         view_key = 'viewholder'
         if self.lazy and not self.is_loaded(view_key):
-            view_handler = viewer(self.name,self.key())
+            eh = {}
+            if self.extra_headers:
+                eh = self.extra_headers
+            view_handler = viewer(self.name,self.key(),extra_headers=eh)
             self.set_loaded(view_key,view_handler)
         else:
             view_handler = self.get_loaded(view_key)
             
         return view_handler
-        
+        #TODO:  handle error
         try:
             pass
         except AttributeError:
@@ -97,6 +121,13 @@ class Aggregate(object):
     
     def key(self):
         return '/'.join([cfg.CFG['demisauce.appname'],self.model_class_name,str(self.local_key_val)])
+    
+    def add_cookies(self,ckie_dict={}):
+        if not 'Cookie' in self.extra_headers:
+            val = ''
+            for ck in ckie_dict:
+                val += urllib.urlencode({ck:ckie_dict[ck]}) + '; '
+            self.extra_headers['Cookie'] = val
     
     def is_loaded(self,what='model'):
         """checks if this item is loaded"""
@@ -280,4 +311,4 @@ class AggregateView(object):
 
 
 if __name__ == "__main__":
-    print 'hello'
+    pass

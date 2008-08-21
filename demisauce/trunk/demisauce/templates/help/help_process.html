@@ -29,7 +29,7 @@
             % endif
         </div>
         <div id="ticket_details_body" style="display:none;">
-            these are more of the ticket details
+            <div class="title">these are more of the ticket details</div>
             <dl>
                 % if item.isuser:
                 <dt>Name:</dt>             <dd><a href="/account/view/${item.person_id}">${item.authorname}</a></dd>
@@ -120,7 +120,8 @@
                 
                 $.tooltip.defaults.width = '400';
                 $("#ticket_details").tooltip({
-                   extraClass: 'miniwin',showURL: false
+                   extraClass: 'miniwin',
+                   showURL: false
                 });
                 var person_details = '';
                 $('#ticket_person_details').tooltip({
@@ -182,9 +183,9 @@
 
     
     % for item in c.filters:
-        <!----><div class="${h.cycle("ds-comment-event", "ds-comment-odd") }">
+        <!--<div class="${h.cycle("ds-comment-event", "ds-comment-odd") }">
             context=${item}, value=${c.filters[item]}
-        </div>
+        </div>-->
     % endfor
     % if c.item and c.item.isuser:
     <br />

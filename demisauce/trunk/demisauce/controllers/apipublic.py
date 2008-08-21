@@ -18,8 +18,8 @@ log = logging.getLogger(__name__)
 
 class ApipublicController(BaseController):
     def activity(self,id=''):
-        for p in request.params:
-            print 'p= %s , val = %s' % (p,request.params[p])
+        #for p in request.params:
+        #    print 'p= %s , val = %s' % (p,request.params[p])
         if not c.user and 'hashedemail' in request.params: 
             user = person.Person.by_hashedemail(str(request.params['hashedemail']))
         elif c.user:
@@ -31,7 +31,7 @@ class ApipublicController(BaseController):
         if 'activity' in request.params:
             action = str(request.params['activity'])
             #s = site.Site.by_slug(site_slug)
-            print 'action = %s' % action
+            #print 'action = %s' % action
         a = activity.Activity(user.site_id,user.id,action)
         if 'ref_url' in request.params:
             a.ref_url = request.params['ref_url']

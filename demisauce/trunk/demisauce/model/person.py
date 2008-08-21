@@ -207,7 +207,7 @@ class Person(ModelBase):
     recent_activities = property(get_recent_activities)
     
     def __str__(self):
-        return "id=%s, email=%s" % (self.id,self.email)
+        return "{person:{site_id:%s, id:%s, email:%s}}" % (self.site_id,self.id,self.email)
     
     
     def has_role(self,role):

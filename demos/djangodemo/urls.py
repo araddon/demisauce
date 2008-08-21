@@ -8,7 +8,7 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
 
-    (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': '/Users/aaron/Dropbox/demisauce/demos/djangodemo/static'}),
+    (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
 
     # Example:
     # (r'^djangodemo/', include('djangodemo.foo.urls')),

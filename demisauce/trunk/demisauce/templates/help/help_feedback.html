@@ -1,3 +1,4 @@
+<%namespace name="helpbits" file="help_bits.html"/>
 <%inherit file="../_baseiframe.html"/>
 
 <%def name="head_more()">
@@ -9,53 +10,6 @@
 % if c.result:
     <h3>Thank You</h3>
 % else:
-    <div id="ds-helpfeedback-div">
-        ${h.form(h.url(action='feedback'), id="feedbackform", method='post')}
-            <input type="hidden" id="objectid" name="objectid" value="${(item and item.id) or '0'}" />
-            <input type="hidden" id="slug" name="slug" value="${c.site_slug}" />
-            <input type="hidden" id="category" name="category" value="" />
-            % if c.user:
-
-                Post as:  ${c.user.displayname}
-                % if c.user.hashedemail:
-                <img alt="" src="http://www.gravatar.com/avatar/${c.user.hashedemail}?s=24" class="avatar avatar-48" height="24" width="24">
-                % endif
-                ${h.hidden_field('authorname', value=(c.user and c.user.displayname) or '')}
-                ${h.hidden_field('email', value=(c.user and c.user.email) or '')}
-            % else:
-                <div>
-                    ${h.text_field('authorname', value=(c.item and c.item.authorname) or 'your displayname', size=22, class_="hint", tabindex=1)}
-                    <label for="authorname">(required)</label>
-                </div>
-                <div>
-                    <input type="text" name="email" id="email" value='Email'  class="hint" size="22" tabindex="2" />
-                    <label for="email">(Required), will not be visible, used for <a href="http://www.gravatar.com/check">Gravatar</a></label>
-                </div>
-                <div>
-                    <input type="text" name="blog" id="blog" size="22" tabindex="3" value="your blog url" class="hint" />
-                    <label for="blog"></label>
-                </div>
-            
-            % endif
-                <input type="hidden" id="goto" name="goto" value="${c.goto_url}" />
-                <input type="hidden" id="url" name="url" value="${c.current_url}" />
-                <div>
-                    ${h.text_area("content", content='type your question or feedback here', size="50x5", class_="hint", tabindex=4)}
-                </div>
-                <div>
-                    <input name="submit" type="submit" id="submit" tabindex="5" value="Submit Feedback" />
-                </div>
-        ${h.end_form()}
-    </div>
+    ${helpbits.form(c.user)}
 % endif
-<script type="text/javascript">
-$(document).ready(function(){
-    $('#feedbackform').dshints();
-    //$('#content').focus();  // this kills esc key on facebox
-    $('#feedbackform').submit(function() { 
-        $(this).ajaxSubmit({ target: '#ds-helpfeedback-div'}); 
-        $.ds.dsactivity({activity:'submit help feedback',custom:{good:'great',tag1:'is a tag'},category:'help'});
-        return false; 
-    });
-});
-</script>
+

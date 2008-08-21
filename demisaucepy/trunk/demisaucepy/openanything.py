@@ -11,10 +11,11 @@ __date__ = '$Date: 2004/04/16 21:16:24 $'
 __copyright__ = 'Copyright (c) 2004 Mark Pilgrim'
 __license__ = 'Python'
 
-import urllib2, urlparse, gzip, urllib
+import urllib2, urlparse, gzip, urllib, logging
 from StringIO import StringIO
 
 ISGAE = False
+log = logging.getLogger(__name__)
 
 try:
     from google.appengine.api import urlfetch
@@ -46,7 +47,7 @@ class DefaultErrorHandler(urllib2.HTTPDefaultErrorHandler):
         return result
     
 
-def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT):
+def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT,extra_headers={}):
     """URL, filename, or string --> stream
     
     This function lets you define parsers that take any input source
@@ -68,7 +69,6 @@ def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT
     If the agent argument is supplied, it will be used as the value of a
     User-Agent request header.
     """
-    
     if hasattr(source, 'read'):
         return source
     
@@ -77,6 +77,7 @@ def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT
     
     if urlparse.urlparse(source)[0] == 'http':
         # open URL with urllib2
+        log.debug('about to open %s, extra_headers=%s' % (source,extra_headers))
         if data == None or data == {}:
             request = urllib2.Request(source)
         else:
@@ -86,6 +87,8 @@ def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT
             request.add_header('If-Modified-Since', lastmodified)
         if etag:
             request.add_header('If-None-Match', etag)
+        for key in extra_headers:
+            request.add_header(key,extra_headers[key])
         request.add_header('Accept-encoding', 'gzip')
         opener = urllib2.build_opener(SmartRedirectHandler(), DefaultErrorHandler())
         return opener.open(request)
@@ -100,10 +103,10 @@ def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT
     return StringIO(str(source))
 
 
-def fetch(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT):
+def fetch(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT,extra_headers={}):
     '''Fetch data and metadata from a URL, file, stream, or string'''
     result = {}
-    f = openAnything(source, data, etag, lastmodified, agent)
+    f = openAnything(source, data, etag, lastmodified, agent,extra_headers=extra_headers)
     result['data'] = f.read()
     if hasattr(f, 'headers'):
         # save ETag, if the server sent one

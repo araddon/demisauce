@@ -113,9 +113,7 @@ class HelpController(BaseController):
             c.site_slug = site.slug
         if 'url' in request.params:
             c.current_url = request.params['url']
-        else:
-            #TODO: fix this 
-            c.current_url = 'http://www.google.com'
+        c.isblue = True
         return render('/help/help_feedback.html')
     
     @rest.dispatch_on(POST="feedbackform")
@@ -125,14 +123,17 @@ class HelpController(BaseController):
             c.site_slug = site.slug
         if 'url' in request.params:
             c.current_url = request.params['url']
+        c.hasheader = True
+        c.isblue = False
         return render('/help/help_feedback.html')
     
     @validate(schema=HelpFormValidation(), form='feedback')
     def feedbackform(self,id=''):
         site = Site.by_slug(str(id))
-        #print 'feedbackform = %s' % id
+        #print 'site = %s' % site
         if site:
             c.site = site
+            #print 'setting site.id = %s' % (site.id)
             help = Help(site_id=site.id,email=sanitize(self.form_result['email']))
             if c.user:
                 help.set_user_info(c.user)
@@ -154,7 +155,7 @@ class HelpController(BaseController):
                 c.goto_url = request.POST['goto']
                 print 'should be redirecting %s' % c.goto_url
                 return render('/refresh.html')
-            else:
+            else:S
                 c.result = True
                 #print 'should be showing message'
                 return render('/help/help_feedback.html')

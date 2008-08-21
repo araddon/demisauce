@@ -51,6 +51,10 @@ class Site(ModelBase):
     def create_slug(self,name):
         self.slug=name.replace(' ','').lower()
     
+    def __str__(self):
+        return '''{id:%s,name:'%s',slug:'%s',base_url:'%s'}''' % (self.id,
+                self.name, self.slug, self.base_url)
+    
     @classmethod
     def by_slug(cls,slug):
         """get site by slug"""

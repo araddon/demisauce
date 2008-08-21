@@ -11,6 +11,7 @@ from demisauce.model import meta, mapping
 from demisauce.model.comment import *
 from demisauce.model.site import Site
 from datetime import datetime, timedelta
+import simplejson
 
 
 log = logging.getLogger(__name__)
@@ -119,7 +120,8 @@ class CommentController(BaseController):
                 c.goto_url = c.user.url
             else:
                 c.goto_url = 'http://www.google.com'
-        
+        #c.hasheader = False
+        #c.isblue = True
         return render('/comment/comment_commentform.html')
     
     @validate(schema=CommentFormValidation(), form='commentform')
@@ -137,6 +139,7 @@ class CommentController(BaseController):
                     item.set_email(sanitize(self.form_result['email']))
                 if item.blog == "your blog url":
                     item.blog = ''
+            # prod environment proxy: apache
             if 'HTTP_X_FORWARDED_FOR' in request.environ:
                 item.ip = request.environ['HTTP_X_FORWARDED_FOR']
             elif 'REMOTE_ADDR' in request.environ:
@@ -175,6 +178,11 @@ class CommentController(BaseController):
             source = 'js'
             if 'source' in self.form_result:
                 source = self.form_result['source']
+            if 'jsoncallback' in request.params:
+                data = {'success':True,'html':item.comment}
+                json = simplejson.dumps(data)
+                response.headers['Content-Type'] = 'text/json'
+                return '%s(%s)' % (request.params['jsoncallback'],json)
             if source == 'js':
                 return render('/refresh.html')
             else:
@@ -182,6 +190,60 @@ class CommentController(BaseController):
                 return render('/api/comment.html')
         else:
             #TODO panic?
+            raise 'eh'
+            pass
+        return
+    
+    def commentsubmitjsonp(self,id=''):
+        site = Site.by_slug(str(id))
+        if site:
+            c.site = site
+            item = Comment(site.id)
+            if c.user:
+                item.set_user_info(c.user)
+            else:
+                if 'authorname' in request.params:
+                    item.authorname = sanitize(request.params['authorname'])
+                if 'blog' in request.params:
+                    item.blog = sanitize(request.params['blog'])
+                if 'email' in request.params:
+                    item.set_email(sanitize(request.params['email']))
+                if item.blog == "your blog url":
+                    item.blog = ''
+            
+            # prod environment proxy: apache
+            if 'HTTP_X_FORWARDED_FOR' in request.environ:
+                item.ip = request.environ['HTTP_X_FORWARDED_FOR']
+            elif 'REMOTE_ADDR' in request.environ:
+                item.ip = request.environ['REMOTE_ADDR']
+            
+            if 'comment' in request.params:
+                item.comment = sanitize(request.params['comment'])
+            if 'type' in request.params:
+                item.type = sanitize(request.params['type'])
+            else:
+                item.type = 'blogentry'
+            
+            if 'rid' in request.params:
+                item.uri = urllib.unquote_plus(request.params['rid'].lower())
+            
+            item.save()
+            
+            #send emails
+            from demisauce.lib import scheduler
+            dnew = {'sitename':c.site.name,'displayname':item.authorname,
+                'email':item.email, 'url':'dest','blog':item.blog}
+            scheduler.add_interval_task(send_emails,0,('comment-notification',[c.site.email],dnew) , initialdelay=4)
+            
+            if 'jsoncallback' in request.params:
+                c.items = [item]
+                data = {'success':True,'html':render('/api/comment.html')}
+                json = simplejson.dumps(data)
+                response.headers['Content-Type'] = 'text/json'
+                return '%s(%s)' % (request.params['jsoncallback'],json)
+        else:
+            #TODO panic?
+            raise 'eh'
             pass
         return
     

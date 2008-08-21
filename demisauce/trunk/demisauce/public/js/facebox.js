@@ -80,8 +80,8 @@
       opacity      : 0,
       overlay      : true,
       width        : 0,
-      loadingImage : '../images/facebox/loading.gif',
-      closeImage   : '../images/facebox/closelabel.gif',
+      loadingImage : '/images/facebox/loading.gif',
+      closeImage   : '/images/facebox/closelabel.gif',
       imageTypes   : [ 'png', 'jpg', 'jpeg', 'gif' ],
       faceboxHtml  : '\
     <div id="facebox" style="display:none;"> \

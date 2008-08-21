@@ -1,5 +1,6 @@
 # Django settings for djangodemo project.
-
+import os
+here = lambda x: os.path.join(os.path.abspath(os.path.dirname(__file__)), x)
 
 ####### custom settings
 DEMISAUCE_APIKEY = 'a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202'
@@ -46,7 +47,8 @@ USE_I18N = True
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = '/Users/aaron/Dropbox/demisauce/demos/djangodemo/static/'
+MEDIA_ROOT = here('static')
+
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
@@ -89,7 +91,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    '/Users/aaron/Dropbox/demisauce/demos/djangodemo/views'
+    here('views')
 )
 
 INSTALLED_APPS = (
