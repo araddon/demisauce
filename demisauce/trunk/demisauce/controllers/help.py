@@ -155,7 +155,7 @@ class HelpController(BaseController):
                 c.goto_url = request.POST['goto']
                 print 'should be redirecting %s' % c.goto_url
                 return render('/refresh.html')
-            else:S
+            else:
                 c.result = True
                 #print 'should be showing message'
                 return render('/help/help_feedback.html')

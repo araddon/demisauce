@@ -322,7 +322,7 @@ class AccountController(BaseController):
         else:
             c.person = meta.DBSession.query(Person).filter_by(
                 site_id=c.user.site_id, id=c.user.id).first()
-            return self._view(c.person,True)
+            return self._view(c.person,getcomments=True)
     
     def _view(self,person,getcomments=False):
         c.person = None
@@ -330,7 +330,7 @@ class AccountController(BaseController):
             c.person = person
             #TODO, somehow filter by site???? this gets ALL
             if getcomments:
-                c.comments = person.recent_comments()
+                c.comments = person.recent_comments(5)
             c.helptickets = c.person.help_tickets()
             c.activities_by_day = Activity.stats_by_person(person.site_id,person.id)
             if c.user.issysadmin:

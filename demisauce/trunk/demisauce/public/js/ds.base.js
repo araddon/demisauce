@@ -44,6 +44,7 @@
             logon_form_link: '#ds-logon-link',
             input_form_selector: '#ds-inputform-div',
             current_url : '',
+            use_sub_domains : false,
             base_url: 'http://localhost:4950',
             site_slug: 'enter your site id here' // unique id for usage, set in admin panel
         },
@@ -78,7 +79,7 @@
             $(o.input_form_selector +','+ o.logon_form_link).show();
             $(o.logon_form_selector+','+ o.logon_form_cancel).hide();
         },
-        make_url: function(action,include_url){
+        service_url: function(action,include_url){
             var result = $.ds.parseUri(window.location.href);
             var url = this.defaults.base_url + action +'/' + encodeURIComponent(this.defaults.site_slug) + '?';
             //?site_slug=
@@ -99,7 +100,7 @@
             var ref_url = '';
             var result = $.ds.parseUri(window.location.href);
             var post_vals = {};
-            var url = this.make_url('/apipublic/activity',true);
+            var url = this.service_url('/apipublic/activity',true);
             if (opts.use_url == true){
                 if (opts.absolute == true) {
                     opts.activity = result.protocol + '://' + result.authority;
@@ -347,6 +348,7 @@
         if ((opts.style === 'facebox')){
             $(el).click(function(){
                 self.load_content();
+                return false;
             });
             if (opts.hotkeys === true){
                 if (typeof($.hotkeys) != 'undefined'){
@@ -421,7 +423,7 @@
             }
             if (self.options.feedback) {
                 $(self.options.faceboxcontent2).append(self.feedback());
-                $.ds.prepLogon($(self.options.faceboxcontent2));
+                //$.ds.prepLogon($(self.options.faceboxcontent2));
             }
         },
         on_close: function(el){
@@ -432,7 +434,7 @@
             var rid = $('#ds-cms-collection').attr('rid');
             var rating_val = ($(el).val() === 'Yes') ? '1': '-1';
               $(el).parent().parent().hide();
-            var url = $.ds.make_url('/help/ratearticle',true);
+            var url = $.ds.service_url('/help/ratearticle',true);
             $.getJSON(url + '&jsoncallback=?', {resource_id:rid,rating:rating_val}, function(json){
                 $.ds.dsactivity({activity:"User submitted a rating on help" ,category:"Help"});
             });
@@ -452,7 +454,7 @@
         },
         feedback: function(txt) {
             var self = this;
-            var qs = 'site_key&' + $.ds.defaults.site_slug; 
+            var qs = 'site_key=' + $.ds.defaults.site_slug; 
             qs += '&url=' + self.options.url; 
             return '<div id="ds-inputform-div" ttestatt="fake" style="width:630;"><iframe width="100%" height="200" frameborder="0" \
             src="' + $.ds.defaults.base_url + '/help/feedback/' + $.ds.defaults.site_slug +'?' + qs + '"  \

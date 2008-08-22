@@ -1,0 +1,28 @@
+<%namespace name="comment" file="comment_bits.html"/>
+
+<style type="text/css" media="screen"> 
+    .ds-comment-odd {background-color: #FAFAFA;margin:4px;padding:4px;} 
+    .ds-comment-even {background-color: #DDDDDD;margin:4px;padding:4px;} 
+</style>
+
+% if c.items and len(c.items) > 0:
+    % if c.items and len(c.items) > 1:
+        <div><h3>${len(c.items)} Comments</h3></div>
+    % endif
+    % for item in c.items:
+        ${comment.show_comment(item)}
+    % endfor
+% else:
+    <div>No Comments</div>
+% endif
+
+% if c.show_form:
+    <div id="comment_form_mini">
+    ${comment.form(c.user)}
+    </div>
+% endif
+
+
+
+
+

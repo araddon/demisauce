@@ -61,7 +61,7 @@
     % endfor
 </%def>
 
-<%def name="commentlist(comments)">
+<%def name="commentlist(comments,person=None)">
     <style type="text/css" media="screen"> 
         .ds-comment-event {background-color: #E4F2FD;margin:8px;} 
         .ds-comment-odd {background-color: #ccc;margin:8px;} 
@@ -80,6 +80,10 @@
         <br /> ${item.comment}
         </div>
     % endfor
+    
+    % if comments and person and comments.count() == 5:
+        <div style="height:25px;"><div class="right" ><a href="/comments/showfor/${person.id}">More...</a></div></div>
+    % endif
 </%def>
 
 

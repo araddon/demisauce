@@ -17,7 +17,11 @@ ${h.form(h.url(action='edit'), method='post', id="site_form")}
 <div class="base_form main_form" id="FormWrapper">
     <div class="yui-gc" >
         <div class="yui-u first">
-            <div>
+            <!--<div id="form_tabs_div" class="boxlinks_tabs boxlinks actionbar">
+               <a class="current" href="#tab1">Main</a>
+               <a href="#tab2">Respond</a>
+            </div>-->
+            <div id="tab1">
                 <input type="hidden" id="objectid" name="objectid" value="${(item and item.id) or '0'}">
                 <h1>Site Settings Edit</h1>
                 <strong>Bold</strong> fields are required.
@@ -62,7 +66,8 @@ ${h.form(h.url(action='edit'), method='post', id="site_form")}
                             No 
                     </fieldset> 
                 </div>
-            </div>
+            </div><!--End tab1-->
+            <div id="tab2" style="display:none;">tab2</div>
         </div>
         <div class="yui-u">
             <div>
@@ -85,6 +90,7 @@ ${h.form(h.url(action='edit'), method='post', id="site_form")}
 
     <script type="text/javascript">
     $(document).ready(function(){
+        $('#form_tabs_div').ds_tabs();
         $('#site_form').slugeditor({slugfrom: '#name',strip:true});
     });
     </script>

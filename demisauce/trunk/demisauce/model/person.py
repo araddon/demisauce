@@ -200,7 +200,7 @@ class Person(ModelBase):
         from demisauce.model.help import Help
         return meta.DBSession.query(model.comment.Comment).filter_by(
                 site_id=self.site_id, hashedemail=self.hashedemail
-                ).order_by(model.comment.Comment.created.desc()).all()
+                ).order_by(model.comment.Comment.created.desc()).limit(ct)
     
     def get_recent_activities(self,ct=5):
         return self.activities.order_by(Activity.created.desc()).limit(ct)

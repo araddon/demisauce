@@ -237,7 +237,7 @@ class CommentController(BaseController):
             
             if 'jsoncallback' in request.params:
                 c.items = [item]
-                data = {'success':True,'html':render('/api/comment.html')}
+                data = {'success':True,'html':render('/comment/comment_nobody.html')}
                 json = simplejson.dumps(data)
                 response.headers['Content-Type'] = 'text/json'
                 return '%s(%s)' % (request.params['jsoncallback'],json)
