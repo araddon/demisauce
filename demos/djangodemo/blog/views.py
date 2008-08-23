@@ -22,10 +22,13 @@ def view(request,id=''):
     
     #Yuck!  TODO: fix this to something more elegant. 
     for entry in entry_list:
-        if entry.comments.model:
-            entry.comments.add_cookies(request.COOKIES)
+        entry.comments.add_cookies(request.COOKIES)
+        
+    #for entry in entry_list:
+    #    if entry.comments.model:
     #        for comment in entry.comments.model:
     #            print comment.created
+    
     t = loader.get_template('index.html')
     rc = RequestContext(request,{
         'entry_list': entry_list,

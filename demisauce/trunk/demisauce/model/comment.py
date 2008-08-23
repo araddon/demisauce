@@ -71,13 +71,13 @@ class Comment(ModelBase):
             ).order_by(comment_table.c.created.desc()).limit(ct)
     
     @classmethod
-    def for_url(cls,site,url):
+    def for_url(cls,site_id=None,url=''):
         """Class method to get recent comments
         for a specific site and url::
             
             Comment.for_url('http://www.example.com')
         """
-        qry = meta.DBSession.query(Comment).filter_by(site_id=site.id,
+        qry = meta.DBSession.query(Comment).filter_by(site_id=site_id,
             uri=str(url).lower()).all()
         return qry
         

@@ -179,7 +179,7 @@ class Aggregate(object):
             setattr(model_instance, '_ds_aggregate', {})
         if not self._attr_name() in model_instance._ds_aggregate:
             model_instance._ds_aggregate[self._attr_name()] = {}
-        self._model_instance = model_instance
+        self._model_instance = model_instance   #
         self.local_key_val = getattr(model_instance, self.local_key)
         return self
     

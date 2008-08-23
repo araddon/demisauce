@@ -18,39 +18,6 @@ from demisauce.model.rating import Rating
 
 log = logging.getLogger(__name__)
 
-
-# http://pythonisito.blogspot.com/2008/07/restfulness-in-turbogears.html
-class RestMeta(type):
-    def __new__(meta,name,bases,dct):
-        cls = type.__new__(meta, name, bases, dct)
-        allowed_methods = cls.allowed_methods = {}
-        for name, value in dct.items():
-            #print name, value
-            if callable(value) and getattr(value, 'exposed', False):
-                allowed_methods[name] = value
-        return cls
-
-class ExposedDescriptor(object):
-    def __get__(self, obj, cls=None):
-        if cls is None: cls = obj
-        allowed_methods = cls.allowed_methods
-        methodname = request.method.lower()
-        if methodname not in allowed_methods:
-            raise 'hello'
-        return True
-
-class RestMethod(object):
-    __metaclass__ = RestMeta
-    exposed = ExposedDescriptor()
-    def __init__(self, *l, **kw):
-        methodname = request.method.lower()
-        method = self.allowed_methods[methodname]
-        self.result = method(self, *l, **kw)
-    
-    def __iter__(self):
-        return iter(self.result)
-    
-
 def make_restful(func):
     """??"""
     def wrapper(*arg):
@@ -67,20 +34,6 @@ class HelpFormValidation(formencode.Schema):
     content = formencode.All(String(not_empty=True))
 
 class HelpController(BaseController):
-    class test(RestMethod):
-        #@expose('json')
-        def get(self, **kw):
-            return dict(method='GET', args=kw)
-        #@expose('json')
-        def post(self, **kw):
-            return dict(method='POST', args=kw)
-        #@expose('json')
-        def put(self, **kw):
-            return dict(method='PUT', args=kw)
-        # NOT exposed, for some reason
-        def delete(self, **kw):
-            return dict(method='DELETE', args=kw)
-    
     def index(self):
         data = {'success':True,'help_id':1,'html':render('/help/help.html')}
         json = simplejson.dumps(data)

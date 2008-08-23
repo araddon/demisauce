@@ -73,6 +73,7 @@ class Service(ModelBase):
     :params:  which parameters need to get passed and how, format?
     :views: [list]{format: json/xml/googlegadget/html}
     :events: [list]{format: xmpp, callback, email, plugin?}
+    :dependency: ??  list of dependencies  (js? css? kinda like "requires?")
     """
     pass
     

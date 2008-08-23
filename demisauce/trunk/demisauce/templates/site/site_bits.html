@@ -18,10 +18,11 @@
             <dt>Slug:</dt>                 <dd>${site.slug}<img alt="help?" title="This is going to be the url for users to embed this sites javascript" 
                 src="/images/icon_help.png" class="demisauce_help_tip" /></dd>
             <dt>Base Url:</dt>              <dd>${h.link_to(site.base_url ,h.url('%s' % str(site.base_url)))}</dd>
-            <dt>Comment Url:</dt>              <dd>${h.link_to(site.site_url ,h.url('%s' % str(site.site_url)))}</dd>
+            <dt>Comment Url:</dt>           <dd>${h.link_to(site.site_url ,h.url('%s' % str(site.site_url)))}</dd>
             <dt>Description:</dt>            <dd>${site.description}</dd>
             <dt>Site Created:</dt>          <dd>${site.created.strftime("%b %d, %Y") or ''}</dd>
             <dt>ApiKey:</dt>                <dd>${site.key}</dd>
+            <dt>SharedSecret:</dt>         <dd>${site.sharedsecret}</dd>
             <dt>Is Public:</dt>                <dd>${(site and site.public) or 'False'}</dd>
             % if c.user and c.user.issysadmin:
             <dt>Is Enabled:</dt>          <dd id="site">${(site and site.enabled) or 'False'},  

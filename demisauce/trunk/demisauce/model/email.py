@@ -37,8 +37,17 @@ class Email(ModelBase):
             self.from_email = self.site.email
     
     def __str__(self):
-        return 'email subject=%s key = %s' % (self.subject,self.key)
+        return 'site_id=%s, email subject=%s key = %s' % (self.site_id, self.subject,self.key)
     
+    @classmethod
+    def all(cls,site_id=0):
+        """
+        Gets all for this site::
+
+            Email.all(site_id=c.site_id)
+        """
+        return meta.DBSession.query(Email).filter_by(site_id=site_id)
+        
     @classmethod
     def by_key(cls,site_id=0,key=''):
         """

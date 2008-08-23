@@ -14,6 +14,7 @@ site_table = Table("site", meta.metadata,
         Column("email", DBString(255)),
         Column("name", DBString(255)),
         Column("slug", DBString(50)),
+        Column("sharedsecret", DBString(50)),
         Column("description", DBText),
         Column("key", DBString(50)),
         Column("base_url", DBString(255),nullable=False,default='http://localhost:4950'),
@@ -42,6 +43,7 @@ class Site(ModelBase):
         self.slug = None
         super(Site, self).__init__(**kwargs)
         self.key = self.create_sitekey()
+        self.sharedsecret = self.create_sitekey()
         if self.slug == None and hasattr(self,'name') and self.name != None:
             self.slug = self.create_slug(self.name)
     

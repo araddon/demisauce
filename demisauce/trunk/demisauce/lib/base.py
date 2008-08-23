@@ -135,6 +135,17 @@ def print_timing(func):
     
     return wrapper
 
+# http://pythonisito.blogspot.com/2008/07/restfulness-in-turbogears.html
+class RestMethod(object):
+    def __call__(self,**kwargs):
+        return self.result(**kwargs)
+    
+    def __init__(self,**kwargs):
+        methodname = request.method.lower()
+        if hasattr(self,methodname):
+            self.result = getattr(self, methodname)
+    
+
 class BaseController(WSGIController):
     requires_auth = False
     

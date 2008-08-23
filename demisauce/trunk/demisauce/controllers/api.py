@@ -19,6 +19,18 @@ from paste.wsgiwrappers import WSGIResponse
 
 log = logging.getLogger(__name__)
 
+class RestApiMethod(RestMethod):
+    def __call__(self,**kwargs):
+        if 'format' in kwargs:
+            format = kwargs['format']
+            if format == 'json':
+                response.headers['Content-Type'] = 'text/json'
+            elif format == 'xml':
+                response.headers['Content-Type'] = 'application/xhtml+xml'
+        return RestMethod.__call__(self,**kwargs)
+    
+
+
 def requires_site(target):
     """A decorator to protect the API methods to be able to
     accept api by either apikey or logged on user, in future oath?
@@ -58,7 +70,6 @@ class ApiController(BaseController):
             request.environ['site'] = self.site
         else:
             log.debug('no apikey or c.user')
-        
     
     def nokey(self):
         """
@@ -149,8 +160,8 @@ class ApiController(BaseController):
         
         if id != '' and id != None:
             rid = urllib.unquote_plus(id)
-            log.info('rid= %s' % id)
-            c.comments = Comment.for_url(site,rid)
+            log.info('comment rid= %s' % id)
+            c.comments = Comment.for_url(site_id=site.id,url=rid)
         else:
             c.comments = Comment.all(site.id)
         
@@ -167,13 +178,10 @@ class ApiController(BaseController):
             c.len = len(c.comments)
             return render('/api/comment.xml')
         elif format == 'view':
-            #response.headers['Content-Type'] = 'application/xhtml+xml'
             c.show_form = True
             c.source = 'remote_html'
             c.len = len(c.comments)
             c.hasheader = True
-            print 'c.user = %s' % (c.user)
-            #return render('/api/comment.html')
             return render('/comment/comment_nobody.html')
         elif format == 'json':
             return render('/api/comment.js')
@@ -181,32 +189,30 @@ class ApiController(BaseController):
             raise 'not implemented'
     
     @requires_site
-    def email(self,format='html',id=''):
-        if id != '' and id != None:
-            site = request.environ['site']
-            c.emailtemplates = meta.DBSession.query(Email).filter_by(
-                site_id=site.id,key=id).all()
-            
-            if c.emailtemplates:
-                c.item = c.emailtemplates[0]
-            else:
-                print 'argh, no email template, siteid = %s' % site.id
-        else:
-            site = request.environ['site']
-            c.emailtemplates = meta.DBSession.query(Email).filter_by(
-                site_id=site.id).all()
-        
-        if c.emailtemplates and 'api.isauthenticated' in request.environ:
-            if c.emailtemplates[0].site.key == request.environ['site'].key:
-                response.headers['Content-Type'] = 'application/xhtml+xml'
+    def email(self,format='html',id='',**kw):
+        site = request.environ['site']
+        class email(RestApiMethod):
+            def get(self, **kw):
                 return render('/api/email.mako')
-            else:
-                print 'c.emaltemplates.key=%s   site.key=%s' % (c.emailtemplates[0].site.key,
-                    request.environ['site'].key)
-                abort(401, 'Invalid API Key')
+            def post(self, **kw):
+                return dict(method='POST', args=kw)
+            def put(self, **kw):
+                return dict(method='PUT', args=kw)
+            def delete(self, **kw):
+                return 'not implemented'
         
-        #TODO be a bit nicer with valid xml and error codes
-        return "not correct key"
+        if id != '' and id != None:
+            c.emailtemplates = Email.by_key(site_id=site.id,key=id)  
+            if c.emailtemplates:
+                c.item = c.emailtemplates[0]         
+        else:
+            c.emailtemplates = Email.all(site_id=site.id)
+        
+        if not c.emailtemplates:
+            log.info('no email templates?  Should be site=%s' % site)
+        
+        kw.update({'format':format})
+        return email()(**kw)
     
     @requires_site
     def send_email(self,format='xml',id=''):
@@ -240,10 +246,7 @@ class ApiController(BaseController):
                 p = person.Person.by_hashedemail(c.site.id,id)
                 for pkey in request.params:
                     postvals[pkey] = request.params[pkey]
-                if not p == None:
-                    print 'p not none %s' % p
-                else:
-                    print 'p is none %s' % id
+                if p == None: # new not edit
                     p = person.Person(site_id=c.site.id,email=request.params['email'])
                 if 'authn' in request.params:
                     p.authn = request.params['authn']
@@ -298,7 +301,8 @@ class ApiController(BaseController):
     
     @requires_site
     def poll(self,format='xml',id=''):
-        if c.site:
+        site = request.environ['site']
+        if site:
             if id != '' and id != None:
                 id = urllib.unquote_plus(id)
             verb = request.environ['REQUEST_METHOD'].lower()
@@ -311,21 +315,10 @@ class ApiController(BaseController):
                         p = [p]
                     c.polls = p
             elif verb == 'post' or verb == 'put':
-                postvals = {}
                 p = poll.Poll.get(c.site.id,id)
-                if not p.site_id == p.site.id:
-                    p = None
-                    return
-                for pkey in request.params:
-                    postvals[pkey] = request.params[pkey]
-                if not p == None:
-                    #print 'poll not new %s' % p.name
-                    pass
-                else:
-                    #print 'poll is new'
+                if p == None:
                     p = poll.Poll(site_id=c.site.id,name=request.params['name'])
-                    
-                        
+                
                 if 'description' in request.params:
                     p.description = request.params['description']
                 p.save()
@@ -333,7 +326,7 @@ class ApiController(BaseController):
             elif verb == 'delete':
                 return 'delete'
             else:
-                return 'what?'
+                return 'not implemented'
             response.headers['Content-Type'] = 'application/xhtml+xml'
             
             return render('/api/poll.xml')

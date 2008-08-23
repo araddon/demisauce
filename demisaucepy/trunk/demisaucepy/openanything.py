@@ -88,6 +88,7 @@ def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT
         if etag:
             request.add_header('If-None-Match', etag)
         for key in extra_headers:
+            print 'adding header key=%s, val=%s' % (key,extra_headers[key])
             request.add_header(key,extra_headers[key])
         request.add_header('Accept-encoding', 'gzip')
         opener = urllib2.build_opener(SmartRedirectHandler(), DefaultErrorHandler())

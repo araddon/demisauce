@@ -3,7 +3,7 @@ import os
 here = lambda x: os.path.join(os.path.abspath(os.path.dirname(__file__)), x)
 
 ####### custom settings
-DEMISAUCE_APIKEY = 'a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202'
+DEMISAUCE_APIKEY = '173726158347a26b3836d1c6c09e6c646461517a'
 DEMISAUCE_URL = 'http://localhost:4951'
 DEMISAUCE_APPNAME = 'djangodemo'
 

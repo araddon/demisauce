@@ -113,7 +113,6 @@ class ModelBase(object):
         
         return [get_class(attrs) for attrs in pydict['data']]
     
-    
     def to_json(self,indents=2):
         """converts to json string, converting non serializeable fields
         to some other format or ignoring them"""

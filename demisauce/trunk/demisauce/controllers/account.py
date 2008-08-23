@@ -343,7 +343,8 @@ class AccountController(BaseController):
                 else:
                     c.person = None
                     c.comments = None
-        
+        else:
+            pass #TODO:  raise error, or bad page
         c.base_url = config['demisauce.url']
         return render('/account/settings.html')
     
@@ -355,9 +356,10 @@ class AccountController(BaseController):
     def view(self,id=0):
         if not c.user:
             redirect_to(controller='home', action='index', id=None)
-        if c.user.issysadmin:
+        
+        if c.user.issysadmin and id > 0:
             person = Person.get(-1,id)
-        if id > 0: # authenticated user
+        elif id > 0: 
             person = Person.get(c.user.site_id,id)
         
         return self._view(person,True)
