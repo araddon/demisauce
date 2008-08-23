@@ -4,6 +4,7 @@ Setup the demisauce application
 Example usage::
 
     yourproj% paster setup-app development.ini
+    
     Running setup_config() from demisauce.websetup
     Creating DB Tables
     Successfully Created DB Tables
@@ -18,6 +19,11 @@ Example usage::
 import logging
 import ConfigParser
 import sys, os
+from demisauce import fixture
+from demisauce import model
+from demisauce.model import mapping
+from demisauce.model import cms, email, site, person, \
+    comment, meta, poll
 
 from paste.deploy import appconfig
 from paste.script import command
@@ -27,36 +33,84 @@ from demisauce.config.environment import load_environment
 
 log = logging.getLogger(__name__)
 
-
-
 class SetupTestData(command.Command):
     """
     This is run from the command line like this:
     
-    paster testdata
+    paster dataload
     
     It installs test data used by the libraries for testing
     """
-    max_args = 1
+    max_args = 2
     min_args = 0
-    usage = "testdata"
+    usage = "dataload"
     summary = "Installs test data into test.ini or \
         ini file of choice"
     group_name = "demisauce"
     parser = command.Command.standard_parser(verbose=True)
-    parser.add_option('--config','-c',
-                      action='store_true',
+    parser.add_option('--ini','-i',
                       dest='cfgfile',
                       default='library_test.ini',
                       help="Enter the config file to load")
+    parser.add_option('--classtype','-c',
+                    dest='classtype',
+                    default='site.Site',
+                    help="Enter the name of the class (assumed to be in demisauce.model.class.Class)")
     
     def command(self):
-        if self.args and len(self.args) >= 0:
-            self.options.cfgfile = self.args[0]
         conf_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         ini_file = os.path.join(conf_dir, self.options.cfgfile)
-        create_data(ini_file)
+        conf = appconfig('config:' + ini_file)
+        load_environment(conf.global_conf, conf.local_conf)
+        if self.options.classtype:
+            create_data_new(self.options.classtype,drop=True)
+        else:
+            create_data(ini_file)
     
+
+def create_data_new(classtype,drop=False):
+    if classtype in dir(fixture):
+        json_list = getattr(fixture, classtype)
+        #print json_list
+        models = model.ModelBase.from_json(json_list)
+        if classtype == 'site' and drop:
+            site.site_table.drop(checkfirst=True,bind=meta.engine)
+            site.site_table.create(checkfirst=True,bind=meta.engine)
+        elif classtype == 'person' and drop:
+            person.person_table.drop(checkfirst=True,bind=meta.engine)
+            person.person_table.create(checkfirst=True,bind=meta.engine)
+            [m.after_load() for m in models]
+        elif classtype == 'email' and drop:
+            email.email_table.drop(checkfirst=True,bind=meta.engine)
+            email.email_table.create(checkfirst=True,bind=meta.engine)
+            [m.after_load() for m in models]
+        elif classtype == 'comment' and drop:
+            comment.comment_table.drop(checkfirst=True,bind=meta.engine)
+            comment.comment_table.create(checkfirst=True,bind=meta.engine)
+        elif classtype == 'poll' and drop:
+            poll.poll_table.drop(checkfirst=True,bind=meta.engine)
+            poll.question_table.drop(checkfirst=True,bind=meta.engine)
+            poll.question_option_table.drop(checkfirst=True,bind=meta.engine)
+            poll.poll_response_table.drop(checkfirst=True,bind=meta.engine)
+            poll.answer_table.drop(checkfirst=True,bind=meta.engine)
+            
+            poll.poll_table.create(checkfirst=True,bind=meta.engine)
+            poll.question_table.create(checkfirst=True,bind=meta.engine)
+            poll.question_option_table.create(checkfirst=True,bind=meta.engine)
+            poll.poll_response_table.create(checkfirst=True,bind=meta.engine)
+            poll.answer_table.create(checkfirst=True,bind=meta.engine)
+            for m in models:
+                questions = model.ModelBase.from_json(fixture.poll_question)
+                options = model.ModelBase.from_json(fixture.poll_question_option)
+                for q in questions:
+                    m.questions.append(q)
+                    for o in options:
+                        q.options.append(o)
+        for m in models:
+            #print m.to_json()
+            m.save()
+    else:
+        print 'no class'
 
 def create_data(ini_file):
     """
@@ -64,10 +118,6 @@ def create_data(ini_file):
     """
     conf = appconfig('config:' + ini_file)
     load_environment(conf.global_conf, conf.local_conf)
-    from demisauce import model
-    from demisauce.model import mapping
-    from demisauce.model import cms, email, site, person, \
-        comment, meta
     if 'test.ini' in ini_file:
         print 'dropping tables for testing:  %s' % ini_file
         meta.metadata.drop_all(bind=config['pylons.g'].sa_engine)
@@ -76,47 +126,17 @@ def create_data(ini_file):
     s = meta.DBSession.query(site.Site).get(1)
     key = conf['demisauce.apikey']
     if not s:
-        s = site.Site('Demisauce Sys Admin', 'guest@demisauce.org')
-        s.description = 'this is Demisauce Site to support itself'
-        s.enabled = True
-        s.slug = 'demisauce.org'
-        s.site_url = 'http://localhost:8080'
-        if key:
-            newkey = s.create_sitekey()
-            print '\nWe used your existing ApiKey:   \n%s \nHowever, we \
-strongly advise you to change it, \nwe generated you a new \
-random one:\n%s, \nyou can enter it into your ini file:\n%s' % (key,newkey,ini_file)
-            s.key = key
-        s.save()
+        create_data_new('site')
+        s = meta.DBSession.query(site.Site).get(1)
     
     if s.key != key:
         print 'Update %s demisauce.apikey to %s \n'  % (ini_file,s.key)  
     
     user = meta.DBSession.query(person.Person).filter_by(site_id=s.id,id=1).first()
     if not user:
-        pwd = 'admin'
-        user = person.Person(site_id=s.id, email='sysadmin@demisauce.org',
-            displayname='Sys Admin @Demisauce',raw_password=pwd)
-        user.isadmin = True
-        user.verified = True
-        user.waitinglist = False
-        user.issysadmin = True
-        user.save()
-        print  '\ndemisauce sysadmin username = %s' % user.email
-        print 'password = %s\n' % pwd
-        print 'site_id = %s' % s.id
-    
-    adminuser = meta.DBSession.query(person.Person).filter_by(site_id=s.id,email='admin@demisauce.org').first()
-    if not adminuser:
-        pwd = 'admin'
-        adminuser = person.Person(site_id=s.id, email= 'admin@demisauce.org',
-            displayname='Admin @Demisauce',raw_password=pwd)
-        adminuser.verified = True
-        adminuser.waitinglist = False
-        adminuser.isadmin = True
-        adminuser.save()
-        print  'demisauce site admin username = %s' % adminuser.email
-        print 'password = %s\n' % pwd
+        # pwd = raw_input('Enter the Password for admin: ')
+        create_data_new('person',True)
+        user = person.Person.get(1,1)
     
     cmsitem = cms.Cmsitem.get_root(site_id=s.id)
     if not cmsitem:
@@ -139,70 +159,10 @@ random one:\n%s, \nyou can enter it into your ini file:\n%s' % (key,newkey,ini_f
         cmsitem.save()
         print 'created items   '
         
-    cmt = comment.Comment(s.id)
-    cmt.set_user_info(user)
-    cmt.uri = '/our/foo/bar/1'
-    cmt.comment = 'this is a comment'
-    cmt.save()
-    
-    
-    emailitem = meta.DBSession.query(email.Email).filter_by(site_id=s.id,
-        subject='Thank You for registering with Demisauce').first()
-    if not emailitem:
-        emailitem = email.Email(s.id, 'Thank You for registering with Demisauce')
-        emailitem.template = """Welcome to Demisauce, we are are currently allowing a few users to try out our hosted service, and will send you an invite when we can accept more testers.  However, this is also an open source project so please feel free to download and try it out yourself.  
-
-More info at http://www.demisauce.org 
-or at:   http://demisauce.googlecode.com
-
-Your Email address $email will not be used other than for logging in.
-
-Thank You
-
-The Demisauce Team
-        """
-        emailitem.from_name = 'Demisauce Web'
-        emailitem.from_email = 'guest@demisauce.org'
-        emailitem.to = ''
-        emailitem.save()
-        emailitem2 = email.Email(s.id,'Welcome To Demisauce')
-        emailitem2.template = """Welcome to Demisauce, Your account has been enabled, and you can start using services on demisauce.
+    create_data_new('comment',True)
+    create_data_new('poll',True)
+    create_data_new('email',True)
         
-To verify your account you need to click and finish registering $link
-        
-Thank You
-        
-The Demisauce Team
-        """
-        emailitem2.from_name = 'Demisauce Admin'
-        emailitem2.from_email = 'guest@demisauce.org'
-        emailitem2.to = ''
-        emailitem2.save()
-        
-        emailitem3 = email.Email(s.id,'Invitation to Demisauce')
-        emailitem3.from_email = 'guest@demisauce.org'
-        emailitem3.from_name = 'Demisauce Web'
-        emailitem3.template = """Welcome to Demisauce, You have recieved an invite from $from , and an account has been created for you.
-
-To verify your account you need to click and finish registering $link
-
-Thank You
-
-Demisauce Team"""
-        emailitem3.save()
-        
-        email4 = email.Email(s.id,'Comment Notification')
-        email4.key = 'comment-notification'
-        email4.from_email = 'guest@demisauce.org'
-        email4.from_name = 'Demisauce Web'
-        email4.template = """Hello;
-
-$email has Commented on your $sitename   on page $url
-
-Thank You
-
-Demisauce Team"""
-        email4.save()
 
     
 def setup_config(command, filename, section, vars):

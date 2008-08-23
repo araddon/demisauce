@@ -62,13 +62,6 @@ class CommentController(BaseController):
             c.items = Comment.by_site(c.user.site_id)
         return render('/comment/comment.html')
     
-    def add(self,id=0):
-        cmt = Comment(1)
-        cmt.set_user_info(c.user)
-        cmt.comment = request.params['comment']
-        cmt.uri = '/comment/comment.html'
-        cmt.save()
-    
     def googleauth(self):
         """
         User is coming in from google, should have an auth token
@@ -129,7 +122,7 @@ class CommentController(BaseController):
         site = Site.by_slug(str(id))
         if site:
             c.site = site
-            item = Comment(site.id)
+            item = Comment(site_id=site.id)
             if c.user:
                 item.set_user_info(c.user)
             else:
@@ -198,7 +191,7 @@ class CommentController(BaseController):
         site = Site.by_slug(str(id))
         if site:
             c.site = site
-            item = Comment(site.id)
+            item = Comment(site_id=site.id)
             if c.user:
                 item.set_user_info(c.user)
             else:

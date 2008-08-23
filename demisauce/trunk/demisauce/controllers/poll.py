@@ -57,7 +57,7 @@ class PollController(SecureController):
     @validate(schema=PollFormValidation(), form='edit')
     def addupdate(self,id=0):
         if self.form_result['poll_id'] == "0":
-            item = Poll(c.site_id, self.form_result['name'])
+            item = Poll(site_id=c.site_id, name=self.form_result['name'])
             item.author = model.person.Person.get(c.site_id,c.user.id)
         else:
             id = self.form_result['poll_id']
@@ -88,7 +88,7 @@ class PollController(SecureController):
         item = None
         if 'poll_id' in request.POST:
             if request.POST['poll_id'] == "0":
-                item = Poll(c.site_id, sanitize(request.POST['name']))
+                item = Poll(site_id=c.site_id, name=sanitize(request.POST['name']))
                 item.person_id = c.user.id
                 item.key = request.POST['key']
                 if c.user:
@@ -115,7 +115,7 @@ class PollController(SecureController):
         if item:
             item.save()
             if request.POST['q_id'] == "0":
-                q = Question(sanitize(request.POST['question']))
+                q = Question(question=sanitize(request.POST['question']))
                 item.questions.append(q)
             else:
                 id = request.POST['q_id']

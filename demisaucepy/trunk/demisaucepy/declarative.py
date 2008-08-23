@@ -205,7 +205,7 @@ class Aggregate(object):
         model_class: Local model which remote demisauce entity model will belong to
         model_name: Name of model
         """
-        print 'ds_mapping_config class=%s, class_name=%s, attr_name=%s' % (model_class,model_class_name,attr_name)
+        log.debug('ds_mapping_config class=%s, class_name=%s, attr_name=%s' % (model_class,model_class_name,attr_name))
         self.model_class_name = model_class_name
         self.model_class = model_class
     

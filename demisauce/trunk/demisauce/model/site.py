@@ -38,11 +38,12 @@ class Site(ModelBase):
     :site_url:  base url of site you use demisauce on
     :enabled:  has this site been configured to allow usage?
     """
-    def __init__(self, name, email):
-        self.name = name
-        self.email = email
+    def __init__(self, **kwargs):
+        self.slug = None
+        super(Site, self).__init__(**kwargs)
         self.key = self.create_sitekey()
-        self.slug = self.create_slug(name)
+        if self.slug == None and hasattr(self,'name') and self.name != None:
+            self.slug = self.create_slug(self.name)
     
     def create_sitekey(self):
         import sha, random

@@ -34,7 +34,6 @@ question_table = Table("poll_question", meta.metadata,
         Column("poll_id", Integer, ForeignKey('poll.id')),
         Column("question", DBString(255), nullable=False),
         Column("type", DBString(20),nullable=False,default='radiowother'),
-        Column("question", DBString(255), nullable=False),
     )
 
 question_option_table = Table("poll_question_option", meta.metadata,
@@ -72,10 +71,8 @@ class Poll(ModelBase):
     html:   Allows the html for the poll to be cached to cheat a bit
     author:  Creator person object of poll
     """
-    def __init__(self,site_id=0, name='', description=""):
-        self.name = name
-        self.description = description
-        self.site_id = site_id
+    def __init__(self, **kwargs):
+        super(Poll, self).__init__(**kwargs)
         
     
     def get_url_encoded_name(self):
@@ -141,10 +138,9 @@ class Question(ModelBase):
     
     type:  radio,multiplechoice,radiowother
     """
-    def __init__(self, question,question_type='radio'):
-        self.question = question
-        self.type = question_type
+    def __init__(self, **kwargs):
         self.max_sort_order = -1
+        super(Question, self).__init__(**kwargs)
         self.update_sort_order()
     
     def update_sort_order(self):
@@ -194,28 +190,22 @@ class QuestionOption(ModelBase):
     
     type:  radio,other(text),check
     """
-    def __init__(self, option,option_type='radio'):
+    def __init__(self, **kwargs):
         super(QuestionOption, self).__init__()
-        self.option = option
-        self.type = option_type
     
 
 class PollResponse(ModelBase):
     """
     The response by person (or anonymous), will have a collection of answers
     """
-    def __init__(self, person_id=0):
-        self.person_id = person_id
+    def __init__(self, **kwargs):
+        super(PollResponse, self).__init__()
     
 
 class PollAnswer(ModelBase):
     """
     Each person (optionally) answer's each qustion
     """
-    def __init__(self,question_id,option_id,other='',**kwargs):
+    def __init__(self,**kwargs):
         super(PollAnswer, self).__init__(**kwargs)
-        self.question_id = question_id
-        self.option_id = option_id
-        self.other = other
     
-

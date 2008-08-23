@@ -71,7 +71,7 @@ mapper(HelpResponse, help_response_table, properties={
 })
 taggable(Help, 'tags', uselist=True)
 
-mapper(Email, emailitem_table, properties={
+mapper(Email, email_table, properties={
     'site':relation(site.Site),
 })
 mapper(Comment, comment_table, properties={

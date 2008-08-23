@@ -208,7 +208,7 @@ class AccountController(BaseController):
                     email=request.POST['email'].lower()).first()
             
             if user is None:
-                site = Site(self.form_result['email'],self.form_result['email'])
+                site = Site(name=self.form_result['email'],email=self.form_result['email'])
                 site.save()
                 user = Person(site_id=site.id,email=self.form_result['email'],
                               displayname=self.form_result['email'])

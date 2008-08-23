@@ -57,7 +57,7 @@ Demisauce can be installed following these `instructions
     main = demisauce.config.middleware:make_app
 
     [paste.paster_command]
-    testdata = demisauce.websetup:SetupTestData
+    dataload = demisauce.websetup:SetupTestData
     
     [paste.app_install]
     main = demisauce.lib.dsinstaller:DemisauceInstaller

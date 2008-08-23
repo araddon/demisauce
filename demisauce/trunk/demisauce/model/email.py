@@ -12,7 +12,7 @@ from demisauce.model import meta, ModelBase, site
 from datetime import datetime
 
 # Define a table.
-emailitem_table = Table("email", meta.metadata,
+email_table = Table("email", meta.metadata,
         Column("id", Integer, primary_key=True),
         Column("site_id", Integer, ForeignKey('site.id')),
         Column("key", DBString(150), nullable=False),
@@ -26,13 +26,15 @@ emailitem_table = Table("email", meta.metadata,
     )
 
 class Email(ModelBase):
-    def __init__(self,site_id, subject, from_email=None, to=None, template=None):
-        self.to = to
-        self.subject = subject
-        self.template = template
-        self.key = self.makekey(subject)
-        self.site = meta.DBSession.query(model.site.Site).get(site_id)
-        self.from_email = self.site.email
+    def __init__(self, **kwargs):
+        super(Email, self).__init__(**kwargs)
+    
+    def after_load(self):
+        if ((not hasattr(self,'key')) or self.key == None) and self.subject != None:
+            self.key = self.makekey(self.subject)
+        if hasattr(self,'site_id') and not hasattr(self,'from_email'):
+            self.site = meta.DBSession.query(model.site.Site).get(self.site_id)
+            self.from_email = self.site.email
     
     def __str__(self):
         return 'email subject=%s key = %s' % (self.subject,self.key)
@@ -46,10 +48,3 @@ class Email(ModelBase):
         """
         return meta.DBSession.query(Email).filter_by(site_id=site_id,key=key).first()
     
-
-
-def get_by_subject(subject):
-    """
-    Gets a set of content by subject
-    """
-    return meta.DBSession.query(Email).filter_by(subject=subject).first()

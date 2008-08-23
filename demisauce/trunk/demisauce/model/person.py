@@ -110,18 +110,18 @@ class Person(ModelBase):
     __jsonkeys__ = ['email','displayname','url','site_id', 'raw_password','created']
     def __init__(self, **kwargs):
         super(Person, self).__init__(**kwargs)
-        if 'site_id' in kwargs:
-            self.site_id = kwargs['site_id']
-        if 'email' in kwargs:
-            self.set_email(kwargs['email'])
-        if self.displayname == None:
-            self.displayname = self.email
+        self.after_load()
+    
+    def after_load(self):
         self.create_user_salt()
         self.user_uniqueid = Person.create_userunique()
-        if 'raw_password' in kwargs and kwargs['raw_password'] != None: 
-            self.set_password(kwargs['raw_password'])
         if self.email != None:
+            self.set_email(self.email)
             self.hashedemail = Person.create_hashed_email(self.email)
+        if not hasattr(self,'displayname'):
+            self.displayname = self.email
+        if hasattr(self,'raw_password'): 
+             self.set_password(self.raw_password)
     
     def create_password(self, size=7):
         """

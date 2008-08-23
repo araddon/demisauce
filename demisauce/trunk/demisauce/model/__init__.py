@@ -43,7 +43,7 @@ def setup_site(user):
         cmsitem.item_type='root'
         cmsitem.save()
     for e in site_emails:
-        emailitem = email.Email(user.site_id,e['subject'])
+        emailitem = email.Email(site_id=user.site_id,subject=e['subject'])
         emailitem.template = e['template']
         emailitem.from_name = e['from_name']
         emailitem.from_email = e['from_email']
@@ -95,21 +95,24 @@ class ModelBase(object):
         module = __import__(cls_def[:cls_def.rfind('.')], globals(), 
             locals(), [cls_def[cls_def.rfind('.')+1:]], -1)
         cls = getattr(module, cls_def[cls_def.rfind('.')+1:])
-        attrs = pydict['dict']
         
-        if 'id' in attrs and 'site_id' in attrs:
-            classobj = cls.get(attrs['site_id'],attrs['id'])
-        else:
-            classobj = cls()
-        
-        for key in attrs:
-            if key.find('datetime_') == 0:
-                attr = key[:]
-                setattr(classobj,key[9:],datetime.datetime.fromtimestamp(attrs[key]))
+        def get_class(attrs):
+            if 'id' in attrs and 'site_id' in attrs:
+                classobj = cls.get(attrs['site_id'],attrs['id'])
             else:
-                log.debug('setting %s = %s' % (key,attrs[key]))
-                setattr(classobj,key,attrs[key])
-        return classobj
+                classobj = cls()
+            
+            for key in attrs:
+                if key.find('datetime_') == 0:
+                    attr = key[:]
+                    setattr(classobj,key[9:],datetime.datetime.fromtimestamp(attrs[key]))
+                else:
+                    log.debug('from_json setting %s = %s' % (key,attrs[key]))
+                    setattr(classobj,key,attrs[key])
+            return classobj
+        
+        return [get_class(attrs) for attrs in pydict['data']]
+    
     
     def to_json(self,indents=2):
         """converts to json string, converting non serializeable fields
@@ -125,7 +128,7 @@ class ModelBase(object):
                 dout.update({key:getattr(self,key)})
         cls = str(self.__class__)
         cls = cls[cls.find('\'')+1:cls.rfind('\'')]
-        cls_out = {'class':cls,'dict':dout}
+        cls_out = {'class':cls,'data':[dout]}
         return simplejson.dumps(cls_out,sort_keys=True,indent=indents)
     
     def delete(self):

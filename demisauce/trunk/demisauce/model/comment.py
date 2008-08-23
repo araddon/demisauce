@@ -39,9 +39,9 @@ class Comment(ModelBase):
     uri is the foreign key, would be "blog_id" if using normal db design
     person is the 32 character md5 hash of the user's email address
     """
-    def __init__(self, site_id=1,commenttype="none",isuser=False):
-        self.type = commenttype
-        self.site_id = site_id
+    def __init__(self, **kwargs):
+        self.type = 'comment'
+        super(Comment, self).__init__(**kwargs)
     
     def set_email(self,email):
         import hashlib

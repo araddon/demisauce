@@ -30,8 +30,8 @@ class TestModels(TestController):
         meta.DBSession.close()
     
     def test_email(self):
-        e = email.Email(1,'My Test Email', 'email@demisauce.org', 'test@demisauce.org',
-                        'this is the content to be sent')
+        e = email.Email(site_id=1,subject='My Test Email', from_email='email@demisauce.org',
+                        template='this is the content to be sent')
         meta.DBSession.save(e)
         meta.DBSession.commit()
         meta.DBSession.flush()
@@ -62,7 +62,7 @@ class TestModels(TestController):
         #assert c2.id == 1
     
     def test_site(self):
-        s = site.Site('New Website on Demi', 'mail@mail.com')
+        s = site.Site(name='New Website on Demi', email='mail@mail.com')
         s.save()
         s2 = meta.DBSession.query(site.Site).filter_by(name='New Website on Demi').first()
         assert s.id == s2.id
@@ -103,7 +103,7 @@ class TestModels(TestController):
         assert len(g3.members) == 2
     
     def test_poll(self):
-        p = poll.Poll(1,'test poll','poll description')
+        p = poll.Poll(site_id=1,name='test poll',description='poll description')
         p.key = 'test-poll'
         p.save()
         meta.DBSession.flush()
@@ -112,13 +112,13 @@ class TestModels(TestController):
         assert p.name == p2.name
         assert p2.name == 'test poll'
         
-        q = poll.Question("why is chocolate good?",'radiowother')
+        q = poll.Question(question="why is chocolate good?",type='radiowother')
         p.questions.append(q)
-        o = poll.QuestionOption("because its sweet!")
+        o = poll.QuestionOption(option="because its sweet!")
         q.options.append(o)
-        o2 = poll.QuestionOption("because its bitter!")
+        o2 = poll.QuestionOption(option="because its bitter!")
         q.options.append(o2)
-        o3 = poll.QuestionOption("Other")
+        o3 = poll.QuestionOption(option="Other")
         o3.type = 'other'
         q.options.append(o3)
         p.save()
@@ -131,16 +131,16 @@ class TestModels(TestController):
         assert p3.questions[0].options[1].option == 'because its bitter!'
         responder = person.Person.by_email(1,'admin@demisauce.org')
         assert responder > 0
-        response = poll.PollResponse(responder.id)
-        response.answers.append(poll.PollAnswer(q.id,o.id))
+        response = poll.PollResponse(person_id=responder.id)
+        response.answers.append(poll.PollAnswer(question_id=q.id,option_id=o.id))
         p3.responses.append(response)
         p3.save()
         assert len(p3.responses) == 1
         assert p3.responses[0].person_id == responder.id
         responder2 = person.Person.by_email(1,'sysadmin@demisauce.org')
         assert responder2 > 0
-        response2 = poll.PollResponse(responder2.id)
-        response2.answers.append(poll.PollAnswer(q.id,o3.id,'text answer'))
+        response2 = poll.PollResponse(person_id=responder2.id)
+        response2.answers.append(poll.PollAnswer(question_id=q.id,option_id=o3.id,other='text answer'))
         p3.responses.append(response2)
         p3.save()
         p4 = poll.Poll.saget(p3.id)

@@ -46,13 +46,13 @@ class PollpublicController(BaseController):
                 poll = Poll.saget(int(request.params['poll_id']))
                 q = poll.get_question(int(request.params['q_id']))
                 if c.user:
-                    pollresponse = PollResponse(c.user.id)
+                    pollresponse = PollResponse(person_id=c.user.id)
                 else:
-                    pollresponse = PollResponse(0)
+                    pollresponse = PollResponse(person_id=0)
                 for oid in request.params['options']:
                     print oid
                 oid = int(request.params['options'])
-                a = PollAnswer(q.id,oid) #TODO make work for many answers
+                a = PollAnswer(question_id=q.id,option_id,oid) #TODO make work for many answers
                 pollresponse.answers.append(a)
                 poll.responses.append(pollresponse)
                 poll.save()

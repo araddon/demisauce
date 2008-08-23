@@ -319,10 +319,11 @@ class ApiController(BaseController):
                 for pkey in request.params:
                     postvals[pkey] = request.params[pkey]
                 if not p == None:
-                    print 'poll not new %s' % p.name
+                    #print 'poll not new %s' % p.name
+                    pass
                 else:
-                    print 'poll is new'
-                    p = poll.Poll(c.site.id,request.params['name'])
+                    #print 'poll is new'
+                    p = poll.Poll(site_id=c.site.id,name=request.params['name'])
                     
                         
                 if 'description' in request.params:

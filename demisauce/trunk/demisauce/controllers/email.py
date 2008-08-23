@@ -37,7 +37,7 @@ class EmailController(SecureController):
     @validate(schema=EmailFormValidation(), form='index')
     def addupdate(self,id=0):
         if self.form_result['objectid'] == "0":
-            item = Email(c.site_id, self.form_result['subject'])
+            item = Email(site_id=c.site_id, subject=self.form_result['subject'])
         else:
             id = self.form_result['objectid']
             item = meta.DBSession.query(Email).filter_by(id=id,site_id=c.site_id).first()
@@ -62,7 +62,7 @@ class EmailController(SecureController):
     def edit(self,id=0):
         c.item = Email.get(c.user.site_id,id=id)
         if c.item == None and (id == None or id == 0):
-            c.item = Email(c.site_id,'')
+            c.item = Email(site_id=c.site_id,subject='')
         return render('/email.html')
         
     @requires_role('abogusrolefortesting')

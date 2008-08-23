@@ -15,10 +15,12 @@ class test_loads(TestController):
         h.save()
         person1 = person.Person.by_email(1,'sysadmin@demisauce.org')
         assert person1.email == 'sysadmin@demisauce.org'
+        print '\nabout to print json'
         person_json = person1.to_json(indents=2)
         assert '"email": "sysadmin@demisauce.org"' in person_json
         print person_json
-        person2 = model.ModelBase.from_json(person_json)
+        person_list = model.ModelBase.from_json(person_json)
+        person2 = person_list[0]
         assert person2.email == 'sysadmin@demisauce.org'
         assert person2.hashedemail == person1.hashedemail
         assert person2.displayname == person1.displayname
@@ -27,9 +29,9 @@ class test_loads(TestController):
         assert person2.id == person1.id
         
         # test the loads from string
-        person3 = model.ModelBase.from_json('''{
+        person_list = model.ModelBase.from_json('''{
           "class": "demisauce.model.person.Person", 
-          "dict": {
+          "data": [{
             "authn": "local", 
             "datetime_created": 1218721711.0, 
             "displayname": "sysadmin@demisauce.org", 
@@ -45,8 +47,10 @@ class test_loads(TestController):
             "user_uniqueid": "423c919970fd8bacd1311acad2db8e17ec0c7bd5", 
             "verified": true, 
             "waitinglist": 0
-          }
+          }]
         }''')
+        assert type(person_list) == list
+        person3 = person_list[0]
         person3.save()
         assert person3.email == 'sysadmin@demisauce.org'
         assert person3.id != person1.id
