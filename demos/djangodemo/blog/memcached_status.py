@@ -1,26 +1,28 @@
 from django import http
 from django.shortcuts import render_to_response
+from django.http import HttpResponse
 from django.conf import settings
 import datetime, re
 # from http://effbot.org/zone/django-memcached-view.htm
 
 def view(request):
-
     try:
         import memcache
     except ImportError:
         raise http.Http404
 
-    if not (request.user.is_authenticated() and
-            request.user.is_staff):
-        raise http.Http404
+    #if not (request.user.is_authenticated() and
+    #        request.user.is_staff):
+    #    return HttpResponse("Not authorized")
+    #    raise http.Http404
 
     # get first memcached URI
     m = re.match(
         "memcached://([.\w]+:\d+)", settings.CACHE_BACKEND
     )
     if not m:
-        raise http.Http404
+        #raise http.Http404
+        return HttpResponse("No Memcached Server 2")
 
     host = memcache._Host(m.group(1))
     host.connect()

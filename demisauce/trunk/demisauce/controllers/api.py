@@ -193,18 +193,19 @@ class ApiController(BaseController):
         site = request.environ['site']
         class email(RestApiMethod):
             def get(self, **kw):
-                return render('/api/email.mako')
+                return render('/api/email.xml')
             def post(self, **kw):
-                return dict(method='POST', args=kw)
+                return 'not implemented'
             def put(self, **kw):
-                return dict(method='PUT', args=kw)
+                return 'not implemented'
             def delete(self, **kw):
                 return 'not implemented'
         
         if id != '' and id != None:
             c.emailtemplates = Email.by_key(site_id=site.id,key=id)  
             if c.emailtemplates:
-                c.item = c.emailtemplates[0]         
+                c.item = c.emailtemplates
+                c.emailtemplates = [c.item]       
         else:
             c.emailtemplates = Email.all(site_id=site.id)
         

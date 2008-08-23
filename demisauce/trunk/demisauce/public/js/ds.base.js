@@ -304,6 +304,10 @@
         groupac: function(){
             //var h = this.get_groupac();
             jQuery.facebox(this.get_groupac());
+            // since its an iframe
+            $('#facebox .content').before('<div id="facebox_precontent_holder"></div>');
+            $('#facebox').css({left:((window.innerWidth - 670)/2),width:670,height:500});
+            $('#facebox_precontent_holder').css({width:630});
         },
         load: function(resource_id,content) {
             if (resource_id in this.defaults.content){
@@ -317,7 +321,7 @@
             var self = this;
             var qs = 'site_key&' + $.ds.defaults.site_slug; 
             qs += '&url=' + self.defaults.url; 
-            return '<div id="ds-inputform-div"><iframe width="100%" height="390" frameborder="0" \
+            return '<div id="ds-inputform-div"><iframe width="100%" height="420" width="570" frameborder="0" \
             src="' + $.ds.defaults.base_url + '/groupadmin/popup/' + $.ds.defaults.site_slug +'?' + qs + '"  \
             allowtransparency="true" vspace="0" hspace="0" marginheight="0" marginwidth="0" \
             name="ds-input-form"></iframe></div>';
