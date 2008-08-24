@@ -6,7 +6,7 @@ site = '''
             "name": "demisauce.com", 
             "key": "a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202", 
             "email": "sysadmin@demisauce.org", 
-            "slug": "demisauce.com",
+            "slug": "demisauce",
             "enabled":"True"
         },    
         {
@@ -23,19 +23,6 @@ site = '''
             "email": "email@yourdomain.org", 
             "slug": "yourdemisauce.slug",
             "base_url": "http://demisauce.yoursite.com",
-            "enabled":"True"
-        }]
-}'''
-service = '''
-{
-    "class": "demisauce.model.service.Service", 
-    "data": [
-        {
-            "site_id": "1",
-            "name": "demisauce.com", 
-            "key": "a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202", 
-            "email": "sysadmin@demisauce.org", 
-            "slug": "demisauce.com",
             "enabled":"True"
         }]
 }'''
@@ -74,7 +61,19 @@ person = '''
             "issysadmin": "False"
         }]
 }'''
-
+service = '''
+{
+    "class": "demisauce.model.service.Service", 
+    "data": [
+        {
+            "site_id": "1",
+            "name": "demisauce.com", 
+            "key": "a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202", 
+            "email": "sysadmin@demisauce.org", 
+            "slug": "demisauce.com",
+            "enabled":"True"
+        }]
+}'''
 email = '''
 {
     "class": "demisauce.model.email.Email", 

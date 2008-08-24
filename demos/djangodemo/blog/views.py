@@ -24,6 +24,7 @@ def view(request,id=''):
     for entry in entry_list:
         entry.comments.add_cookies(request.COOKIES)
         
+    #raise 'hello'
     #for entry in entry_list:
     #    if entry.comments.model:
     #        for comment in entry.comments.model:

@@ -44,9 +44,8 @@
             logon_form_link: '#ds-logon-link',
             input_form_selector: '#ds-inputform-div',
             current_url : '',
-            use_sub_domains : false,
             base_url: 'http://localhost:4950',
-            site_slug: 'enter your site id here' // unique id for usage, set in admin panel
+            site_slug: 'enter your id here' // unique id for usage, set in admin panel
         },
         prepLogon : function(el) {
             $(el).append('<div id="ds-logonform-div" style="display:none;"></div> \
@@ -79,15 +78,6 @@
             $(o.input_form_selector +','+ o.logon_form_link).show();
             $(o.logon_form_selector+','+ o.logon_form_cancel).hide();
         },
-        service_url: function(action,include_url){
-            var result = $.ds.parseUri(window.location.href);
-            var url = this.defaults.base_url + action +'/' + encodeURIComponent(this.defaults.site_slug) + '?';
-            //?site_slug=
-            url += $.param({ref_url:(result.protocol + '://' + result.authority + result.relative),
-                            site_slug: this.defaults.site_slug});
-            //post_vals = $.extend({},{ref_url:(result.protocol + '://' + result.authority + result.relative)});
-            return url;
-        },
         dsactivity: function(options) {
             var opts = $.extend({
                 use_url:false,
@@ -100,7 +90,8 @@
             var ref_url = '';
             var result = $.ds.parseUri(window.location.href);
             var post_vals = {};
-            var url = this.service_url('/apipublic/activity',true);
+            var url = '/apipublic/activity/?site_slug=' + encodeURIComponent(this.defaults.site_slug);
+            
             if (opts.use_url == true){
                 if (opts.absolute == true) {
                     opts.activity = result.protocol + '://' + result.authority;
@@ -110,11 +101,13 @@
             url += '&activity=' + encodeURIComponent(opts.activity);
             post_vals = $.extend(post_vals,{activity:opts.activity});
             if (opts.unique_id != null) {
+                //url += '&unique_id=' + encodeURIComponent(opts.unique_id);
                 post_vals = $.extend(post_vals,{unique_id:opts.unique_id});
             };
             if (opts.category != null) {
                 post_vals = $.extend(post_vals,{category:opts.category});
             };
+            post_vals = $.extend(post_vals,{ref_url:(result.protocol + '://' + result.authority + result.relative)});
             if (opts.custom != null) {
                 var cnames = '';
                 for (var name in opts.custom){
@@ -124,8 +117,14 @@
                 post_vals = $.extend(post_vals,{'cnames':cnames});
             };
             if (opts.activity != null) {
-                $.getJSON(url + '&jsoncallback=?', $.param(post_vals), function(json){
-                    alert('success or failure?' + json)
+                //$.get(url , function(data){});
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: $.param(post_vals),
+                    success: function(msg){
+                      //??
+                    }
                 });
             };
         }
@@ -158,85 +157,96 @@
     
     $.fn.dspoll = function(options) {
         return this.each(function() {
-               if (!$(this).is("ds-dspoll")) new $.ds.dspoll(this, options);
+               if (!$(this).is(".ds-dspoll")) new $.ds.dspoll(this, options);
         });
     };
     $.ds.dspoll = function(el, options) {
-        var opts = $.extend({view_selector:'#ds-poll-results-target',
-            poll_id:0,
-            getremote:''}, 
+        var opts = $.extend({view_selector:'#ds-poll-results',
+            poll_id:0}, 
             $.ds.defaults, options);
         this.element = el; 
         this.poll_id = $('#poll_id').val();
         this.q_id = $('#q_id').val();
         var self = this; //Do bindings
         self.options = opts;
-        $.data(this.element, "ds-dspoll", this);
-        if (opts.getremote !== ''){
-            self.display(el,opts.getremote);
-        }
         $('div.ds-poll-vote a').click(function(){
-            self.show_results();
+            $('div.ds-poll-vote,#ds-poll-question').hide();
+            $(opts.view_selector).show();
         });
-        //#ds-poll-vote
         $('div.ds-poll-vote input').click(function(){
             self.vote(this);
         });
         return this;
     }
+    function dspollCallback(json) {
+        alert(json.html);
+    }
     $.extend($.ds.dspoll.prototype, {
-        show_results: function(el){
-            $('div.ds-poll-vote,#ds-poll-question').hide();
-            $(this.options.view_selector).show();
-            $(this.options.view_selector).html($('#ds-poll-results').html());
-            return this;
-        },
         vote: function(el) {
             var self = this;
-            var opts = $('#ds-poll-question div input[@checked]').val();
-            var data = {poll_id:self.poll_id,q_id:this.q_id,'options':opts};
+            var opts = $('#ds_option_' + self.q_id).val();
+            var data = {poll_id:self.poll_id,q_id:this.q_id,
+                'options':opts};
             //data: $.param(post_vals),
             var url = self.options.base_url + "/pollpublic/vote";
-            $.getJSON(url + '?jsoncallback=?', data, function(json){
-                $('#ds-poll-results').empty();
-                $(self.element).after(json.html);
-                self.show_results();
-                $.ds.dsactivity({activity:"User Voted On" + json.key,category:"Poll"});
+            $.getJSON(url + '?tags=fake&&format=json&jsoncallback=?', data, dspollCallback);
+            /*
+            function(json){
+                alert(json.html);
+            }
+            
+            $.getJSON("test.js", { name: "John", time: "2pm" }, function(json){
+              alert("JSON Data: " + json.users[3].name);
+            });
+            $.getJSON("http://api.flickr.com/services/feeds/photos_public.gne?
+                    tags=cat&tagmode=any&format=json&jsoncallback=?",
+                    function(data){
+                      $.each(data.items, function(i,item){
+                        $("<img/>").attr("src", item.media.m).appendTo("#images");
+                        if ( i == 3 ) return false;
+                      });
+                    });
+            
+            
+            $.ajax({type: "POST", url: url,
+                dataType:'jsonp',
+                data: data,
+                success: function(resp){
+                  alert(resp)
+                },
+                failure: function(resp) {
+                    alert('failure')
+                }
             });
             
-        },
-        display: function(el,resource_id){
-            var self = this;
-            var url = this.options.base_url + "/pollpublic/display/" + resource_id;
-            $.getJSON(url + '?jsoncallback=?', {}, function(json){
-                $(el).append(json.html);
-                if (self.options.success){
-                    self.options.success();
+            $.post("/pollpublic/vote", data, function(resp){
+                alert(resp)
+                if (resp.poll.id > 0 && $('#poll_id').val() == 0){
+                    $('#poll_id').val(msg.poll.id);
+                    self.options.id = msg.poll.id;
+                    self.question_added(element,msg.poll.q_id)
                 }
-                if ($.browser.safari) {
-                    $('style',$(el)).each(function(){
-                        $('head').append('<style id="injectedCss" type="text/css">' + $(this).text() + '</style>');
-                        $(this).text('');
-                    });
-                }
-            });
+            }, "json");
+            */
+            $('div.ds-poll-vote,#ds-poll-question').hide();
+            $(opts.view_selector).show();
         }
     });
     $.fn.dshints = function(el,options) {
-        var opts = $.extend({
+        var defaults = {
             hint_selector: '.hint',
             hint_class: 'hint'
-        }, options);
+        };
+        // Extend our default options with those provided.
+        var opts = $.extend(defaults, options);
         
         //$("input:text[@class=textInput]");
         $(opts.hint_selector,this).each(function() {
             $(this).attr('hint',$(this).val());
         });
         $(opts.hint_selector,this).focus(function(){
-            if ($(this).hasClass(opts.hint_class) &&
-                    ($(this).val() == $(this).attr('hint'))) {
-                $(this).val('');
-                $(this).removeClass(opts.hint_class);
+            if ($(this).hasClass(opts.hint_class)) {
+                $(this).val('').removeClass(opts.hint_class);
             }
         });
         $(opts.hint_selector,this).blur(function(){
@@ -259,12 +269,18 @@
         });
     }
     $.ds.comments = function(el, o) {
-        var options = {};
+        var options = {
+            base_url: '',
+            site_slug: ''
+        };
         $.ds.defaults.current_url = window.location.href;
-        o = o || {}; $.extend(options, $.ds.defaults, o); //Extend and copy options
+        o = o || {}; $.extend(options, o); //Extend and copy options
         this.element = el; var self = this; //Do bindings
         $.data(this.element, "ds-comments", this);
         self.options = options;
+        if (options.base_url != ''){
+            $.ds.defaults.base_url = options.base_url;
+        }
         $.ds.prepLogon(this.element);
     }
     
@@ -286,18 +302,19 @@
     $.ds.faceboxmanager = {
         defaults : {
             style: 'facebox',
-            rating: false,
+            rating: true,
             feedback: true,
             draggable: true,
-            topinfo: false,
+            topinfo: true,
             resizable: true,
             script: false,
             content: {},
+            site_slug     : 'demisauce.org',
+            base_url     : 'http://localhost:4950',
             use_current_url: false,
             source_url:  '',
             url: '', // original url of click
-            help_url: '/api/json/help/root/help',
-            help_popup_url:'/help/submitfeedback',
+            help_url: '/api/script/help/root/help',
             faceboxprecontent: '#facebox_precontent_holder',
             faceboxcontent: '#facebox_content_holder',
             faceboxcontent2: '#facebox_content_holder2',
@@ -307,10 +324,6 @@
         groupac: function(){
             //var h = this.get_groupac();
             jQuery.facebox(this.get_groupac());
-            // since its an iframe
-            $('#facebox .content').before('<div id="facebox_precontent_holder"></div>');
-            $('#facebox').css({left:((window.innerWidth - 670)/2),width:670,height:500});
-            $('#facebox_precontent_holder').css({width:630});
         },
         load: function(resource_id,content) {
             if (resource_id in this.defaults.content){
@@ -324,8 +337,8 @@
             var self = this;
             var qs = 'site_key&' + $.ds.defaults.site_slug; 
             qs += '&url=' + self.defaults.url; 
-            return '<div id="ds-inputform-div"><iframe width="100%" height="420" width="570" frameborder="0" \
-            src="' + $.ds.defaults.base_url + '/groupadmin/popup/' + $.ds.defaults.site_slug +'?' + qs + '"  \
+            return '<div id="ds-inputform-div"><iframe width="100%" height="390" frameborder="0" \
+            src="' + self.defaults.base_url + '/groupadmin/popup/' + self.defaults.site_slug +'?' + qs + '"  \
             allowtransparency="true" vspace="0" hspace="0" marginheight="0" marginwidth="0" \
             name="ds-input-form"></iframe></div>';
         },
@@ -337,114 +350,57 @@
             if (opts.use_current_url == true){
                 opts.script = true,
                 result = $.ds.parseUri(window.location.href);
-                opts.url = $.ds.defaults.base_url + opts.help_url + result.relative.replace('#','');
-                opts.source_url = result.relative;
+                opts.source_url = opts.base_url + opts.help_url + result.relative;
+                opts.url = result.relative;
+            }
+            if (typeof($.hotkeys) != 'undefined'){
+                // hot keys for help
+                $.hotkeys.add('Shift+?',{disableInInput: true,type:'keypress'}, function(){ 
+                    if ($.facebox.settings.isshown == false) {
+                        $.facebox.settings.isshown = true;
+                        $('#facebox_show_href').trigger('click');
+                        //jQuery(document).trigger('close.facebox')
+                    } else {
+                        $.facebox.settings.isshown = false;
+                        $('#facebox .close').trigger('click');
+                    }
+                });
             }
             return opts;
         }
     };
     
     $.ds.help = function(el, options) {
-        var opts = $.extend({isloaded:false,
-            hotkeys:false,showtitle:false}, $.ds.faceboxmanager.defaults, options);
+        var opts = $.extend({isloaded:false}, $.ds.faceboxmanager.defaults, options);
         this.element = el; 
         var self = this; //Do bindings
         self.options = opts;
-        
-        var temp = (opts.style === 'facebox');// what hack is this?  why does it fail?
-        if ((opts.style === 'facebox')){
-            $(el).click(function(){
-                self.load_content();
-                return false;
-            });
-            if (opts.hotkeys === true){
-                if (typeof($.hotkeys) != 'undefined'){
-                    // hot keys for help
-                    $.hotkeys.add('Shift+?',{disableInInput: true,type:'keypress'}, function(){ 
-                        if ($.facebox.settings.isshown == false) {
-                            self.load_content();
-                        } else {
-                            $.facebox.settings.isshown = false;
-                            $('#facebox .close').trigger('click');
-                        }
-                    });
-                }
-            }
-        } else if (opts.style == 'popup'){
-            $(el).click(function(){
-                var result = $.ds.parseUri(window.location.href);
-                var url = $.ds.defaults.base_url + opts.help_popup_url +'/' + encodeURIComponent($.ds.defaults.site_slug) + '?';
-                url += $.param({ref_url:(result.protocol + '://' + result.authority + result.relative),
-                                site_slug: $.ds.defaults.site_slug});
-                 window.open (url,"mywindow","location=1,status=1,scrollbars=1,width=500,height=400");
-            });
+        if (opts.style == 'facebox'){
+            var fb = $(el).facebox(opts);
         }
-        return this;
+        $(el).bind('loaded_script', function() { 
+            self.load_content();
+        });
+        return fb;
     }
     
     $.extend($.ds.help.prototype, {
-        load_content: function() {
+        load_content: function(resource_id) {
             var self = this;
-            $.facebox.loading();
-            if (self.options.isloaded === false && self.options.topinfo){
-                $.getJSON(self.options.url + '?jsoncallback=?', {}, function(json){
-                      self.topcontent = json.html;
-                      self.options.isloaded = true;
-                      $(self.options.faceboxprecontent).append(self.topcontent);
-                });
-            }
-            jQuery.facebox('');
-            $('#facebox').draggable();
-            
-            $(document).bind('close.facebox', function() { 
-                self.on_close();
-                $('#facebox_precontent_holder').remove();
-                $('#facebox_content_holder2').remove();
-                $('#facebook_esc_close').remove();
-            });
-            $('#facebox .content').before('<div id="facebox_precontent_holder"></div>');
-            $('#facebox .content').after('<div id="facebox_content_holder2"></div>');
-            $('#facebox .footer').prepend('<span id="facebook_esc_close" class="" style="float:left;text-align:left;">ESC = Close this panel</span>');
-
             // now populate facebox
-            if (self.options.isloaded === false) {
+            if (self.options.isloaded == false) {
                 self.options.isloaded = true;
             }
-            $('#facebox').css({left:((window.innerWidth - 670)/2),width:670});
-            $('#facebox_precontent_holder').css({width:630});
             if (self.options.topinfo) {
-                $(self.options.faceboxprecontent).append(self.topinfo());
+                $(self.options.faceboxprecontent).append(self.topinfo())
             }
             if (self.options.rating) {
-                $(self.options.faceboxcontent2).append(self.rating());
-                var isclicked = false;
-                $('.rating input',$(self.options.faceboxcontent2)).click(function(){
-                    if (isclicked === false){
-                        self.rate(this);
-                    }
-                })
-            }
-            if (self.options.showtitle) {
-                html = $(this.element).html();
-                $(self.options.faceboxprecontent).append('<h3>' + html + '</h3>');
+                $(self.options.faceboxcontent2).append(self.rating())
             }
             if (self.options.feedback) {
-                $(self.options.faceboxcontent2).append(self.feedback());
-                //$.ds.prepLogon($(self.options.faceboxcontent2));
+                $(self.options.faceboxcontent2).append(self.feedback())
+                $.ds.prepLogon($(self.options.faceboxcontent2));
             }
-        },
-        on_close: function(el){
-            
-        },
-        rate: function (el){
-            var self = this;
-            var rid = $('#ds-cms-collection').attr('rid');
-            var rating_val = ($(el).val() === 'Yes') ? '1': '-1';
-              $(el).parent().parent().hide();
-            var url = $.ds.service_url('/help/ratearticle',true);
-            $.getJSON(url + '&jsoncallback=?', {resource_id:rid,rating:rating_val}, function(json){
-                $.ds.dsactivity({activity:"User submitted a rating on help" ,category:"Help"});
-            });
         },
         topinfo: function() {
             return '<div class="help-header" style="float:right;"> \
@@ -454,26 +410,26 @@
         rating: function() {
             return '<div class="rating" style="text-align:right;margin:10px 0 0 0;"> \
                 <h4>Was This Information Helpful?</h4> \
-                <form>\
-                        <input id="helpful_yes" class="buttonx" type="button"  value="Yes" name="helpful"/> \
-                        <input id="helpful_no" class="buttonx" type="button"  value="No" name="helpful"/> \
-                </form></div>';
+                <form  ><fieldset> \
+                        <input id="helpful_yes" class="inputRadio" type="radio"  value="yes" name="helpful"/> No \
+                        <input id="helpful_no" class="inputRadio" type="radio"  value="no" name="helpful"/> Yes \
+                </fieldset></form></div>';
         },
         feedback: function(txt) {
             var self = this;
-            var qs = 'site_key=' + $.ds.defaults.site_slug; 
+            var qs = 'site_key&' + $.ds.defaults.site_slug; 
             qs += '&url=' + self.options.url; 
-            return '<div id="ds-inputform-div" ttestatt="fake" style="width:630;"><iframe width="100%" height="200" frameborder="0" \
-            src="' + $.ds.defaults.base_url + '/help/feedback/' + $.ds.defaults.site_slug +'?' + qs + '"  \
+            return '<div id="ds-inputform-div"><iframe width="100%" height="200" frameborder="0" \
+            src="' + self.options.base_url + '/help/feedback/' + self.options.site_slug +'?' + qs + '"  \
             allowtransparency="true" vspace="0" hspace="0" marginheight="0" marginwidth="0" \
             name="ds-input-form"></iframe></div>';
         },
-        xxxhideHelp: function() {
+        hideHelp: function() {
             var self = this;
             self.options.isshown = false;
             $(self.options.helpselector).hide();
         },
-        xxxxshowHelp: function() {
+        showHelp: function() {
             var self = this;
             $(self.options.helpselector).show();
             $.hotkeys.add('Esc',{disableInInput: true}, function(){ 
@@ -486,83 +442,4 @@
             self.options.isshown = true;
         }
     });
-    
-    
-    $.fn.dstags = function(options) {
-        return this.each(function() {
-             if (!$(this).is(".ds-tag-helper")) new $.ds.tag_helper(this, options);
-        });
-    };
-    $.ds.tag = {
-        defaults: {
-            tag_div_selector: '#tag_list_div',
-            tagged_class: 'tagged_wdelete',
-            tag_input: '#tags',
-            id: "tbd"
-        }
-    };
-    $.ds.tag_helper = function(el,options) {
-        var self = this;
-        options = $.extend({tags:[],tagd:{}}, $.ds.tag.defaults, options);
-        self.first_tag = true;
-        self.element = el; 
-        self.options = options;
-        $.data(this.element, ".ds-tag-helper", this);
-        var tags = options.tags;
-        for (var i=0; i < tags.length; i++) {
-            self.add_tag(tags[i]);
-        }
-        var self = this;
-        $('a',$(el)).click(function(){
-            self.click_tag($(this).html());
-        });
-    };
-    $.extend($.ds.tag_helper.prototype, {
-        add_tag: function(tag){
-            var self = this;
-            //remove hint
-            if (self.first_tag === true){
-                $(self.options.tag_input).focus();
-                self.first_tag = false;
-            }
-            // highlight tag
-            if (tag.indexOf(':') > 0){
-                $('#tag_' + tag.replace(':','')).addClass(self.options.tagged_class);
-            } else {
-                $('#tag_' + tag).addClass(self.options.tagged_class);
-            }
-            
-            // add to selected list
-            if (!(tag in self.options.tagd)){
-                self.options.tagd[tag] = tag;
-                self.options.tags[self.options.length] = tag;
-            }
-            // add to input box
-            var sep = ',';
-            var jqTagInput = $(self.options.tag_input).val();
-            if (jqTagInput == '') sep = '';
-            $(self.options.tag_input).val(jqTagInput + sep + tag);
-        },
-        click_tag: function(tag){
-            var self = this;
-            if (!(tag in self.options.tagd)){
-                self.add_tag(tag);
-            } else {
-                // remove
-                delete self.options.tagd[tag]
-                var newtags = [];
-                for (var t in self.options.tagd) newtags[newtags.length] = t;
-                self.options.tags = newtags;
-                // remove highlight tag
-                if (tag.indexOf(':') > 0){
-                    $('#tag_' + tag.replace(':','')).removeClass(self.options.tagged_class);
-                } else {
-                    $('#tag_' + tag).removeClass(self.options.tagged_class);
-                }
-                $(self.options.tag_input).val(newtags.join(','));
-            }
-        }
-    });
-    
-    
 })(jQuery);
