@@ -42,14 +42,19 @@ TESTING
 ======================
 Use's nosetest, see full `nosetest documentation <http://www.somethingaboutorange.com/mrl/projects/nose/>`_
 
+To run tests::
+
     nosetests -s
     
-run just one test
+run just one file worth of tests::
+
     nosetests -s  test_loads.py   
-gets all folders, not just tests
+gets all folders, not just tests::
+
     nosetests -w ../  --with-doctest -v 
     
-includes test folder lking for doctests
+includes test folder lking for doctests::
+
     nosetests --with-doctest --doctest-tests
         
     OR
