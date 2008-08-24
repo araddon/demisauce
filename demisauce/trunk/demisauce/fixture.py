@@ -14,14 +14,22 @@ site = '''
             "key": "173726158347a26b3836d1c6c09e6c646461517a", 
             "email": "djangodemo@demisauce.org", 
             "slug": "djangodemo",
-            "base_url": "http://localhost:4951",
+            "base_url": "http://djangodemo.test:8001",
+            "enabled":"True"
+        },
+        {
+            "name": "PHP Demo App", 
+            "key": "4cf01693843baaedaf59caf26437cb4b2f0560c6", 
+            "email": "phpdemo@demisauce.org", 
+            "slug": "phpdemo",
+            "base_url": "http://demisauce.test",
             "enabled":"True"
         },    
         {
             "name": "your test app", 
             "key": "252484057901f25c1536d1c6c09e6c646461528e", 
             "email": "email@yourdomain.org", 
-            "slug": "yourdemisauce.slug",
+            "slug": "yoursitename",
             "base_url": "http://demisauce.yoursite.com",
             "enabled":"True"
         }]
@@ -59,6 +67,16 @@ person = '''
             "verified": "True",
             "waitinglist": "False",
             "issysadmin": "False"
+        },    
+        {
+            "site_id": "3", 
+            "displayname": "phpdemo admin", 
+            "email": "phpdemo@demisauce.org", 
+            "raw_password": "admin",
+            "isadmin": "True",
+            "verified": "True",
+            "waitinglist": "False",
+            "issysadmin": "False"
         }]
 }'''
 app = '''
@@ -70,7 +88,19 @@ app = '''
             "owner_id": "1",
             "name": "demisauce.com", 
             "base_url": "http://localhost:4950", 
-            "authn": "dstoken"
+            "authn": "demisauce"
+        },{
+            "site_id": "2",
+            "owner_id": "3",
+            "name": "djangodemo", 
+            "base_url": "http://djangodemo.test:8001", 
+            "authn": "demisauce"
+        },{
+            "site_id": "3",
+            "owner_id": "4",
+            "name": "phpdemo app", 
+            "base_url": "http://demisauce.test", 
+            "authn": "demisauce"
         }]
 }'''
 service = '''
@@ -95,6 +125,24 @@ service = '''
             "key": "ds-comment",
             "views": "",
             "description": "Comment html and form "
+        },{
+            "site_id": "2",
+            "app_id": "2",
+            "owner_id": "3",
+            "name": "django secure hello world html service", 
+            "url": "/service/helloworld/", 
+            "key": "ds-djangodemo-hello",
+            "views": "",
+            "description": "hello world test service "
+        },{
+            "site_id": "3",
+            "app_id": "3",
+            "owner_id": "4",
+            "name": "Php Demo secure hello world html service", 
+            "url": "/service/helloworld/", 
+            "key": "ds-phpdemo-hello",
+            "views": "",
+            "description": "secure hello world"
         }]
 }'''
 email = '''

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<demisauce>
+% for item in c.services:
+    <service id="${item.id}" key="${item.key}">
+        <name>${item.name}</name>
+        <base_url>${item.app.base_url}</base_url>
+        <authn>${item.app.authn}</authn>
+        <url>${item.url}</url>
+        <description><![CDATA[${item.description}]]></description>
+    </service>
+% endfor
+</demisauce>

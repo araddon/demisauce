@@ -7,56 +7,62 @@ Installation and Setup
 Requires Pylons, and either MySQL or SqlLite
 
 
-Install ``demisauce`` using subversion::
+Install _Demisauce: http://github.com/araddon/demisauce/tree/master using git
 
-    http://code.google.com/p/demisauce/source
 
 Make a config file as follows::
 
     paster make-config demisauce config.ini
 
 Tweak the config file as appropriate and then setup the application,
-    there is a development_ini.sample file which should be close to
-    what you need.
+there is a development_ini.sample file which should be close to
+what you need.::
 
     paster setup-app config.ini
 
 the paster "setup-app" will output a "site key" (an api key to update into your
-    ini setting).  It will also give you your username, password
+ini setting).  It will also give you your username, password::
 
     paster serve --reload development.ini
-    
+
 Development
 ======================
 After making changes to the model, if you are using SQLAlchemy to 
-    create db, you can write changes to db using:  (runs websetup.py setup_config())
+create db, you can write changes to db using:  (runs websetup.py setup_config())::
     
     paster setup-app development.ini
     
-After making changes to the model, if you are using SQLAlchemy to 
-    create db, you can write changes to db using:  (runs websetup.py setup_config())
+To delete table's, and reload the fixture one table (or set of 
+related tables such as poll's).  
 
-    paster setup-app development.ini
+Default ini is library_test.ini::
+
+    paster dataload -c person -i development.ini
     
+    OR
+    
+    paster dataload -c site
+
 TESTING
 ======================
-Use's nosetest, see full `nosetest documentation <http://www.somethingaboutorange.com/mrl/projects/nose/>`_
+Use's nosetest, see full `nosetest documentation<http://www.somethingaboutorange.com/mrl/projects/nose/>`_
 
 To run tests::
 
     nosetests -s
-    
+
 run just one file worth of tests::
 
-    nosetests -s  test_loads.py   
-gets all folders, not just tests::
+    nosetests -s  test_loads.py  
+
+gets all folders which may have doctest, not just tests::
 
     nosetests -w ../  --with-doctest -v 
-    
-includes test folder lking for doctests::
+
+includes test folder for doctests::
 
     nosetests --with-doctest --doctest-tests
-        
+    
     OR
     
     python setup.py test

@@ -53,6 +53,7 @@
                 } else {
                     slug = $(self.options.slugfrom).val().replace(/ /g,'-').toLowerCase().replace(/[^a-z\-]/g,'');
                 }
+                slug = slug.replace(/(-{2,50})/g,'-');
                 $(self.options.permalink_sel).val(slug);
             }else{
                 

@@ -35,17 +35,16 @@ log = logging.getLogger(__name__)
 
 class SetupTestData(command.Command):
     """
-    This is run from the command line like this:
+    This is run from the command line like this::
     
-    paster dataload
+        paster dataload -i development.ini -c person
     
     It installs test data used by the libraries for testing
     """
     max_args = 2
     min_args = 0
     usage = "dataload"
-    summary = "Installs test data into test.ini or \
-        ini file of choice"
+    summary = "Installs test data into test.ini or ini file of choice"
     group_name = "demisauce"
     parser = command.Command.standard_parser(verbose=True)
     parser.add_option('--ini','-i',
@@ -169,6 +168,7 @@ def create_data(ini_file):
     create_data_new('comment',True)
     create_data_new('poll',True)
     create_data_new('email',True)
+    create_data_new('app',True)
         
 
     

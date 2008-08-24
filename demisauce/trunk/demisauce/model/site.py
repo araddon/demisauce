@@ -4,9 +4,11 @@ from sqlalchemy.types import Integer, String as DBString, DateTime, \
     Text as DBText, Boolean
 from sqlalchemy.sql import func
 from demisauce import model
+from demisauce import lib 
 #from demisauce.model import mapping
 from demisauce.model import meta, ModelBase
 from datetime import datetime
+import re
 
 site_table = Table("site", meta.metadata,
         Column("id", Integer, primary_key=True),
@@ -42,17 +44,15 @@ class Site(ModelBase):
     def __init__(self, **kwargs):
         self.slug = None
         super(Site, self).__init__(**kwargs)
-        self.key = self.create_sitekey()
-        self.sharedsecret = self.create_sitekey()
+        self.key = Site.create_sitekey()
+        self.sharedsecret = Site.create_sitekey()
         if self.slug == None and hasattr(self,'name') and self.name != None:
-            self.slug = self.create_slug(self.name)
+            self.slug = lib.slugify(self.name)
     
-    def create_sitekey(self):
+    @classmethod
+    def create_sitekey(cls):
         import sha, random
         return sha.new(str(random.random())).hexdigest()
-    
-    def create_slug(self,name):
-        self.slug=name.replace(' ','').lower()
     
     def __str__(self):
         return '''{id:%s,name:'%s',slug:'%s',base_url:'%s'}''' % (self.id,
