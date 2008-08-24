@@ -231,6 +231,31 @@ class ApiController(BaseController):
                 c.item = email
             
     
+    #@requires_site
+    def service(self,format='xml',id='',**kw):
+        #site = request.environ['site']
+        class service(RestApiMethod):
+            def get(self, **kw):
+                return render('/api/service.xml')
+            def post(self, **kw):
+                return 'not implemented'
+            def put(self, **kw):
+                return 'not implemented'
+            def delete(self, **kw):
+                return 'not implemented'
+        
+        if id != '' and id != None:
+            services = model.service.Service.by_key(key=id)  
+            if services:
+                c.services = [services]       
+        else:
+            c.services = model.service.Service.all()
+        
+        if not c.services:
+            log.info('no services?  Should be id=%s' % id)
+        
+        kw.update({'format':format})
+        return service()(**kw)
     @requires_site
     def person(self,format='xml',id=''):
         if c.site:

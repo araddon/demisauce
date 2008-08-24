@@ -24,7 +24,7 @@ padding:8px 8px 4px;
 #facebox .tr {background:url(/images/facebox/tr.png);}
 #facebox .bl {background:url(/images/facebox/bl.png);}
 #facebox .br {background:url(/images/facebox/br.png);}
-#facebox {position: absolute;top: 0;left: 0;z-index: 100;text-align: left;width:450px;}
+#facebox {position: absolute;top: 0;left: 0;z-index: 100;text-align: left;}
 #facebox_black {position: absolute;top: 0;left: 0;z-index: 100;text-align: left;
     background:#000000 none repeat scroll 0%;opacity:0.9;z-index:1500;}
 #facebox .popup {position: relative;}

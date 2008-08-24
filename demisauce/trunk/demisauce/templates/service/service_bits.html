@@ -102,6 +102,10 @@
                     <label for="name">App Name</label>
                     ${h.text_field('name', value=(item and item.name) or '', size=40)}
                 </div>
+                <div class="required">
+                     <label for="base_url">Base Url</label>
+                     ${h.text_field('base_url', value=(item and item.base_url) or '', size=40)}
+                 </div>
                 <div class="optional">
                     <label for="description">description:</label>
                     ${h.text_area("description", content=(item and item.description) or '', size="45x3")}
@@ -139,7 +143,7 @@
     % for item in items:
         <tr class="${h.cycle("", "alternate") }">
             <td>${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}</td>
-            <td>${h.link_to('View Xml', "/api/xml/service/%s" % item.id)}</td>
+            <td>${h.link_to('View Xml', "/api/xml/service/%s" % item.key)}</td>
             <td>${h.link_to('Edit', h.url(controller="service",action="edit", id=item.id), class_="title")}</td>
             <td>${(item.created).strftime("%b %d, %Y") or ''}</td>
             <td>${h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}</td>

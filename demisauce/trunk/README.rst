@@ -33,9 +33,15 @@ After making changes to the model, if you are using SQLAlchemy to
     
     paster setup-app development.ini
     
+After making changes to the model, if you are using SQLAlchemy to 
+    create db, you can write changes to db using:  (runs websetup.py setup_config())
+
+    paster setup-app development.ini
+    
 TESTING
 ======================
     nosetests -s  (to get printout of stdout)
+    nosetests -s  test_loads.py   # to test specific test
     nosetests -w ../  --with-doctest -v      (gets all folders, not just tests)
     nosetests --with-doctest --doctest-tests  (includes test folder lking for 
         doctests)

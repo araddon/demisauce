@@ -61,17 +61,40 @@ person = '''
             "issysadmin": "False"
         }]
 }'''
+app = '''
+{
+    "class": "demisauce.model.service.App", 
+    "data": [
+        {
+            "site_id": "1",
+            "owner_id": "1",
+            "name": "demisauce.com", 
+            "base_url": "http://localhost:4950", 
+            "authn": "dstoken"
+        }]
+}'''
 service = '''
 {
     "class": "demisauce.model.service.Service", 
     "data": [
         {
             "site_id": "1",
-            "name": "demisauce.com", 
-            "key": "a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202", 
-            "email": "sysadmin@demisauce.org", 
-            "slug": "demisauce.com",
-            "enabled":"True"
+            "app_id": "1",
+            "owner_id": "1",
+            "name": "Poll Html Service", 
+            "url": "/pollpublic", 
+            "key": "ds-poll",
+            "views": "",
+            "description": "This is the publicly hosted html for polls"
+        },{
+            "site_id": "1",
+            "app_id": "1",
+            "owner_id": "1",
+            "name": "Comment Html Service", 
+            "url": "/comment", 
+            "key": "ds-comment",
+            "views": "",
+            "description": "Comment html and form "
         }]
 }'''
 email = '''
@@ -85,12 +108,9 @@ email = '''
             "from_email":"guest@demisauce.org",
             "from_name":"Demisauce Admin",
             "template": "Welcome to Demisauce, Your account has been enabled, and you can start using services on demisauce.
-
-            To verify your account you need to click and finish registering $link
-
-            Thank You
-
-            Demisauce Team"
+\nTo verify your account you need to click and finish registering $link
+\nThank You
+\nDemisauce Team"
         },    
         {
             "site_id": "1", 
@@ -99,12 +119,9 @@ email = '''
             "from_email":"guest@demisauce.org",
             "from_name":"Demisauce Web",
             "template": "Welcome to Demisauce, You have recieved an invite from $from , and an account has been created for you.
-
-To verify your account you need to click and finish registering $link
-
-Thank You
-
-Demisauce Team"
+\nTo verify your account you need to click and finish registering $link
+\nThank You
+\nDemisauce Team"
         },    
         {
             "site_id": "1", 
@@ -113,15 +130,11 @@ Demisauce Team"
             "from_email":"guest@demisauce.org",
             "from_name":"Demisauce Web",
             "template": "Welcome to Demisauce, we are are currently allowing a few users to try out our hosted service, and will send you an invite when we can accept more testers.  However, this is also an open source project so please feel free to download and try it out yourself.  
-
-More info at http://www.demisauce.org 
+\nMore info at http://www.demisauce.org 
 or at:   http://demisauce.googlecode.com
-
-Your Email address $email will not be used other than for logging in.
-
-Thank You
-
-The Demisauce Team"
+\nYour Email address $email will not be used other than for logging in.
+\nThank You
+\nThe Demisauce Team"
         },    
         {
             "site_id": "1", 
@@ -130,12 +143,9 @@ The Demisauce Team"
             "from_email":"guest@demisauce.org",
             "from_name":"Demisauce Web",
             "template": "Hello;
-
-$email has Commented on your $sitename   on page $url
-
-Thank You
-
-Demisauce Team"
+\n$email has Commented on your $sitename   on page $url
+\nThank You
+\nDemisauce Team"
         }]
 }'''
 

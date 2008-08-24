@@ -32,7 +32,7 @@ class ServiceController(SecureController):
         self.site = Site.get(-1,c.site_id)
     
     def index(self):
-        c.apps = App.by_site(c.site_id)
+        c.services = Service.all()
         return render('/service/service.html')
     
     def view(self,id=0):

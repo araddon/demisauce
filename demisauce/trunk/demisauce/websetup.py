@@ -23,7 +23,7 @@ from demisauce import fixture
 from demisauce import model
 from demisauce.model import mapping
 from demisauce.model import cms, email, site, person, \
-    comment, meta, poll
+    comment, meta, poll, service
 
 from paste.deploy import appconfig
 from paste.script import command
@@ -106,6 +106,13 @@ def create_data_new(classtype,drop=False):
                     m.questions.append(q)
                     for o in options:
                         q.options.append(o)
+        elif (classtype == 'app') and drop:
+            service.app_table.drop(checkfirst=True,bind=meta.engine)
+            service.service_table.drop(checkfirst=True,bind=meta.engine)
+            service.app_table.create(checkfirst=True,bind=meta.engine)
+            service.service_table.create(checkfirst=True,bind=meta.engine)
+            json_list = getattr(fixture, 'service')
+            models.extend(model.ModelBase.from_json(json_list))
         for m in models:
             #print m.to_json()
             m.save()
