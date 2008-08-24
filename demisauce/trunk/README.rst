@@ -40,11 +40,17 @@ After making changes to the model, if you are using SQLAlchemy to
     
 TESTING
 ======================
-    nosetests -s  (to get printout of stdout)
-    nosetests -s  test_loads.py   # to test specific test
-    nosetests -w ../  --with-doctest -v      (gets all folders, not just tests)
-    nosetests --with-doctest --doctest-tests  (includes test folder lking for 
-        doctests)
+Use's nosetest, see full `nosetest documentation <http://www.somethingaboutorange.com/mrl/projects/nose/>`_
+
+    nosetests -s
+    
+run just one test
+    nosetests -s  test_loads.py   
+gets all folders, not just tests
+    nosetests -w ../  --with-doctest -v 
+    
+includes test folder lking for doctests
+    nosetests --with-doctest --doctest-tests
         
     OR
     
