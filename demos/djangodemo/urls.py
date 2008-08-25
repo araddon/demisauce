@@ -16,11 +16,11 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable admin documentation:
     # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
     
-    # Uncomment the next line for to enable the admin:
-    #(r'^blog/(.*)', djangodemo.blog.views),
+    (r'^$', 'djangodemo.blog.views.index'),
     (r'^blog/$', 'djangodemo.blog.views.index'),
     (r'^blog/view/(?P<id>\d+)', 'djangodemo.blog.views.view'),
     (r'^status/cache/$', 'djangodemo.blog.memcached_status.view'),
+    (r'^test/helloworld/(.*)', 'djangodemo.blog.helloworld.show'),
     (r'^service/helloworld/(.*)', 'djangodemo.blog.helloworld.view'),
     
     

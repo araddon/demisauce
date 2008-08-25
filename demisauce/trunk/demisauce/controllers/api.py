@@ -256,6 +256,7 @@ class ApiController(BaseController):
         
         kw.update({'format':format})
         return service()(**kw)
+    
     @requires_site
     def person(self,format='xml',id=''):
         if c.site:

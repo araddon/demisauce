@@ -15,8 +15,7 @@ def demisauce_vars(request):
         'demisauce_url': settings.DEMISAUCE_URL,
         'current_url': cur_url
     }
-
-
+    
 class ModelAggregatorMeta(ModelBase,AggregatorMeta): pass
 
 

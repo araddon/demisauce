@@ -47,7 +47,6 @@ def get_admin_permissions():
                     return cfg.CFG['pylons.h'].isdemisauce_admin()
         except AttributeError:
             pass
-
     return False
 
 def demisauce_xmlnodes(resource_id='',routes_dict=None,append_path=False,
@@ -120,10 +119,7 @@ def pylons_demisauce_ws_get(method, resource_id='', format='html', isadmin=False
     method
     resource_id (which piece of content)
     """
-    #resource_id = urllib.quote_plus(resource_id)
-    #key += '&'.join(['%s=%s' %(k,kwargs[k]) for k in kwargs.keys()])
     def ws_get():
-        #ensureConfig(CFG) # what the heck is this needed for?  
         return demisauce_ws_get(method,resource_id,format=format)
         
     mycache = cache.get_cache('demisauce.remotecontent')

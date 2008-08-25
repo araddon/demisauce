@@ -6,9 +6,10 @@ site = '''
             "name": "demisauce.com", 
             "key": "a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202", 
             "email": "sysadmin@demisauce.org", 
+            "base_url": "http://localhost:4950",
             "slug": "demisauce",
             "enabled":"True"
-        },    
+        },
         {
             "name": "Django Demo App", 
             "key": "173726158347a26b3836d1c6c09e6c646461517a", 
@@ -24,7 +25,7 @@ site = '''
             "slug": "phpdemo",
             "base_url": "http://demisauce.test",
             "enabled":"True"
-        },    
+        },
         {
             "name": "your test app", 
             "key": "252484057901f25c1536d1c6c09e6c646461528e", 
@@ -32,6 +33,15 @@ site = '''
             "slug": "yoursitename",
             "base_url": "http://demisauce.yoursite.com",
             "enabled":"True"
+        },
+        {
+            "name": "Demisauce Sandbox", 
+            "key": "3c5121ce937a1126817b2af30b6604da6a95ffe4", 
+            "email": "sandbox@demisauce.org", 
+            "slug": "sandbox",
+            "base_url": "http://sandbox.demisauce.com",
+            "enabled":"True",
+            "description":"This is a sandbox for testing your app without touching production data"
         }]
 }'''
 person = '''
@@ -98,7 +108,7 @@ app = '''
         },{
             "site_id": "3",
             "owner_id": "4",
-            "name": "phpdemo app", 
+            "name": "phpdemoapp", 
             "base_url": "http://demisauce.test", 
             "authn": "demisauce"
         }]
@@ -140,7 +150,7 @@ service = '''
             "owner_id": "4",
             "name": "Php Demo secure hello world html service", 
             "url": "/service/helloworld/", 
-            "key": "ds-phpdemo-hello",
+            "key": "helloworld",
             "views": "",
             "description": "secure hello world"
         }]

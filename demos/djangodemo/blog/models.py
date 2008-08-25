@@ -5,24 +5,15 @@ from demisaucepy.django_helper import ModelAggregatorMeta
 from demisaucepy.declarative import has_a, has_many, \
     AggregateView
 
-class Blog(models.Model):
-    title = models.CharField(max_length=255)
-    
-    def __unicode__(self):
-        return self.title
-    
-
 class Entry(models.Model):
     __metaclass__ = ModelAggregatorMeta
-    blog = models.ForeignKey(Blog)
     title = models.CharField(max_length=255)
     pub_date = models.DateTimeField('date published')
     content = models.TextField()
     comments = has_many(name='comment',lazy=True,local_key='id' )
-    
+    phphello = has_a(name='phphello',app='phpdemoapp',lazy=True,local_key='id' )
     def __unicode__(self):
         return self.title
     
 
-admin.site.register(Blog)
 admin.site.register(Entry)

@@ -2,14 +2,15 @@
 This is a set of base meta class definition for a declarative
 definition builder to add demisauce capability to remote systems.  
 
-Events and Mappings::
+Events and Aggregations::
     
     class AthleticPerson(Person):
         __demisaucetype__ = 'athlete'
-        publish_to = DemisaucePublications('delete')
-        subscribe_to = DemisauceEvents('add',filter=Person,newuser_setup)
-        comments = DemisauceMapping('comments',local_key=id,
-                    lazy=true,views=['summary','list','details'])
+        publish_to = DemisaucePublications('person_delete')
+        subscribe_to = DemisauceEvents('person_add',filter=Person,newuser_setup)
+        comments = has_many('comments',local_key='id',
+                    lazy=True,views=['summary','list','details'])
+        
         def newuser_setup(entity):
             # your logic here
             
@@ -20,8 +21,10 @@ import logging
 import time
 import urlparse
 from demisaucepy import cfg
-from demisaucepy import demisauce_ws, hash_email, \
-    Comment, Person as DemisaucePerson
+from demisaucepy.cache import cache
+from demisaucepy import demisauce_ws, hash_email, ServiceHandler
+#Comment, Person as DemisaucePerson
+
 DSDEBUG = False
 _modeltype_map = {}
 log = logging.getLogger(__name__)
@@ -39,6 +42,7 @@ class DuplicateMapping(Exception):
     """Raised when the same demisauce entity type is declared for 
     a class or inheritied class with the same name."""
 
+
 class Aggregate(object):
     """
     An entity mapper for remote entities
@@ -47,6 +51,7 @@ class Aggregate(object):
         (must be a demisauce entity type)
     :lazy: (true/false) optional, defaults to True
     :local_key: (optional, defaults to id) used for joins
+    :app:  app provider (many dift service providers)
     """
     def __init__(self, name, **kwargs):
         super(Aggregate, self).__init__()
@@ -57,64 +62,30 @@ class Aggregate(object):
         self.islist = True
         if 'local_key' in kwargs:
             self.local_key = kwargs['local_key']
+        self.app = 'demisauce'
+        if 'app' in kwargs:
+            self.app = kwargs['app']
         self.local_key_val = None
         self._model_instance = None
         self.extra_headers = {}
     
-    def get_view(self,view='default'):
-        class viewer(object):
-            """this is a helper method to load or cache the correct
-            view's.  This parent will defer the decision to viewer to determine
-            which view to get::
-            
-                {{ entry.comments.views.summary }}
-            
-            The above snipped will load the "summary" view.
-            """
-            def __init__(self,name,key,extra_headers={}):
-                self.name = name
-                self.key = key
-                self.extra_headers = extra_headers
-            
-            def __getattr__(self,view):
-                """Allows for view's unknown to this code base to be retrieved.
-                
-                entry.comments.views.summary
-                entry.comments.views.detailed
-                entry.comments.views.recent
-                
-                Would all be valid (summary,detailed,recent)
-                """
-                if not view in self.__dict__:
-                    log.debug('calling dsws %s' % view)
-                    dsitem = demisauce_ws(self.name,self.key,data={'views':view},
-                            format='view',extra_headers=self.extra_headers)
-                    if dsitem.success == True:
-                        self.__dict__[view] = dsitem.data
-                    else:
-                        self.__dict__[view] = []
-                        #raise RetrievalError('no view found')
-                return self.__dict__[view]
-            
-        
-        view_key = 'viewholder'
-        if self.lazy and not self.is_loaded(view_key):
+    def get_service(self,service='views',format='view'):
+        if self.lazy and not self.is_loaded(service):
             eh = {}
             if self.extra_headers:
                 eh = self.extra_headers
-            view_handler = viewer(self.name,self.key(),extra_headers=eh)
-            self.set_loaded(view_key,view_handler)
+            service_handler = ServiceHandler(self.name,self.key(),extra_headers=eh,format=format)
+            self.set_loaded(service,service_handler)
         else:
-            view_handler = self.get_loaded(view_key)
-            
-        return view_handler
+            service_handler = self.get_loaded(service)
+        return service_handler
         #TODO:  handle error
         try:
             pass
         except AttributeError:
             return None
     
-    views = property(get_view)
+    views = property(get_service)
     def view(self,which_view=''):
         """docstring for view"""
         pass
@@ -145,28 +116,9 @@ class Aggregate(object):
     
     def get_model(self):
         """Returns the entity collection/item appropriate"""
-        #print 'in get_model lazy=%s, %s' % (self.lazy,self._model_instance._dsmodel_loaded)
-        if self.lazy and not self.is_loaded('model'):
-            #print '82 about to get model lazy loaded %s' % (self.name)
-            #print 'local_key = %s classname=%s' % (self.local_key,self.model_class_name)
-            key = self.key()
-            print '113 key = %s' % key
-            dsitem = demisauce_ws(self.name,key,format='xml')
-            if dsitem.success == True:
-                self.set_loaded('model',dsitem.xml_node._xmlhash[self.name])
-            else:
-                self.set_loaded('model',[])
-                #raise RetrievalError('no result %s' % dsitem.data)
-        else:
-            print 'eh?  loaded model? %s' % self._model_instance
-        return self.get_loaded('model')
-        try:
-            pass
-        except AttributeError:
-            return None
+        return self.get_service(service='model',format='xml').model
     
     model = property(get_model)
-    
     def __get__(self, model_instance, model_class):
         """Returns the entity collection/item appropriate
         
@@ -305,7 +257,6 @@ class Aggregagtor(Base):
         
 class AggregateView(object):
     def __init__(self,meta,views=[]):
-        # use metaclass info
         self.views = meta.get_views(views)
     
 

@@ -27,7 +27,7 @@ def view(request):
     host = memcache._Host(m.group(1))
     host.connect()
     host.send_cmd("stats")
-
+    
     class Stats:
         pass
 

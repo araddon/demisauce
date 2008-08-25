@@ -8,15 +8,11 @@ INSTALL INSTRUCTIONS:
 http://code.google.com/p/demisauce/wiki/InstallationInstructions
 
 
-
-
-
-
 =====================
-To do development, run this in the demisauce, or demisaucepy roots   /trunk/
-setup.py develop
+To do development, run this in the demisauce and demisaucepy roots
+
+pathtodemisauce/demisauce/demisauce/trunk/$ python setup.py develop
+
+pathtodemisauce/demisauce/demisaucepy/trunk/$ python setup.py develop
 
 
-http://peak.telecommunity.com/DevCenter/setuptools#development-mode
-http://ianbicking.org/docs/setuptools-presentation/
-http://peak.telecommunity.com/DevCenter/setuptools

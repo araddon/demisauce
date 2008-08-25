@@ -43,7 +43,7 @@ class MY_Controller extends Controller {
         $ds_url = implode('/', $arr);
         
         $ds_cmsxml = $this->demisauce->get_cms($ds_url);
-        $this->data['ds_poll_html'] = $this->demisauce->get_poll_html('what-should-the-new-features-be');
+        $this->data['ds_poll_xml'] = $this->demisauce->get_poll_xml('what-should-the-new-features-be');
         
         $this->output->cache(0);
         if ($ds_cmsxml !== FALSE) {

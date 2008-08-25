@@ -23,7 +23,7 @@ from demisauce import fixture
 from demisauce import model
 from demisauce.model import mapping
 from demisauce.model import cms, email, site, person, \
-    comment, meta, poll, service
+    comment, meta, poll, service, tag, help
 
 from paste.deploy import appconfig
 from paste.script import command
@@ -68,50 +68,58 @@ class SetupTestData(command.Command):
     
 
 def create_data_new(classtype,drop=False):
+    models = None
     if classtype in dir(fixture):
         json_list = getattr(fixture, classtype)
         #print json_list
         models = model.ModelBase.from_json(json_list)
-        if classtype == 'site' and drop:
-            site.site_table.drop(checkfirst=True,bind=meta.engine)
-            site.site_table.create(checkfirst=True,bind=meta.engine)
-        elif classtype == 'person' and drop:
-            person.person_table.drop(checkfirst=True,bind=meta.engine)
-            person.person_table.create(checkfirst=True,bind=meta.engine)
-            [m.after_load() for m in models]
-        elif classtype == 'email' and drop:
-            email.email_table.drop(checkfirst=True,bind=meta.engine)
-            email.email_table.create(checkfirst=True,bind=meta.engine)
-            [m.after_load() for m in models]
-        elif classtype == 'comment' and drop:
-            comment.comment_table.drop(checkfirst=True,bind=meta.engine)
-            comment.comment_table.create(checkfirst=True,bind=meta.engine)
-        elif classtype == 'poll' and drop:
-            poll.poll_table.drop(checkfirst=True,bind=meta.engine)
-            poll.question_table.drop(checkfirst=True,bind=meta.engine)
-            poll.question_option_table.drop(checkfirst=True,bind=meta.engine)
-            poll.poll_response_table.drop(checkfirst=True,bind=meta.engine)
-            poll.answer_table.drop(checkfirst=True,bind=meta.engine)
-            
-            poll.poll_table.create(checkfirst=True,bind=meta.engine)
-            poll.question_table.create(checkfirst=True,bind=meta.engine)
-            poll.question_option_table.create(checkfirst=True,bind=meta.engine)
-            poll.poll_response_table.create(checkfirst=True,bind=meta.engine)
-            poll.answer_table.create(checkfirst=True,bind=meta.engine)
-            for m in models:
-                questions = model.ModelBase.from_json(fixture.poll_question)
-                options = model.ModelBase.from_json(fixture.poll_question_option)
-                for q in questions:
-                    m.questions.append(q)
-                    for o in options:
-                        q.options.append(o)
-        elif (classtype == 'app') and drop:
-            service.app_table.drop(checkfirst=True,bind=meta.engine)
-            service.service_table.drop(checkfirst=True,bind=meta.engine)
-            service.app_table.create(checkfirst=True,bind=meta.engine)
-            service.service_table.create(checkfirst=True,bind=meta.engine)
-            json_list = getattr(fixture, 'service')
-            models.extend(model.ModelBase.from_json(json_list))
+    if classtype == 'site' and drop:
+        site.site_table.drop(checkfirst=True,bind=meta.engine)
+        site.site_table.create(checkfirst=True,bind=meta.engine)
+    elif classtype == 'person' and drop:
+        person.person_table.drop(checkfirst=True,bind=meta.engine)
+        person.person_table.create(checkfirst=True,bind=meta.engine)
+        [m.after_load() for m in models]
+    elif classtype == 'email' and drop:
+        email.email_table.drop(checkfirst=True,bind=meta.engine)
+        email.email_table.create(checkfirst=True,bind=meta.engine)
+        [m.after_load() for m in models]
+    elif classtype == 'comment' and drop:
+        comment.comment_table.drop(checkfirst=True,bind=meta.engine)
+        comment.comment_table.create(checkfirst=True,bind=meta.engine)
+    elif classtype == 'poll' and drop:
+        poll.poll_table.drop(checkfirst=True,bind=meta.engine)
+        poll.question_table.drop(checkfirst=True,bind=meta.engine)
+        poll.question_option_table.drop(checkfirst=True,bind=meta.engine)
+        poll.poll_response_table.drop(checkfirst=True,bind=meta.engine)
+        poll.answer_table.drop(checkfirst=True,bind=meta.engine)
+        
+        poll.poll_table.create(checkfirst=True,bind=meta.engine)
+        poll.question_table.create(checkfirst=True,bind=meta.engine)
+        poll.question_option_table.create(checkfirst=True,bind=meta.engine)
+        poll.poll_response_table.create(checkfirst=True,bind=meta.engine)
+        poll.answer_table.create(checkfirst=True,bind=meta.engine)
+        for m in models:
+            questions = model.ModelBase.from_json(fixture.poll_question)
+            options = model.ModelBase.from_json(fixture.poll_question_option)
+            for q in questions:
+                m.questions.append(q)
+                for o in options:
+                    q.options.append(o)
+    elif (classtype == 'app') and drop:
+        service.app_table.drop(checkfirst=True,bind=meta.engine)
+        service.service_table.drop(checkfirst=True,bind=meta.engine)
+        service.app_table.create(checkfirst=True,bind=meta.engine)
+        service.service_table.create(checkfirst=True,bind=meta.engine)
+        json_list = getattr(fixture, 'service')
+        models.extend(model.ModelBase.from_json(json_list))
+    elif classtype == 'tag' and drop:
+        tag.tag_table.drop(checkfirst=True,bind=meta.engine)
+        tag.tag_map_table.drop(checkfirst=True,bind=meta.engine)
+        tag.tag_table.create(checkfirst=True,bind=meta.engine)
+        tag.tag_map_table.create(checkfirst=True,bind=meta.engine)
+        
+    if models:
         for m in models:
             #print m.to_json()
             m.save()
@@ -169,7 +177,7 @@ def create_data(ini_file):
     create_data_new('poll',True)
     create_data_new('email',True)
     create_data_new('app',True)
-        
+    create_data_new('tag',True)
 
     
 def setup_config(command, filename, section, vars):

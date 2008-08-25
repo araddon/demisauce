@@ -3,7 +3,8 @@ This is the simple test for connectivity
 """
 from demisaucepy.tests import *
 from demisaucepy import demisauce_ws, hash_email, \
-    demisauce_ws_get, Comment, Person as DemisaucePerson
+    demisauce_ws_get
+from demisaucepy.models import Comment, Person as DemisaucePerson
 from demisaucepy.declarative import Aggregagtor, has_a, \
     has_many, aggregator_callable, AggregateView
 
@@ -48,7 +49,7 @@ class test_aggregator(TestDSBase):
         assert p.personext.model.email == 'sysadmin@demisauce.org'
         assert p.comments.model != None
         assert p.comments.view != None
-        assert 'Comments' in p.comments.views
+        assert 'Comments' in p.comments.views.summary
         print '%s' % p.comments.views
         #TODO writes tests for aggregate view
         #views = AggregateView(p.comments,['summary','detail'])

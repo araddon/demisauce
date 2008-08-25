@@ -76,8 +76,13 @@
             
             <div id="polltry1"></div>
             <div id="polltry2"></div>
-            <div id="polltry3"><?php echo $ds_poll_html;?></div>
-            
+            <div id="polltry3"><?php echo $ds_poll_xml->html;?></div>
+            <div id="djangophphello" class="ds-poll">
+                <div class="ds-poll-title">remote django helloworld</div>
+                <div id="ds-django-hellocontent">
+                    MISSING
+                </div>
+            </div>
         </div>
     </div>
 </div>

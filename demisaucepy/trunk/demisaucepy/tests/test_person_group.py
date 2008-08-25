@@ -2,8 +2,8 @@
 This is the base tests for creating/reading user data remotely
 """
 from demisaucepy.tests import *
-from demisaucepy import demisauce_ws, hash_email, \
-    Person
+from demisaucepy import demisauce_ws, hash_email
+from demisaucepy.models import Person
 
 class test_person_group_api(TestDSBase):
     

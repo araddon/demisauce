@@ -2,8 +2,8 @@
 This is the base tests for creating/reading user data remotely
 """
 from demisaucepy.tests import *
-from demisaucepy import demisauce_ws, hash_email, \
-    Poll, Person
+from demisaucepy import demisauce_ws, hash_email
+from demisaucepy.models import Poll, Person
 
 class test_poll_api(TestDSBase):
     
@@ -13,9 +13,9 @@ class test_poll_api(TestDSBase):
         
         """
         pollname = Person.create_random_email()
-        p = Poll.by_name('test poll')
+        p = Poll.by_name('what-should-the-new-features-be')
         assert p != None
-        assert p.name == 'test poll'
+        assert 'features' in p.name
         assert p.questions != None
         assert len(p.questions) > 0
         
