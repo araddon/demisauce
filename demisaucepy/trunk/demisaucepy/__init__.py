@@ -33,19 +33,21 @@ class ServiceDefinition(object):
     """
     service definition
     """
-    def __init__(self, method,format='xml', data={},app='demisauce',service_url=None,api_key=None):
+    def __init__(self, method,format='xml', data={},app='demisauce',base_url=None,api_key=None):
         self.method = method
         self.format = format
         self.app = app
         self.cache = True
         self.api_version = 'api'
+        self.url_format = "{base_url}/api/{format}/{service}/{key}?apikey={api_key}"
         self.data = data
         self.isdefined = False
+        self.service_url = None
         self.service_registry = None
         if api_key == None:
             self.api_key = cfg.CFG['demisauce.apikey']
-        if service_url == None:
-            self.service_url = cfg.CFG['demisauce.url']
+        if base_url == None:
+            self.base_url = cfg.CFG['demisauce.url']
     
     def clone(self):
         """Create a clone of this service definition"""
@@ -56,7 +58,7 @@ class ServiceDefinition(object):
         ns.data = self.data
         ns.isdefined = self.isdefined
         ns.api_key = self.api_key
-        ns.service_url = self.service_url
+        ns.base_url = self.base_url
         return ns
     
     def load_definition(self,request_key='demisauce/comment'):
@@ -75,6 +77,23 @@ class ServiceDefinition(object):
         key = '%s/%s' % (self.app, self.method)
         response = client.fetch_service(request=key)
         # setup more service definition
+        model = response.model
+        self.isdefined = True
+        print 'updating property definitions for service %s' % self.method
+        if model and model.base_url:
+            #print dir(model)
+            self.base_url = model.base_url
+            print 'base_url now = %s' % self.base_url
+            if model.url and model.url != 'None':
+                self.service_url = model.url
+            if model.url_format and model.url_format != 'None':
+                self.url_format = model.url_format
+            else:
+                self.url_format = None
+            
+        else:
+            print 'nope, no model or no base_url anyway'
+            print response.data
     
 
 class ServiceResponse(object):
@@ -85,20 +104,31 @@ class ServiceResponse(object):
         self.format = 'xml'
         self.__xmlnode__ = None
         self.url = ''
-
+    
     def getxmlnode(self):
         if self.__xmlnode__ == None and self.data != None:
             # probably need to verify we can parse this?
             self.__xmlnode__ = XMLNode(self.data)
             if self.__xmlnode__:
-                if self.__xmlnode__._xmlhash:
-                    if len(self.__xmlnode__._xmlhash.keys()) == 1:
-                        self.name = self.__xmlnode__._xmlhash.keys()[0]
-                        return self.__xmlnode__._xmlhash[self.name]
-        if self.__xmlnode__ and self.name in self.__xmlnode__._xmlhash:
-            return self.__xmlnode__._xmlhash[self.name]
+                    if self.__xmlnode__._xmlhash:
+                        if len(self.__xmlnode__._xmlhash.keys()) == 1:
+                            # if only one, thats undoubtedly it
+                            self.name = self.__xmlnode__._xmlhash.keys()[0]
+                            return self.__xmlnode__._xmlhash[self.name]
+            if self.__xmlnode__ and self.name in self.__xmlnode__._xmlhash:
+                return self.__xmlnode__._xmlhash[self.name]
+            return self.__xmlnode__
+            """    
+            if self.__xmlnode__:
+                    if self.__xmlnode__._xmlhash:
+                        print 'len xmlnode=%s' % len(self.__xmlnode__._xmlhash.keys()) 
+                        # if only one, thats undoubtedly it
+            else:
+                print self.data
+            """
         else:
             return None
+    
     model = property(getxmlnode)
 
 class ServiceTransportBase(object):
@@ -176,19 +206,35 @@ class ServiceClient(ServiceClientBase):
         self.request = 'service'
         self.response = ServiceResponse(format=service.format)
         self._cache_key = None
+        print 'finished SErviceClient init'
     
     def get_url(self,request):
-        url_val = '%s/%s/%s/%s/%s?apikey=%s' % (self.service.service_url,
+        #TODO get rid of these 3 lines
+        print self.service.url_format
+        url_val = '%s/%s/%s/%s/%s?apikey=%s' % (self.service.base_url,
             self.service.api_version,self.service.format,
             self.service.method,request, self.service.api_key)
-        return url_val
+        if self.service.url_format == None:
+            # use service.url not url_format
+            print 'not url_format'
+            return '%s/%s' % (self.service.base_url,self.service.service_url)
+        else:
+            url_val = self.service.url_format
+            d = {"base_url":self.service.base_url,
+                "format":self.service.format,
+                "service":self.service.method,
+                "key":request,
+                "api_key":self.service.api_key}
+            for k in d.keys():
+                url_val = url_val.replace('{%s}'%k,d[k])
+            return url_val #.replace('{','').replace('}','')
     
     def connect(self,request='service',headers={}):
         self.transport.connect(request=request)
     
     def authorize(self):
         pass
-        
+    
     def cache_key(self,url):
         if self._cache_key:
             return self._cache_key
@@ -204,7 +250,7 @@ class ServiceClient(ServiceClientBase):
     def check_cache(self,cache_key):
         #print 'checking cache key=%s' % cache_key
         cacheval = None
-        #cache.delete(cache_key)
+        cache.delete(cache_key)
         cacheval = cache.get(cache_key)
         #print 'cache val = %s' % (cacheval)
         if cacheval != None:
@@ -217,6 +263,7 @@ class ServiceClient(ServiceClientBase):
             return False
     
     def fetch_service(self,request=''):
+        print 'top fetch'
         #self.connect(request=request)
         #self.authorize()
         url = self.get_url(request=request)
@@ -229,110 +276,11 @@ class ServiceClient(ServiceClientBase):
                 #print self.response.data
                 cache.set(cache_key,self.response)
             else:
-                print'211 ServiceClient failure'
+                print'233 ServiceClient failure'
                 print self.response.data
         return self.response
     
 
-
-
-# How to get Daemon service client in?
-
-class HttpServiceClientOld(object):
-    """
-    Container class for return from web service calls
-    demisauce_fetch(self.name,self.key,data={'views':service_handle},
-                format=self.format,extra_headers=self.extra_headers,app=self.app)
-    """
-    def __init__(self, method,key,format='xml', data={},extra_headers={},app='demisauce'):
-        self.success = False
-        self.method = method
-        self.key = key
-        self.format = format
-        self.app = app
-        self.extra_headers = extra_headers
-        self.data = data
-        self.api_key = cfg.CFG['demisauce.apikey']
-        self.service_url = cfg.CFG['demisauce.url']
-        self.__xmlnode__ = None
-    
-    def get_url(self):
-        url_val = '%s/api/%s/%s/%s?apikey=%s' % (self.service_url,self.format,
-                        self.method,self.key, self.api_key)
-        return url_val
-    url = property(get_url)
-    
-    def get_service_definition(self):
-        pass
-    
-    def fetch(self,url):
-        useragent = 'DemisaucePY/1.0'
-        try: 
-            self.params = openanything.fetch(url, data=self.data,agent=useragent,extra_headers=self.extra_headers)
-            #print item.params['status']
-            if self.params['status'] == 500:
-                self.message = 'there was an error on the demisauce server, \
-                        no content was returned'
-                log.error('500 = %s' % url)
-            elif self.params['status'] == 404:
-                self.message = 'not found'
-                log.debug('404 = %s' % url)
-            elif self.params['status'] == 401:
-                self.message = 'Invalid API Key'
-                log.debug('401 = %s' % url)
-            else:
-                self.data = self.params['data']
-                self.success = True
-                self.message = 'success'
-        except urllib2.URLError, err:
-            if err[0][0] == 10061:
-                print 'error in demisauce_fetch'
-                log.debug('No Server = %s' % url)
-                # connection refused
-                self.message = 'the remote server didn\'t respond at \
-                        <a href=\"%s\">%s</a> ' % (url,url)
-        
-    
-    def retrieve(self):
-        self.get_service_definition()
-        url = self.url
-        print 'getting url %s' % url
-        log.debug('url = %s, headers=%s' % (url, self.extra_headers))
-        #print 'httpclient.retrieve url=%s' % url
-        keyurl = url
-        #TODO:  allow non vary by headers?
-        for key in self.extra_headers:
-            keyurl += '%s:%s' % (key,self.extra_headers[key])
-        key = hashlib.md5(keyurl.lower()).hexdigest()
-        print 'md5cachekey = %s' % (key)
-        cacheval = None
-        #cache.delete(key)
-        cacheval = cache.get(key)
-        #print 'cache val = %s' % (cacheval)
-        if cacheval != None:
-            #print 'cache item.data = %s' % (cacheval.data)
-            self.data = cacheval.data
-            self.success = True
-        else:
-            self.fetch(url)
-            if self.success:
-                #print 'was success?'
-                cache.set(key,self)
-            else:
-                print'crap, failure'
-                print self.data
-    
-    def getxmlnode(self):
-        if self.__xmlnode__ == None:
-            # probably need to verify we can parse this?
-            self.__xmlnode__ = XMLNode(self.data)
-        return self.__xmlnode__
-    
-    xml_node = property(getxmlnode)
-
-#todo:  migrate to ServiceProperty
-
-    
 
 #MARKED for deprecation below this
 class Dsws(object):

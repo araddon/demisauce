@@ -98,6 +98,14 @@ app = '''
             "owner_id": "1",
             "name": "demisauce.com", 
             "slug": "demisauce",
+            "url_format":"{base_url}/api/{format}/{service}/{key}?apikey={api_key}",
+            "base_url": "http://localhost:4950", 
+            "authn": "demisauce"
+        },{
+            "site_id": "1",
+            "owner_id": "1",
+            "name": "demisauce.com api2", 
+            "slug": "demisauce",
             "base_url": "http://localhost:4950", 
             "authn": "demisauce"
         },{
@@ -110,8 +118,8 @@ app = '''
         },{
             "site_id": "3",
             "owner_id": "4",
-            "name": "phpdemoapp", 
-            "slug": "phpdemoapp",
+            "name": "phpdemo", 
+            "slug": "phpdemo",
             "base_url": "http://demisauce.test", 
             "authn": "demisauce"
         }]
@@ -122,7 +130,7 @@ service = '''
     "data": [
         {
             "site_id": "1",
-            "app_id": "1",
+            "app_id": "2",
             "owner_id": "1",
             "name": "Poll Html Service", 
             "url": "/pollpublic", 
@@ -134,13 +142,13 @@ service = '''
             "app_id": "1",
             "owner_id": "1",
             "name": "Comment Html Service", 
-            "url": "/comment", 
+            "url": "comment", 
             "key": "comment",
             "views": "",
             "description": "Comment html and form "
         },{
             "site_id": "2",
-            "app_id": "2",
+            "app_id": "3",
             "owner_id": "3",
             "name": "django secure hello world html service", 
             "url": "/service/helloworld/", 
@@ -149,7 +157,7 @@ service = '''
             "description": "hello world test service "
         },{
             "site_id": "3",
-            "app_id": "3",
+            "app_id": "4",
             "owner_id": "4",
             "name": "Php Demo secure hello world html service", 
             "url": "/service/helloworld/", 

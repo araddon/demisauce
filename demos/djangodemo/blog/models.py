@@ -11,7 +11,7 @@ class Entry(models.Model):
     pub_date = models.DateTimeField('date published')
     content = models.TextField()
     comments = has_many(name='comment',lazy=True,local_key='id' )
-    phphello = has_a(name='phphello',app='phpdemoapp',lazy=True,local_key='id' )
+    phphello = has_a(name='helloworld',app='phpdemo',lazy=True,local_key='id' )
     def __unicode__(self):
         return self.title
     

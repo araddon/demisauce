@@ -21,6 +21,7 @@ app_table = Table("app", meta.metadata,
         Column("name", DBString(50)),
         Column("slug", DBString(50)),
         Column("base_url", DBString(255)),
+        Column("url_format", DBString(255),nullable=True),
         Column("authn", DBString(50)),
         Column("description", DBText),
     )

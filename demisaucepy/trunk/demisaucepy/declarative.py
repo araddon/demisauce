@@ -23,7 +23,7 @@ import urlparse
 from demisaucepy import cfg
 from demisaucepy.cache import cache
 from demisaucepy import demisauce_ws, hash_email, \
-    ServiceDefinition, HttpServiceClientOld
+    ServiceDefinition, ServiceClient
 
 
 DSDEBUG = False
@@ -47,12 +47,14 @@ class DuplicateMapping(Exception):
 
 # what to do w this?  attach to the instance?
 class ServiceHandler(object):
-    def __init__(self,name,key,extra_headers={},format='view',app='demisauce'):
+    def __init__(self,name,key,extra_headers={},format='view',app='demisauce',service=None):
         self.name = name
         self.key = key
         self.extra_headers = extra_headers
         self.format = format
         self.app = app
+        self.service = service
+        self.service.format = format
     
     def __getattr__(self,service_handle=''):
         """Allows for view's unknown to this code base to be retrieved::
@@ -68,16 +70,14 @@ class ServiceHandler(object):
         if service_handle in self.__dict__:
             return self.__dict__[service_handle]
         log.debug('calling HttpServiceClient %s' % service_handle)
-        client = HttpServiceClientOld(self.name,self.key,data={'views':service_handle},
-                    format=self.format,extra_headers=self.extra_headers,app=self.app)
-        #self.__dict__['message'] = client.message
-        client.retrieve()
-        if client.success == True and self.format == 'view':
-            return client.data
+        client = ServiceClient(service=self.service)
+        response = client.fetch_service(request=self.key)
+        if response.success == True and self.format == 'view':
+            return response.data
         elif client.success == True and self.format == 'xml':
-            return client.xml_node._xmlhash[self.name]
+            return response.model
         else:
-            print client.message
+            print response.message
             return []
     
 
@@ -100,11 +100,11 @@ class ServiceProperty(object):
         super(ServiceProperty, self).__init__()
         self.service = ServiceDefinition(
             method=name,
-            format='xml',
+            format=format,
             app=app
         )
         key = '%s/%s' % (app,name)
-        print 'in ServiceProperty before load %s' % (key)
+        print 'in ServiceProperty before load %s, format=%s' % (key,format)
         #self.service.load_definition(key=name)
         
         self.name = name
@@ -128,7 +128,7 @@ class ServiceProperty(object):
             eh = {}
             if self.extra_headers:
                 eh = self.extra_headers
-            service_handler = ServiceHandler(self.name,self.key(),extra_headers=eh,format=format)
+            service_handler = ServiceHandler(self.name,self.key(),extra_headers=eh,format=format,service=self.service)
             self.set_loaded(service,service_handler)
         else:
             service_handler = self.get_loaded(service)
