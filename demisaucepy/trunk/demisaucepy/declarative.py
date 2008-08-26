@@ -22,8 +22,9 @@ import time
 import urlparse
 from demisaucepy import cfg
 from demisaucepy.cache import cache
-from demisaucepy import demisauce_ws, hash_email, ServiceHandler
-#Comment, Person as DemisaucePerson
+from demisaucepy import demisauce_ws, hash_email, \
+    ServiceDefinition, HttpServiceClientOld
+
 
 DSDEBUG = False
 _modeltype_map = {}
@@ -43,9 +44,51 @@ class DuplicateMapping(Exception):
     a class or inheritied class with the same name."""
 
 
-class Aggregate(object):
+
+# what to do w this?  attach to the instance?
+class ServiceHandler(object):
+    def __init__(self,name,key,extra_headers={},format='view',app='demisauce'):
+        self.name = name
+        self.key = key
+        self.extra_headers = extra_headers
+        self.format = format
+        self.app = app
+    
+    def __getattr__(self,service_handle=''):
+        """Allows for view's unknown to this code base to be retrieved::
+
+            entry.comments.views.summary
+            entry.comments.views.detailed
+            entry.comments.views.recent
+
+            entry.comments.model
+
+        Would all be valid (summary,detailed,recent)
+        """
+        if service_handle in self.__dict__:
+            return self.__dict__[service_handle]
+        log.debug('calling HttpServiceClient %s' % service_handle)
+        client = HttpServiceClientOld(self.name,self.key,data={'views':service_handle},
+                    format=self.format,extra_headers=self.extra_headers,app=self.app)
+        #self.__dict__['message'] = client.message
+        client.retrieve()
+        if client.success == True and self.format == 'view':
+            return client.data
+        elif client.success == True and self.format == 'xml':
+            return client.xml_node._xmlhash[self.name]
+        else:
+            print client.message
+            return []
+    
+
+class ServiceProperty(object):
     """
-    An entity mapper for remote entities
+    An entity mapper for remote entities.   
+    
+    NOTE:  this is an instance per property and act's as a metaclass
+    as it runs at initiation time NOT runtime, one instance per
+    defined service property
+    
     *construction parameters*
     :name: comments, person, email, poll, etc 
         (must be a demisauce entity type)
@@ -53,24 +96,35 @@ class Aggregate(object):
     :local_key: (optional, defaults to id) used for joins
     :app:  app provider (many dift service providers)
     """
-    def __init__(self, name, **kwargs):
-        super(Aggregate, self).__init__()
+    def __init__(self, name, local_key='id',format='xml',lazy=True,app="demisauce"):
+        super(ServiceProperty, self).__init__()
+        self.service = ServiceDefinition(
+            method=name,
+            format='xml',
+            app=app
+        )
+        key = '%s/%s' % (app,name)
+        print 'in ServiceProperty before load %s' % (key)
+        #self.service.load_definition(key=name)
+        
         self.name = name
-        if 'lazy' in kwargs:
-            self.lazy = kwargs['lazy']
+        self.app = app
+        
+        self.lazy = lazy
         self._loaded = False
         self.islist = True
-        if 'local_key' in kwargs:
-            self.local_key = kwargs['local_key']
-        self.app = 'demisauce'
-        if 'app' in kwargs:
-            self.app = kwargs['app']
+        self.local_key = local_key
         self.local_key_val = None
         self._model_instance = None
         self.extra_headers = {}
+        print 'ServiceProperty: service.method=%s, service.app=%s' % (self.service.method,self.service.app)
     
     def get_service(self,service='views',format='view'):
         if self.lazy and not self.is_loaded(service):
+            if not self.service.isdefined:
+                key = '%s/%s' % (self.app,self.name)
+                print 'in ServiceProperty ServiceDefinition load %s' % (key)
+                self.service.load_definition(request_key=self.name)
             eh = {}
             if self.extra_headers:
                 eh = self.extra_headers
@@ -119,13 +173,22 @@ class Aggregate(object):
         return self.get_service(service='model',format='xml').model
     
     model = property(get_model)
+    
+    """def get_model2(self):
+        #Returns the entity collection/item appropriate
+        res = self.get_service(service='model',format='xml').model
+        def getxmlnode(self):
+            if self.__xmlnode__ == None:
+                # probably need to verify we can parse this?
+                self.__xmlnode__ = XMLNode(self.data)
+            return self.__xmlnode__
+
+        xml_node = property(getxmlnode)
+        return 
+    
+    model2 = property(get_model)"""
     def __get__(self, model_instance, model_class):
-        """Returns the entity collection/item appropriate
-        
-        See http://docs.python.org/ref/descriptors.html for more about descriptors
-        or this article:
-        http://pythonisito.blogspot.com/2008/07/restfulness-in-turbogears.html
-        """
+        """Returns the entity collection/item appropriate"""
         #print 'in __get__ %s, class=%s,  name=%s' %(model_instance,model_class,self.name)
         if not hasattr(model_instance,'_ds_aggregate'):
             setattr(model_instance, '_ds_aggregate', {})
@@ -150,8 +213,7 @@ class Aggregate(object):
     
     def __ds_mapping_config__(self, model_class, model_class_name, attr_name):
         """Configure mapping, relating a demisauce remote
-        entity model to its local python class.  The local python
-        model name forms part of the type
+        service(s) to its local python entity.  
         
         Args:
         model_class: Local model which remote demisauce entity model will belong to
@@ -162,7 +224,7 @@ class Aggregate(object):
         self.model_class = model_class
     
 
-class has_a(Aggregate):
+class has_a(ServiceProperty):
     """Has a single"""
     def __init__(self, name,**kwargs):
         super(has_a, self).__init__(name,**kwargs)
@@ -172,7 +234,7 @@ class has_a(Aggregate):
         return str(self.local_key_val)
     
 
-class has_many(Aggregate):
+class has_many(ServiceProperty):
     """Has many"""
     def __init__(self, name,**kwargs):
         super(has_many, self).__init__(name,**kwargs)
@@ -204,7 +266,7 @@ class AggregatorMeta(type):
         
         for attr_name in dict_.keys():
             attr = dict_[attr_name]
-            if isinstance(attr, Aggregate):
+            if isinstance(attr, ServiceProperty):
                 if attr_name in defined:
                     raise DuplicateMapping('Duplicate mapping: %s' % attr_name)
                 defined.add(attr_name)
@@ -217,7 +279,7 @@ class AggregatorMeta(type):
             cls._publishes_to = []
         else:
             cls._publishes_to.append(cls)
-            
+        
         if not hasattr(cls, 'subscribes_to'):
             cls._subscribes_to = []
         else:

@@ -58,7 +58,7 @@ class Help(ModelBaseAggregator):
     """
     Help is the Support/Help/Feedback form
     """
-    comments = has_many('comment',proxy=True,lazy=True,local_key='id')
+    comments = has_many('comment',lazy=True,local_key='id')
     
     def __init__(self, **kwargs):
         ModelBase.__init__(self,**kwargs)

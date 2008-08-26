@@ -70,4 +70,8 @@ def make_app(global_conf, full_stack=True, **app_conf):
         static_app = StaticURLParser(config['pylons.paths']['static_files'])
     app = Cascade([static_app, javascripts_app, app])
     
+    from demisauce.model.help import Help
+    print 'argh, trying to get def to fire'
+    #h = Help()
+    
     return app

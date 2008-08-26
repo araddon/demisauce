@@ -18,7 +18,8 @@ app_table = Table("app", meta.metadata,
         Column("site_id", Integer, ForeignKey('site.id')),
         Column("owner_id", Integer, ForeignKey('person.id')),
         Column("created", DateTime,default=datetime.now()),
-        Column("name", DBString(255)),
+        Column("name", DBString(50)),
+        Column("slug", DBString(50)),
         Column("base_url", DBString(255)),
         Column("authn", DBString(50)),
         Column("description", DBText),
@@ -87,32 +88,10 @@ class Service(ModelBase):
         return meta.DBSession.query(Service).options(eagerload('site')).options(eagerload('app'))
     
     @classmethod
-    def by_key(cls,key=''):
-        """Class method to get recent help tickets
-        for a specific site and url"""
-        return meta.DBSession.query(Service).options(eagerload('site')).filter_by(key=str(key).lower()).first()
+    def by_app_service(cls,appkey='',servicekey=''):
+        """Class method to get """
+        #return meta.DBSession.query(Service).filter_by(key=str(key).lower()).options(eagerload('site'))
+        return meta.DBSession.query(Service).filter_by(key=str(servicekey).lower())\
+            .join('app').filter_by(slug=str(appkey).lower()).first()
         
-    def nodelist_wperson_ratings(node,current_userid,site_id,recent=False,count=15):
-        """Gets a Node, and determines if current user has rated any of the
-            nodes.
-        """
-        rating_der = select([rating_table],rating_table.c.person_id==current_userid).alias('rating_der')
-        #statement = node_table.outerjoin(rating_der,node_table.c.id==rating_der.c.obj_id).select(use_labels=True)
-        qry = model.DBSession.query(Node).options(contains_eager("ratings",alias=rating_der))
-        if node == None and recent == False:
-            order_by_clause = node_table.c.rating_ct.desc()
-        elif recent == True:
-            order_by_clause = node_table.c.created.desc()
-        else:
-            order_by_clause = node_table.c.rating_ct.desc()
-
-        qry = qry.from_statement(node_table.outerjoin(
-                                rating_der,node_table.c.id==rating_der.c.obj_id
-                        ).select(and_(Node.role=='pu',Node.site_id==site_id),use_labels=True
-                                ).order_by(order_by_clause)
-                )
-        #print 'site_id=%s' % (site_id)
-        #print qry
-        result = qry.all()
-        return result, qry
     

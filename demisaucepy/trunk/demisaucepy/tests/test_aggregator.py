@@ -24,6 +24,7 @@ class Person(Aggregagtor):
     """
     personext = has_a('person',lazy=True,local_key='hashed_email')
     comments = has_many('comment',lazy=True,local_key='id')
+    
     def __init__(self, displayname, email):
         super(Person, self).__init__()
         self.id = 145
@@ -46,6 +47,7 @@ class test_aggregator(TestDSBase):
     def test_aggregator_hasa(self):
         p = Person('aaron','sysadmin@demisauce.org')
         assert type(p.personext) != None
+        print dir(p.personext.model)
         assert p.personext.model.email == 'sysadmin@demisauce.org'
         assert p.comments.model != None
         assert p.comments.view != None

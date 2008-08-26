@@ -97,18 +97,21 @@ app = '''
             "site_id": "1",
             "owner_id": "1",
             "name": "demisauce.com", 
+            "slug": "demisauce",
             "base_url": "http://localhost:4950", 
             "authn": "demisauce"
         },{
             "site_id": "2",
             "owner_id": "3",
             "name": "djangodemo", 
+            "slug": "djangodemo",
             "base_url": "http://djangodemo.test:8001", 
             "authn": "demisauce"
         },{
             "site_id": "3",
             "owner_id": "4",
             "name": "phpdemoapp", 
+            "slug": "phpdemoapp",
             "base_url": "http://demisauce.test", 
             "authn": "demisauce"
         }]
@@ -123,7 +126,7 @@ service = '''
             "owner_id": "1",
             "name": "Poll Html Service", 
             "url": "/pollpublic", 
-            "key": "ds-poll",
+            "key": "poll",
             "views": "",
             "description": "This is the publicly hosted html for polls"
         },{
@@ -132,7 +135,7 @@ service = '''
             "owner_id": "1",
             "name": "Comment Html Service", 
             "url": "/comment", 
-            "key": "ds-comment",
+            "key": "comment",
             "views": "",
             "description": "Comment html and form "
         },{
@@ -141,7 +144,7 @@ service = '''
             "owner_id": "3",
             "name": "django secure hello world html service", 
             "url": "/service/helloworld/", 
-            "key": "ds-djangodemo-hello",
+            "key": "helloworld",
             "views": "",
             "description": "hello world test service "
         },{

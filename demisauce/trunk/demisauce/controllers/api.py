@@ -234,7 +234,7 @@ class ApiController(BaseController):
     #@requires_site
     def service(self,format='xml',id='',**kw):
         #site = request.environ['site']
-        class service(RestApiMethod):
+        class servicerest(RestApiMethod):
             def get(self, **kw):
                 return render('/api/service.xml')
             def post(self, **kw):
@@ -245,7 +245,9 @@ class ApiController(BaseController):
                 return 'not implemented'
         
         if id != '' and id != None:
-            services = model.service.Service.by_key(key=id)  
+            app,service = id.split('/')
+            #print 'app=%s, service=%s' % (app,service)
+            services = model.service.Service.by_app_service(appkey=app,servicekey=service)  
             if services:
                 c.services = [services]       
         else:
@@ -255,7 +257,7 @@ class ApiController(BaseController):
             log.info('no services?  Should be id=%s' % id)
         
         kw.update({'format':format})
-        return service()(**kw)
+        return servicerest()(**kw)
     
     @requires_site
     def person(self,format='xml',id=''):

@@ -2,10 +2,30 @@ from pylons import cache
 import pylons
 from beaker import exceptions
 
+
+class DummyCache(object):
+    def __init__(self, *args, **kwargs):
+        pass
+    def add(self, *args, **kwargs):
+        return True
+    def get(self, key, default=None):
+        return None
+    def set(self, *args, **kwargs):
+        pass
+    def delete(self, *args, **kwargs):
+        pass
+    def get_many(self, *args, **kwargs):
+        return {}
+    def has_key(self, *args, **kwargs):
+        return False
+
+
 class PylonsCache(object):
     """ducktype a django cache and wrap the pylons cache
     See django api: 
     http://www.djangoproject.com/documentation/cache/
+    beaker cache:
+    http://docs.pylonshq.com/_sources/beaker.txt
     """
     def __init__(self):
         pass
@@ -27,7 +47,8 @@ class PylonsCache(object):
         mycache.set_value(key, value)
     
     def delete(self, key):
-        self.set(key,None)
+        mycache = cache.get_cache('demisauce')
+        mycache.remove_value(key) 
     
     def get_many(self, keys):
         """
@@ -58,3 +79,4 @@ class PylonsCache(object):
         # so that it always has the same functionality as has_key(), even
         # if a subclass overrides it.
         return self.has_key(key)
+    
