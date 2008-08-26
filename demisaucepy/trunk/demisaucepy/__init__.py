@@ -35,7 +35,6 @@ class ServiceDefinition(object):
     """
     def __init__(self, method,format='xml', data={},app='demisauce',service_url=None,api_key=None):
         self.method = method
-        #self.rest_request = this is a per request, not part of definition
         self.format = format
         self.app = app
         self.cache = True
@@ -79,12 +78,28 @@ class ServiceDefinition(object):
     
 
 class ServiceResponse(object):
-    def __init__(self):
+    def __init__(self,format='xml'):
         self.success = False
         self.data = None
+        self.name = 'name'
+        self.format = 'xml'
         self.__xmlnode__ = None
         self.url = ''
 
+    def getxmlnode(self):
+        if self.__xmlnode__ == None and self.data != None:
+            # probably need to verify we can parse this?
+            self.__xmlnode__ = XMLNode(self.data)
+            if self.__xmlnode__:
+                if self.__xmlnode__._xmlhash:
+                    if len(self.__xmlnode__._xmlhash.keys()) == 1:
+                        self.name = self.__xmlnode__._xmlhash.keys()[0]
+                        return self.__xmlnode__._xmlhash[self.name]
+        if self.__xmlnode__ and self.name in self.__xmlnode__._xmlhash:
+            return self.__xmlnode__._xmlhash[self.name]
+        else:
+            return None
+    model = property(getxmlnode)
 
 class ServiceTransportBase(object):
     def __init__(self,service=None):
@@ -159,7 +174,7 @@ class ServiceClient(ServiceClientBase):
         self.transport.service = service
         self.extra_headers = {}
         self.request = 'service'
-        self.response = ServiceResponse()
+        self.response = ServiceResponse(format=service.format)
         self._cache_key = None
     
     def get_url(self,request):
@@ -211,7 +226,7 @@ class ServiceClient(ServiceClientBase):
             self.response = self.transport.fetch(url)
             if self.response.success:
                 print 'was success, setting cache'
-                print self.response.data
+                #print self.response.data
                 cache.set(cache_key,self.response)
             else:
                 print'211 ServiceClient failure'

@@ -145,7 +145,7 @@ class ServiceProperty(object):
         pass
     
     def key(self):
-        return '/'.join([cfg.CFG['demisauce.appname'],self.model_class_name,str(self.local_key_val)])
+        return '/'.join([cfg.CFG['demisauce.appname'],self.entityname,str(self.local_key_val)])
     
     def add_cookies(self,ckie_dict={}):
         if not 'Cookie' in self.extra_headers:
@@ -188,8 +188,11 @@ class ServiceProperty(object):
     
     model2 = property(get_model)"""
     def __get__(self, model_instance, model_class):
-        """Returns the entity collection/item appropriate"""
-        #print 'in __get__ %s, class=%s,  name=%s' %(model_instance,model_class,self.name)
+        """user is trying to access this as if its a property?"""
+        print 'in __get__ %s, class=%s,  name=%s' %(model_instance,model_class,self.name)
+        if model_instance is None:
+            return self
+        
         if not hasattr(model_instance,'_ds_aggregate'):
             setattr(model_instance, '_ds_aggregate', {})
         if not self._attr_name() in model_instance._ds_aggregate:
@@ -211,18 +214,6 @@ class ServiceProperty(object):
         """internal name for demisauce entities"""
         return '_' + self.name
     
-    def __ds_mapping_config__(self, model_class, model_class_name, attr_name):
-        """Configure mapping, relating a demisauce remote
-        service(s) to its local python entity.  
-        
-        Args:
-        model_class: Local model which remote demisauce entity model will belong to
-        model_name: Name of model
-        """
-        log.debug('ds_mapping_config class=%s, class_name=%s, attr_name=%s' % (model_class,model_class_name,attr_name))
-        self.model_class_name = model_class_name
-        self.model_class = model_class
-    
 
 class has_a(ServiceProperty):
     """Has a single"""
@@ -242,49 +233,15 @@ class has_many(ServiceProperty):
     
 
 class AggregatorMeta(type):
+    """This is a metaclass that setup's the Entity class's
+    at definition time with information necessary for ServiceProperty
+    to use"""
     def __init__(cls, classname, bases, dict_):
-        if DSDEBUG:
-            print 'in ds AggregatorMeta init classname = %s \n \
-            bases = %s \n \
-            dict_ = %s \n \
-            cls = %s' % (classname, bases, dict_,cls)
-        
         super(AggregatorMeta, cls).__init__(classname, bases, dict_)
-        cls._dsmappings = {}
-        defined = set()
-        for base in bases:
-            #print 'base %s' % (base)
-            if hasattr(base, '_dsmappings'):
-                dsmappings_keys = base._dsmappings.keys()
-                duplicate_mappings = defined.intersection(dsmappings_keys)
-                if duplicate_mappings:
-                    raise DuplicateMapping(
-                      'Duplicate demisauce models in base class %s already defined: %s' %
-                      (base.__name__, list(duplicate_mappings)))
-                defined.update(dsmappings_keys)
-                cls._dsmappings.update(base._dsmappings)
-        
         for attr_name in dict_.keys():
             attr = dict_[attr_name]
             if isinstance(attr, ServiceProperty):
-                if attr_name in defined:
-                    raise DuplicateMapping('Duplicate mapping: %s' % attr_name)
-                defined.add(attr_name)
-                cls._dsmappings[attr_name] = attr
-                attr.__ds_mapping_config__(cls, classname,attr_name)
-        
-        #_modeltype_map[cls.kind()] = cls
-        
-        if not hasattr(cls, 'publishes_to'):
-            cls._publishes_to = []
-        else:
-            cls._publishes_to.append(cls)
-        
-        if not hasattr(cls, 'subscribes_to'):
-            cls._subscribes_to = []
-        else:
-            cls._subscribes_to.append(cls)
-        
+                attr.entityname = classname
     
 
 def aggregator_callable(cls=object):
@@ -300,12 +257,6 @@ def aggregator_callable(cls=object):
         def kind(cls):
             """Returns the entity type"""
             return cls.__name__
-        
-        @classmethod
-        def dsmappings(cls):
-            """Returns a info"""
-            return dict(cls._dsmappings)
-        
     
     return InternalBase
 
