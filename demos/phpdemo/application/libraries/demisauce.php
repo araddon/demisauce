@@ -85,8 +85,13 @@ class Demisauce {
             if ($response === FALSE) {
                 return FALSE;
             }
-            $xml = simplexml_load_string($response);
-            return $xml;
+            if ($format == 'xml') {
+                $xml = simplexml_load_string($response);
+                return $xml;
+            } else {
+                return $response;
+            }
+
         } catch (Exception $e) {
             #echo 'Caught exception: ',  $e->getMessage(), "\n";
             return FALSE;
@@ -103,6 +108,23 @@ class Demisauce {
     public function get_cms($resource,$format='xml')
     {
         return $this->get_ds_ws($resource,'cms',$format);
+    }
+    /**
+     * Get remote html
+     *
+     * @access  public
+     * @param   string resource id for poll
+     * @return  html 
+     */
+    public function get_remote($poll)
+    {  
+        $ds_poll_xml = $this->get_ds_ws($poll,'poll','xml');
+        $html = '';
+        foreach ($ds_poll_xml as $poll) {
+             $html = $html.$poll->html;
+        }
+        # only returning the first
+        return $ds_poll_xml[0]->poll;
     }
     /**
      * Get Poll Html

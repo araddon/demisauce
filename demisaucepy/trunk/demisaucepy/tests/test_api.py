@@ -3,6 +3,7 @@ This is the base content item
 """
 from demisaucepy.tests import *
 from demisaucepy import demisauce_ws_get
+from demisaucepy.models import RemoteService
 
 
 class TestApi(TestDSBase):

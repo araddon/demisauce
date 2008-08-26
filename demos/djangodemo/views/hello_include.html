@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% load cache %}
+
 
 {% block title %}Hello World remote html include demo, title{% endblock %}
 
@@ -10,8 +10,6 @@
     {% if entry %}
         {% if entry.phphello %}
             {% autoescape off %}
-            {{ entry.phphello.views.summary }}
-            found
             {{ entry.phphello.views.message }}
             {% endautoescape %}
         {% else %}

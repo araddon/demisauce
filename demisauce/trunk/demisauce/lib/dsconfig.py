@@ -2,6 +2,15 @@ import os, logging
 from paste.deploy.converters import asbool
 from pylons import config
 
+def after_app_load():
+    # trying to force import to get declarative to load
+    from demisauce.model.help import Help
+    # load config into demisaucepy
+    from demisaucepy import cfg
+    for key in cfg.CFG.keys():
+        if key in config:
+            cfg.CFG[key] = config[key]
+    setup_logging()
 
 def setup_logging():
     """
@@ -13,7 +22,7 @@ def setup_logging():
          datefmt='%b-%d %H:%M:%S')
     """
     logfile = config['logfile']
-    if logfile == 'STDOUT': # special value, used for unit testing
+    if logfile == 'STDOUT': # send to output
         logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
                #format='%(name)s %(levelname)s %(message)s',
                #format='%(asctime)s,%(msecs)d %(levelname)s %(message)s',

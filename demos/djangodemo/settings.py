@@ -1,6 +1,7 @@
 # Django settings for djangodemo project.
 import os
 here = lambda x: os.path.join(os.path.abspath(os.path.dirname(__file__)), x)
+LOG_FILE = 'STDOUT'
 
 ####### custom settings
 DEMISAUCE_APIKEY = '173726158347a26b3836d1c6c09e6c646461517a'

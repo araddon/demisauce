@@ -5,18 +5,49 @@ import openanything
 import datetime
 from xmlnode import XMLNode
 from demisaucepy import cfg
-from demisaucepy import Dsws, demisauce_ws
+from demisaucepy import ServiceDefinition, ServiceClient, \
+    ServiceResponse
+
 log = logging.getLogger(__name__)
 
-class api_object(object):
+class RemoteService(object):
     """
-    Base class for a returned Demisauce object
+    Base class for a returned Demisauce service
+    comments = has_many(name='comment',lazy=True,local_key='id' )
+    phphello = has_a(name='helloworld',app='phpdemo',lazy=True,local_key='id' )
     """
+    def __init__(self,name):
+        pass
+    
+    def from_xml_node(self,node):
+        # allow creation from xml node
+        pass
+    
     def __repr__(self):
         return self.__str__();
     
+class Comment(RemoteService):
+    """
+    The Comment class
+    """
+    @classmethod
+    def by_name(cls,name=''):
+        """
+        Returns the comments record's
+        """
+        name = urllib.quote_plus(name)
+        dsitem = demisauce_ws('comment',name,format='xml')
+        if dsitem.success == True:
+            poll = dsitem.xml_node.comment
+            poll._xml = dsitem.data
+            return poll
+        else:
+            print dsitem.data
+            return None
 
-class Person(api_object):
+
+
+class Person(RemoteService):
     """
     The Person class
     """
@@ -65,7 +96,7 @@ class Person(api_object):
             return None
     
 
-class Comment(api_object):
+class Comment(RemoteService):
     """
     The Comment class
     """
@@ -85,7 +116,7 @@ class Comment(api_object):
             return None
     
 
-class Poll(api_object):
+class Poll(RemoteService):
     """
     The Poll class
     """

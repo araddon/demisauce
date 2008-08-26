@@ -39,8 +39,9 @@
 |	$autoload['libraries'] = array('database', 'session', 'xmlrpc');
 */
 
-$autoload['libraries'] = array('simpletester');
-//$autoload['libraries'] = array();
+// switch the comments on these to turn on testing
+//$autoload['libraries'] = array('simpletester');
+$autoload['libraries'] = array();
 
 
 /*

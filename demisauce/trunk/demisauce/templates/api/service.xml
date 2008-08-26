@@ -6,7 +6,7 @@
         <base_url>${item.app.base_url}</base_url>
         <url_format>${item.app.url_format}</url_format>
         <authn>${item.app.authn}</authn>
-        <url>${item.url}</url>
+        <method_url>${item.method_url}</method_url>
         <slug>${item.app.slug }</slug>
         <description><![CDATA[${item.description}]]></description>
     </service>

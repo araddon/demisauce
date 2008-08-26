@@ -8,7 +8,7 @@ import demisauce.lib.app_globals as app_globals
 import demisauce.lib.helpers
 from demisauce.config.routing import make_map
 from demisauce.model import init_model
-from demisaucepy import cfg
+
 #from jinja2 import Environment, PackageLoader
 
 
@@ -37,8 +37,7 @@ def load_environment(global_conf, app_conf):
     config['pylons.g'] = app_globals.Globals()
     
     config['pylons.h'] = demisauce.lib.helpers
-    # load config into demisaucepy
-    cfg.CFG = config
+    
     if 'sqlalchemy.readengines' in config:
         config['pylons.g'].sa_readengines = load_engines(config,config['sqlalchemy.readengines'])
         config['pylons.g'].sa_masterengine = engine_from_config(config,
@@ -63,3 +62,6 @@ def load_environment(global_conf, app_conf):
     
     # CONFIGURATION OPTIONS HERE (note: all config options will override
     # any Pylons config options)
+    
+    from demisauce.lib import dsconfig
+    dsconfig.after_app_load()

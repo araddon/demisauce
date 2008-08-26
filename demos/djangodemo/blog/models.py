@@ -5,6 +5,7 @@ from demisaucepy.django_helper import ModelAggregatorMeta
 from demisaucepy.declarative import has_a, has_many, \
     AggregateView
 
+
 class Entry(models.Model):
     __metaclass__ = ModelAggregatorMeta
     title = models.CharField(max_length=255)

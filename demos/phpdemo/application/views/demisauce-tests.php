@@ -34,16 +34,16 @@
                         equals( 'What should the new features be?', jQuery('#polltry3 div.ds-poll-title').html(), "Poll Title should be populated from server side get" );
                         
                     });
-                    test("ds.comment service", function() {
+                    test("djangodemo helloworld service", function() {
                         equals( "not", 'fake', "check to see if remotehtml get worked" );
                         equals( "not", 'fake', "check to ensure logged on" );
                         equals( "not", 'fake', "make sure you can post a comment" );
                         equals( "not", 'fake', "and that it updated remote app" );
                         equals( "not", 'fake', "check to ensure logged off, repeat tests" );
                     });
-                    test("djangodemo service", function() {
-                        equals( "not", 'fake', "djangodemoservice discovery and download" );
-                        equals( "not", 'fake', "djangodemoservice should not be visible" );
+                    test("ds.comment service", function() {
+                        
+                        ok( $('#demisauce-comment').html().indexOf('your displayname') > 0, "see if we got content from comment html" );
                     });
 
                 </script>
@@ -83,6 +83,12 @@
                     MISSING
                 </div>
             </div>
+            <div id="ds-comment" class="ds-poll">
+                 <div class="ds-poll-title">remote html comment</div>
+                 <div id="demisauce-comment">
+                    <?php echo $ds_comment;?>
+                 </div>
+             </div>
         </div>
     </div>
 </div>

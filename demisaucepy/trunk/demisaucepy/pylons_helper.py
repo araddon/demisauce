@@ -2,7 +2,7 @@ import urllib, urllib2, logging
 import openanything
 from pylons import cache, config, request
 import datetime
-from demisaucepy import demisauce_ws_get, Dsws
+from demisaucepy import demisauce_ws_get
 import pylons
 from pylons.util import AttribSafeContextObj, ContextObj
 from pylons.i18n import ugettext
@@ -49,33 +49,10 @@ def get_admin_permissions():
             pass
     return False
 
-def demisauce_xmlnodes(resource_id='',routes_dict=None,append_path=False,
-                       random=False,max=-1,**kwargs):
-    """
-    Accepts a key of which content is desired
-    
-    Returns None if not available or not found
-    """
-    url = request.environ['PATH_INFO']
-    if append_path and routes_dict != None: 
-        resource_id += request.environ['pylons.routes_dict'][routes_dict]
-    elif append_path and routes_dict == None:
-        resource_id += url
-    else:
-        pass
-    
-    isadmin = get_admin_permissions()
-    item = pylons_demisauce_ws_get('cms',resource_id,isadmin=isadmin,format='xml')
-    if not item.success:
-        return []
-    
-    nodes = [n for n in item.xml_node]
-    if random:
-        import random
-        random.shuffle(nodes)
-    if max > -1:
-        if max < len(nodes): nodes = nodes[:max]
-    return nodes
+def demisauce_xmlnodes(**kwargs):
+    #TODO:  implement a simpleinterface similar to declarative mapper
+    #phphello = has_a(name='helloworld',app='phpdemo',lazy=True,local_key='id' )
+    raise NotImplementedError
     
 
 def remote_html(resource_id='',routes_dict=None,append_path=False,**kwargs):

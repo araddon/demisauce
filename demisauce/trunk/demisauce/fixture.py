@@ -99,14 +99,14 @@ app = '''
             "name": "demisauce.com", 
             "slug": "demisauce",
             "url_format":"{base_url}/api/{format}/{service}/{key}?apikey={api_key}",
-            "base_url": "http://localhost:4950", 
+            "base_url": "http://localhost:4951", 
             "authn": "demisauce"
         },{
             "site_id": "1",
             "owner_id": "1",
             "name": "demisauce.com api2", 
             "slug": "demisauce",
-            "base_url": "http://localhost:4950", 
+            "base_url": "http://localhost:4951", 
             "authn": "demisauce"
         },{
             "site_id": "2",
@@ -133,7 +133,7 @@ service = '''
             "app_id": "2",
             "owner_id": "1",
             "name": "Poll Html Service", 
-            "url": "/pollpublic", 
+            "method_url": "/pollpublic", 
             "key": "poll",
             "views": "",
             "description": "This is the publicly hosted html for polls"
@@ -142,7 +142,7 @@ service = '''
             "app_id": "1",
             "owner_id": "1",
             "name": "Comment Html Service", 
-            "url": "comment", 
+            "method_url": "comment", 
             "key": "comment",
             "views": "",
             "description": "Comment html and form "
@@ -151,7 +151,7 @@ service = '''
             "app_id": "3",
             "owner_id": "3",
             "name": "django secure hello world html service", 
-            "url": "/service/helloworld/", 
+            "method_url": "/service/helloworld/", 
             "key": "helloworld",
             "views": "",
             "description": "hello world test service "
@@ -160,7 +160,7 @@ service = '''
             "app_id": "4",
             "owner_id": "4",
             "name": "Php Demo secure hello world html service", 
-            "url": "/service/helloworld/", 
+            "method_url": "/service/helloworld/", 
             "key": "helloworld",
             "views": "",
             "description": "secure hello world"
@@ -231,9 +231,19 @@ comment = '''
             "hashedemail":"0c0342d8eb446cd7743c3f750ea3174f",
             "email":"sysadmin@demisauce.org",
             "authorname":"Sysadmin @ Demisauce"
+        },
+        {
+            "site_id": "1", 
+            "person_id": "1", 
+            "comment": "test comment", 
+            "uri": "testapp/person/145",
+            "isuser":"True",
+            "hashedemail":"0c0342d8eb446cd7743c3f750ea3174f",
+            "email":"sysadmin@demisauce.org",
+            "authorname":"Sysadmin @ Demisauce"
         }]
 }'''
-
+testapp
 poll = '''
 {
     "class": "demisauce.model.poll.Poll", 

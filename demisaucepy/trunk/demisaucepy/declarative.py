@@ -15,23 +15,17 @@ Events and Aggregations::
             # your logic here
             
 """
-import datetime
-import urllib
-import logging
-import time
-import urlparse
+import datetime, urllib, logging, threading, time, urlparse
 from demisaucepy import cfg
 from demisaucepy.cache import cache
 from demisaucepy import demisauce_ws, hash_email, \
-    ServiceDefinition, ServiceClient
+    ServiceDefinition, ServiceClient, RetrievalError, \
+    UrlFormatter
 
 
 DSDEBUG = False
 _modeltype_map = {}
 log = logging.getLogger(__name__)
-
-class RetrievalError(Exception):
-    """No result?"""
 
 class MappingError(Exception):
     """what?"""
@@ -45,40 +39,79 @@ class DuplicateMapping(Exception):
 
 
 
-# what to do w this?  attach to the instance?
 class ServiceHandler(object):
-    def __init__(self,name,key,extra_headers={},format='view',app='demisauce',service=None):
-        self.name = name
-        self.key = key
-        self.extra_headers = extra_headers
-        self.format = format
-        self.app = app
+    def __init__(self,model_instance,service,local_key='id',this_app='',
+        extra_headers={},key_format=''):
         self.service = service
-        self.service.format = format
+        self.model_instance = model_instance
+        self.extra_headers = extra_headers
+        self.local_key = local_key
+        self.this_app_slug = this_app
+        self.is_loaded = False
+        self.key_format = key_format
+        self.lazy = True
+        self.client = None
+        self.previous_call = ''
     
-    def __getattr__(self,service_handle=''):
-        """Allows for view's unknown to this code base to be retrieved::
-
-            entry.comments.views.summary
-            entry.comments.views.detailed
-            entry.comments.views.recent
-
-            entry.comments.model
-
-        Would all be valid (summary,detailed,recent)
-        """
-        if service_handle in self.__dict__:
-            return self.__dict__[service_handle]
-        log.debug('calling HttpServiceClient %s' % service_handle)
+    def get_service(self,service='views',format='view',data={}):
+        self.service.format = format
         client = ServiceClient(service=self.service)
-        response = client.fetch_service(request=self.key)
-        if response.success == True and self.format == 'view':
+        client.extra_headers = self.extra_headers
+        print 'about to fetch %s' % self.key()
+        response = client.fetch_service(request=self.key())
+        if response.success == True and self.service.format == 'view':
+            #print response.data
             return response.data
-        elif client.success == True and self.format == 'xml':
-            return response.model
+        elif self.service.format == 'xml':
+            return response
         else:
             print response.message
             return []
+    
+    def add_cookies(self,ckie_dict={}):
+        if not 'Cookie' in self.extra_headers:
+            val = ''
+            for ck in ckie_dict:
+                val += urllib.urlencode({ck:ckie_dict[ck]}) + '; '
+            self.extra_headers['Cookie'] = val
+    
+    def key(self):
+        #print 'making key %s' % self.key_format
+        d = {"app_slug":self.this_app_slug,
+            "class_name":self.model_instance.__class__.__name__,
+            "local_key":str(getattr(self.model_instance,self.local_key))}
+        return UrlFormatter(self.key_format, d)
+    
+    def __getattr__(self,get_what):
+        #print 'in __getattr__ of servicehandler  %s' % (get_what)
+        if self.lazy and not self.is_loaded:
+            if not self.service.isdefined:
+                log.debug('ServiceProperty.get_service:  calling service definition load %s/%s' % (self.service.app_slug,self.service.name))
+                self.service.load_definition(request_key=self.service.name)
+                self.is_loaded = True
+        
+        if get_what.lower() == 'model':
+            if not get_what in self.__dict__:
+                resp = self.get_service(service='model',format='xml')
+                if resp.success:
+                    model = resp.model
+                    setattr(self,get_what,model)
+                else:
+                    return None
+            return getattr(self,get_what)
+        elif self.previous_call.lower() == 'views' and get_what != 'views':
+            #print 'views:  prev=%s , get_what= %s' % (self.previous_call,get_what)
+            if not get_what in self.__dict__:
+                view_result = self.get_service(service='views',format='view',data={'views':get_what})
+                setattr(self,get_what,view_result)
+            self.previous_call = ''
+            return getattr(self,get_what)
+        elif self.previous_call.lower() == 'model':
+            return getattr(self,'model')
+        else:
+            self.previous_call = get_what
+        #print 'returning self for = %s' % get_what
+        return self
     
 
 class ServiceProperty(object):
@@ -99,53 +132,36 @@ class ServiceProperty(object):
     def __init__(self, name, local_key='id',format='xml',lazy=True,app="demisauce"):
         super(ServiceProperty, self).__init__()
         self.service = ServiceDefinition(
-            method=name,
+            name=name,
             format=format,
-            app=app
+            app_slug=app
         )
-        key = '%s/%s' % (app,name)
-        print 'in ServiceProperty before load %s, format=%s' % (key,format)
-        #self.service.load_definition(key=name)
-        
+        log.debug('init: setting service definition %s/%s, format=%s' % (app,name,format))
+        #self.service.load_definition(request_key=name)
         self.name = name
-        self.app = app
-        
+        self.app_slug = app
+        self.key_format = '{app_slug}/{class_name}/{local_key}'
         self.lazy = lazy
-        self._loaded = False
+        self.this_app_slug = 'yourappname'
         self.islist = True
         self.local_key = local_key
-        self.local_key_val = None
-        self._model_instance = None
         self.extra_headers = {}
-        print 'ServiceProperty: service.method=%s, service.app=%s' % (self.service.method,self.service.app)
+        log.debug('ServiceProperty: service.name=%s, service.app=%s' % (self.service.name,self.service.app_slug))
     
-    def get_service(self,service='views',format='view'):
-        if self.lazy and not self.is_loaded(service):
-            if not self.service.isdefined:
-                key = '%s/%s' % (self.app,self.name)
-                print 'in ServiceProperty ServiceDefinition load %s' % (key)
-                self.service.load_definition(request_key=self.name)
-            eh = {}
-            if self.extra_headers:
-                eh = self.extra_headers
-            service_handler = ServiceHandler(self.name,self.key(),extra_headers=eh,format=format,service=self.service)
-            self.set_loaded(service,service_handler)
+    def reload_cfg(self):
+        if cfg and 'demisauce.appname' in cfg.CFG:
+            self.this_app_slug = cfg.CFG['demisauce.appname']
+            print 'found app name %s' % self.this_app_slug
+    
+    def add_request(self,req_dict):
+        if hasattr(threading.local(), 'ds_request'):
+            local_req = getattr(threading.local(),'ds_request')
         else:
-            service_handler = self.get_loaded(service)
-        return service_handler
-        #TODO:  handle error
-        try:
-            pass
-        except AttributeError:
-            return None
-    
-    views = property(get_service)
-    def view(self,which_view=''):
-        """docstring for view"""
-        pass
-    
-    def key(self):
-        return '/'.join([cfg.CFG['demisauce.appname'],self.entityname,str(self.local_key_val)])
+            local_req = {'cache':True}
+        if 'cache' in req_dict and str(req_dict['cache']).lower() == 'false':
+            local_req['cache'] = False
+        
+        setattr(threading.local(), 'ds_request', local_req)
     
     def add_cookies(self,ckie_dict={}):
         if not 'Cookie' in self.extra_headers:
@@ -154,75 +170,41 @@ class ServiceProperty(object):
                 val += urllib.urlencode({ck:ckie_dict[ck]}) + '; '
             self.extra_headers['Cookie'] = val
     
-    def is_loaded(self,what='model'):
-        """checks if this item is loaded"""
-        loaded_key = 'loaded%s' % what
-        if self._attr_name() in self._model_instance._ds_aggregate:
-            if what in self._model_instance._ds_aggregate[self._attr_name()]:
-                return True
-        return False
-    
-    def get_loaded(self,what='model'):
-        return self._model_instance._ds_aggregate[self._attr_name()][what]
-    
-    def set_loaded(self,what='model',value=None):
-        self._model_instance._ds_aggregate[self._attr_name()][what] = value
-    
-    def get_model(self):
-        """Returns the entity collection/item appropriate"""
-        return self.get_service(service='model',format='xml').model
-    
-    model = property(get_model)
-    
-    """def get_model2(self):
-        #Returns the entity collection/item appropriate
-        res = self.get_service(service='model',format='xml').model
-        def getxmlnode(self):
-            if self.__xmlnode__ == None:
-                # probably need to verify we can parse this?
-                self.__xmlnode__ = XMLNode(self.data)
-            return self.__xmlnode__
-
-        xml_node = property(getxmlnode)
-        return 
-    
-    model2 = property(get_model)"""
     def __get__(self, model_instance, model_class):
-        """user is trying to access this as if its a property?"""
-        print 'in __get__ %s, class=%s,  name=%s' %(model_instance,model_class,self.name)
+        """
+        user is trying to access the declarative, if not an instance (Class Property)
+        return this, else return the service handler for this mapped service
+        
+        about: http://docs.python.org/ref/descriptors.html
+        """
+        #print 'in __get__ %s, class=%s,  name=%s' %(model_instance,model_class,self._attr_name())
         if model_instance is None:
             return self
         
-        if not hasattr(model_instance,'_ds_aggregate'):
-            setattr(model_instance, '_ds_aggregate', {})
-        if not self._attr_name() in model_instance._ds_aggregate:
-            model_instance._ds_aggregate[self._attr_name()] = {}
-        self._model_instance = model_instance   #
-        self.local_key_val = getattr(model_instance, self.local_key)
-        return self
+        if not hasattr(model_instance,self._attr_name()):
+            self.reload_cfg()
+            sh = ServiceHandler(model_instance=model_instance,service=self.service,
+                    local_key=self.local_key,this_app=self.this_app_slug,key_format=self.key_format)
+            sh.extra_headers = self.extra_headers
+            setattr(model_instance, self._attr_name(),sh)
+        return getattr(model_instance, self._attr_name())
     
     def __set__(self, model_instance, value):
-        """Sets the value for this property on the given model instance.
-        
-        See http://docs.python.org/ref/descriptors.html for a description of
-        the arguments to this class and what they mean.
-        """
-        print 'in set attr %s' % (value)
+        """not implemented"""
+        raise NotImplementedError
         setattr(model_instance, self._attr_name(), value)
     
     def _attr_name(self):
         """internal name for demisauce entities"""
-        return '_' + self.name
+        return '_' + self._instance_name
     
 
 class has_a(ServiceProperty):
-    """Has a single"""
+    """Has a single mapped entity(service)"""
     def __init__(self, name,**kwargs):
         super(has_a, self).__init__(name,**kwargs)
         self.islist = False
-    
-    def key(self):
-        return str(self.local_key_val)
+        self.key_format = '{local_key}'
     
 
 class has_many(ServiceProperty):
@@ -241,7 +223,7 @@ class AggregatorMeta(type):
         for attr_name in dict_.keys():
             attr = dict_[attr_name]
             if isinstance(attr, ServiceProperty):
-                attr.entityname = classname
+                attr._instance_name = attr_name
     
 
 def aggregator_callable(cls=object):
@@ -250,13 +232,6 @@ def aggregator_callable(cls=object):
     """
     class InternalBase(cls):
         __metaclass__ = AggregatorMeta
-        def __init__(self, **kwargs):
-            pass
-        
-        @classmethod
-        def kind(cls):
-            """Returns the entity type"""
-            return cls.__name__
     
     return InternalBase
 

@@ -8,8 +8,8 @@ from webhelpers import *
 from pylons import c, config
 
 import pylons
-from pylons import cache, session, c
-from demisaucepy.pylons_helper import *
+from pylons import cache, session, c, request
+#from demisaucepy.pylons_helper import remote_html
 import urllib, hashlib
 
 from webhelpers.rails import *
@@ -126,6 +126,12 @@ htmlCodes = [
 ]
 htmlCodesReversed = htmlCodes[:]
 htmlCodesReversed.reverse()
+
+
+def remote_html(resource_id='',routes_dict=None,append_path=False,**kwargs):
+    from demisaucepy.pylons_helper import remote_html
+    return remote_html(resource_id=resource_id,
+        routes_dict=routes_dict,append_path=append_path,**kwargs)
 
 def html_encode(s, codes=htmlCodes):
     """ Returns the HTML encoded version of the given string. This is useful to

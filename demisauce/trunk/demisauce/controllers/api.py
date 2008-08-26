@@ -173,7 +173,7 @@ class ApiController(BaseController):
         elif format == 'xml':
             response.headers['Content-Type'] = 'application/xhtml+xml'
             if c.comments == []:
-                log.info('404, no comments id=%s' % id)
+                log.info('404, no comments siteid=%s, uri=%s' %(site.id,rid))
                 abort(404, 'No items found')
             c.len = len(c.comments)
             return render('/api/comment.xml')

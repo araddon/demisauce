@@ -29,11 +29,12 @@ class TestXmlNode(TestDSBase):
         '''
         nodes = XMLNode(xml_str)
         assert nodes
+        assert hasattr(nodes,'email')
         # since email is the only child of nodes, we should be able to iterate the parent
         nodes2 = [n for n in nodes]
         assert len(nodes2) == 2
-        assert nodes2[0].subject == 'Goalswarm Node Invite'
-        # or the kid
+        assert nodes[0].subject == 'Goalswarm Node Invite'
+        # also, node.email should be iterable (should be the same)
         nodes3 = [n for n in nodes.email]
         assert len(nodes3) == 2
         assert nodes3[0].subject == 'Goalswarm Node Invite'
@@ -41,6 +42,7 @@ class TestXmlNode(TestDSBase):
         node1 = nodes.email[0]
         assert str(node1.__class__) == 'demisaucepy.xmlnode.XMLNode'
         assert node1.subject == 'Goalswarm Node Invite'
+        assert hasattr(node1,'subject')
         xml_str2 = '''
     <emails>
         <email id="12" key="PasswordReset">

@@ -47,12 +47,10 @@ class test_aggregator(TestDSBase):
     def test_aggregator_hasa(self):
         p = Person('aaron','sysadmin@demisauce.org')
         assert type(p.personext) != None
-        print dir(p.personext.model)
         assert p.personext.model.email == 'sysadmin@demisauce.org'
         assert p.comments.model != None
-        assert p.comments.view != None
-        assert 'Comments' in p.comments.views.summary
-        print '%s' % p.comments.views
+        assert p.comments.views != None
+        assert 'comment' in p.comments.views.summary
         #TODO writes tests for aggregate view
         #views = AggregateView(p.comments,['summary','detail'])
 
