@@ -4,6 +4,7 @@
         <div id="yui-main">
             <div class="yui-b" id="jq-testing">
                 <script type="text/javascript" src="<?php echo $demisauce_base_url;?>/js/ds.slugeditor.js"></script>
+                <link rel="stylesheet" href="<?php echo $demisauce_base_url;?>/js/accordion/demo.css" />
             	<style type="text/css">
             		.xerror, .error { display: none }
             	</style>
@@ -73,22 +74,31 @@
             </div>
         </div>
         <div class="yui-b sidebar">
-            
-            <div id="polltry1"></div>
-            <div id="polltry2"></div>
-            <div id="polltry3"><?php echo $ds_poll_xml->html;?></div>
-            <div id="djangophphello" class="ds-poll">
-                <div class="ds-poll-title">remote django helloworld</div>
-                <div id="ds-django-hellocontent">
-                    MISSING
+            <div class="basic"  id="aaronslist">
+                <a>Django Helloworld html content</a>
+                <div id="djangophphello" class="ds-poll">
+                    <div class="ds-poll-title">remote django helloworld</div>
+                    <div id="ds-django-hellocontent">
+                        MISSING
+                    </div>
                 </div>
-            </div>
-            <div id="ds-comment" class="ds-poll">
-                 <div class="ds-poll-title">remote html comment</div>
-                 <div id="demisauce-comment">
-                    <?php echo $ds_comment;?>
+                <a>Poll using javascript load</a>
+                <div id="polltry1"></div>
+                <a>Poll using server load</a>
+                <div id="polltry3"><?php echo $ds_poll_xml->html;?></div>
+                <a>remotehtml comment:</a>
+                <div id="ds-comment" class="ds-poll">
+                     <div class="ds-poll-title">remote html comment</div>
+                     <div id="demisauce-comment">
+                        <?php echo $ds_comment;?>
+                     </div>
                  </div>
-             </div>
+            </div>
+            <script type="text/javascript" >
+                jQuery('#aaronslist').accordion({ 
+                    autoHeight: true 
+                });
+            </script>
         </div>
     </div>
 </div>
