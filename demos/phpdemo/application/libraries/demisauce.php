@@ -161,55 +161,61 @@ class Demisauce extends DemisauceServiceBase{
     private function check_cache() {
         
     }
+    private function get_service_definition($dss,$serviceapp){
+        // TODO:  check cache 
+        $service_def = new  DemisauceService(array(
+            'service'    => 'service',
+            'api_key'    => Demisauce::$api_key,
+            'base_url'   => Demisauce::$demisauce_base_url,
+            
+        ));
+        $response = $service_def->fetch($serviceapp);
+        //echo $response->xml;
+        if ($response->success){
+            
+            // should be one service
+            $response->success = false; //temp
+            foreach ($response->xml as $svc_xml) {
+                $response->success = true;
+                if (property_exists($svc_xml, 'base_url')) {
+                    $dss->base_url = $svc_xml->base_url;
+                }
+                if (property_exists($svc_xml, 'method_url') && $svc_xml->method_url != 'None') {
+                    $dss->method_url = $svc_xml->method_url;
+                }
+                if (property_exists($svc_xml, 'url_format') && $svc_xml->url_format != 'None') {
+                    $dss->url_format = $svc_xml->url_format;
+                } else {
+                    $dss->url_format = null;
+                }
+            }
+            // add service base to registry
+            if ($response->success){
+                $this->service_reg[$serviceapp] = $dss;
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
     public function get_service($resource,$service='',$format='xml',$app='demisauce'){
         //echo "ARGS1:  $resource , $service , $format , $app <br/>";
         if ($app == '') {
             $app = $this->service_app_slug;
         }
-        $serviceapp = $service."/".$app;
-        $dss;
+        $serviceapp = $app."/".$service;
+        // define the intended service
+        $dss = new DemisauceService(array(
+            'service'    => $service,
+            'api_key'    => Demisauce::$api_key,
+            'base_url'   => Demisauce::$base_url,
+            'app_slug'   => $app,
+            'format'     => $format
+        ));
+        // now get service definition
         if (!in_array($serviceapp,$this->service_reg)){
-            // TODO:  check cache 
-            $service_def = new  DemisauceService(array(
-                'service'    => 'service',
-                'api_key'    => Demisauce::$api_key,
-                'base_url'   => Demisauce::$demisauce_base_url,
-                
-            ));
-            $response = $service_def->fetch($app."/".$service);
-            //echo $response->xml;
-            if ($response->success){
-                // prep the intended service
-                $dss = new DemisauceService(array(
-                    'service'    => $service,
-                    'api_key'    => Demisauce::$api_key,
-                    'base_url'   => Demisauce::$base_url,
-                    'app_slug'   => $app,
-                    'format'     => $format
-                ));
-                // should be one service
-                $response->success = false;
-                foreach ($response->xml as $svc_xml) {
-                    $response->success = true;
-                    if (property_exists($svc_xml, 'base_url')) {
-                        $dss->base_url = $svc_xml->base_url;
-                    }
-                    if (property_exists($svc_xml, 'method_url') && $svc_xml->method_url != 'None') {
-                        $dss->method_url = $svc_xml->method_url;
-                    }
-                    if (property_exists($svc_xml, 'url_format') && $svc_xml->url_format != 'None') {
-                        $dss->url_format = $svc_xml->url_format;
-                    } else {
-                        $dss->url_format = null;
-                    }
-                }
-                // add service base to registry
-                if ($response->success){
-                    $this->service_reg[$serviceapp] = $dss;
-                }
-            } else {
-                return false;
-            }
+            $succeeded = $this->get_service_definition(&$dss,$serviceapp);
+            if (!$succeeded) return null;
         } else {
             $dss = $this->service_reg[$serviceapp];
         }

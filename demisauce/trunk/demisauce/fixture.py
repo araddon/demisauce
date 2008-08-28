@@ -130,7 +130,7 @@ service = '''
     "data": [
         {
             "site_id": "1",
-            "app_id": "2",
+            "app_id": "1",
             "owner_id": "1",
             "name": "Poll Html Service", 
             "method_url": "/pollpublic", 
@@ -243,7 +243,7 @@ comment = '''
             "authorname":"Sysadmin @ Demisauce"
         }]
 }'''
-testapp
+
 poll = '''
 {
     "class": "demisauce.model.poll.Poll", 

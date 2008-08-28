@@ -2,7 +2,7 @@
 
 /* Demisauce Config items */
 
-$config['demisauce_base'] = 'http://localhost:4950';
+$config['demisauce_base'] = 'http://localhost:4951';
 $config['demisauce_key'] = 'a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202';
 
 /*

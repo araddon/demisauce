@@ -11,8 +11,8 @@
                 <script>
                     test("Demisauce ds.base.js()", function() {
                         $.ds.defaults.site_slug = 'demisauce';
-                        $.ds.defaults.base_url = 'http://localhost:4950';
-                        equals( "http://localhost:4950", $.ds.defaults.base_url, "need base url" );
+                        $.ds.defaults.base_url = 'http://localhost:4951';
+                        equals( "http://localhost:4951", $.ds.defaults.base_url, "need base url" );
                         ok( $.ds, "$.ds" );
                     });
                     test("ds.slugeditor", function() {
@@ -32,6 +32,21 @@
                             equals( 'What should the new features be?', jQuery('#polltry1 div.ds-poll-title').html(), "Poll Title should be populated from client side get" );
                             start();
                         }});
+                        jQuery('#polltry1 #ds-poll-question div input:first').attr("checked", "checked"); 
+                        /*
+                        stop();
+                        $('#polltry1 #ds-poll-form').submit(function() { 
+                            ok( jQuery('#polltry1 #ds-poll-question-response').html() != oldResults, "results should be different" );
+                            start();
+                        }).submit();
+                        jQuery('#polltry1 #ds-poll-form').trigger('submit');
+                        */
+                        var temp = jQuery('#polltry1').html();
+                        //alert(temp)
+                        var oldResults = jQuery('#ds-poll-question-response',jQuery('#polltry1')).html();
+                        ok( jQuery('#ds-poll-question-response',jQuery('#polltry1')).html() != oldResults, "results should be different" );
+                        //alert(oldResults);
+                        //alert(jQuery('#ds-poll-question-response',jQuery('#polltry1')).html());
                         equals( 'What should the new features be?', jQuery('#polltry3 div.ds-poll-title').html(), "Poll Title should be populated from server side get" );
                         
                     });
