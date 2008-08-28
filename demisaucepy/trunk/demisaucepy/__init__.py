@@ -173,15 +173,13 @@ class GaeServiceTransport(ServiceTransportBase):
 
 class HttpServiceTransport(ServiceTransportBase):
     def connect(self):
-        print 'in http service transport connect'
         pass
     
     def fetch(self,url,data={},extra_headers={},response=None):
         response = response or ServiceResponse()
-        #print 'in http service transport fetch'
         useragent = 'DemisaucePY/1.0'
         try: 
-            print url
+            log.info('httptransport getting url: %s' % (url))
             response.params = openanything.fetch(url, data=data,agent=useragent,extra_headers=extra_headers)
             #print item.params['status']
             if response.params['status'] == 500:

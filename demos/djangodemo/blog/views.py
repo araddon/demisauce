@@ -17,9 +17,11 @@ def index(request):
 
 def view(request,id=''):
     entry_list = [Entry.objects.get(id=id)]
-    cache.add('hello_aaron',10)
-    temp = cache.get('hello_aaron')
-    print 'cache val = %s' % (temp)
+    #cache.add('hello_aaron',10)
+    #temp = cache.get('hello_aaron')
+    #print 'cache val = %s' % (temp)
+    
+    
     #Yuck!  TODO: fix this to something more elegant. 
     Entry.comments.add_request(request.REQUEST)
     for entry in entry_list:

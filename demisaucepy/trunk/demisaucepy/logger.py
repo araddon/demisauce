@@ -31,7 +31,7 @@ def setup_logging():
          format='%(asctime)s, %(name)s %(levelname)s %(message)s',
          datefmt='%b-%d %H:%M:%S')
     """
-    if ENV == "PYLONS":
+    if ENV == "PYLONS" or ENV == 'OTHER':
         return
     if LOG_FILE == 'STDOUT': # send to output
         logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
@@ -55,7 +55,7 @@ def setup_logging():
         """
     
 
-#setup_logging()
+setup_logging()
     
 
 
