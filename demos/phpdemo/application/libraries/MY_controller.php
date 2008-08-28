@@ -1,18 +1,28 @@
 <?php
+require_once APPPATH.'libraries/demisauce.php';
+
+Demisauce::$api_key = "a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202";
+Demisauce::$demisauce_base_url   = "http://localhost:4951";
+Demisauce::$base_url   = "http://localhost:4951";
+Demisauce::$this_app_slug = "phpdemo";
+
 
 class MY_Controller extends Controller {
 
     public $path = '/content/';
     public $data = array("title" => "Demisauce.org information web site");
+    public $dsService;
+    
     function MY_Controller()
     {
         parent::Controller();   
-        $config['demisauce_base_url'] = $this->config->item('demisauce_base');
-        $config['demisauce_key'] = $this->config->item('demisauce_key');
-        $this->load->library('demisauce', $config);
-        $this->data = $this->_prep_demisauce($this->data);
+        //$config['demisauce_base_url'] = $this->config->item('demisauce_base');
+        //$config['demisauce_key'] = $this->config->item('demisauce_key');
+        //$this->load->library('demisauce', $config);
+        $this->data = $this->_prep_page();
+        $this->dsService = Demisauce::get_app();
     }
-    function _prep_demisauce()
+    function _prep_page()
     {
         $data['title'] = 'Demisauce.org information web site';
         $data['demisauce_base_url'] = $this->config->item('demisauce_base');
@@ -21,7 +31,7 @@ class MY_Controller extends Controller {
     }
     function _header()
     {
-        $xml = $this->demisauce->get_cms('root');
+        $xml = $this->dsService->get_cms('root');
         $this->data['nav_array'] = $xml[0]->cmsitem;
         $this->data['body_content'] = '';
         $this->load->view('_header.html',$this->data);
@@ -42,8 +52,8 @@ class MY_Controller extends Controller {
         unset($arr[1]);
         $ds_url = implode('/', $arr);
         
-        $ds_cmsxml = $this->demisauce->get_cms($ds_url);
-        $this->data['ds_poll_xml'] = $this->demisauce->get_poll_xml('what-should-the-new-features-be');
+        $ds_cmsxml = $this->dsService->get_cms($ds_url);
+        
         
         $this->output->cache(0);
         if ($ds_cmsxml !== FALSE) {

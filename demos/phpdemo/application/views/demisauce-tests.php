@@ -36,15 +36,12 @@
                         
                     });
                     test("djangodemo helloworld service", function() {
-                        equals( "not", 'fake', "check to see if remotehtml get worked" );
-                        equals( "not", 'fake', "check to ensure logged on" );
-                        equals( "not", 'fake', "make sure you can post a comment" );
-                        equals( "not", 'fake', "and that it updated remote app" );
-                        equals( "not", 'fake', "check to ensure logged off, repeat tests" );
+                        ok( $('#ds-django-hellocontent').html().indexOf('django') > 0, "see if we got content from django demo" );
                     });
                     test("ds.comment service", function() {
                         
                         ok( $('#demisauce-comment').html().indexOf('your displayname') > 0, "see if we got content from comment html" );
+                        ok( 'fake' == 'not', "Post a comment, and retrieve and read it" );
                     });
 
                 </script>
@@ -55,22 +52,7 @@
                 <div id="main">
                     <div id="log"><div><strong>Log Output:  </strong></div></div>
                 </div>
-                <form id="testform">
-                    <div class="required">
-                        <label for="subject">Subject:</label>
-                        <input id="subject" type="text" value="" name="subject"/>
-                    </div>
-                    <div id="permalink_div" class="required" style="display: block;">
-                        <label for="slug">Permalink:</label>
-                        <span id="permalink" class="secondary">
-                            <span id="editable-slug-span" title="Click to edit this part of the permalink"/>
-                            <a id="editable-slug-href" href="javascript:void(0)">Edit</a>
-                        </span>
-                        <input id="permalink" type="hidden" value="" size="100"/>
-                        <br/>
-                        <input id="real_permalink" type="text" style="displayxx: show;" value="" name="real_permalink"/>
-                    </div>
-                </form>
+
             </div>
         </div>
         <div class="yui-b sidebar">
@@ -79,13 +61,32 @@
                 <div id="djangophphello" class="ds-poll">
                     <div class="ds-poll-title">remote django helloworld</div>
                     <div id="ds-django-hellocontent">
-                        MISSING
+                        <?php echo $ds_django_hello;?>
                     </div>
+                </div>
+                <a>Slug Editor</a>
+                <div id="ds-slug-editor-div1">
+                    <form id="testform">
+                        <div class="required">
+                            <label for="subject">Subject:</label>
+                            <input id="subject" type="text" value="" name="subject"/>
+                        </div>
+                        <div id="permalink_div" class="required" style="display: block;">
+                            <label for="slug">Permalink:</label>
+                            <span id="permalink" class="secondary">
+                                <span id="editable-slug-span" title="Click to edit this part of the permalink"/>
+                                <a id="editable-slug-href" href="javascript:void(0)">Edit</a>
+                            </span>
+                            <input id="permalink" type="hidden" value="" size="100"/>
+                            <br/>
+                            <input id="real_permalink" type="text" style="displayxx: show;" value="" name="real_permalink"/>
+                        </div>
+                    </form>
                 </div>
                 <a>Poll using javascript load</a>
                 <div id="polltry1"></div>
                 <a>Poll using server load</a>
-                <div id="polltry3"><?php echo $ds_poll_xml->html;?></div>
+                <div id="polltry3"><?php echo $ds_poll_html;?></div>
                 <a>remotehtml comment:</a>
                 <div id="ds-comment" class="ds-poll">
                      <div class="ds-poll-title">remote html comment</div>

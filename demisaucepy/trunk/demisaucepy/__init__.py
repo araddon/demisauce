@@ -43,7 +43,7 @@ def UrlFormatter(url_format,sub_dict):
 class ServiceDefinition(object):
     """
     service definition for a remote service
-
+    
     :name: name of remote service
     :format: format (json,xml,html,rss) of remote service
     :app_slug: url friendly name of app  (demisauce,phpdemo,djangodemo):  entered

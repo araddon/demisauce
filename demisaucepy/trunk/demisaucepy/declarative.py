@@ -57,7 +57,7 @@ class ServiceHandler(object):
         self.service.format = format
         client = ServiceClient(service=self.service)
         client.extra_headers = self.extra_headers
-        print 'about to fetch %s' % self.key()
+        log.debug('about to fetch %s' % self.key())
         response = client.fetch_service(request=self.key())
         if response.success == True and self.service.format == 'view':
             #print response.data

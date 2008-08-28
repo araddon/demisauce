@@ -182,6 +182,7 @@ class ApiController(BaseController):
             c.source = 'remote_html'
             c.len = len(c.comments)
             c.hasheader = True
+            c.site_slug = site.slug
             return render('/comment/comment_nobody.html')
         elif format == 'json':
             return render('/api/comment.js')

@@ -24,7 +24,6 @@
 |
 */
 	$system_folder = "../../../../dev/CodeIgniter_1.6.2/system";
-
 /*
 |---------------------------------------------------------------
 | APPLICATION FOLDER NAME
@@ -60,6 +59,7 @@
 | full server path.
 |
 */
+
 if (strpos($system_folder, '/') === FALSE)
 {
 	if (function_exists('realpath') AND @realpath(dirname(__FILE__)) !== FALSE)
@@ -112,7 +112,9 @@ else
 | And away we go...
 |
 */
-require_once BASEPATH.'codeigniter/CodeIgniter'.EXT;
+//CodeIgniter_v.v.v/system/codeigniter/CodeIgniter.php 
+$fc = BASEPATH.'codeigniter/CodeIgniter'.EXT;
+require_once $fc;
 
 /* End of file index.php */
 /* Location: ./index.php */
