@@ -40,8 +40,7 @@ class DuplicateMapping(Exception):
 
 
 class ServiceHandler(object):
-    def __init__(self,model_instance,service,local_key='id',this_app='',
-        extra_headers={},key_format=''):
+    def __init__(self,model_instance,service,local_key='id',this_app='',extra_headers={},key_format=''):
         self.service = service
         self.model_instance = model_instance
         self.extra_headers = extra_headers
@@ -57,8 +56,11 @@ class ServiceHandler(object):
         self.service.format = format
         client = ServiceClient(service=self.service)
         client.extra_headers = self.extra_headers
-        log.debug('about to fetch %s' % self.key())
-        response = client.fetch_service(request=self.key())
+        try:
+            log.debug('about to fetch %s' % self.key())
+            response = client.fetch_service(request=self.key())
+        except Exception, e:
+            log.error('what the heck? %s' % e)
         if response.success == True and self.service.format == 'view':
             #print response.data
             return response.data
@@ -83,7 +85,7 @@ class ServiceHandler(object):
         return UrlFormatter(self.key_format, d)
     
     def __getattr__(self,get_what):
-        #print 'in __getattr__ of servicehandler  %s' % (get_what)
+        log.debug('ServiceHandler __getattr__  %s' % (get_what))
         if self.lazy and not self.is_loaded:
             if not self.service.isdefined:
                 log.debug('ServiceProperty.get_service:  calling service definition load %s/%s' % (self.service.app_slug,self.service.name))
@@ -101,6 +103,7 @@ class ServiceHandler(object):
             return getattr(self,get_what)
         elif self.previous_call.lower() == 'views' and get_what != 'views':
             #print 'views:  prev=%s , get_what= %s' % (self.previous_call,get_what)
+            log.debug('ServiceHandler:getattr:views:  prev=%s , get_what= %s' % (self.previous_call,get_what))
             if not get_what in self.__dict__:
                 view_result = self.get_service(service='views',format='view',data={'views':get_what})
                 setattr(self,get_what,view_result)
@@ -151,7 +154,7 @@ class ServiceProperty(object):
     def reload_cfg(self):
         if cfg and 'demisauce.appname' in cfg.CFG:
             self.this_app_slug = cfg.CFG['demisauce.appname']
-            print 'found app name %s' % self.this_app_slug
+            #print 'found app name %s' % self.this_app_slug
     
     def add_request(self,req_dict):
         if hasattr(threading.local(), 'ds_request'):
@@ -183,10 +186,12 @@ class ServiceProperty(object):
         
         if not hasattr(model_instance,self._attr_name()):
             self.reload_cfg()
+            log.debug('getting service handler for %s' % (self.service))
             sh = ServiceHandler(model_instance=model_instance,service=self.service,
                     local_key=self.local_key,this_app=self.this_app_slug,key_format=self.key_format)
             sh.extra_headers = self.extra_headers
             setattr(model_instance, self._attr_name(),sh)
+            log.debug('did the service handler set')
         return getattr(model_instance, self._attr_name())
     
     def __set__(self, model_instance, value):
@@ -213,6 +218,11 @@ class has_many(ServiceProperty):
         super(has_many, self).__init__(name,**kwargs)
         self.islist = True
     
+def make_declarative(dict_):
+    for attr_name in dict_.keys():
+        attr = dict_[attr_name]
+        if isinstance(attr, ServiceProperty):
+            attr._instance_name = attr_name
 
 class AggregatorMeta(type):
     """This is a metaclass that setup's the Entity class's
@@ -220,10 +230,7 @@ class AggregatorMeta(type):
     to use"""
     def __init__(cls, classname, bases, dict_):
         super(AggregatorMeta, cls).__init__(classname, bases, dict_)
-        for attr_name in dict_.keys():
-            attr = dict_[attr_name]
-            if isinstance(attr, ServiceProperty):
-                attr._instance_name = attr_name
+        make_declarative(dict_)
     
 
 def aggregator_callable(cls=object):

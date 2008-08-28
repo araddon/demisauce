@@ -11,7 +11,8 @@ __date__ = '$Date: 2004/04/16 21:16:24 $'
 __copyright__ = 'Copyright (c) 2004 Mark Pilgrim'
 __license__ = 'Python'
 
-import urllib2, urlparse, gzip, urllib, logging
+import urllib2, urlparse, gzip
+import urllib, logging, os
 from StringIO import StringIO
 
 ISGAE = False
@@ -19,7 +20,9 @@ log = logging.getLogger(__name__)
 
 try:
     from google.appengine.api import urlfetch
-    ISGAE = True
+    if 'AUTH_DOMAIN' in os.environ and 'gmail.com' in os.environ['AUTH_DOMAIN']:
+        log.info('seems to be google app engine')
+        ISGAE = True
 except ImportError:
     pass
 
@@ -46,14 +49,25 @@ class DefaultErrorHandler(urllib2.HTTPDefaultErrorHandler):
         result.status = code
         return result
     
+class GAEResponse(object):
+    def __init__(self,gae_response,url=''):
+        self.url = url
+        self.status = gae_response.status_code
+        self.gaer = gae_response
+    
+    def read(self):
+        return self.gaer.content
+    def close(self):
+        pass
+    
 
 def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT,extra_headers={}):
-    """URL, filename, or string --> stream
-    
+    """    
     This function lets you define parsers that take any input source
     (URL, pathname to local or network file, or actual data as a string)
-    and deal with it in a uniform manner.  Returned object is guaranteed
-    to have all the basic stdio read methods (read, readline, readlines).
+    and deal with it in a uniform manner.  Returned object 
+    (except google app engine fetcher) has all the basic stdio 
+    read methods (read, readline, readlines).
     Just .close() the object when you're done with it.
     
     if data is supplied (in a dictionary), it will be http POST'ed
@@ -72,36 +86,33 @@ def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT
     if hasattr(source, 'read'):
         return source
     
-    if source == '-':
-        return sys.stdin
-    
     if urlparse.urlparse(source)[0] == 'http':
-        # open URL with urllib2
+        # open URL with urllib2, or gae fetch
         log.debug('about to open %s, extra_headers=%s' % (source,extra_headers))
-        if data == None or data == {}:
-            request = urllib2.Request(source)
+        if ISGAE:
+            if data == None or data == {}:
+                response = urlfetch.fetch(url=source,headers=extra_headers)
+            else:
+                response = urlfetch.fetch(url=source,payload=data,
+                    method=POST,headers=extra_headers)
+            return GAEResponse(response,url=source)
         else:
-            request = urllib2.Request(source,urllib.urlencode(data))
-        request.add_header('User-Agent', agent)
-        if lastmodified:
-            request.add_header('If-Modified-Since', lastmodified)
-        if etag:
-            request.add_header('If-None-Match', etag)
-        for key in extra_headers:
-            print 'adding header key=%s, val=%s' % (key,extra_headers[key])
-            request.add_header(key,extra_headers[key])
-        request.add_header('Accept-encoding', 'gzip')
-        opener = urllib2.build_opener(SmartRedirectHandler(), DefaultErrorHandler())
-        return opener.open(request)
+            if data == None or data == {}:
+                request = urllib2.Request(source)
+            else:
+                request = urllib2.Request(source,urllib.urlencode(data))
+            request.add_header('User-Agent', agent)
+            if lastmodified:
+                request.add_header('If-Modified-Since', lastmodified)
+            if etag:
+                request.add_header('If-None-Match', etag)
+            for key in extra_headers:
+                log.debug('adding header key=%s, val=%s' % (key,extra_headers[key]))
+                request.add_header(key,extra_headers[key])
+            request.add_header('Accept-encoding', 'gzip')
+            opener = urllib2.build_opener(SmartRedirectHandler(), DefaultErrorHandler())
+            return opener.open(request)
     
-    # try to open with native open function (if source is a filename)
-    try:
-        return open(source)
-    except (IOError, OSError):
-        pass
-    
-    # treat source as string
-    return StringIO(str(source))
 
 
 def fetch(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT,extra_headers={}):

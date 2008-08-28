@@ -100,6 +100,7 @@ class ServiceDefinition(object):
         python in memory class definition
         """
         log.info('ServiceDefinition.load_definitin() %s:%s ' % (self.app_slug, request_key))
+        
         self.reload_cfg()
         self.service_registry = self.clone()
         self.service_registry.name = 'service'
@@ -126,7 +127,8 @@ class ServiceDefinition(object):
         
     
     def __str__(self):
-        return 'na'
+        return "{name:'%s',format:'%s',base_url:'%s'}" % (self.name,self.format,self.base_url)
+    
 
 class ServiceResponse(object):
     def __init__(self,format='xml'):
@@ -266,7 +268,7 @@ class ServiceClient(ServiceClientBase):
         for key in self.extra_headers:
             cache_key += '%s:%s' % (key,self.extra_headers[key])
         cache_key = hashlib.md5(cache_key.lower()).hexdigest()
-        print 'md5cachekey = %s' % (cache_key)
+        #print 'md5cachekey = %s' % (cache_key)
         self._cache_key = cache_key
         return cache_key
     
@@ -274,6 +276,9 @@ class ServiceClient(ServiceClientBase):
         """
         """
         if self.use_cache == False:
+            return False
+        if cache == None:
+            log.info('doesnt use cache')
             return False
         
         log.debug('checking cache key=%s' % cache_key)
@@ -299,7 +304,8 @@ class ServiceClient(ServiceClientBase):
             if self.response.success:
                 log.debug('success for service %s' % (self.service.name))
                 #print self.response.data
-                cache.set(cache_key,self.response)
+                if cache is not None:
+                    cache.set(cache_key,self.response)
             else:
                 log.error('service error on fetch')
                 print self.response.data
