@@ -1,4 +1,20 @@
 import os, logging
+try:
+    from google.appengine.api import memcache
+except ImportError:
+    pass
+try:
+    from django.core.cache import cache as djangocache
+    from django.conf import settings
+except ImportError:
+    pass
+try:
+    from pylons import config
+    from pylons import cache as pylonscache
+    import pylons
+    from beaker import exceptions
+except ImportError:
+    pass
 
 cache = None
 
@@ -74,7 +90,7 @@ class PylonsCache(CacheBase):
     http://docs.pylonshq.com/_sources/beaker.txt
     """
     def get(self, key, default=None):
-        mycache = cache.get_cache('demisauce')
+        mycache = pylonscache.get_cache('demisauce')
         try:
             myvalue = mycache.get_value(key)
         except KeyError:
@@ -82,11 +98,11 @@ class PylonsCache(CacheBase):
         return myvalue
     
     def set(self, key, value, timeout=None):
-        mycache = cache.get_cache('demisauce')
+        mycache = pylonscache.get_cache('demisauce')
         mycache.set_value(key, value)
     
     def delete(self, key):
-        mycache = cache.get_cache('demisauce')
+        mycache = pylonscache.get_cache('demisauce')
         mycache.remove_value(key) 
     
 

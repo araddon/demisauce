@@ -307,13 +307,15 @@ class AccountController(BaseController):
         User has selected to update profile
         """
         if c.user and 'email' in request.POST:
-            user = c.user
+            user = Person.get(c.user.site_id,c.user.id)
             user.displayname = request.POST['displayname']
             user.set_email(request.POST['email'])
             user.url = request.POST['url']
             self.start_session(user)
             user.save()
             c.person = user
+            c.user = user
+            self.start_session(user)
         return render('/account/settings.html')
     
     def settings(self):

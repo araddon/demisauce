@@ -19,7 +19,7 @@
         ${h.form(h.url(action='feedback'), id="feedbackform", method='post')}
             <input type="hidden" id="objectid" name="objectid" value="${(item and item.id) or '0'}" />
             <input type="hidden" id="slug" name="slug" value="${c.site_slug}" />
-            <input type="hidden" id="category" name="category" value="" />
+            <input type="hidden" id="category" name="category" value="${c.category}" />
             % if c.user:
 
                 Post as:  ${c.user.displayname}

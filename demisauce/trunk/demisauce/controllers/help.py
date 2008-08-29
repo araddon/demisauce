@@ -66,6 +66,9 @@ class HelpController(BaseController):
             c.site_slug = site.slug
         if 'url' in request.params:
             c.current_url = request.params['url']
+        c.category = 'help'
+        if 'category' in request.params:
+            c.category = sanitize(request.params['category'])
         c.isblue = True
         return render('/help/help_feedback.html')
     
@@ -97,6 +100,8 @@ class HelpController(BaseController):
                     help.blog = sanitize(self.form_result['blog'])
                 if help.blog == "your blog url":
                     help.blog = ''
+            if 'category' in self.form_result:
+                help.category = sanitize(self.form_result['category'])
             help.url = sanitize(self.form_result['url'])
             help.content = sanitize(self.form_result['content'])
             if 'HTTP_X_FORWARDED_FOR' in request.environ:

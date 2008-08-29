@@ -104,7 +104,7 @@ app = '''
         },{
             "site_id": "1",
             "owner_id": "1",
-            "name": "demisauce.com api2", 
+            "name": "demisauce.com alternate api", 
             "slug": "demisauce",
             "base_url": "http://localhost:4951", 
             "authn": "demisauce"
@@ -164,6 +164,15 @@ service = '''
             "key": "helloworld",
             "views": "",
             "description": "secure hello world"
+        },{
+            "site_id": "1",
+            "app_id": "1",
+            "owner_id": "1",
+            "name": "Help/Idea/Feedback Submission widget.", 
+            "method_url": "/help/feedback_service", 
+            "key": "feedback",
+            "views": "badge,publiclist,adminrecent,adminfiltered",
+            "description": "An Idea, Problem, Feedback set of services."
         }]
 }'''
 email = '''

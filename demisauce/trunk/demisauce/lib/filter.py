@@ -30,6 +30,7 @@ class Filter(JsonSerializeable):
     :name:  name of this specific filter(for context) (recent,complete,assigned)
     :value: value of filter
     :offset:   for paging
+    :clauses:  dictionary of clauses (filters, orders, etc, )
     :count: for storing # in this filtered set
     :site_id:  site_id for filtering
     """
@@ -46,9 +47,7 @@ class Filter(JsonSerializeable):
     
     def _load(self,kwargs):
         for a in kwargs:
-            print 'iterating kwargs %s' % a
             if hasattr(self,a):
-                print 'about to set self.%s = %s' % (a,kwargs[a])
                 setattr(self,a,kwargs[a])
     
     def __str__(self):
@@ -93,31 +92,17 @@ class FilterList(object):
         self.site_id = site_id
         self.load_filters()
     
-    def xxxadd_param(self,name,val):
-        fltr = self[self.context]
-        if name in fltr:
-            fltr[name] = val
-        else:
-            fltr[name] = val
-        
-        self.new(context=self.context,filter=fltr)
-    
     def set(self,filter=None):
         if not filter == None:
             filter.site_id = self.site_id
             self.filters[filter.context] = filter
-            print 'setting filter %s' % (filter)
+            #print 'setting filter %s' % (filter)
             self.context = filter.context
             self.save()
     
     def current(self):
         """Return filter for current context"""
         return self.__getitem__(self.context)
-    
-    def xxxget_filter(self):
-        # use context to load filter
-        raise NotImplementedError
-        return self[self.context]
     
     def save(self):
         
@@ -137,8 +122,6 @@ class FilterList(object):
             filtering data across page views wout using
             stateless info"""
         if 'filters' in session:
-            #del(session['filters'])
-            #session.save()
             self.filters = session['filters']
         #elif 'filters' in request.cookies:
         #    self.filters = request.cookies['filters'].lower().split(',')

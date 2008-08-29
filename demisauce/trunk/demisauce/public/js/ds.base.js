@@ -424,12 +424,13 @@
                     }
                 })
             }
+            var category = 'help';
             if (self.options.showtitle) {
-                html = $(this.element).html();
-                $(self.options.faceboxprecontent).append('<h3>' + html + '</h3>');
+                category = $(this.element).attr('category');
+                $(self.options.faceboxprecontent).append('<h3>' + $(this.element).html() + '</h3>');
             }
             if (self.options.feedback) {
-                $(self.options.faceboxcontent2).append(self.feedback());
+                $(self.options.faceboxcontent2).append(self.feedback(category));
                 //$.ds.prepLogon($(self.options.faceboxcontent2));
             }
         },
@@ -459,10 +460,10 @@
                         <input id="helpful_no" class="buttonx" type="button"  value="No" name="helpful"/> \
                 </form></div>';
         },
-        feedback: function(txt) {
+        feedback: function(category) {
             var self = this;
             var qs = 'site_key=' + $.ds.defaults.site_slug; 
-            qs += '&url=' + self.options.url; 
+            qs += '&url=' + self.options.url + '&category=' + category; 
             return '<div id="ds-inputform-div" ttestatt="fake" style="width:630;"><iframe width="100%" height="200" frameborder="0" \
             src="' + $.ds.defaults.base_url + '/help/feedback/' + $.ds.defaults.site_slug +'?' + qs + '"  \
             allowtransparency="true" vspace="0" hspace="0" marginheight="0" marginwidth="0" \
