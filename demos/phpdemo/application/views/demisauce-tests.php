@@ -1,13 +1,12 @@
 <div id="doc2" class="yui-t6">
     <div id="bd">
-
         <div id="yui-main">
             <div class="yui-b" id="jq-testing">
                 <script type="text/javascript" src="<?php echo $demisauce_base_url;?>/js/ds.slugeditor.js"></script>
                 <link rel="stylesheet" href="<?php echo $demisauce_base_url;?>/js/accordion/demo.css" />
-            	<style type="text/css">
-            		.xerror, .error { display: none }
-            	</style>
+                <style type="text/css">
+                    .xerror, .error { display: none }
+                </style>
                 <script>
                     test("Demisauce ds.base.js()", function() {
                         $.ds.defaults.site_slug = 'demisauce';
@@ -32,24 +31,24 @@
                             equals( 'What should the new features be?', jQuery('#polltry1 div.ds-poll-title').html(), "Poll Title should be populated from client side get" );
                             start();
                         }});
-                        jQuery('#polltry1 #ds-poll-question div input:first').attr("checked", "checked"); 
-                        /*
-                        stop();
-                        $('#polltry1 #ds-poll-form').submit(function() { 
-                            ok( jQuery('#polltry1 #ds-poll-question-response').html() != oldResults, "results should be different" );
-                            start();
-                        }).submit();
-                        jQuery('#polltry1 #ds-poll-form').trigger('submit');
-                        */
-                        var temp = jQuery('#polltry1').html();
-                        //alert(temp)
-                        var oldResults = jQuery('#ds-poll-question-response',jQuery('#polltry1')).html();
-                        ok( jQuery('#ds-poll-question-response',jQuery('#polltry1')).html() != oldResults, "results should be different" );
-                        //alert(oldResults);
-                        //alert(jQuery('#ds-poll-question-response',jQuery('#polltry1')).html());
                         equals( 'What should the new features be?', jQuery('#polltry3 div.ds-poll-title').html(), "Poll Title should be populated from server side get" );
                         
                     });
+                    /*
+                    test("ds.poll", function() {
+                        // now try to submit
+                        jQuery('#ds-poll-question div input:first',jQuery('#polltry3')).attr("checked", "checked"); 
+                        var oldResults = jQuery('#ds-poll-question-response',jQuery('#polltry3')).html();
+                        
+                        $('#ds-poll-form',jQuery('#polltry3')).submit(function() { 
+                            ok( jQuery('#ds-poll-question-response',jQuery('#polltry3')).html() != oldResults, "results should be different" );
+                            start();
+                        });
+                        
+                        jQuery('#ds-poll-form',jQuery('#polltry3')).trigger('submit');
+                        stop();
+                    });
+                    */
                     test("djangodemo helloworld service", function() {
                         ok( $('#ds-django-hellocontent').html().indexOf('django') > 0, "see if we got content from django demo" );
                     });
@@ -60,26 +59,30 @@
                     });
 
                 </script>
-                	<h1>Demisauce Client Test Suite</h1>
-                	<h2 id="banner"></h2>
-                	<h2 id="userAgent"></h2>
-                	<ol id="tests"></ol>
+                    <h1>Demisauce Client Test Suite</h1>
+                    <h2 id="banner"></h2>
+                    <h2 id="userAgent"></h2>
+                    <ol id="tests"></ol>
                 <div id="main">
                     <div id="log"><div><strong>Log Output:  </strong></div></div>
                 </div>
 
             </div>
         </div>
+        <style type="text/css">
+            form {font-size: .8em; ;}
+        </style>
+        
         <div class="yui-b sidebar">
             <div class="basic"  id="aaronslist">
-                <a>Django Helloworld html content</a>
-                <div id="djangophphello" class="ds-poll">
+                <a class='basic'>Django Helloworld html content</a>
+                <div id="djangophphello">
                     <div class="ds-poll-title">remote django helloworld</div>
                     <div id="ds-django-hellocontent">
                         <?php echo $ds_django_hello;?>
                     </div>
                 </div>
-                <a>Slug Editor</a>
+                <a class='basic'>Slug Editor</a>
                 <div id="ds-slug-editor-div1">
                     <form id="testform">
                         <div class="required">
@@ -89,7 +92,7 @@
                         <div id="permalink_div" class="required" style="display: block;">
                             <label for="slug">Permalink:</label>
                             <span id="permalink" class="secondary">
-                                <span id="editable-slug-span" title="Click to edit this part of the permalink"/>
+                                <span id="editable-slug-span" title="Click to edit this part of the permalink"></span>
                                 <a id="editable-slug-href" href="javascript:void(0)">Edit</a>
                             </span>
                             <input id="permalink" type="hidden" value="" size="100"/>
@@ -98,12 +101,12 @@
                         </div>
                     </form>
                 </div>
-                <a>Poll using javascript load</a>
+                <a class='basic'>Poll using javascript load</a>
                 <div id="polltry1"></div>
-                <a>Poll using server load</a>
+                <a class='basic'>Poll using server load</a>
                 <div id="polltry3"><?php echo $ds_poll_html;?></div>
-                <a>remotehtml comment:</a>
-                <div id="ds-comment" class="ds-poll">
+                <a class='basic'>remotehtml comment:</a>
+                <div id="ds-comment" style="padding:8px;input">
                      <div class="ds-poll-title">remote html comment</div>
                      <div id="demisauce-comment">
                         <?php echo $ds_comment;?>
@@ -112,7 +115,8 @@
             </div>
             <script type="text/javascript" >
                 jQuery('#aaronslist').accordion({ 
-                    autoHeight: true 
+                    autoHeight: true,
+                    header: "a.basic"
                 });
             </script>
         </div>

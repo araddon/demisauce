@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<emails>
+<demisauce>
 % for item in c.emailtemplates:
 <email id="${item.id}" key="${item.key}">
     <subject>${item.subject}</subject>
@@ -9,4 +9,4 @@
     <template><![CDATA[${item.template}]]></template>
 </email>
 % endfor
-</emails>
+</demisauce>

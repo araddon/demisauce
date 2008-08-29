@@ -23,6 +23,7 @@ def make_map():
     map.connect('api/:format/:action/*id', controller='api')
     map.connect('c/*key', controller='viewer', action='index')
     map.connect('kb/:key/:id', controller='viewer', action='viewer')
+    map.connect('helpadmin/:action/:id/*other', controller='helpadmin')
     #map.connect('cms/get/:key/:id', controller='cms', action='index')
     # CUSTOM ROUTES HERE
     #map.connect(':controller/:action/:id')

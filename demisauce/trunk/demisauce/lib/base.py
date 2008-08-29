@@ -41,9 +41,9 @@ def send_emails(email_template,recipient_list,substitution_dict=None):
     
     #/api/email/html/your_slug_title_here?apikey=f3f5de7f8376daf29ce3232ca606904ff4adc929
     resource_id = urllib.quote_plus(email_template)
-    emails = demisauce_ws_get('email',resource_id,format='xml')
-    if emails and emails.success:
-        t = emails.xml_node.email[0]
+    response = demisauce_ws_get('email',resource_id,format='xml')
+    if response.success:
+        t = response.model
         from string import Template
         s = Template(t.template)
         template = s.substitute(substitution_dict)
@@ -51,8 +51,8 @@ def send_emails(email_template,recipient_list,substitution_dict=None):
                 template, '%s<%s>' % (t.from_name,t.from_email), recipient_list))
         log.debug('sent emails to %s' % recipient_list)
     elif not emails.success:
-        log.debug('Invalid DS WS call')
-        return 'invalid api key'
+        log.error('Error retrieving that template')
+        return False
 
 
 base_url = h.base_url
@@ -177,12 +177,12 @@ class BaseController(WSGIController):
         c.form_errors = c.form_errors or {}
         self.user = get_current_user()
         self.site = get_current_site()
-        self.filters = FilterList()
-        request.environ['filters'] = self.filters
         c.user = self.user
         c.site = self.site
         if c.user:
             c.site_id = c.user.site_id
+            self.filters = FilterList(site_id=c.site_id)
+            request.environ['filters'] = self.filters
         c.base_url = h.base_url()
         c.help_url = h.help_url()
         c.adminsite_slug = 'demisauce.org'

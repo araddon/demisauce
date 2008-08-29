@@ -7,6 +7,7 @@ from demisauce.model import ModelBase, meta
 from demisauce.model import site
 from demisauce.model.person import Person
 from demisauce.model.tag import Tag
+from demisauce.lib.filter import Filter
 from demisaucepy.declarative import Aggregagtor, has_a, \
     has_many, aggregator_callable, AggregateView
     
@@ -53,6 +54,8 @@ help_response_table = Table("helpresponse", meta.metadata,
     )
 
 ModelBaseAggregator = aggregator_callable(ModelBase)
+
+
 
 class Help(ModelBaseAggregator):
     """
@@ -143,6 +146,10 @@ class Help(ModelBaseAggregator):
     def apply_filter(cls,site_id=0,filter={}):
         qry = meta.DBSession.query(Help).filter_by(site_id=site_id)
         qry = qry
+    
+    #@classmethod
+    #def status_filter(cls,site_id=0,status='new'):
+    #    return StatusFilter(site_id=site_id)
     
     @classmethod
     def by_site(cls,site_id=0,ct=15,filter='new',offset=0):

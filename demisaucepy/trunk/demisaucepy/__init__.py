@@ -5,7 +5,8 @@ import openanything
 import datetime
 from xmlnode import XMLNode
 from demisaucepy import cfg, logger
-from demisaucepy.cache import cache
+
+import demisaucepy.cache_setup
 import hashlib
 import warnings
 
@@ -139,7 +140,21 @@ class ServiceResponse(object):
         self.__xmlnode__ = None
         self.url = ''
     
-    def getxmlnode(self):
+    def handle_response(self):
+        pass
+        
+    def get_xmlnode(self):
+        if self.__xmlnode__ == None and self.data != None:
+            self.__xmlnode__ = XMLNode(self.data)
+            return self.__xmlnode__
+        elif self.__xmlnode__ is not None:
+            return self.__xmlnode__
+        else:
+            return None
+    
+    xmlnode = property(get_xmlnode)
+    
+    def getmodel(self):
         if self.__xmlnode__ == None and self.data != None:
             # probably need to verify we can parse this?
             self.__xmlnode__ = XMLNode(self.data)
@@ -152,10 +167,12 @@ class ServiceResponse(object):
             if self.__xmlnode__ and self.name in self.__xmlnode__._xmlhash:
                 return self.__xmlnode__._xmlhash[self.name]
             return self.__xmlnode__
+        elif self.__xmlnode__ is not None:
+            return self.__xmlnode__
         else:
             return None
     
-    model = property(getxmlnode)
+    model = property(getmodel)
 
 class ServiceTransportBase(object):
     def __init__(self,service=None):
@@ -203,6 +220,9 @@ class HttpServiceTransport(ServiceTransportBase):
                 # connection refused
                 response.message = 'the remote server didn\'t respond at \
                         <a href=\"%s\">%s</a> ' % (url,url)
+                        
+        if hasattr(response,'handle_response'):
+            response.handle_response()
         return response
     
 
@@ -273,6 +293,9 @@ class ServiceClient(ServiceClientBase):
     def check_cache(self,cache_key):
         """
         """
+        
+        import demisaucepy.cache_setup
+        from demisaucepy.cache import cache
         if self.use_cache == False:
             return False
         if cache == None:
@@ -295,6 +318,8 @@ class ServiceClient(ServiceClientBase):
     def fetch_service(self,request='',data={}):
         #self.connect(request=request)
         #self.authorize()
+        import demisaucepy.cache_setup
+        from demisaucepy.cache import cache
         url = self.get_url(request=request)
         cache_key = self.cache_key(url=url)
         if not self.check_cache(cache_key):

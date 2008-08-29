@@ -2,9 +2,10 @@ import logging
 from pylons import c, cache, config, g, request, response, session
 import simplejson
 
-import demisauce.model as model
-from demisauce.model import mapping, meta
-from demisauce.model.person import Person
+from demisauce.lib import JsonSerializeable
+#import demisauce.model as model
+#from demisauce.model import mapping, meta
+#from demisauce.model.person import Person
 
 log = logging.getLogger(__name__)
 """
@@ -21,23 +22,58 @@ to work on it?
 filter group's?  ie, everything within a group would share the same base SqlAlchemy selectable from statement?
 or, is there a way to do it dynamically?  add in a "from" 
 """
-class Filter(object):
+class Filter(JsonSerializeable):
     """
+    :context:  Each filter only applies to a "context" which is
+        a (portion/aspect of the web site) such as the new help tickets
+         page (filter by recent, filter by complete, assigned)
+    :name:  name of this specific filter(for context) (recent,complete,assigned)
+    :value: value of filter
+    :offset:   for paging
+    :count: for storing # in this filtered set
+    :site_id:  site_id for filtering
     """
     def __init__(self,**kwargs):
+        self.context = 'comments'
         self.name = 'default'
-        self._dict = {
-            'name':'default',
-            'value':'filtervalue',
-            'offset':0,
-            'count':0
-        }
-        self._load(self._dict)
+        self.site_id = 0
+        self.count = 0 # indicates newness
+        self.offset = 0
+        self.value = 'filtervalue'
+        self.clauses = {}
         self._load(kwargs)
+        self.qry = None
     
-    def _load(self,dict):
+    def _load(self,kwargs):
         for a in kwargs:
-            setattr(self,a,kwargs[a])
+            print 'iterating kwargs %s' % a
+            if hasattr(self,a):
+                print 'about to set self.%s = %s' % (a,kwargs[a])
+                setattr(self,a,kwargs[a])
+    
+    def __str__(self):
+        return "{context:'%s',name:'%s',value:'%s',clauses:'%s'}" % (self.context,self.name,self.value,self.clauses)
+    
+    def finish(self,offset=0,limit=0):
+        for clause in self.clauses.keys():
+            filter_function = getattr(self, "filterby_%s" % clause)
+            filter_function(self.clauses[clause])
+            
+        q = self.qry
+        self.count = q.count()# ?? persist once per?
+        if self.offset == 0:
+            #self.count = q.count()
+            self.offset = offset
+            q = self.qry.limit(limit)
+        else:
+            self.offset += offset
+            if self.offset > self.count:
+                return None
+            else:
+                q = self.qry.limit(limit).offset(self.offset-1)
+        
+        self.qry = None
+        return q
     
 
 class FilterList(object):
@@ -51,12 +87,13 @@ class FilterList(object):
             SecureController.__before__(self)
             self.helpfilter = self.filters['helpadmin']
     """
-    def __init__(self,**kwargs):
+    def __init__(self,context='none',site_id=0):
         self.filters = {}
-        self.context = ''
+        self.context = context
+        self.site_id = site_id
         self.load_filters()
     
-    def add_param(self,name,val):
+    def xxxadd_param(self,name,val):
         fltr = self[self.context]
         if name in fltr:
             fltr[name] = val
@@ -65,20 +102,21 @@ class FilterList(object):
         
         self.new(context=self.context,filter=fltr)
     
-    def new(self,context='default',filter='{name:"bytag",value:"python"}'):
-        if context in self.filters:
-            self.filters[context] = filter
-        else:
-            self.filters[context] = filter
-        self.context = context
-        self.save()
+    def set(self,filter=None):
+        if not filter == None:
+            filter.site_id = self.site_id
+            self.filters[filter.context] = filter
+            print 'setting filter %s' % (filter)
+            self.context = filter.context
+            self.save()
     
     def current(self):
         """Return filter for current context"""
-        return self[self.context]
+        return self.__getitem__(self.context)
     
-    def get_filter(self):
+    def xxxget_filter(self):
         # use context to load filter
+        raise NotImplementedError
         return self[self.context]
     
     def save(self):
@@ -99,6 +137,8 @@ class FilterList(object):
             filtering data across page views wout using
             stateless info"""
         if 'filters' in session:
+            #del(session['filters'])
+            #session.save()
             self.filters = session['filters']
         #elif 'filters' in request.cookies:
         #    self.filters = request.cookies['filters'].lower().split(',')

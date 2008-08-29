@@ -12,11 +12,11 @@
         <div class="clear"></div>
         <dl>
             % if item.isuser:
-            <dt>Name:</dt>             <dd><a href="/account/view/${item.person_id}" body="#ticket_person_details_body" id="ticket_person_details">${item.authorname}</a></dd>
+            <dt>Name,Email:</dt>             <dd><a href="/account/view/${item.person_id}" body="#ticket_person_details_body" id="ticket_person_details">${item.authorname}</a>,
+                                                ${item.email}</dd>
             % else:
-            <dt>Name:</dt>             <dd>${item.authorname}</dd>
+            <dt>Name:</dt>             <dd>${item.authorname}, ${item.email}</dd>
             % endif
-            <dt>Email:</dt>            <dd>${item.email}</dd>
             <dt>url:</dt>              <dd>${item.url}</dd>
             <dt>Content:</dt>          <dd>${h.truncate(item.content, 100)}</dd>
             <dt>More..:</dt>          <dd><a href="#" id="ticket_details" body="#ticket_details_body" >details</a></dd>
@@ -31,12 +31,6 @@
         <div id="ticket_details_body" style="display:none;">
             <div class="title">these are more of the ticket details</div>
             <dl>
-                % if item.isuser:
-                <dt>Name:</dt>             <dd><a href="/account/view/${item.person_id}">${item.authorname}</a></dd>
-                % else:
-                <dt>Name:</dt>             <dd>${item.authorname}</dd>
-                % endif
-                <dt>Email:</dt>            <dd>${item.email}</dd>
                 <dt>IP:</dt>               <dd>${item.ip}</dd>
                 <dt>url:</dt>              <dd>${item.url}</dd>
                 <dt>Content:</dt>          <dd>${item.content}</dd>
@@ -96,7 +90,7 @@
                                 <img alt="help?" title="Puts a task in their inbox and notifies them to review this ticket" 
                                     src="/images/icon_help.png" class="demisauce_help_tip" />
                                 <div id="assign_ticket_show" style="display:none;">
-                                    stuff
+                                    ${h.text_field('assignto', value='')}
                                 </div>
                         </fieldset> 
                     </div>
@@ -135,17 +129,32 @@
 </%def>
 
 <div>
-    <div class="bar1" style="height:30px;">
-        <span class="h3">Help And Feedback Page</span>
-        <span class="right" style="margin-top:-17px;">
+    <div class="bar1" style="height:30px;position:relative;padding-top:8px;">
+        <%
+            f = c.filters.current()
+        %>
         % if c.item:
-            % if c.filters and ('help' in c.filters) and ('count' in c.filters['help']):
-                Feedback ${c.filters['help']['offset']} of ${c.filters['help']['count']} 
-                <!--<a href="/helpadmin/process/previous" id="">&#171; Previous</a>-->
+            % if f is not None and f.offset > 1:
+            <div class="" style="position:absolute;z-index:100;" >
+                <a href="${h.url_for(action='previous')}" id="" class="button primary">Previous &#171;</a>
+            </div>
             % endif
+            % if f is not None and f.count > f.offset:
+            <div class="" style="position:absolute;top:8px;right:4px;z-index:100;">
+                <a href="${h.url_for(action='next')}" id="" class="button primary">Next &#187;</a>
+            </div>
+            % endif
+            <div style="text-align:center;position:relative;z-index:5;">
+                <h3>
+                % if c.filters.current() is not None:
+                    Feedback ${c.filters.current().offset} of ${c.filters.current().count} 
+                    <a href="${h.url_for(action='viewlist')}" >list</a>
+                % endif
+                </h3>
+            </div>
+        % else:
+            <div style="text-align:center;position:relative;z-index:5;"><h3>Help And Feedback Page</h3></div>
         % endif
-            <a href="/helpadmin/next/" id="" class="button primary">Next &#187;</a>
-        </span>
 
     </div>
     
@@ -181,12 +190,6 @@
         ${c.item.comments.views.summary}
     % endif
 
-    
-    % for item in c.filters:
-        <!--<div class="${h.cycle("ds-comment-event", "ds-comment-odd") }">
-            context=${item}, value=${c.filters[item]}
-        </div>-->
-    % endfor
     % if c.item and c.item.isuser:
     <br />
     <div class="box2" style="margin: 10px 0px; padding:5px">

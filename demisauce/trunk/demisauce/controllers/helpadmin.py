@@ -9,6 +9,7 @@ import simplejson
 from sqlalchemy.sql import and_, select, func
 
 from demisauce.lib.base import *
+from demisauce.lib.filter import FilterList, Filter
 from demisauce import model
 from demisauce.model import meta, mapping
 from demisauce.model.person import Person
@@ -20,6 +21,25 @@ from demisauce.model.tag import Tag, TagAssoc
 
 log = logging.getLogger(__name__)
 
+class HelpFilter(Filter):
+    def __init__(self, name='status', **kwargs):
+        Filter.__init__(self,**kwargs)
+        self.context = 'helpadmin'
+        self.name = name
+    
+    def start(self):
+        self.qry = meta.DBSession.query(Help).filter_by(site_id=self.site_id)
+    
+    def filterby_status(self,filter='new',offset=0):
+        self.qry = self.qry.filter(Help.status==helpstatus_map[filter])
+    def filterby_newness(self,filter='new',offset=0):
+        self.qry = self.qry.order_by(Help.created.desc())
+    def filterby_tag(self,filter='tag',offset=0):
+        self.qry = self.qry.join(['tag_rel','tags'])
+        self.qry = self.qry.filter(TagAssoc.type=='help')
+        self.qry = self.qry.filter(Tag.value==filter)
+    
+
 class HelpProcessFormValidation(formencode.Schema):
     """Form validation for the comment web admin"""
     allow_extra_fields = True
@@ -28,20 +48,26 @@ class HelpProcessFormValidation(formencode.Schema):
     #response = formencode.All(String(not_empty=True))
 
 class HelpadminController(SecureController):
-    def __before__(self):
+    def __before__(self,**kwargs):
         SecureController.__before__(self)
-        self.filters.context = 'help'
-        self.helpfilter = self.filters.get_filter
-        if self.helpfilter() == None:
-            self.filters.new('help',{'name':"status",'value':"new",'offset':0,'count':0})
+        self.other = []
+        self.filters.context = 'helpadmin'
+        if self.filters.current() == None:
+            self.filters.set(HelpFilter(name='status',clauses={'status':'new'}))
         if 'filterstatus' in request.params and \
             request.params['filterstatus'] == 'refresh':
-            self.filters.new('help',{'name':"status",'value':request.params['filter'],'offset':0,'count':0})
-        c.filters = self.filters.filters
+            self.filters.set(HelpFilter(name='status',clauses={'status':'new'}))
+        c.filters = self.filters
     
+    @requires_role('admin')
+    def deleted_filters(self,id=0):
+        del(session['filters'])
+        session.save()
+        return 'done'
     
     @requires_role('admin')
     def index(self):
+        self.filters.set(HelpFilter())
         return self.viewlist()
     
     def cloud(self,id=0):
@@ -49,17 +75,10 @@ class HelpadminController(SecureController):
     
     @requires_role('admin')
     def viewlist(self,id=0):
-        c.item = None
-        filter = 'new'
-        #c.all_tags = Tag.by_key(site_id=c.site_id,tag_type='help')
-        if 'filter' in request.params:
-            filter = request.params['filter']
-        if id > 0:
-            c.item = Help.get(c.user.site_id,id)
-            c.item.comments.add_cookies(request.cookies)
-        return render('/help/help_process.html')
+        # viewlist of whatever filter we have
+        return self._filter(offset=0,limit=20)
     
-    #TODO:  delete, not used
+    #Marked for removal, was ajax based help method.  
     @requires_role('admin')
     def tag_help(self,id=''):
         data = {'success':False}
@@ -75,60 +94,52 @@ class HelpadminController(SecureController):
     
     def status(self,id=''):
         filter = id
-        if filter in helpstatus_map:
-            self.filters.new('help',{'name':"status",'value':filter,'offset':0})
-            #c.helptickets = Help.by_site(c.user.site_id,20,filter)
-        elif filter == 'recent':
-            self.filters.new('help',{'name':"newness",'value':'recent','offset':0})
-            #c.helptickets = Help.recent(c.user.site_id,20)
-        return self._filter()
+        log.info('other=%s,filter=%s' % (self.other,filter))
+        if filter in helpstatus_map and self.other == []: # new
+            self.filters.set(HelpFilter(name='status'))
+            self.filters.current().clauses['status'] = id # filter value
+        elif filter == 'recent' and self.other == []:
+            self.filters.set(HelpFilter(name='newness'))
+            self.filters.current().clauses['newness'] = id # filter value
+        return self._filter(offset=1,limit=1)
     
-    def _filter(self,filter='',val='',offset=0):
-        fltr = self.filters['help']
-        fltr['offset'] = fltr['offset'] + offset
-        self.filters.new('help',fltr)
-        limit = 20
-        if fltr['offset'] > 0:
-            limit = 1
-        if fltr['name'] == 'status':
-            c.helptickets = Help.by_site(c.user.site_id,limit,fltr['value'],offset=fltr['offset'])
-        elif fltr['name'] == 'newness':
-            c.helptickets = Help.recent(c.user.site_id,limit)
-        if limit == 1:
-            c.item = c.helptickets[0]
-            c.helptickets = None
-        
-        if fltr['name'] == 'tag':
-            
-            self.filters['help']
-            fltr = self.filters['help']
-            qry = meta.DBSession.query(Help)
-            qry = qry.join(['tag_rel','tags'])
-            qry = qry.filter(TagAssoc.type=='help')
-            qry = qry.filter(Tag.value==fltr['value'])
-            if fltr['offset'] > 0:
-                c.item = qry.offset(fltr['offset']-1).limit(1).first()
-            else:
-                c.helptickets = qry
-        if c.helptickets:
-            self.filters.add_param('count',c.helptickets.count())
+    def _filter(self,offset=0,limit=20,safilter=None):
+        hf = self.filters.current()
+        hf.start()
+        qry = hf.finish(offset=offset,limit=limit)
+        #print str(qry)
+        if offset != 0 and hf.count > 0 and hf.count >= hf.offset:
+            c.item = qry[0]
+        elif hf.count <= hf.offset:
+            return self.index()
+        else:
+            c.helptickets = qry
+            print 'count = %s' % qry.count()
+        if safilter is not None:
+            c.item = qry.filter(safilter)[0]
+        if c.item:
+            c.item.comments.add_cookies(request.cookies)
+        self.filters.save()
         return render('/help/help_process.html')
     
     def tag(self,id=''):
-        c.item = None
-        if id != None:
-            self.filters.new('help',{'name':"tag",'value':id,'offset':0})
-        
-        return self._filter()
+        log.info('other=%s,tag filter=%s' % (self.other,id))
+        print 'about to set tag filter'
+        self.filters.set(HelpFilter(name='tag',clauses={'tag':id}))
+        return self._filter(offset=1,limit=1)
     
     @requires_role('admin')
     @rest.dispatch_on(POST="help_process_submit")
     def process(self,id=0):
-        return self.viewlist(id)
+         return self._filter(offset=1,limit=1,safilter=(Help.id==int(id)))
     
     def next(self,id=0):
         # use existing filter to grab next
-        return self._filter(offset=1)
+        return self._filter(offset=1,limit=1)
+        
+    def previous(self,id=0):
+        # use existing filter to grab previous
+        return self._filter(offset=-1,limit=1)
     
     @requires_role('admin')
     @validate(schema=HelpProcessFormValidation(), form='process')
@@ -150,7 +161,7 @@ class HelpadminController(SecureController):
             if 'tags' in self.form_result:
                 h.set_tags(self.form_result['tags'],c.user)
             h.save()
-            return self.viewlist()
+            return self._filter(offset=1,limit=1)
         else:
             #TODO panic?
             log.error('help_process_submit h not found: help_id = %s ' % (self.form_result['help_id']))
@@ -159,5 +170,5 @@ class HelpadminController(SecureController):
     @requires_role('admin')
     def view(self,id=0):
         c.item = Help.get(c.user.site_id,id)
-        return render('/help/help_viewone.html')
+        return render('/help/help_process.html')
     

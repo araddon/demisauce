@@ -12,7 +12,7 @@
     </div>
 </%def>
 
-<%def name="helplist(tickets,showcheck=False,truncatesize=40,urlextra='')">
+<%def name="helplist(tickets,showcheck=False,truncatesize=40,urlextra='',filter='new')">
     % if tickets:
         % for tkt in tickets:
             <div class="checkable">

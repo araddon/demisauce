@@ -87,9 +87,10 @@ def is_current_filter(filter='',value=''):
     toreturn = 'current'
     if filter == None or filters == None or filters.context == '':
         return ''
-    fltr = filters[filters.context]
-    if filter == fltr['name'] and str(fltr['value']) == value:
-        return toreturn
+    fltr = filters.current()
+    for k in fltr.clauses.keys():
+        if fltr.clauses[k] == value:
+            return toreturn
     return ''
 
 def is_current(matchlist,toreturn="current"):
