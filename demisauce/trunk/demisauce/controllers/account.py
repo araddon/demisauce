@@ -214,6 +214,10 @@ class AccountController(BaseController):
                               displayname=self.form_result['email'])
                 user.slug = user.hashedemail
                 user.save()
+                a = Activity(site_id=user.site_id,person_id=user.id,activity='Signup Interest Form')
+                #a.ref_url = 'comment url'
+                a.category = 'account'
+                a.save()
                 #TODO:  refactor/extract email send to trigger event api
                 #send emails
                 url2 = urllib.quote_plus('/account/viewh/%s' % (user.hashedemail))
@@ -245,6 +249,9 @@ class AccountController(BaseController):
                     user_uniqueid=request.cookies['userkey'].lower()).first()
             
             if not user is None:
+                a = Activity(site_id=user.site_id,person_id=user.id,activity='Logging In')
+                #a.ref_url = 'comment url'
+                a.category = 'account'
                 self.start_session(user)
                 return self.returnurl_orgoto(controller='home',action='index')
         
@@ -268,6 +275,10 @@ class AccountController(BaseController):
             
             elif 'password' in request.POST:
                 if user.is_authenticated(request.POST['password']):
+                    a = Activity(site_id=user.site_id,person_id=user.id,activity='Logging In')
+                    #a.ref_url = 'comment url'
+                    a.category = 'account'
+                    a.save()
                     remember_me = False
                     if 'remember_me' in request.POST:
                         remember_me = True
