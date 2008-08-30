@@ -23,6 +23,31 @@
             </div>
             <div class="box boxc">
                 <h3>Top Activities</h3>
+                <script type="text/javascript">
+                  google.load("visualization", "1", {packages:["columnchart"]});
+                  google.setOnLoadCallback(drawChart);
+                  function drawChart() {
+                    var data = new google.visualization.DataTable();
+                    data.addColumn('string', 'Activity');
+                    data.addColumn('number', 'Number');
+                    data.addRows(${len(c.activities)  + 1});
+                    <%
+                    activityct = 0
+                    %>
+                     % for a in c.activities:
+                         data.setValue(${activityct}, 0, '${a[1]}');
+                         data.setValue(${activityct}, 1, ${a[0]});
+                         <%
+                         activityct += 1
+                         %>
+                     % endfor
+                    var chart = new google.visualization.ColumnChart(document.getElementById('top_activities_div'));
+                    chart.draw(data, {width: 450, height: 400, is3D: true, title: 'Top Activities'});
+                  }
+                </script>
+                
+                <div id="top_activities_div"></div>
+                
                 <style type="text/css" media="screen"> 
                     .ds-comment-event {background-color: #E4F2FD;margin:8px;} 
                     .ds-comment-odd {background-color: #ccc;margin:8px;} 

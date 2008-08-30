@@ -73,7 +73,7 @@ class ModelBase(object):
     """
     Abstract base class implementing some shortcuts
     """
-    def __init__(self,*args,**kwargs):
+    def __init__(self,**kwargs):
         for key in kwargs:
             if hasattr(self,key):
                 setattr(self,key,kwargs[key])

@@ -1,7 +1,8 @@
-<div id="ds-poll-results" style="display:none;">
+
 {{if poll}}
+<div id="{{htmlid}}" class="ds-poll-results" style="display:none;">
     {{for q in poll.questions}}
-    <div id="ds-poll-question-response">
+    <div class="ds-poll-question-response" >
         {{for o in q.options}}
         <div>
             {{o.option}}: <b>{{o.count}}</b>
@@ -10,10 +11,11 @@
     
     </div>
     {{endfor}}
+</div>
 {{else}}
   no results yet
 {{endif}}
-</div>
+
 
 
 

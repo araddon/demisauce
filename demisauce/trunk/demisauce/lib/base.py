@@ -162,11 +162,11 @@ class BaseController(WSGIController):
             if remember_me == True:
                 expire_seconds = 60*60*24*31
                 response.set_cookie('userkey', user.user_uniqueid,path='/',
-                        expires=expire_seconds, secure=True)
+                        expires=expire_seconds)
                 response.set_cookie('email', user.email,path='/',
                         expires=expire_seconds, secure=True)
                 response.set_cookie('test', user.email,path='/',
-                            expires=expire_seconds, secure=True)
+                            expires=expire_seconds)
             log.debug('in base controller setting user ')
     
     def __before__(self):
@@ -179,6 +179,9 @@ class BaseController(WSGIController):
         self.site = get_current_site()
         c.user = self.user
         c.site = self.site
+        c.debug = False
+        if 'debug' in config:
+            c.debug = config['debug']
         if c.user:
             c.site_id = c.user.site_id
             self.filters = FilterList(site_id=c.site_id)

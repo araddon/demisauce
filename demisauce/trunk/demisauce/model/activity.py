@@ -71,7 +71,7 @@ class Activity(ModelBase):
     @classmethod
     def stats_by_person(cls,site_id=0,person_id=0):
         #q = text("""SELECT count(id), activity FROM activity where person_id=1 group by month, activity""")
-        q = text("""SELECT count(id), day, month, year FROM activity where person_id=%s group by day""" % person_id)
+        q = text("""SELECT count(id), day, month, year FROM activity where person_id=%s group by year,month,day""" % person_id)
         res = meta.engine.execute(q)
         act = [a for a in res]
         return act

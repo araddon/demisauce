@@ -5,11 +5,12 @@
 
         ${h.text_area('emails', value=(item and item.email) or '', size="50x6")}
 
-        <div class="actions">
-            <input type="submit" class="primaryAction" id="submit" value="Submit &#187;">    &nbsp;&nbsp;
+        <div class="actions submit">
+            <input type="submit" class="primary" id="submit" value="Submit &#187;">    &nbsp;&nbsp;
             <a href="javascript:void(0);" id="inviteusers_cancel">cancel</a>
         </div>
-    ${h.end_form()}
+        
+     ${h.end_form()}
     <br />
 </div>
 <script type="text/javascript">

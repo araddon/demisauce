@@ -133,7 +133,7 @@ service = '''
             "app_id": "1",
             "owner_id": "1",
             "name": "Poll Html Service", 
-            "method_url": "/pollpublic", 
+            "method_url": "pollpublic", 
             "key": "poll",
             "views": "",
             "description": "This is the publicly hosted html for polls"
@@ -151,7 +151,7 @@ service = '''
             "app_id": "3",
             "owner_id": "3",
             "name": "django secure hello world html service", 
-            "method_url": "/service/helloworld/", 
+            "method_url": "service/helloworld/", 
             "key": "helloworld",
             "views": "",
             "description": "hello world test service "
@@ -160,7 +160,7 @@ service = '''
             "app_id": "4",
             "owner_id": "4",
             "name": "Php Demo secure hello world html service", 
-            "method_url": "/service/helloworld/", 
+            "method_url": "service/helloworld/", 
             "key": "helloworld",
             "views": "",
             "description": "secure hello world"
@@ -169,7 +169,7 @@ service = '''
             "app_id": "1",
             "owner_id": "1",
             "name": "Help/Idea/Feedback Submission widget.", 
-            "method_url": "/help/feedback_service", 
+            "method_url": "help/feedback_service", 
             "key": "feedback",
             "views": "badge,publiclist,adminrecent,adminfiltered",
             "description": "An Idea, Problem, Feedback set of services."

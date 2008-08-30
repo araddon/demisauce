@@ -4,10 +4,10 @@
 
 <%def name="body()">
 
-    % if c.code == "404":
+    % if c.code and c.code == "404":
         <h3>Error, page not found </h3>
     % else:
-        <h3>Error, other </h3>
+        <h3>Error, other ${c.code}</h3>
     % endif
 
 </%def>

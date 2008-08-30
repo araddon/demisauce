@@ -3,6 +3,8 @@ import os.path
 import paste.fileapp
 from pylons.middleware import error_document_template, media_path
 from paste.deploy.converters import asbool
+from pylons.util import get_prefix
+
 from demisauce.lib.base import *
 
 class ErrorController(BaseController):
@@ -16,13 +18,17 @@ class ErrorController(BaseController):
     """
     def documentxx(self):
         """Render the error document"""
-        print 'in error.py controller'
-        if asbool(config['debug']) and request.params.get('code', '') == '500':
+        c.code = request.params.get('code', '')
+        #print 'in error.py controller'
+        #print 'what up? %s' % (request.environ['SCRIPT_NAME'])
+        #print 'what up2? %s' % (get_prefix(request.environ))
+        #print 'code %s' % (request.params.get('code', ''))
+        if 'debug' in config and asbool(config['debug']) and request.params.get('code', '') == '500':
             # we re in debug mode, return pylons handler
             return self.pylons_default()
         elif (request.environ['paste.recursive.old_path_info'] and
             request.environ['paste.recursive.old_path_info'][0].find('/api/') >= 0):
-            print 'oldpath = %s' % request.environ['paste.recursive.old_path_info'][0]
+            #print 'oldpath = %s' % request.environ['paste.recursive.old_path_info'][0]
             if request.environ['paste.recursive.old_path_info'][0].find('/api/xml/') >= 0:
                 # special page for xml api
                 response.headers['Content-Type'] = 'application/xhtml+xml'
@@ -40,10 +46,12 @@ class ErrorController(BaseController):
         else:
             print 'in else of document error'
             return render('/error.html')
+            #return render('/environment.html')
             #return self.pylons_default()
     
     def document(self):
         """Render the error document"""
+        print 'here in error document'
         page = error_document_template % \
             dict(prefix=request.environ.get('SCRIPT_NAME', ''),
                  code=request.params.get('code', ''),

@@ -25,12 +25,13 @@ class ServiceValidation(formencode.Schema):
 def app_list(site_id):
     pass
 
-class ServiceController(SecureController):
+class ServiceController(BaseController):
     def __before__(self):
         super(ServiceController, self).__before__()
         c.app_list = [['','']]
         self.site = Site.get(-1,c.site_id)
     
+    #@requires_role('admin')
     def index(self):
         c.services = Service.all()
         return render('/service/service.html')
@@ -39,6 +40,7 @@ class ServiceController(SecureController):
         c.item = App.get(c.user.site_id,id)
         return render('/service/service.html')
     
+    @requires_role('admin')
     def edit(self,id=0):
         log.info('what the heck, in edit %s' % id)
         site = Site.get(-1,c.site_id)
@@ -50,4 +52,4 @@ class ServiceController(SecureController):
         else:
             c.item = App.get(c.user.site_id,id)
             c.service = Service()
-        return render('/service/service.html')
+        return render('/service/service_edit.html')

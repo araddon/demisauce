@@ -50,6 +50,7 @@
                 
                 % else:
                     <li><a href="/c/features" class="${h.is_current(['/c'])}" >Features</a></li>
+                    <li><a href="/service" class="${h.is_current(['/service'])}" >Service's</a></li>
                 % endif
                 </ul>
             </div>
@@ -112,6 +113,9 @@
 <%def name="footer()">
     <div id="ft">
         <div id="ft-content">
+            % if not c.debug:
+                prod footer
+            %else:
             <ul id="footer-nav">
                 <li><a href="#">Project</a>
                   <ul>
@@ -191,6 +195,7 @@
                     </div>
                 </li>
             </ul>
+            % endif
         </div>
     </div>
     <script>

@@ -153,3 +153,29 @@
     </tbody>
 </table>
 </%def>
+
+<%def name="publicview(items)">
+<table class="dsadmin">
+    <thead>
+        <tr>
+            <th>View</th>
+            <th>Xml</th>
+            <th></th>
+            <th>Date</th>
+            <th>Author</th>
+        </tr>
+    </thead>
+    <tbody>
+    % for item in items:
+        <tr class="${h.cycle("", "alternate") }">
+            <td>${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}</td>
+            <td>${h.link_to('View Xml', "/api/xml/service/%s/%s" % (item.app.slug,item.key))}</td>
+            <td>${h.link_to('Edit', h.url(controller="service",action="edit", id=item.id), class_="title")}</td>
+            <td>${(item.created).strftime("%b %d, %Y") or ''}</td>
+            <td>${h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}</td>
+        </tr>
+        
+    % endfor
+    </tbody>
+</table>
+</%def>

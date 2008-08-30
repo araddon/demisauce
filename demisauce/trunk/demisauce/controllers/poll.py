@@ -16,7 +16,9 @@ from demisauce.model.poll import *
 log = logging.getLogger(__name__)
 
 def poll_html(poll):
+    htmlid = 'ds-poll-results-%s' % poll.id
     poll.results = rendertf('/poll/poll_results.html',locals())
+    results = poll.results
     poll.html = rendertf('/poll/poll_public.html',locals())
 
 class PollFormValidation(formencode.Schema):

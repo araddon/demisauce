@@ -176,7 +176,7 @@ class Question(ModelBase):
         else:
             exists = [o for o in self.options if (o.option == option)]
             if exists == [] and option != '':
-                o = QuestionOption(option)
+                o = QuestionOption(option=option)
                 self.max_sort_order += 1
                 o.sort_order = self.max_sort_order
                 self.options.append(o)
@@ -191,7 +191,7 @@ class QuestionOption(ModelBase):
     type:  radio,other(text),check
     """
     def __init__(self, **kwargs):
-        super(QuestionOption, self).__init__()
+        super(QuestionOption, self).__init__(**kwargs)
     
 
 class PollResponse(ModelBase):
@@ -199,7 +199,7 @@ class PollResponse(ModelBase):
     The response by person (or anonymous), will have a collection of answers
     """
     def __init__(self, **kwargs):
-        super(PollResponse, self).__init__()
+        super(PollResponse, self).__init__(**kwargs)
     
 
 class PollAnswer(ModelBase):

@@ -162,45 +162,46 @@
         });
     };
     $.ds.dspoll = function(el, options) {
-        var opts = $.extend({view_selector:'#ds-poll-results-target',
+        var opts = $.extend({view_selector:'.ds-poll-results-target',
             poll_id:0,
             getremote:''}, 
             $.ds.defaults, options);
         this.element = el; 
-        this.poll_id = $('#poll_id').val();
-        this.q_id = $('#q_id').val();
-        var self = this; //Do bindings
+        var self = this; 
+        this.poll_id = $('#poll_id',$(self.element)).val();
+        this.q_id = $('#q_id',$(self.element)).val();
         self.options = opts;
         $.data(this.element, "ds-dspoll", this);
         if (opts.getremote !== ''){
             self.display(el,opts.getremote);
         }
-        $('div.ds-poll-vote a').click(function(){
+        $('div.ds-poll-vote a',$(self.element)).click(function(){
             self.show_results();
         });
         //#ds-poll-vote
-        $('div.ds-poll-vote input').click(function(){
+        $('div.ds-poll-vote input',$(self.element)).click(function(){
             self.vote(this);
         });
         return this;
     }
     $.extend($.ds.dspoll.prototype, {
         show_results: function(el){
-            $('div.ds-poll-vote,#ds-poll-question').hide();
-            $(this.options.view_selector).show();
-            $(this.options.view_selector).html($('#ds-poll-results').html());
+            var self = this;
+            $('div.ds-poll-vote,.ds-poll-question',$(self.element)).hide();
+            $(this.options.view_selector,$(self.element)).children().show();
             return this;
         },
         vote: function(el) {
             var self = this;
-            var opts = $('#ds-poll-question div input[@checked]').val();
+            var opts = $('.ds-poll-question div input[@checked]',$(self.element)).val();
             var data = {poll_id:self.poll_id,q_id:this.q_id,'options':opts};
             //data: $.param(post_vals),
             var url = self.options.base_url + "/pollpublic/vote";
             $.getJSON(url + '?jsoncallback=?', data, function(json){
-                $('#ds-poll-results').empty();
+                //$('#ds-poll-results-' +self.poll_id).empty();// fails on cross domain
+                $(self.element).hide();
                 $(self.element).after(json.html);
-                self.show_results();
+                $('#' +json.htmlid).show();
                 $.ds.dsactivity({activity:"User Voted On" + json.key,category:"Poll"});
             });
             

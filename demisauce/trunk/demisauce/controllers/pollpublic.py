@@ -55,10 +55,11 @@ class PollpublicController(BaseController):
                 poll.responses.append(pollresponse)
                 poll.save()
                 poll.update_vote(pollresponse)
+                htmlid = 'poll_answer_%s' % a.id
                 poll.results = rendertf('/poll/poll_results.html',locals())
                 poll.save()
         
-        data = {'success':True,'html':poll.results,'key':poll.key}
+        data = {'success':True,'html':poll.results,'key':poll.key,'htmlid':htmlid}
         json = simplejson.dumps(data)
         response.headers['Content-Type'] = 'text/json'
         return '%s(%s)' % (request.params['jsoncallback'],json)
