@@ -41,7 +41,7 @@ def send_emails(email_template,recipient_list,substitution_dict=None):
     
     #/api/email/html/your_slug_title_here?apikey=f3f5de7f8376daf29ce3232ca606904ff4adc929
     resource_id = urllib.quote_plus(email_template)
-    response = demisauce_ws_get('email',resource_id,format='xml')
+    response = demisauce_ws_get('email',resource_id,format='xml',cache=False)
     if response.success:
         t = response.model
         from string import Template

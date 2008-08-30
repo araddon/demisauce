@@ -56,14 +56,15 @@ class ServiceDefinition(object):
     :base_url:  base url of the "app" (each app has many services, 
         shared base_url) ex:  http://demisauce.demisauce.com
         note, NOT trailing slash
+    :cache:  default = True, to use cache or not
     """
     _service_keys = ['name']
     def __init__(self, name,format='xml', data={},app_slug='demisauce',
-            base_url=None,api_key=None,local_key='id'):
+            base_url=None,api_key=None,local_key='id',cache=True):
         self.name = name
         self.format = format
         self.app_slug = app_slug
-        self.cache = True
+        self.cache = cache
         self.url_format = "{base_url}/api/{format}/{service}/{key}?apikey={api_key}"
         self.data = data
         self.isdefined = False
@@ -82,6 +83,7 @@ class ServiceDefinition(object):
         ns.format = self.format
         ns.app_slug = self.app_slug
         ns.data = self.data
+        ns.cache = self.cache
         ns.isdefined = self.isdefined
         ns.api_key = self.api_key
         ns.base_url = self.base_url
@@ -106,6 +108,7 @@ class ServiceDefinition(object):
         self.service_registry = self.clone()
         self.service_registry.name = 'service'
         client = ServiceClient(service=self.service_registry)
+        client.use_cache = self.cache
         #client.connect()
         #client.authorize()
         response = client.fetch_service(request=('%s/%s' % (self.app_slug, self.name)))
@@ -327,7 +330,7 @@ class ServiceClient(ServiceClientBase):
             if self.response.success:
                 log.debug('success for service %s' % (self.service.name))
                 #print self.response.data
-                if cache is not None:
+                if cache is not None and self.use_cache:
                     cache.set(cache_key,self.response)
             else:
                 log.error('service error on fetch')
@@ -335,12 +338,13 @@ class ServiceClient(ServiceClientBase):
         return self.response
     
 
-def demisauce_ws_get(method,resource_id,data={},cfgl={},format='html',extra_headers={}):
+def demisauce_ws_get(method,resource_id,data={},cfgl={},format='html',extra_headers={},cache=True):
     return demisauce_ws(method,resource_id,verb='get',data=data,
-                cfgl=cfgl,format=format,extra_headers=extra_headers)
+                cfgl=cfgl,format=format,extra_headers=extra_headers,cache=cache)
 
 
-def demisauce_ws(method,resource_id,verb='get',data={},cfgl={},format='html',extra_headers={},app='demisauce'):
+def demisauce_ws(method,resource_id,verb='get',data={},cfgl={},
+        format='html',extra_headers={},app='demisauce',cache=True):
     """
     Core web service get
     api/format/method/rid?queryparams
@@ -359,9 +363,11 @@ def demisauce_ws(method,resource_id,verb='get',data={},cfgl={},format='html',ext
     service = ServiceDefinition(
         name=method,
         format=format,
-        app_slug=app
+        app_slug=app,
+        cache=cache
     )
     client = ServiceClient(service=service)
+    client.use_cache = cache
     if not service.isdefined:
         log.debug('demisauce_ws.load_definition  %s/%s' % (service.app_slug,service.name))
         service.load_definition(request_key=service.name)
