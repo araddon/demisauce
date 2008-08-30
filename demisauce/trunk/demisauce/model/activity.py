@@ -25,10 +25,11 @@ activity_table = Table("activity", meta.metadata,
     )
 
 class Activity(ModelBase):
-    def __init__(self, site_id, person_id, activity=None):
-        self.site_id = site_id
-        self.person_id = person_id
-        self.activity = activity
+    def __init__(self, **kwargs):
+        super(Activity, self).__init__(**kwargs)
+        #self.site_id = site_id
+        #self.person_id = person_id
+        #self.activity = activity
         self.created = datetime.now()
         self.year = self.created.year
         self.month = self.created.month

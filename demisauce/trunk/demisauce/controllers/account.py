@@ -59,7 +59,7 @@ class AccountController(BaseController):
                     dnew['link'] = '%s/account/verify?unique=%s&node=%s&return_url=%s' %\
                         (base_url(),user.user_uniqueid,user.id,url2)
                     dnew['from'] = c.user.displayname
-                    a = Activity(user.site_id,user.id,'sending email invite')
+                    a = Activity(site_id=user.site_id,person_id=user.id,activity='sending email invite')
                     a.ref_url = 'account admin invite'
                     a.category = 'account'
                     a.save()

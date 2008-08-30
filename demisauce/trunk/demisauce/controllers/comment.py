@@ -7,7 +7,7 @@ import formencode
 from demisauce.lib.base import *
 #import demisauce.lib.sanitize
 from demisauce import model
-from demisauce.model import meta, mapping
+from demisauce.model import meta, mapping, activity
 from demisauce.model.comment import *
 from demisauce.model.site import Site
 from datetime import datetime, timedelta
@@ -194,6 +194,10 @@ class CommentController(BaseController):
             item = Comment(site_id=site.id)
             if c.user:
                 item.set_user_info(c.user)
+                a = activity.Activity(site_id=c.user.site_id,person_id=c.user.id,activity='Commenting')
+                #a.ref_url = 'comment url'
+                a.category = 'comment'
+                a.save()
             else:
                 if 'authorname' in request.params:
                     item.authorname = sanitize(request.params['authorname'])

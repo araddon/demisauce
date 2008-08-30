@@ -32,7 +32,7 @@ class ApipublicController(BaseController):
             action = str(request.params['activity'])
             #s = site.Site.by_slug(site_slug)
             #print 'action = %s' % action
-        a = activity.Activity(user.site_id,user.id,action)
+        a = activity.Activity(site_id=user.site_id,person_id=user.id,activity=action)
         if 'ref_url' in request.params:
             a.ref_url = request.params['ref_url']
         if 'category' in request.params:
