@@ -15,13 +15,7 @@ from demisauce.model.cms import *
 
 log = logging.getLogger(__name__)
 
-def print_hello(*args, **kws):
-    alist = []
-    alist.append(config['demisauce.url'])
-    for arg in args:
-        alist.append(arg)
-    print 'hello from print hello  %s' % alist
-    
+
 class HomeController(BaseController):
 
     def index(self,key=''):

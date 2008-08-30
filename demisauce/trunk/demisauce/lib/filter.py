@@ -53,7 +53,7 @@ class Filter(JsonSerializeable):
     def __str__(self):
         return "{context:'%s',name:'%s',value:'%s',clauses:'%s'}" % (self.context,self.name,self.value,self.clauses)
     
-    def finish(self,offset=0,limit=0):
+    def finish(self,offset=0,limit=0,safilter=None):
         for clause in self.clauses.keys():
             filter_function = getattr(self, "filterby_%s" % clause)
             filter_function(self.clauses[clause])

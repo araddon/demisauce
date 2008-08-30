@@ -32,8 +32,6 @@ class SiteController(NeedsadminController):
         if id > 0 and c.user.issysadmin:
             c.item = Site.saget(id)
             
-            for user in c.item.users:
-                print 'user: %s' % user
         else:
             c.item = Site.get(-1,c.user.site_id)
         return render('/site/site.html')

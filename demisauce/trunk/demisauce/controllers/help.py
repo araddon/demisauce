@@ -21,7 +21,6 @@ log = logging.getLogger(__name__)
 def make_restful(func):
     """??"""
     def wrapper(*arg):
-        print 'in make_restful.wrapper %s' % func
         return func.inner1
     return wrapper
 
@@ -46,7 +45,6 @@ class HelpController(BaseController):
         if site and 'resource_id' in request.params:
             userid = 0
             #TODO:  add rating_ct to ??? (context?  help?  cms?)
-            print 'resource_id = %s' % request.params['resource_id']
             displayname = 'anonymous'
             if c.user:
                 userid = c.user.id
@@ -86,10 +84,8 @@ class HelpController(BaseController):
     @validate(schema=HelpFormValidation(), form='feedback')
     def feedbackform(self,id=''):
         site = Site.by_slug(str(id))
-        #print 'site = %s' % site
         if site:
             c.site = site
-            #print 'setting site.id = %s' % (site.id)
             help = Help(site_id=site.id,email=sanitize(self.form_result['email']))
             if c.user:
                 help.set_user_info(c.user)
@@ -111,16 +107,13 @@ class HelpController(BaseController):
             help.save()
             if 'goto' in request.POST and len(request.POST['goto']) > 5:
                 c.goto_url = request.POST['goto']
-                print 'should be redirecting %s' % c.goto_url
                 return render('/refresh.html')
             else:
                 c.result = True
-                #print 'should be showing message'
                 return render('/help/help_feedback.html')
             
         else:
-            #TODO panic?
-            pass
-        return "whoops, error %s" % id
+            log.error('feedback from came in with no site %s' % request.params)
+        return render('/help/help_feedback.html')
     
 

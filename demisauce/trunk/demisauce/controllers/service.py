@@ -37,7 +37,7 @@ class ServiceController(BaseController):
         return render('/service/service.html')
     
     def view(self,id=0):
-        c.item = App.get(c.user.site_id,id)
+        c.item = Service.get(-1,id)
         return render('/service/service.html')
     
     @requires_role('admin')

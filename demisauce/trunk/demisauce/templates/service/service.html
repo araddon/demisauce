@@ -12,7 +12,7 @@
 
 % if c.item:
     <br />
-    ${service.form(c.service,c.item)}
+    ${service.detail_view(c.item)}
 % else:
     <div >
         ${service.publicview(c.services)}
@@ -22,6 +22,7 @@
 
 
 <%def name="sidebar_top()">
+
     <div >
         ${service.actions()}
     </div>
@@ -31,9 +32,9 @@
     </div>
     <div style="margin:8px;padding:0px;"><h4>Status</h4></div>
     <ul class="filter" style="margin:8px;">
-        <li><a href="/helpadmin/status/new" class="">New</a></li>
-        <li><a href="/helpadmin/status/completed" class="">complete</a></li>
-        <li><a href="/helpadmin/status/recent" class="">recent</a></li>
+        <li><a href="#" class="">New</a></li>
+        <li><a href="#" class="">complete</a></li>
+        <li><a href="#" class="">recent</a></li>
     </ul>
     <div style="margin:8px;padding:0px;"><h4>Tag</h4></div>
     <div id="tag_cloud_div" class="tag_cloud" style="margin:5px;font-size:100%;">

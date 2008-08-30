@@ -24,7 +24,7 @@ class DashboardController(SecureController):
         if c.user:
             c.helptickets = model.help.Help.by_site(c.user.site_id,5)
             c.new_ticket_ct = c.helptickets.count()
-            c.comments = Comment.by_site(c.user.site_id,5)
+            c.comments = Comment.by_site(c.user.site_id).limit(5)
             
         return render('/dashboard.html')
         

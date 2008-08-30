@@ -71,7 +71,7 @@ class GroupadminController(SecureController):
         else:
             g = Group(c.user.site_id)
         g.name = self.form_result['name']
-        print self.form_result['members']
+        #print self.form_result['members']
         newtogroup, newtosite = g.add_memberlist(self.form_result['members'])
         g.save()
         #return 'newtogroup= %s,  \n newtosite=%s' % (newtogroup, newtosite)

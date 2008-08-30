@@ -32,17 +32,26 @@ li{list-style:none;margin:0;}
   grey (background boxes):  #FAFAFA
   really light grey:   background-color:#E7E7E7;
 	margin: top right bottom left; 
+	margin:0 auto -12em;
+	
+  min-height:100%;
+  height:auto !important;
 */
 body {text-align: center; background-color:; ; margin:0px;	padding:0px;}
+body,html {background-colorx:#EEEEEE;height:100%;}
+#page-wrapper {height:auto !important;margin:0 auto -14em;min-height:100%;clear:both;}
 #hd {height:65px;padding:min-width: 950px;background:#000;}
 #mainnav {height:30px;padding:min-width: 950px;background:#000;}
-#bd {min-height:500px;background-color:#fff;}
-.sidebar {background:;}
+#bd #yui-main .yui-b {min-heightx:600px;padding:0px 4px 4px 4px;}
+#doc2 {min-height:100%;height:100%;heightx:auto !important;margin:0 auto 14em;}
+#bd {background-colorxx:#fff;min-height:100%;height:100%;}
+#bd .sidebar {background:;min-height:100%;height:100%;;}
 p {margin:0px 0px 0px 0px;}
 .yui-b {margin:8px 0px 0px 0px;background-color:#fff;}
 .ib {vertical-align: bottom; }
 .yui-t7 #bd {border: red 0px solid;margin:8px 0px 0px 0px;}
-
+#footer-wrapper {height:14em;}
+#ft {width:73.076em;}
 
 /* Fontology 
 #hd {font-size:110%;color:#fff;}
@@ -82,8 +91,9 @@ h1 {font-size:24px;letter-spacing:-0.0325em;line-height:0.75em;}
 #subnav div ul.topnav{font-size:83%;}
 #subnav a:link {padding: 2px 10px 2px 10px; }
 /* right sidebar background-color:#EEEEEE*/
-#bd div.sidebar {min-height:600px;border: 0px solid #235C9D;padding:3px;}
-
+#bd div.sidebar {min-heightx:600px;borderxx: 0px solid #235C9D;padding:4px;}
+#bd div.sidebar {heightx:100%;border: 1px solid #666666;padding:4px;background-color:#EEEEEE;}
+#bd div.sidebar {background-colorxx:#EBF4FA;borderxx: 1px solid #BBD9EE;}
 
 /* no rounded corners for you IE, you suck */
 ul.topnav {list-style-image:none;list-style-position:outside;
@@ -157,7 +167,7 @@ div.boxbb {border:1px solid #BBD9EE;}
 div.boxc {border:1px solid #e0e7b8;}
 .box h2,.box h3, .box h4 {padding:0px; margin:0px;} 
 /* Info Bars */
-div.bar1 {padding: 4px 4px 4px 8px;background: #F5F5F5;border:1px solid #BBD9EE;}
+div.bar1 {padding: 4px 4px 4px 8px;background: #F5F5F5;border:1px solid #666;}
 div.sidebar div.bar1 {background: #DDDDDD;border:1px solid #666666;}
 .bar1 h3,.bar1 h2,.bar1 h4,.barg h3,.barg h2,.barg h4 {padding:0px; margin:0px;} 
 div.barg {padding: 4px;background: #F5F5F5;}
@@ -226,8 +236,9 @@ span.checkableselected {
     
 
 /* Footer              -----------*/
-#ft hr{	width: 100%;}
-#ft { margin: 30px 0 0 0; background-image: url('/images/dotted_line.gif'); background-repeat: repeat-x; background-position: left top; color: #9A9CA0; padding: 7px 0 3px 0; clear: both; }
+#footer-wrapper {background-color:#EEEEEE;overflow:hidden;text-align:center;}
+#ft {margin:0 auto;padding:0 3em;text-align:left;color: #9A9CA0; clear: both;}
+
 #ft a { color: #9A9CA0; text-decoration: none; }
 #ft a:hover { color: #0060BF; text-decoration: underline; }
 #ft-content { margin: 0px auto;  padding: 5px 0px; }

@@ -54,7 +54,6 @@ def to_json_convert(obj,indents=2):
         if type(getattr(obj,key)) == datetime.datetime:
             dout.update({'datetime_%s' % key:time.mktime(getattr(obj,key).timetuple())})
         else:
-            print 'key=%s, attr=%s' % (key,getattr(obj,key))
             dout.update({key:getattr(obj,key)})
     cls = str(obj.__class__)
     cls = cls[cls.find('\'')+1:cls.rfind('\'')]

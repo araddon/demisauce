@@ -44,14 +44,13 @@ class ErrorController(BaseController):
                         'message':request.params.get('message', '')}
             
         else:
-            print 'in else of document error'
+            log.error('Error:  %s' % request.environ['paste.recursive.old_path_info'])
             return render('/error.html')
             #return render('/environment.html')
             #return self.pylons_default()
     
     def document(self):
         """Render the error document"""
-        print 'here in error document'
         page = error_document_template % \
             dict(prefix=request.environ.get('SCRIPT_NAME', ''),
                  code=request.params.get('code', ''),
@@ -60,7 +59,6 @@ class ErrorController(BaseController):
     
     def pylons_default(self):
         """Render the error document"""
-        print 'in error pylons_default'
         page = error_document_template % \
             dict(prefix=request.environ.get('SCRIPT_NAME', ''),
                  code=request.params.get('code', ''),

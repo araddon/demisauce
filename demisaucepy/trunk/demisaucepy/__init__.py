@@ -12,6 +12,7 @@ import warnings
 
 log = logging.getLogger(__name__)
 
+__version__ = '0.2.0'
 
 class RetrievalError(Exception):
     def __init__(self,message="There was an error retrieving this message"):

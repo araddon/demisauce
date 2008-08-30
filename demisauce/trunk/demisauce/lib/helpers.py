@@ -20,7 +20,7 @@ import webhelpers.paginate
 import math
 
 
-def dspager(qry):
+def dspager(qry,perpage=15):
     temp = """
     <div class="boxlinks boxlinks_tabs">
     <span class="nextprev">&#171; Previous</span>
@@ -44,12 +44,13 @@ def dspager(qry):
     page = 1
     if 'page' in request.params:
         page = int(request.params['page'])
-    return webhelpers.paginate.Page(qry,page=page,items_per_page=5)
+    qry = webhelpers.paginate.Page(qry,page=page,items_per_page=perpage)
+    qry.dspagerhtml = dspager2(qry)
+    return qry
 
 def dspager2(pgr):
     p = pgr.pager('''<div class="boxlinks boxlinks_tabs">$link_previous ~4~ $link_next </div>''',
         symbol_next=' Next >> ',symbol_previous='<< Prev ', curpage_attr={'class': 'current'})
-    print p
     return p.replace('&gt;&gt;','&#187;').replace('&lt;&lt;','&#171;')
 
 def route_url(includeaction=True):
@@ -150,7 +151,6 @@ def isdemisauce_admin():
         return False
     elif c.user.id == 1:
         return True
-    print 'not demisauce admin %s' % c.user.email
     return False
 
 def tag_links(site_id=0,tag_type=None,tags=tags,cachetime=180):

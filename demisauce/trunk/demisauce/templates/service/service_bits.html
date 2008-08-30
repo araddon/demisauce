@@ -1,13 +1,18 @@
 <%def name="actions()">
-    <div class="actionbar" style="height:34px; ">
-        <div class="right boxlinks_action boxlinks"  style="margin-top:-4px;">
+    % if c.user and c.user.isadmin:
+    <div class="actionbar" style="height:35px; ">
+        <div class="boxlinks_action boxlinks"  style="margin-top:-4px;">
             <ul>
                 <li><a href="/service/edit/" id="addapp" objid="0">
-                    <img  alt="Add New App" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
-                    Add New App</a></li>
+                    <img  alt="Add New Service" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                    Add New Service</a></li>
+                <!--<li><a href="/service/appedit" id="addapp" objid="0">
+                        <img  alt="Add New App" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                        Add New App</a></li>-->
             </ul>
         </div>
     </div>
+    % endif
 </%def>
 <%def name="form(item,app,mode='admin')">
 
@@ -72,7 +77,7 @@
             </div>
             <div class="actions">
                 <input type="submit" class="primary" id="submit" value="Save &#187;">
-                &nbsp;&nbsp;<a href="/poll" id="cancelnode">cancel</a>
+                &nbsp;&nbsp;<a href="/service" id="cancelnode">cancel</a>
             </div>
         </div>
     
@@ -88,7 +93,6 @@
     <div id="hidden_app_div" style="display:none">
         ${app_form(app)}
     </div>
-</div>
 
 </%def>
 <%def name="app_form(item)">
@@ -153,7 +157,32 @@
     </tbody>
 </table>
 </%def>
+<%def name="detail_view(item)">
+<dl>
+    <dt>Name:</dt>          <dd><h3>${item.name}</h3></dd>
+    <dt>Author:</dt>        <dd>
+                                % if c.user and c.user.isadmin and c.user.site_id == item.site_id:
+                                    ${h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}
+                                % else:
+                                    ${item.owner.displayname}
+                                % endif
+                            </dd>
+    <dt>Created:</dt>          <dd>${(item.created).strftime("%b %d, %Y") or ''}</dd>
+    <dt><a href="http://www.gravatar.com/emails">Gravatar</a>:</dt>             
+                            <dd>
+                                % if person and person.hashedemail:
+                                <img alt="" src="http://www.gravatar.com/avatar/${person.hashedemail}?s=48" class="avatar avatar-48" height="48" width="48">
+                                % endif
+                            </dd>
+    <dt>Site:</dt>                  <dd>${item.site.name}</dd>
+    <dt>Site URL:</dt>            <dd>${h.link_to(item.site.base_url)}</dd>
+    <dt>Description:</dt>                  <dd>${item.description}</dd>
 
+</dl>
+    
+
+    
+</%def>
 <%def name="publicview(items)">
 <table class="dsadmin">
     <thead>

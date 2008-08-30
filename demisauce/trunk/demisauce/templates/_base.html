@@ -14,13 +14,6 @@
 </%def>
 <%def name="messages()">
 
-                <div  id="hiddenmessage" class="corner_box statusmsgboxrc" style="display:none;">
-                    <div class="corner_top"><div></div></div>
-                    <div class="corner_content">
-                        hidden message
-                    </div>
-                    <div class="corner_bottom"><div></div></div>
-                </div>
                 <script type="text/javascript">
                 $(document).ready(function(){
                    
@@ -104,7 +97,7 @@
     </div>
 </%def>
 <%def name="sidebar(*args,**kwargs)">
-        <div class="yui-b sidebar" style="background-color:#EBF4FA;border: 1px solid #BBD9EE;">
+        <div class="yui-b sidebar" style="">
 
             ${self.sidebar_top()}
 
@@ -276,7 +269,13 @@
     <link rel="stylesheet" href="/js/jquery.treeview.css" />
     <!--<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.3.0/build/assets/skins/sam/skin.css" />-->
     ${self.head_more()}
-    
+
+    <style type="text/css">
+    body,html {
+        background-colorx:#EEEEEE;
+        height:100%;
+    }
+    </style>
 </head>
 
 

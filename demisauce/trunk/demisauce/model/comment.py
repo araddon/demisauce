@@ -65,10 +65,10 @@ class Comment(ModelBase):
     clean_comment = property(get_comment)
     
     @classmethod
-    def by_site(cls,site_id=0,ct=15):
+    def by_site(cls,site_id=0):
         """Class method to get recent comments"""
         return meta.DBSession.query(Comment).filter_by(site_id=site_id
-            ).order_by(comment_table.c.created.desc()).limit(ct)
+            ).order_by(comment_table.c.created.desc())
     
     @classmethod
     def for_url(cls,site_id=None,url=''):

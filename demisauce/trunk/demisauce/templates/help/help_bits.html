@@ -59,10 +59,40 @@
         //$('#content').focus();  // this kills esc key on facebox
         $('#feedbackform').submit(function() { 
             $(this).ajaxSubmit({ target: '#ds-helpfeedback-div'}); 
-            $.ds.dsactivity({activity:'submit help feedback',custom:{good:'great',tag1:'is a tag'},category:'help'});
+            $.ds.dsactivity({activity:'submit help feedback',custom:{good:'great',tag1:'is a tag'},category:'Help'});
             return false; 
         });
     });
     </script>
+</%def>
+
+
+<%def name="helplist(tickets,truncatesize=40,urlextra='',filter='new')">
+    <table class="dsadmin">
+    <thead>
+        <tr>
+            <th>View</th>
+            <th>Date</th>
+            <th>Author</th>
+        </tr>
+    </thead>
+    <tbody>
+    <% 
+        ticketct = 1
+    %>
+    % for tkt in tickets:
+        <tr>
+            <td>${h.link_to(h.truncate(tkt.clean_content, truncatesize),h.url("/helpadmin/process/%s%s" % (str(tkt.id),urlextra)))}</td>
+            <td>${(tkt.created).strftime("%b %d, %Y %H:%m") or ''}</td>
+            
+            <td>${tkt.authorname}</td>
+        </tr>
+        <% 
+            ticketct += 1
+        %>
+    % endfor
+        </tbody>
+    </table>
+    ${tickets.dspagerhtml}
 </%def>
 

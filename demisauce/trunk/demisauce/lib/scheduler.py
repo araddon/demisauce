@@ -217,7 +217,6 @@ class Scheduler:
     
     def start(self):
         """Start the scheduler."""
-        print 'here in scheduler'
         self._run()
     
     def stop(self):

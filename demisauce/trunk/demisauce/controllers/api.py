@@ -133,8 +133,6 @@ class ApiController(BaseController):
                 (c.cmsitems[0].item_type == "folder" or \
                 c.cmsitems[0].item_type == 'root'):
                 c.cmsitems = [itemassoc.item for itemassoc in c.cmsitems[0].children]
-            for item in c.cmsitems:
-                print item.content
             
         if c.site and c.site.id:
             url = id.replace('root/help','')
@@ -247,7 +245,6 @@ class ApiController(BaseController):
         
         if id != '' and id != None:
             app,service = id.split('/')
-            #print 'app=%s, service=%s' % (app,service)
             services = model.service.Service.by_app_service(appkey=app,servicekey=service)  
             if services:
                 c.services = [services]       
@@ -292,7 +289,7 @@ class ApiController(BaseController):
             
             return render('/api/person.xml')
         else:
-            print 'person no site key %s' % (c.site)
+            log.info('person: no site key %s' % (c.site))
             return 'no site key'
     
     @requires_site
@@ -309,10 +306,7 @@ class ApiController(BaseController):
                 postvals = {}
                 for pkey in request.params:
                     postvals[pkey] = request.params[pkey]
-                if not g == None:
-                    print 'group not new %s' % g.name
                 else:
-                    print 'group is new'
                     g = group.Group(c.site.id,request.params['name'])
                 if 'authn' in request.params:
                     g.authn = request.params['authn']

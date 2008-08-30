@@ -15,7 +15,6 @@ log = logging.getLogger(__name__)
 class ViewerController(BaseController):
 
     def index(self,key=''):
-        print key
         if key != '':
             c.cmsitems = [meta.DBSession.query(Cmsitem).filter_by(key=key,site_id=c.site_id).first()]
         else:

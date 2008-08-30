@@ -6,6 +6,7 @@ from formencode.validators import *
 import formencode
 from demisauce.lib.base import *
 #import demisauce.lib.sanitize
+from demisauce.lib.helpers import dspager
 from demisauce import model
 from demisauce.model import meta, mapping, activity
 from demisauce.model.comment import *
@@ -59,7 +60,7 @@ class CommentController(BaseController):
         if id > 0:
             c.items = [meta.DBSession.query(Comment).get(id)]
         elif c.user:
-            c.items = Comment.by_site(c.user.site_id)
+            c.items = dspager(Comment.by_site(c.user.site_id))
         return render('/comment/comment.html')
     
     def googleauth(self):
@@ -310,9 +311,9 @@ class CommentController(BaseController):
                 c.items = Comment.for_url(site,request.params['url'])
                 return render('/comment/comment_js2.js')
             else:
-                print '%s not in site_url' % (url)
+                log.error('%s not in site_url' % (url))
         else:
-            print 'url not in params'
+            log.info('not in site_url' )
         
         return """document.getElementById('demisauce-comments').innerHTML = '<a href="%s/">Sorry Go to Demisauce to Comment</a>';""" % c.base_url
     

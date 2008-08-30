@@ -71,9 +71,7 @@ def find_folder_or_create(key,parentid):
 
 def updaterid(parent):
     for associtem in parent.children:
-        #print '%s%s' % (parent.rid and (parent.rid + '/') or '',associtem.item.key)
         associtem.item.rid = '%s%s' % (parent.rid and (parent.rid + '/') or '',associtem.item.key)
-        print associtem.item.rid
         updaterid(associtem.item)
 
 
@@ -117,7 +115,6 @@ class CmsController(SecureController):
     
     @rest.dispatch_on(POST="addupdate")
     def addfolder(self,id=0):
-        #print 'addfolder id=%s' % id
         c.item = Cmsitem(c.site_id, '','')
         c.item.key = ''
         c.item.item_type = 'folder'
@@ -177,14 +174,12 @@ class CmsController(SecureController):
         ids = [int(i) for i in request.POST['ids'].split(',') if i != '']
         if c.item and c.item.children and len(c.item.children) > 0:
             for cassoc in c.item.children:
-                #print 'cassoc.item.id=%s   position=%s' % (cassoc.item.id,cassoc.position)
                 pos = 0
                 for i in ids:
                     pos += 1
                     if i == cassoc.item.id:
                         cassoc.position = pos
                     
-                #print 'cassoc.item.id=%s   position=%s' % (cassoc.item.id,cassoc.position)
             c.item.save()
         else:
               return 'no parent?'
@@ -208,7 +203,6 @@ class CmsController(SecureController):
                 ).filter_by(item_type='root',site_id=c.site_id).first()
         
         s = ''
-        print 'root rid=%s' % root.rid
         updaterid(root)
         root.save()
         return ''

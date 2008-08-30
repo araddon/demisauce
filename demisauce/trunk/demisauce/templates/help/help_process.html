@@ -1,5 +1,5 @@
 <%namespace name="mns_us" file="../usersite_bits.html"/>
-<%namespace name="mns_help" file="help_bits.html"/>
+<%namespace name="helpbits" file="help_bits.html"/>
 <%inherit file="../_base2col.html"/>
 
 
@@ -162,7 +162,7 @@
     % if c.item:
         ${help_process(c.item)}
     % elif c.helptickets:
-        ${mns_us.helplist(c.helptickets,showcheck=False)}
+        ${helpbits.helplist(c.helptickets)}
     % endif
     
     

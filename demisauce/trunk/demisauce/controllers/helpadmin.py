@@ -9,6 +9,7 @@ import simplejson
 from sqlalchemy.sql import and_, select, func
 
 from demisauce.lib.base import *
+from demisauce.lib.helpers import dspager
 from demisauce.lib.filter import FilterList, Filter
 from demisauce import model
 from demisauce.model import meta, mapping
@@ -83,7 +84,6 @@ class HelpadminController(SecureController):
     def tag_help(self,id=''):
         data = {'success':False}
         if self.site and 'help_id' in request.params:
-            print 'help_id = %s' % request.params['help_id']
             h = Help.get(c.site_id,int(request.params['help_id']))
             h.tags.append(Tag(tag=str(request.params['tag']),person=c.user))
             h.save()
@@ -103,35 +103,41 @@ class HelpadminController(SecureController):
             self.filters.current().clauses['newness'] = id # filter value
         return self._filter(offset=1,limit=1)
     
-    def _filter(self,offset=0,limit=20,safilter=None):
+    def _filter(self,offset=0,limit=20):
         hf = self.filters.current()
         hf.start()
         qry = hf.finish(offset=offset,limit=limit)
-        #print str(qry)
+
         if offset != 0 and hf.count > 0 and hf.count >= hf.offset:
             c.item = qry[0]
+        elif offset == 0 and hf.count > 0: #viewlist existing
+            c.helptickets = qry
         elif hf.count <= hf.offset:
             return self.index()
         else:
             c.helptickets = qry
-            print 'count = %s' % qry.count()
-        if safilter is not None:
-            c.item = qry.filter(safilter)[0]
+        
+        self.filters.save()
+        return self._view()
+    def _view(self):
         if c.item:
             c.item.comments.add_cookies(request.cookies)
-        self.filters.save()
+        if c.helptickets:
+            c.helptickets = dspager(c.helptickets,20)
+        
         return render('/help/help_process.html')
     
     def tag(self,id=''):
-        log.info('other=%s,tag filter=%s' % (self.other,id))
-        print 'about to set tag filter'
+        #log.debug('other=%s,tag filter=%s' % (self.other,id))
         self.filters.set(HelpFilter(name='tag',clauses={'tag':id}))
         return self._filter(offset=1,limit=1)
     
     @requires_role('admin')
     @rest.dispatch_on(POST="help_process_submit")
     def process(self,id=0):
-         return self._filter(offset=1,limit=1,safilter=(Help.id==int(id)))
+        c.item = Help.get(c.site_id,id)
+        return self._view()
+        #return self._filter(offset=1,limit=1,safilter=(Help.id==int(id)))
     
     def next(self,id=0):
         # use existing filter to grab next

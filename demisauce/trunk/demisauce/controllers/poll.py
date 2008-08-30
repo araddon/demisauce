@@ -74,7 +74,7 @@ class PollController(SecureController):
             item.css = self.form_result['css']
         item.save()
         q2 = sanitize(self.form_result['question'])
-        print 'q_ids %s' % self.form_result['q_ids']
+        #print 'q_ids %s' % self.form_result['q_ids']
         for qid in [t for t in self.form_result['q_ids'].strip().split(',') if t != '']:
             q = item.get_question(int(qid))
             if 'question_type' in self.form_result:
@@ -138,12 +138,12 @@ class PollController(SecureController):
             q = poll.questions[0]
             if 'question_option' in request.params:
                 for o in request.params.getall('question_option'):
-                    print 'oo = %s' % o
+                    #print 'oo = %s' % o
                     q.add_or_update_option(o)
             if 'o_id' in request.params:
                 sort_order = 0
                 for oid in request.params.getall('o_id'):
-                    print 'oid = %s, sort_order=%s' % (oid,sort_order)
+                    #print 'oid = %s, sort_order=%s' % (oid,sort_order)
                     q.change_sort_order(oid,sort_order)
                     sort_order += 1
             poll_html(poll)

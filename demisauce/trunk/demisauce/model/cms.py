@@ -99,7 +99,6 @@ class Cmsitem(ModelBase):
 class CmsMapperExt(MapperExtension):
     """will update children count etc"""
     def before_update(self, mapper, connection, instance):
-        #print 'in before update, does this hit inserts?'
         #instance.__onupdate__()
         return EXT_PASS
     

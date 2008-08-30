@@ -17,7 +17,6 @@ def load_engines(config,engines):
     # could be a comprehension but was a bit to long
     li = []
     for eng in engines.split(','):
-        print eng
         li.append(engine_from_config(config,eng,echo=asbool(config[eng + 'echo'])))
     return li
 
@@ -43,7 +42,6 @@ def load_environment(global_conf, app_conf):
         config['pylons.g'].sa_masterengine = engine_from_config(config,
                 'sqlalchemy.master.', echo=asbool(config['sqlalchemy.master.echo']))
         config['pylons.g'].sa_readengines.append(config['pylons.g'].sa_masterengine)
-        print config['pylons.g'].sa_readengines
     else:
         #engine = engine_from_config(config, 'sqlalchemy.')
         engine = engine_from_config(config,
