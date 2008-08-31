@@ -103,20 +103,25 @@ class CommentController(BaseController):
                 item.delete()
     
     @rest.dispatch_on(POST="commentsubmit")
-    def commentform(self,slug=0):
+    def commentform(self,id=0):
+        site = Site.by_slug(str(id))
         c.source = 'js'
-        if 'source' in request.params:
-            c.source = request.params['source']
-        c.resource_id = ''
-        if 'rid' in request.params:
-            c.resource_id = request.params['rid']
-        if request.GET.has_key('url'):
-            c.goto_url =  request.GET['url']
-        else:
-            if c.user:
-                c.goto_url = c.user.url
+        if site and site.id > 0:
+            c.site_slug = site.slug
+            if 'source' in request.params:
+                c.source = request.params['source']
+            c.resource_id = ''
+            if 'rid' in request.params:
+                c.resource_id = request.params['rid']
+            if request.GET.has_key('url'):
+                c.goto_url =  request.GET['url']
             else:
-                c.goto_url = 'http://www.google.com'
+                if c.user:
+                    c.goto_url = c.user.url
+                else:
+                    c.goto_url = 'http://www.google.com'
+        else:
+            raise Exception('that site was not found')
         #c.hasheader = False
         #c.isblue = True
         return render('/comment/comment_commentform.html')
@@ -180,11 +185,12 @@ class CommentController(BaseController):
                 json = simplejson.dumps(data)
                 response.headers['Content-Type'] = 'text/json'
                 return '%s(%s)' % (request.params['jsoncallback'],json)
-            if source == 'js':
-                return render('/refresh.html')
-            else:
-                c.items = [item]
-                return render('/api/comment.html')
+            #if source == 'js':
+            #    return render('/refresh.html')
+            #else:
+            c.items = [item]
+            #c.show_form = False
+            return render('/comment/comment_nobody.html')
         else:
             #TODO panic?
             raise 'eh'

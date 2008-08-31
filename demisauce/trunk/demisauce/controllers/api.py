@@ -12,6 +12,7 @@ from demisauce.lib.base import *
 from demisauce import model
 from demisauce.model import meta, help, cms, person, \
     group, poll
+from demisauce.model.site import Site
 from demisauce.model.comment import Comment
 from demisauce.model.email import Email
 from paste.httpexceptions import HTTPException
@@ -155,6 +156,9 @@ class ApiController(BaseController):
     @requires_site
     def comment(self,format='json',id=''):
         site = request.environ['site']
+        #site2 = Site.by_slug(str(id))
+        #if site2.id != site.id and 'apikey' in request.params and request.params['apikey'] == site2.key:
+        #    site = site2 # logged in user not same as 
         c.len = 0
         
         if id != '' and id != None:
@@ -184,6 +188,7 @@ class ApiController(BaseController):
             c.len = len(c.comments)
             c.hasheader = True
             c.site_slug = site.slug
+            #raise 'eh'
             return render('/comment/comment_nobody.html')
         elif format == 'json':
             return render('/api/comment.js')

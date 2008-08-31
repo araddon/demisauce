@@ -311,7 +311,7 @@ class ServiceClient(ServiceClientBase):
         #cache.delete(cache_key)
         cacheval = cache.get(cache_key)
         if cacheval != None:
-            log.debug('cache found for = %s' % (cache_key))
+            log.info('cache found for = %s' % (cache_key))
             self.response.data = cacheval.data
             self.response.success = True
             return True

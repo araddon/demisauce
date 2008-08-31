@@ -137,16 +137,7 @@ ${items.dspagerhtml}
     <script type="text/javascript">
     $(document).ready(function(){
         $('#commentform').dshints();
-        $('#commentform').submit(function() { 
-            //alert('hello');
-            var qs = $(this).formSerialize(); 
-            var url = $.ds.defaults.base_url + '/comment/commentsubmitjsonp/${c.site.slug}?jsoncallback=?&' + qs;
-            //alert(url);
-            $.getJSON(url , {}, function(json){
-                $('#ds-commentform-div').html(json.html);
-            });
-            return false;
-        });
+        $('#ds-commentform-div #return_url').val(window.location.href);
     });
     </script>
 </%def>

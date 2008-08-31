@@ -263,13 +263,31 @@
         });
     }
     $.ds.comments = function(el, o) {
-        var options = {};
+        var options = {commentiframe:true};
         $.ds.defaults.current_url = window.location.href;
         o = o || {}; $.extend(options, $.ds.defaults, o); //Extend and copy options
         this.element = el; var self = this; //Do bindings
         $.data(this.element, "ds-comments", this);
         self.options = options;
         $.ds.prepLogon(this.element);
+        if (o.commentiframe === false){
+            $($.ds.defaults.logon_form_link).click(function(){
+                $.ds.showLogon();
+                $('#ds-commentform-div',$(self.element)).hide();
+            });
+            $($.ds.defaults.logon_form_cancel).click(function(){
+                $('#ds-commentform-div',$(self.element)).show();
+            });
+            $('#commentform').submit(function() { 
+                var qs = $(this).formSerialize(); 
+                var url = $.ds.defaults.base_url + '/comment/commentsubmitjsonp/${c.site.slug}?jsoncallback=?&' + qs;
+                $.getJSON(url , {}, function(json){
+                    $('#ds-commentform-div').html(json.html);
+                });
+                return false;
+            });
+        }
+        
     }
     
     $.fn.dsgroupac = function(options) {
