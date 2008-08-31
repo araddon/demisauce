@@ -11,9 +11,14 @@
  * @link        http://demisauce.org
  */
  
-
+// TODO, address format=xml but html contained inside gracefully
+function poll_html($resource) {
+    $ds = Demisauce::get_app();
+    $content = $ds->get_service($resource,$service='poll',$format='xml',$app='demisauce');
+    return $content[0]->poll->html;
+}
 function demisauce_html($service, $resource_id){
-    //return 'here it is';
+    $ds = Demisauce::get_app();
 }
 class DemisauceServiceBase {
     function __construct($props = array()){

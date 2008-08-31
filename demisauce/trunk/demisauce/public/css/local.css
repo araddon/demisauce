@@ -50,7 +50,7 @@ p {margin:0px 0px 0px 0px;}
 .yui-b {margin:8px 0px 0px 0px;background-color:#fff;}
 .ib {vertical-align: bottom; }
 .yui-t7 #bd {border: red 0px solid;margin:8px 0px 0px 0px;}
-#footer-wrapper {height:14em;}
+#footer-wrapper {height:14em;width:100%;}
 #ft {width:73.076em;}
 
 /* Fontology 
@@ -236,7 +236,7 @@ span.checkableselected {
     
 
 /* Footer              -----------*/
-#footer-wrapper {background-color:#EEEEEE;overflow:hidden;text-align:center;}
+#footer-wrapper {background-color:#EEEEEE;overflow:hidden;text-align:center;border-top:1px solid #ccc;}
 #ft {margin:0 auto;padding:0 3em;text-align:left;color: #9A9CA0; clear: both;}
 
 #ft a { color: #9A9CA0; text-decoration: none; }

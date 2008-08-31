@@ -1,6 +1,7 @@
 ## -*- coding: utf-8 -*-
 ## base.html
 ## This head_more is overrideable to put more into head
+<%namespace name="helpbits" file="/help/help_bits.html"/>
 <%page args="title='base',pagehelp='not'"/>
 <%
     c.attributes = {}
@@ -107,7 +108,33 @@
     <div id="ft">
         <div id="ft-content">
             % if not c.debug:
-                prod footer
+                <ul id="footer-nav">
+                    <li><a href="#">Project</a>
+                      <ul>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="http://groups.google.com/group/demisauce">Community</a></li>
+                        <li><a href="http://github.com/araddon/demisauce/tree/master">Code</a></li>
+                      </ul>
+                    </li>
+                    <li><a href="#">Features</a>
+                      <ul>
+                        <li><a href="/">Home</a></li>
+                      </ul>
+                    </li>
+                    <li><a href="#">Blogs</a>
+                      <ul>
+                        <li><a href="http://aaronspotlatch.appspot.com">Aaron</a></li>
+                      </ul>
+                    </li>
+                    <li><a href="#">Links</a>
+                      <ul>
+                        <li><a href="http://www.makotemplates.org/docs/syntax.html">Mako</a></li>
+                        <li><a href="http://www.sqlalchemy.org/docs/04/">sqlalchemy</a></li>
+                        <li><a href="http://docs.pylonshq.com/index.html">Pylons</a></li>
+                      </ul>
+                    </li>
+                    ${helpbits.feedbackbadge()}
+                </ul>
             %else:
             <ul id="footer-nav">
                 <li><a href="#">Project</a>
@@ -162,31 +189,7 @@
                     <li><a href="http://pythonpaste.org/tempita/">tempita</a></li>
                   </ul>
                 </li>
-                <style type="text/css" media="screen">
-                    li.help-feedback {height:150px;font-weight: bold;}
-                    li.help-feedback div {text-align:center;padding:9px 0px 9px 4px;}
-                    #ds-submit-idea {background-color:#C9E39C;}
-                    #ds-report-problem {background-color:#E58829;}
-                    #ds-give-feedback {background-color:#5093CD;}
-                    .feedback-smaller {background-color:#666;font-size:68%;color:#fff;font-weight:400;padding:4px;}
-                </style>
-                <li class="help-feedback" style="text-align:center;">
-                    <div id="ds-submit-idea">
-                        <a href="#" helptype="idea" rel="dshelp" category="Idea" id="facebox_show_href">Submit an Idea</a>
-                    </div>
-                    <div id="ds-report-problem">
-                        <a href="#" helptype="problem" rel="dspopup" category="Problem" id="facebox_show_href">Report a Problem</a>
-                    </div>
-                    <div id="ds-give-feedback">
-                        <a href="#" helptype="feedback" rel="dshelp" category="Feedback" id="facebox_show_href">Give Feedback</a>
-                    </div>
-                    <div class="feedback-smaller">
-                        <a href="http://www.demisauce.com/site/demisauce.org" style="color:#fff;" >View All Feedback</a>
-                    </div>
-                    <div class="feedback-smaller">
-                         <a href="http://www.demisauce.com" style="color:#fff;" >Powerd By Demisauce</a>
-                    </div>
-                </li>
+                ${helpbits.feedbackbadge()}
             </ul>
             % endif
         </div>

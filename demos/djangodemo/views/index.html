@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 
+{% load demisaucetags %}
 {% block title %}Django Demo Blog home page{% endblock %}
 
 {% block content %}
@@ -10,6 +11,7 @@
     <div class="post">
         <h1 class="title"><a href="/blog/view/{{ entry.id }}">{{ entry.title }}</a></h1>
         <p class="byline"><small>Posted on {{ entry.pub_date|date:"F d, Y" }} 
+            
             by <a href="#">admin</a> | <a href="#">Edit</a></small></p>
         <div class="entry">
             {{ entry.content }}
@@ -20,10 +22,14 @@
             <a href="#" class="comments">Comments (33)</a></p>
         {% if show_comments %}
             {% if entry.comments %}
+                
+                
+                
                 {% autoescape off %}
                 {{ entry.comments.views.summary }}
                 
                 {{ entry.phphello.views.summary }}
+                
                 {% endautoescape %}
                 
             {% else %}

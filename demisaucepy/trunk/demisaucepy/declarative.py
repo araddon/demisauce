@@ -38,6 +38,27 @@ class DuplicateMapping(Exception):
     a class or inheritied class with the same name."""
 
 
+def service_view(service,resource,format='view',app='demisauce'):
+    
+    client = ServiceClient(service=ServiceDefinition(
+        name=service,
+        format=format,
+        app_slug=app
+    ))
+    #client.extra_headers = self.extra_headers
+    try:
+        log.debug('service_view: about to fetch %s:%s' % (service,resource))
+        client.fetch_service(request=resource)
+    except Exception, e:
+        log.error('what the heck? %s' % e)
+    if client.response.success == True and (format == 'view' or format == 'html'):
+        #print response.data
+        return client.response.data
+    elif format == 'xml':
+        return client.response
+    else:
+        print client.response.message
+        return []
 
 class ServiceHandler(object):
     def __init__(self,model_instance,service,local_key='id',this_app='',extra_headers={},key_format=''):

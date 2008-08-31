@@ -18,7 +18,7 @@
                 ?>
                     
                     
-                <?php echo demisauce_html('poll','what-should-the-new-features-be'); ?>
+                
                 
 
             </div>

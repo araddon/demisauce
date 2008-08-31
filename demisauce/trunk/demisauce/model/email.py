@@ -43,7 +43,7 @@ class Email(ModelBase):
     def all(cls,site_id=0):
         """
         Gets all for this site::
-
+        
             Email.all(site_id=c.site_id)
         """
         return meta.DBSession.query(Email).filter_by(site_id=site_id)

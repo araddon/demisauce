@@ -45,9 +45,9 @@ copyright = '2008, Aaron Raddon'
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.2.0'
+version = '0.1.0'
 # The full version, including alpha/beta/rc tags.
-release = '0.2.0'
+release = '0.1.0'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -112,6 +112,9 @@ html_last_updated_fmt = '%b %d, %Y'
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
 #html_additional_pages = {}
+html_additional_pages = {
+    'lefttoc': 'lefttoc.html',
+}
 
 # If false, no module index is generated.
 #html_use_modindex = True

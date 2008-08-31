@@ -12,7 +12,7 @@ import warnings
 
 log = logging.getLogger(__name__)
 
-__version__ = '0.2.0'
+__version__ = '0.1.0'
 
 class RetrievalError(Exception):
     def __init__(self,message="There was an error retrieving this message"):
@@ -139,6 +139,7 @@ class ServiceResponse(object):
     def __init__(self,format='xml'):
         self.success = False
         self.data = None
+        self.message = ''
         self.name = 'name'
         self.format = 'xml'
         self.__xmlnode__ = None

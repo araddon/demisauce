@@ -1,3 +1,5 @@
+<script type="text/javascript" src="<?php echo $demisauce_base_url;?>/js/testrunner.js"></script>
+
 <div id="doc2" class="yui-t6">
     <div id="bd">
         <div id="yui-main">
@@ -28,10 +30,10 @@
                     test("ds.poll", function() {
                         stop();
                         jQuery('#polltry1').dspoll({getremote:'what-should-the-new-features-be',success:function(){
-                            equals( 'What should the new features be?', jQuery('#polltry1 div.ds-poll-title').html(), "Poll Title should be populated from client side get" );
+                            equals( jQuery('#polltry1 div.ds-poll-title').html(), 'What should the new features be for Demisauce?', "Poll Title should be populated from client side get" );
                             start();
                         }});
-                        equals( 'What should the new features be?', jQuery('#polltry3 div.ds-poll-title').html(), "Poll Title should be populated from server side get" );
+                        equals( jQuery('#polltry3 div.ds-poll-title').html(), 'What should the new features be for Demisauce?', "Poll Title should be populated from server side get" );
                         
                     });
                     /*
@@ -104,7 +106,8 @@
                 <a class='basic'>Poll using javascript load</a>
                 <div id="polltry1"></div>
                 <a class='basic'>Poll using server load</a>
-                <div id="polltry3"><?php echo $ds_poll_html;?></div>
+                <div id="polltry3"><?php echo poll_html('what-should-the-new-features-be');?></div>
+                
                 <a class='basic'>remotehtml comment:</a>
                 <div id="ds-comment" style="padding:8px;input">
                      <div class="ds-poll-title">remote html comment</div>

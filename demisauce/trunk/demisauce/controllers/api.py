@@ -332,36 +332,36 @@ class ApiController(BaseController):
             return 'no site key'
     
     @requires_site
-    def poll(self,format='xml',id=''):
+    def poll(self,format='xml',id='',**kw):
         site = request.environ['site']
         if site:
+            p = None
+            c.polls = None
             if id != '' and id != None:
-                id = urllib.unquote_plus(id)
-            verb = request.environ['REQUEST_METHOD'].lower()
-            if verb == 'get':
-                if id == '' or id == None:
-                    c.polls = poll.Poll.by_site(c.site.id)
-                else:
-                    p = poll.Poll.by_key(c.site.id,id)
-                    if type(p) != list:
-                        p = [p]
-                    c.polls = p
-            elif verb == 'post' or verb == 'put':
-                p = poll.Poll.get(c.site.id,id)
-                if p == None:
-                    p = poll.Poll(site_id=c.site.id,name=request.params['name'])
-                
-                if 'description' in request.params:
-                    p.description = request.params['description']
-                p.save()
-                c.polls = [p]
-            elif verb == 'delete':
-                return 'delete'
-            else:
-                return 'not implemented'
-            response.headers['Content-Type'] = 'application/xhtml+xml'
+                id = str(urllib.unquote_plus(id))
             
-            return render('/api/poll.xml')
+            if id == '' or id == None:
+                c.polls = poll.Poll.by_site(site.id)
+            else:
+                p = poll.Poll.by_key(site.id,id)
+                if type(p) != list:
+                    c.polls = [p]
+            class pollrest(RestApiMethod):
+                def get(self, **kw):
+                    return render('/api/poll.xml')
+                def post(self, **kw):
+                    raise NotImplementedError('not implemented')
+                def put(self, **kw):
+                    raise NotImplementedError('not implemented')
+                def delete(self, **kw):
+                    raise NotImplementedError('not implemented')
+            
+            if format == 'xml':
+                response.headers['Content-Type'] = 'application/xhtml+xml'
+            elif p is not None and format == 'view':
+                return '%s %s' % (p.html,p.results)
+            kw.update({'format':format})
+            return pollrest()(**kw)
         else:
             return 'no site key'
     

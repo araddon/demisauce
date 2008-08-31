@@ -1,3 +1,5 @@
+{% load demisaucetags %}
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <!--
 Design by Free CSS Templates
@@ -72,18 +74,7 @@ Released   : 20071220
 				</ul>
 			</li>
 			<li>
-				<h2>Archives</h2>
-				<ul>
-					<li><a href="#">September</a> (23)</li>
-					<li><a href="#">August</a> (31)</li>
-					<li><a href="#">July</a> (31)</li>
-					<li><a href="#">June</a> (30)</li>
-					<li><a href="#">May</a> (31)</li>
-					<li><a href="#">April</a> (30)</li>
-					<li><a href="#">March</a> (31)</li>
-					<li><a href="#">February</a> (28)</li>
-					<li><a href="#">January</a> (31)</li>
-				</ul>
+				{% dsview "poll" "what-should-the-new-features-be" %}
 			</li>
 		</ul>
 	</div>

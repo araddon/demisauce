@@ -86,9 +86,11 @@ class ModelBase(object):
     
     @classmethod
     def from_json(cls,json):
-        """Converts from a json string back to a populated object::
-        
+        """
+        Converts from a json string back to a populated object::
+            
             peep = Person.from_json(json_string)
+        
         """
         pydict = simplejson.loads(json)
         cls_def = pydict['class']

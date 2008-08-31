@@ -96,3 +96,34 @@
     ${tickets.dspagerhtml}
 </%def>
 
+<%def name="feedbackbadge()">
+    <style type="text/css" media="screen">
+        li.help-feedback {height:150px;font-weight: bold;}
+        li.help-feedback div {text-align:center;padding:9px 0px 9px 4px;}
+        #ds-submit-idea {background-color:#C9E39C;}
+        #ds-report-problem {background-color:#E58829;}
+        #ds-give-feedback {background-color:#5093CD;}
+        .feedback-smaller {background-color:#666;font-size:68%;color:#fff;font-weight:400;padding:4px;}
+    </style>
+    <li class="help-feedback" style="text-align:center;">
+        <div id="ds-submit-idea">
+            <a href="#" helptype="idea" rel="dshelp" category="Idea" id="facebox_show_href">Submit an Idea</a>
+        </div>
+        <div id="ds-report-problem">
+            <a href="#" helptype="problem" rel="dspopup" category="Problem" id="facebox_show_href">Report a Problem</a>
+        </div>
+        <div id="ds-give-feedback">
+            <a href="#" helptype="feedback" rel="dshelp" category="Feedback" id="facebox_show_href">Give Feedback</a>
+        </div>
+        <!--<div class="feedback-smaller">
+            <a href="http://demisauce.demisauce.com/help/" style="color:#fff;" >View All Feedback</a>
+        </div>-->
+        <div class="feedback-smaller">
+             <a href="http://www.demisauce.com" style="color:#fff;" >Powerd By Demisauce</a>
+        </div>
+    </li>
+
+</%def>
+
+
+
