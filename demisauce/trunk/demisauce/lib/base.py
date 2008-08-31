@@ -62,6 +62,8 @@ def get_current_user():
     user = None
     if 'user' in session and type(session['user']) == Person:
         user = session['user']
+    elif 'dsu' in request.cookies:
+        user = Person.by_unique(request.cookies['userkey'].lower())
     elif 'userkey' in request.cookies:
         user = Person.by_unique(request.cookies['userkey'].lower())
     return user

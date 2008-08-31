@@ -188,6 +188,10 @@ class Person(ModelBase):
         if self.random_salt == None: return False
         return (self.hashed_password == sha.new(self.random_salt+supplied_pwd).hexdigest())
     
+    def public_token(self):
+        """create's a token for user """
+        return sha.new(self.random_sale+str(self.id)).hexdigest()
+    
     def help_tickets(self,ct=10):
         """Returns list of help tickets i have submited"""
         from demisauce.model.help import Help

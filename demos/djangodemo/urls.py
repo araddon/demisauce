@@ -22,8 +22,8 @@ urlpatterns = patterns('',
     (r'^status/cache/$', 'djangodemo.blog.memcached_status.view'),
     (r'^test/helloworld/(.*)', 'djangodemo.blog.helloworld.show'),
     (r'^service/helloworld/(.*)', 'djangodemo.blog.helloworld.view'),
-    
-    
+    (r'^handshake/initial/(.*)', 'djangodemo.blog.handshake.initial'),
+    (r'^handshake/reply/(.*)', 'djangodemo.blog.handshake.initial'),
 
     # Uncomment the next line for to enable the admin:
     (r'^admin/(.*)', admin.site.root),

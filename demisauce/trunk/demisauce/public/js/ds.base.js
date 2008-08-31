@@ -12,6 +12,9 @@
             Demisauce mods:  namespaced it to not pollute global
         */
         parseUri : function (str) {
+            if (str == undefined){
+                str = window.location.href;
+            }
             var o   =  {
                 strictMode: false,
                 key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory"
@@ -49,6 +52,7 @@
             site_slug: 'enter your site id here' // unique id for usage, set in admin panel
         },
         prepLogon : function(el) {
+            
             $(el).append('<div id="ds-logonform-div" style="display:none;"></div> \
                 <a href="javascript:void(0);" id="ds-logon-link" >Show Logon</a> \
                 <a href="javascript:void(0);" id="ds-showinputform-link" style="display:none;">Cancel</a>');
@@ -66,7 +70,7 @@
                 
             }else{
                 o.logon_form_loaded = true;
-                var qs = 'url=' + encodeURIComponent(o.current_url);
+                var qs = 'url=' + encodeURIComponent(window.location.href);
                 $(o.logon_form_selector).html('<iframe width="100%" height="150" frameborder="0" \
                     src="' + o.base_url + '/comment/login?' + qs + '" allowtransparency="true" \
                     vspace="0" hspace="0" marginheight="0" marginwidth="0" id="ds-input-loginform" ></iframe>');
@@ -130,7 +134,6 @@
             };
         }
     });
-    
     $.fn.dsactivity = function(options) {
         var defaults = {};
         
@@ -425,6 +428,7 @@
                     }
                 })
             }
+            
             var category = 'help';
             if (self.options.showtitle) {
                 category = $(this.element).attr('category');
@@ -434,6 +438,7 @@
                 $(self.options.faceboxcontent2).append(self.feedback(category));
                 //$.ds.prepLogon($(self.options.faceboxcontent2));
             }
+            $.ds.prepLogon($('#facebox_content_holder2'));
         },
         on_close: function(el){
             

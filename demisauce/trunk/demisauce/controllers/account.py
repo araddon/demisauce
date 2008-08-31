@@ -38,6 +38,7 @@ class AccountController(BaseController):
     @rest.dispatch_on(POST="inviteusers_POST")
     def inviteusers(self,id=0):
         return render('/account/inviteusers.html')
+    
     def inviteusers_POST(self):
         """
         admin is sending out a number of invites to users
@@ -302,6 +303,31 @@ class AccountController(BaseController):
         h.add_alert("You have been signed out.")
         redirect_wsave(controller='home', action='index', id=None)
     
+    def handshake(self):
+        if 'token' in request.params and 'site_slug' in request.params:
+            # start a handshake, to figure out if we know this user.
+            site = Site.by_slug(str(request.params['site_slug']))
+            if site and site.id > 0:
+                # lookup user?  how?  
+                expire_seconds = 60*60*24*31
+                #TODO:  verify that url it came from is in site config
+                response.set_cookie('dsu', user.public_token(),path='/',
+                        expires=expire_seconds, secure=False)
+            return ''
+        elif 'usertoken' in request.params:
+            pass
+            
+        """
+        if apiuser == None and 'token' in request.params:
+            url = 'http://%s/%s?' % (request.environ['HTTP_HOST'],request.environ['PATH_INFO'])
+            return_url = urllib.urlencode({'return_url':url})
+            url = '%s?token_response=%s&%s' % ('http://demisauce.test:8001/handshake/initial',request.params['token'],return_url)
+            #urllib.urlencode({'return_url':'http://localhost:4951/account/handshake'})
+            print 'redirecting for handshake url=%s' % url
+            # http://demisauce.test:8001/handshake/initial?return_url=http%3A%2F%2Flocalhost%3A4951%2Faccount%2Fhandshake&token=yourtoken
+            #redirect_to('http://demisauce.test:8001/handshake/initial?return_url=http%3A%2F%2Flocalhost%3A4951%2Faccount%2Fhandshake&token=%s' % apiuser.hashed_email)
+            return redirect_to(url)
+        """
     
     @rest.dispatch_on(POST="account_edit")
     def edit(self):

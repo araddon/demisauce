@@ -86,8 +86,11 @@ class CommentController(BaseController):
             user = Person(site_id=1,email=email,displayname=name)
             user.authn = 'google'
             user.save()
+            log.info('creating a google user')
+            
+        expires_seconds = 60*60*24*31
         response.set_cookie('userkey', user.user_uniqueid,
-                            expires=datetime.today() + timedelta(days=31))
+                            expires=expires_seconds)
         if 'url' in request.GET:
             url = request.GET['url']
             redirect_to(str(url))

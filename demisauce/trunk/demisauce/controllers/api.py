@@ -64,6 +64,7 @@ def requires_site_slug(target):
 class ApiController(BaseController):
     def __before__(self):
         BaseController.__before__(self)
+        
         # Authentication required?
         if self.site and self.site.id > 0:
             request.environ['api.isauthenticated'] = 'true'
@@ -171,9 +172,11 @@ class ApiController(BaseController):
         elif format == 'xml':
             response.headers['Content-Type'] = 'application/xhtml+xml'
             if c.comments == []:
-                log.info('404, no comments siteid=%s, uri=%s' %(site.id,rid))
-                abort(404, 'No items found')
-            c.len = len(c.comments)
+                #log.info('404, no comments siteid=%s, uri=%s' %(site.id,rid))
+                #abort(404, 'No items found')
+                c.len = 0 # no comments is ok, right?
+            else:
+                c.len = len(c.comments)
             return render('/api/comment.xml')
         elif format == 'view':
             c.show_form = True
@@ -185,7 +188,7 @@ class ApiController(BaseController):
         elif format == 'json':
             return render('/api/comment.js')
         else:
-            raise 'not implemented'
+            raise NotImplementedError('format of type %s not supported' % format)
     
     @requires_site
     def email(self,format='html',id='',**kw):
