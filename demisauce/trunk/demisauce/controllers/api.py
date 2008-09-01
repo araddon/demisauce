@@ -28,6 +28,8 @@ class RestApiMethod(RestMethod):
                 response.headers['Content-Type'] = 'text/json'
             elif format == 'xml':
                 response.headers['Content-Type'] = 'application/xhtml+xml'
+            else: 
+                pass # html, view
         return RestMethod.__call__(self,**kwargs)
     
 

@@ -13,6 +13,10 @@ def index(request):
     rc = RequestContext(request,{
         'entry_list': entry_list,
     })
+    #cache.delete('e3bc6199e87646230dd144246318eea2') # service definition
+    #cache.delete('d3a6ac5d5c0f2ce6a9d647a08b36debd') # feedback badge html
+    #cache.delete('a9e72e94a16e5e65f9acc9b9a83ca049') # poll service
+    
     return HttpResponse(t.render(rc))
 
 def view(request,id=''):

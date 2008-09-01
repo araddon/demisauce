@@ -107,11 +107,6 @@ class ServiceHandler(object):
     
     def __getattr__(self,get_what):
         log.debug('ServiceHandler __getattr__  %s' % (get_what))
-        if self.lazy and not self.is_loaded:
-            if not self.service.isdefined:
-                log.debug('ServiceProperty.get_service:  calling service definition load %s/%s' % (self.service.app_slug,self.service.name))
-                self.service.load_definition(request_key=self.service.name)
-                self.is_loaded = True
         
         if get_what.lower() == 'model':
             if not get_what in self.__dict__:

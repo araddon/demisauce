@@ -69,6 +69,7 @@ class ServiceDefinition(object):
         self.url_format = "{base_url}/api/{format}/{service}/{key}?apikey={api_key}"
         self.data = data
         self.isdefined = False
+        self.needs_service_def = True
         self.method_url = None
         self.service_registry = None
         self.api_key = api_key
@@ -81,11 +82,12 @@ class ServiceDefinition(object):
     def clone(self):
         """Create a clone of this service definition"""
         ns = ServiceDefinition(name=self.name)
-        ns.format = self.format
+        ns.format = 'xml'
         ns.app_slug = self.app_slug
         ns.data = self.data
         ns.cache = self.cache
         ns.isdefined = self.isdefined
+        ns.needs_service_def = False
         ns.api_key = self.api_key
         ns.base_url = self.base_url
         return ns
@@ -259,23 +261,25 @@ class ServiceClient(ServiceClientBase):
         log.debug('ServiceClient init %s' % (service.name))
     
     def get_url(self,request):
-        if hasattr(self.service,'url_format') and self.service.url_format == None:
+        urlformat = ''
+        if self.service.method_url is not None and self.service.method_url != "None":
             # use service.method_url not url_format
-            return '%s/%s' % (self.service.base_url,self.service.method_url)
+            urlformat =  '{base_url}/%s' % (self.service.method_url)
         else:
-            d = {}
-            try:
-                d = {"base_url":self.service.base_url,
-                    "format":self.service.format,
-                    "service":self.service.name,
-                    "method_url":self.service.method_url,
-                    "key":request,
-                    "app_slug":self.service.app_slug,
-                    "api_key":self.service.api_key}
-            except AttributeError, e:
-                raise RetrievalError('Attribute URL problems')
-            
-            return UrlFormatter(self.service.url_format, d)
+            urlformat = self.service.url_format
+        d = {}
+        try:
+            d = {"base_url":self.service.base_url,
+                "format":self.service.format,
+                "service":self.service.name,
+                "method_url":self.service.method_url,
+                "key":request,
+                "app_slug":self.service.app_slug,
+                "api_key":self.service.api_key}
+        except AttributeError, e:
+            raise RetrievalError('Attribute URL problems')
+        
+        return UrlFormatter(urlformat, d)
     
     def connect(self,request='service',headers={}):
         self.transport.connect(request=request)
@@ -325,7 +329,13 @@ class ServiceClient(ServiceClientBase):
         #self.authorize()
         import demisaucepy.cache_setup
         from demisaucepy.cache import cache
+        
+        if not self.service.isdefined and self.service.needs_service_def == True:
+            log.debug('ServiceClient:  calling service definition load %s/%s' % (self.service.app_slug,self.service.name))
+            self.service.load_definition(request_key=request)
+        
         url = self.get_url(request=request)
+        self.response.url = url
         cache_key = self.cache_key(url=url)
         if not self.check_cache(cache_key):
             self.response = self.transport.fetch(url,data=data,extra_headers=self.extra_headers)

@@ -19,8 +19,13 @@ Released   : 20071220
     <link href="/static/default.css" rel="stylesheet" type="text/css" media="screen" />
     
     <script type="text/javascript" src="{{demisauce_url}}/js/jquery-1.2.6.pack.js"></script>
+    <script type='text/javascript' src='{{demisauce_url}}/js/jquery.dimensions.js'></script>
+    <script type="text/javascript" src="{{demisauce_url}}/js/ui.mouse.js"></script>
     <script type="text/javascript" src="{{demisauce_url}}/js/ds.base.js"></script>
     <script type="text/javascript" src="{{demisauce_url}}/js/jquery.form.js"></script>
+    <script type="text/javascript" src="{{demisauce_url}}/js/facebox.js"></script>
+    <script type="text/javascript" src="{{demisauce_url}}/js/ui.draggable.js"></script>
+    <link rel="stylesheet" href="{{demisauce_url}}/css/ds.widgets.css" />
     <script type="text/javascript" >
         jQuery(document).ready(function($) {
             $.ds.defaults.site_slug = 'djangodemo';
@@ -64,6 +69,7 @@ Released   : 20071220
 		<ul>
 			<li>
 				<h2>Categories</h2>
+				
 				<ul>
 					<li><a href="#">Aliquam libero</a></li>
 					<li><a href="#">Consectetuer adipiscing elit</a></li>
@@ -81,8 +87,12 @@ Released   : 20071220
 	<!-- end sidebar -->
 </div>
 <!-- end page -->
-<div id="footer">
-	<p>&copy;2007 All Rights Reserved. &nbsp;&bull;&nbsp; Design by <a href="http://www.freecsstemplates.org/">Free CSS Templates</a> &nbsp;&bull;&nbsp; Icons by <a href="http://www.famfamfam.com/">FAMFAMFAM</a>.</p>
+<div id="footer" style="height:180px">
+	<p style="width:65%;float:left;">&copy;2007 All Rights Reserved. &nbsp;&bull;&nbsp; Design by 
+	    <a href="http://www.freecsstemplates.org/">Free CSS Templates</a> 
+	    &nbsp;&bull;&nbsp; Icons by <a href="http://www.famfamfam.com/">FAMFAMFAM</a>.
+	</p>
+	<div style="width:200px;float:left; margin-top:15px;">{% dsview "feedback" "badge" %}</div>
 </div>
 </body>
 </html>

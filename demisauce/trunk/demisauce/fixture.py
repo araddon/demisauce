@@ -133,7 +133,6 @@ service = '''
             "app_id": "1",
             "owner_id": "1",
             "name": "Poll Html Service", 
-            "method_url": "pollpublic", 
             "key": "poll",
             "views": "",
             "description": "This is the publicly hosted html for polls"
@@ -142,7 +141,6 @@ service = '''
             "app_id": "1",
             "owner_id": "1",
             "name": "Comment Html Service", 
-            "method_url": "comment", 
             "key": "comment",
             "views": "",
             "description": "Comment html and form "
@@ -169,7 +167,7 @@ service = '''
             "app_id": "1",
             "owner_id": "1",
             "name": "Help/Idea/Feedback Submission widget.", 
-            "method_url": "help/feedback_service", 
+            "method_url": "help/feedback_service/{request}", 
             "key": "feedback",
             "views": "badge,publiclist,adminrecent,adminfiltered",
             "description": "An Idea, Problem, Feedback set of services."

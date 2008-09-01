@@ -167,16 +167,11 @@
                                     ${item.owner.displayname}
                                 % endif
                             </dd>
-    <dt>Created:</dt>          <dd>${(item.created).strftime("%b %d, %Y") or ''}</dd>
-    <dt><a href="http://www.gravatar.com/emails">Gravatar</a>:</dt>             
-                            <dd>
-                                % if person and person.hashedemail:
-                                <img alt="" src="http://www.gravatar.com/avatar/${person.hashedemail}?s=48" class="avatar avatar-48" height="48" width="48">
-                                % endif
-                            </dd>
-    <dt>Site:</dt>                  <dd>${item.site.name}</dd>
-    <dt>Site URL:</dt>            <dd>${h.link_to(item.site.base_url)}</dd>
-    <dt>Description:</dt>                  <dd>${item.description}</dd>
+    <dt>Created:</dt>       <dd>${(item.created).strftime("%b %d, %Y") or ''}</dd>
+    <dt>Site:</dt>          <dd>${item.site.name}</dd>
+    <dt>Site URL:</dt>      <dd>${item.site.base_url}</dd>
+    <dt>Service URL:</dt>   <dd>${item.method_url}</dd>
+    <dt>Description:</dt>   <dd>${item.description}</dd>
 
 </dl>
     

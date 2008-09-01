@@ -39,6 +39,9 @@ class HelpController(BaseController):
         #response.headers['Content-Type'] = 'text/json'
         return '[%s]' % (json)
     
+    def feedback_service(self,id=None):
+        return render('/help/help_badge.html')
+    
     def ratearticle(self,id=''):
         site = Site.by_slug(str(id))
         data = {'success':False}

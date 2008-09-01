@@ -18,7 +18,7 @@ class Service extends MY_Controller {
     }
     function helloworld($name='World')
     {
-        print 'This is the Hello '.$name.' From php';
+        print 'This is the Hello '.$name.' From php.  It is showing in another app hopefully!';
     }
 }
 
