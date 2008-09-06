@@ -253,6 +253,7 @@ class XmlRpcServiceTransport(ServiceTransportBase):
                                            GAEXMLRPCTransport())
         else:
             rpc_server = xmlrpclib.ServerProxy(url)
+        
         t = tuple([s for s in 'x'.split(',')])
         response.data = getattr(rpc_server,'metaWeblog.getRecentPosts')(t)
         response.format = 'xmlrpc'
