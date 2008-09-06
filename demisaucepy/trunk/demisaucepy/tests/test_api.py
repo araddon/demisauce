@@ -1,10 +1,12 @@
 """
 This is the base content item
 """
+import logging
 from demisaucepy.tests import *
 from demisaucepy import demisauce_ws_get
 from demisaucepy.models import RemoteService
 
+log = logging.getLogger(__name__)
 
 class TestApi(TestDSBase):
     def test_emailget(self):
@@ -37,3 +39,30 @@ class TestApi(TestDSBase):
         assert item.data.find('Demisauce Server') >= 0
         
     
+    def test_xmlproc(self):
+        """
+        Test via xmlrpc
+        """
+        from demisaucepy import cfg
+        from demisaucepy.cache import cache
+        from demisaucepy import demisauce_ws, hash_email, \
+            ServiceDefinition, ServiceClient, RetrievalError, \
+            UrlFormatter
+        #from google.appengine.api import urlfetch
+        
+        sd = ServiceDefinition(
+                name='wordpress',
+                app_slug='wordpress'
+            )
+        sd.isdefined = False
+        sd.method_url = None
+        #.service_registry = None
+        #self.api_key = api_key
+        sd.base_url = "http://192.168.125.133/blog/xmlrpc.php"
+        client = ServiceClient(service=sd)
+        #client.extra_headers = self.extra_headers
+        response = client.fetch_service(request="wp.getPages",data={})
+        assert client.service.format == 'xmlrpc'
+        
+        assert response.model[0].wp_slug == 'demisauce-official-introduction'
+

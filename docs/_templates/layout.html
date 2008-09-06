@@ -163,6 +163,10 @@
         <div class="bodywrapper">
       {%- endif %}
           <div class="body">
+              {% if current_page_name == 'index' %}
+                HELLO!
+              {% endif %}
+              
             {% block body %}{% endblock %}
           </div>
       {%- if builder != 'htmlhelp' %}

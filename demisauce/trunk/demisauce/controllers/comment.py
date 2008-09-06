@@ -96,6 +96,7 @@ class CommentController(BaseController):
             redirect_to(str(url))
         return render('/comment/comment_login.html')
     
+    @requires_role('admin')
     def delete(self,id=0):
         if c.user and c.user.isadmin and id > 0:
             item = Comment.get(c.user.site_id,id)
@@ -108,6 +109,7 @@ class CommentController(BaseController):
         c.source = 'js'
         if site and site.id > 0:
             c.site_slug = site.slug
+            c.site = site
             if 'source' in request.params:
                 c.source = request.params['source']
             c.resource_id = ''
@@ -134,6 +136,10 @@ class CommentController(BaseController):
             item = Comment(site_id=site.id)
             if c.user:
                 item.set_user_info(c.user)
+                a = activity.Activity(site_id=c.user.site_id,person_id=c.user.id,activity='Commenting')
+                #a.ref_url = 'comment url'
+                a.category = 'comment'
+                a.save()
             else:
                 item.authorname = sanitize(self.form_result['authorname'])
                 item.blog = sanitize(self.form_result['blog'])

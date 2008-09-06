@@ -416,7 +416,9 @@
                 });
             }
             jQuery.facebox('');
-            $('#facebox').draggable();
+            if (typeof $.fn.draggable != 'undefined'){
+                $('#facebox').draggable();
+            }
             
             $(document).bind('close.facebox', function() { 
                 self.on_close();
@@ -446,7 +448,12 @@
                     }
                 })
             }
-            
+            // convert images to absolute
+            $('img',$('#facebox')).each(function (){
+                result = $.ds.parseUri(this.src);
+                url = $.ds.defaults.base_url + result.relative;
+                this.src = url;
+            });
             var category = 'help';
             if (self.options.showtitle) {
                 category = $(this.element).attr('category');

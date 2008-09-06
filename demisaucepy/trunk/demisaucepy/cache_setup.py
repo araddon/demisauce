@@ -12,6 +12,7 @@ def load_cache():
             # this is pretty definitive not like the other's below
             # so we do it first
             cachemodule.cache = GaeCache()
+            cachemodule.isgae = True
             log.debug('using Google App Engine Cache')
             return
     except ImportError:

@@ -47,7 +47,7 @@ def service_view(service,resource,format='view',app='demisauce'):
     ))
     #client.extra_headers = self.extra_headers
     try:
-        log.debug('service_view: about to fetch %s:%s' % (service,resource))
+        log.debug('service_view: about to fetch %s:%s  format=%s' % (service,resource,format))
         client.fetch_service(request=resource)
     except Exception, e:
         log.error('what the heck? %s' % e)
@@ -56,6 +56,8 @@ def service_view(service,resource,format='view',app='demisauce'):
         return client.response.data
     elif format == 'xml':
         return client.response
+    elif format == 'xmlrpc':
+        print client.response.data
     else:
         print client.response.message
         return []
@@ -77,15 +79,16 @@ class ServiceHandler(object):
         self.service.format = format
         client = ServiceClient(service=self.service)
         client.extra_headers = self.extra_headers
+        log.debug('about to fetch %s' % self.key())
+        
         try:
-            log.debug('about to fetch %s' % self.key())
             response = client.fetch_service(request=self.key())
         except Exception, e:
             log.error('what the heck? %s' % e)
-        if response.success == True and self.service.format == 'view':
+        if response and response.success == True and self.service.format == 'view':
             #print response.data
             return response.data
-        elif self.service.format == 'xml':
+        elif response and self.service.format == 'xml':
             return response
         else:
             print response.message

@@ -39,18 +39,28 @@ li{list-style:none;margin:0;}
 */
 body {text-align: center; background-color:; ; margin:0px;	padding:0px;}
 body,html {background-colorx:#EEEEEE;height:100%;}
-#page-wrapper {height:auto !important;margin:0 auto -14em;min-height:100%;clear:both;}
+#page-wrapper {clearxx:both;
+  min-height: 100%;
+  height: auto !important;
+  height: 100%;
+  margin:0 auto -14em;
+}
+
 #hd {height:65px;padding:min-width: 950px;background:#000;}
 #mainnav {height:30px;padding:min-width: 950px;background:#000;}
 #bd #yui-main .yui-b {min-heightx:600px;padding:0px 4px 4px 4px;}
-#doc2 {min-height:100%;height:100%;heightx:auto !important;margin:0 auto 14em;}
-#bd {background-colorxx:#fff;min-height:100%;height:100%;}
-#bd .sidebar {background:;min-height:100%;height:100%;;}
+#doc2 {min-heightx:100%;heightx:100%;heightx:auto !important;margin:0 auto 14em;}
+#bd {background-colorxx:#fff;min-heightx:100%;heightx:100%;}
+#bd .sidebar {background:;min-heightx:100%;heightx:100%;;}
 p {margin:0px 0px 0px 0px;}
 .yui-b {margin:8px 0px 0px 0px;background-color:#fff;}
 .ib {vertical-align: bottom; }
 .yui-t7 #bd {border: red 0px solid;margin:8px 0px 0px 0px;}
-#footer-wrapper {height:14em;width:100%;}
+#footer-wrapper {
+  height:14em;
+  width:100%;
+}
+
 #ft {width:73.076em;}
 
 /* Fontology 

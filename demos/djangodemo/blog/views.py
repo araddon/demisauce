@@ -16,21 +16,17 @@ def index(request):
     #cache.delete('e3bc6199e87646230dd144246318eea2') # service definition
     #cache.delete('d3a6ac5d5c0f2ce6a9d647a08b36debd') # feedback badge html
     #cache.delete('a9e72e94a16e5e65f9acc9b9a83ca049') # poll service
-    
+    #cache.delete('0ebe41b686e32db935e18b92e7ea9ee3')  #phphelloworld service
+    #log.debug(dir(request.user))
     return HttpResponse(t.render(rc))
 
 def view(request,id=''):
     entry_list = [Entry.objects.get(id=id)]
-    #cache.add('hello_aaron',10)
-    #temp = cache.get('hello_aaron')
-    #print 'cache val = %s' % (temp)
     
-    
-    #Yuck!  TODO: fix this to something more elegant. 
+    #for passing cookie header info
     Entry.comments.add_request(request.REQUEST)
-    for entry in entry_list:
-        entry.comments.add_cookies(request.COOKIES)
-        #print entry.comments.views.summary
+    #for entry in entry_list:
+    #    log.debug(dir(entry))
     temp ="""
     for entry in entry_list:
         if entry.comments.model:

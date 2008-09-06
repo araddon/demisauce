@@ -122,6 +122,13 @@ app = '''
             "slug": "phpdemo",
             "base_url": "http://demisauce.test", 
             "authn": "demisauce"
+        },{
+            "site_id": "1",
+            "owner_id": "1",
+            "name": "wordpress", 
+            "slug": "wordpress",
+            "base_url": "http://192.168.125.133/blog/xmlrpc.php", 
+            "authn": "demisauce"
         }]
 }'''
 service = '''
@@ -171,6 +178,16 @@ service = '''
             "key": "feedback",
             "views": "badge,publiclist,adminrecent,adminfiltered",
             "description": "An Idea, Problem, Feedback set of services."
+        },{
+            "site_id": "1",
+            "app_id": "5",
+            "owner_id": "4",
+            "name": "Wordpress content service", 
+            "method_url": "blog/xmlrpc.php", 
+            "key": "wordpress",
+            "format": "xmlrpc",
+            "views": "",
+            "description": "Wordpress CMS extraction service"
         }]
 }'''
 email = '''

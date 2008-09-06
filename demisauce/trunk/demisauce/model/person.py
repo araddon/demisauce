@@ -190,7 +190,7 @@ class Person(ModelBase):
     
     def public_token(self):
         """create's a token for user """
-        return sha.new(self.random_sale+str(self.id)).hexdigest()
+        return sha.new(self.random_salt+str(self.id)).hexdigest()
     
     def help_tickets(self,ct=10):
         """Returns list of help tickets i have submited"""

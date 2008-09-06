@@ -17,6 +17,7 @@ except ImportError:
     pass
 
 cache = None
+isgae = False
 
 log = logging.getLogger(__name__)
 
@@ -116,14 +117,14 @@ class GaeCache(object):
     """
     def get(self, key, default=None):
         val = memcache.get(key)
-        if val == none and default is not None:
+        if val == None and default is not None:
             return default
         else:
             return val
         
     
-    def set(self, key, value, timeout=None):
-        memcache.add(key=key, value=value, time=timeout)
+    def set(self, key, value, timeout=0):
+        return  memcache.add(key, value, timeout)
     
     def delete(self, key):
         return memcache.delete(key)

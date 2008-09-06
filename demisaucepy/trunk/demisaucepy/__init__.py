@@ -4,11 +4,12 @@ import string
 import openanything
 import datetime
 from xmlnode import XMLNode
-from demisaucepy import cfg, logger
+from demisaucepy import cfg, logger, xmlrpcreflector
 
 import demisaucepy.cache_setup
 import hashlib
 import warnings
+import xmlrpclib
 
 log = logging.getLogger(__name__)
 
@@ -116,6 +117,7 @@ class ServiceDefinition(object):
         #client.authorize()
         response = client.fetch_service(request=('%s/%s' % (self.app_slug, self.name)))
         # setup more service definition
+        #log.debug('after service load %s, %s' % (self.app_slug, self.name))
         model = response.model
         self.isdefined = True
         if model and model.base_url:
@@ -124,10 +126,12 @@ class ServiceDefinition(object):
             log.debug('setting base_url to%s for%s %s ' % (self.base_url, self.app_slug, self.name))
             if hasattr(model,'method_url') and model.method_url != 'None':
                 self.method_url = model.method_url
-            if model.url_format and model.url_format != 'None':
+            if model.url_format and model.url_format != 'None' and hasattr(model,'url_format') :
                 self.url_format = model.url_format
             else:
                 self.url_format = None
+            if hasattr(model,'format') and model.format != None:
+                self.format = model.format
             
         else:
             log.debug('no base url on service definition get')
@@ -141,6 +145,7 @@ class ServiceResponse(object):
     def __init__(self,format='xml'):
         self.success = False
         self.data = None
+        self.xmlrpc = None
         self.message = ''
         self.name = 'name'
         self.format = 'xml'
@@ -162,7 +167,9 @@ class ServiceResponse(object):
     xmlnode = property(get_xmlnode)
     
     def getmodel(self):
-        if self.__xmlnode__ == None and self.data != None:
+        if self.format == 'xmlrpc':
+            return self.xmlrpc
+        elif self.__xmlnode__ == None and self.data != None:
             # probably need to verify we can parse this?
             self.__xmlnode__ = XMLNode(self.data)
             if self.__xmlnode__:
@@ -181,6 +188,7 @@ class ServiceResponse(object):
     
     model = property(getmodel)
 
+
 class ServiceTransportBase(object):
     def __init__(self,service=None):
         self.service = service
@@ -194,6 +202,64 @@ class ServiceTransportBase(object):
 class GaeServiceTransport(ServiceTransportBase):
     def fetch(self):
         raise NotImplementedError
+        
+
+class GAEXMLRPCTransport(object):
+    """Handles an HTTP transaction to an XML-RPC server.
+    From:   http://brizzled.clapper.org/id/80
+    """
+    def __init__(self):
+        pass
+    
+    def request(self, host, handler, request_body, verbose=0):
+        from google.appengine.api import urlfetch
+        result = None
+        url = 'http://%s%s' % (host, handler)
+        try:
+            response = urlfetch.fetch(url,
+                                      payload=request_body,
+                                      method=urlfetch.POST,
+                                      headers={'Content-Type': 'text/xml'})
+        except:
+            msg = 'Failed to fetch %s' % url
+            logging.error(msg)
+            raise xmlrpclib.ProtocolError(host + handler, 500, msg, {})
+        
+        if response.status_code != 200:
+            logging.error('%s returned status code %s' %
+                          (url, response.status_code))
+            raise xmlrpclib.ProtocolError(host + handler,
+                                          response.status_code,
+                                          "",
+                                          response.headers)
+        else:
+            result = self.__parse_response(response.content)
+        
+        return result
+    
+    def __parse_response(self, response_body):
+        p, u = xmlrpclib.getparser(use_datetime=False)
+        p.feed(response_body)
+        return u.close()
+    
+
+class XmlRpcServiceTransport(ServiceTransportBase):
+    #http://svn.python.org/projects/python/trunk/Lib/xmlrpclib.py
+    def fetch(self,url,data={},extra_headers={},response=None):
+        print 'in xmlrpcservicetransport: %s' % url
+        response = response or ServiceResponse()
+        if openanything.ISGAE == True:
+            rpc_server = xmlrpclib.ServerProxy(url,
+                                           GAEXMLRPCTransport())
+        else:
+            rpc_server = xmlrpclib.ServerProxy(url)
+        t = tuple([s for s in 'x'.split(',')])
+        response.data = getattr(rpc_server,'metaWeblog.getRecentPosts')(t)
+        response.format = 'xmlrpc'
+        response.xmlrpc = xmlrpcreflector.parse_result(response.data)
+        logging.debug('request successful?')
+        return response
+        
 
 class HttpServiceTransport(ServiceTransportBase):
     def connect(self):
@@ -273,7 +339,8 @@ class ServiceClient(ServiceClientBase):
                 "format":self.service.format,
                 "service":self.service.name,
                 "method_url":self.service.method_url,
-                "key":request,
+                "key":request, 
+                "request":request,
                 "app_slug":self.service.app_slug,
                 "api_key":self.service.api_key}
         except AttributeError, e:
@@ -334,19 +401,26 @@ class ServiceClient(ServiceClientBase):
             log.debug('ServiceClient:  calling service definition load %s/%s' % (self.service.app_slug,self.service.name))
             self.service.load_definition(request_key=request)
         
+        if self.service.format == 'xmlrpc':
+            print 'about to create xmrpcservicetransport'
+            self.transport = XmlRpcServiceTransport()
+            self.transport.service = self.service
         url = self.get_url(request=request)
         self.response.url = url
         cache_key = self.cache_key(url=url)
+        log.debug('about to check cache for url=%s' % url)
+        print 'url = %s' % url
         if not self.check_cache(cache_key):
             self.response = self.transport.fetch(url,data=data,extra_headers=self.extra_headers)
             if self.response.success:
-                log.debug('success for service %s' % (self.service.name))
+                log.debug('success for service %s, %s' % (self.service.name,cache))
                 #print self.response.data
                 if cache is not None and self.use_cache:
                     cache.set(cache_key,self.response)
             else:
                 log.error('service error on fetch')
                 print self.response.data
+        log.debug('returning from fetch %s' % (self.response))
         return self.response
     
 
@@ -380,9 +454,6 @@ def demisauce_ws(method,resource_id,verb='get',data={},cfgl={},
     )
     client = ServiceClient(service=service)
     client.use_cache = cache
-    if not service.isdefined:
-        log.debug('demisauce_ws.load_definition  %s/%s' % (service.app_slug,service.name))
-        service.load_definition(request_key=service.name)
     client.extra_headers = extra_headers
     response = client.fetch_service(request=resource_id,data=data)
     return response

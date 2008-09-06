@@ -4,11 +4,14 @@ from django.contrib import admin
 from demisaucepy.django_helper import ModelAggregatorMeta
 from demisaucepy.declarative import has_a, has_many, \
     AggregateView
+from django.contrib.auth.models import User
+
 
 
 class Entry(models.Model):
     __metaclass__ = ModelAggregatorMeta
     title = models.CharField(max_length=255)
+    user = models.ForeignKey(User, unique=True)
     pub_date = models.DateTimeField('date published')
     content = models.TextField()
     comments = has_many(name='comment',lazy=True,local_key='id' )
