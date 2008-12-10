@@ -56,6 +56,8 @@ service_table = Table("service", meta.metadata,
         Column("app_id", Integer, ForeignKey('app.id')),
         Column("owner_id", Integer, ForeignKey('person.id')),
         Column("created", DateTime,default=datetime.now()),
+        Column("cache_time", Integer, default=900),
+        Column("list_public", Boolean, default=False),
         Column("format", DBString(30)),
         Column("name", DBString(255)),
         Column("method_url", DBString(255)),
@@ -76,7 +78,7 @@ class Service(ModelBase):
     :description:  description of service
     :relative_url:  /comment/commentform - combined with base
         app url will allow enough destination info
-    :cache:   cache time, maybe which cache to use, per person, role?
+    :cache_time:   cache time
     :authz:  public, admin, logged on, ?  role based(??)
     :params:  which parameters need to get passed and how, format?
     :views: [list]{format: json/xml/googlegadget/html}

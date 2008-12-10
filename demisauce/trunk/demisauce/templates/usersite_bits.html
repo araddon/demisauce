@@ -92,7 +92,7 @@
     <div id="profilesettings">
         <div class="actionbar">
             <span class="h3">Profile Settings</span>
-            % if person.id == c.user.id and showedit:
+            % if c.user is not None and person.id == c.user.id and showedit:
                 <div class="boxlinks right"  style="margin-top:-27px;margin-right:-13px;height:25px;">
                     <a id="profile${person.id}" href="/account/edit">Edit</a>
                 </div>
@@ -112,24 +112,28 @@
         <div class="clear"></div>
         <dl>
             <dt>Name:</dt>             <dd>${(person and person.displayname) or ''}</dd>
-            <dt>Email:</dt>                 <dd>${(person and person.email) or '' }</dd>
+
             <dt>Site:</dt>                  <dd>${h.link_to((person.site and person.site.name) or '','/site/view/%s' % person.site.id)}</dd>
             <dt>My Website:</dt>            <dd>${h.link_to_unless(person.url == None, person.url ,h.url('%s' % str(person.url)))}</dd>
             <dt>Member Since:</dt>          <dd>${(person and person.created).strftime("%b %d, %Y") or ''}</dd>
             <dt>Is Admin:</dt>             <dd>${(person and person.isadmin) or 'False'}</dd>
-            % if c.user and c.user.issysadmin:
+            % if c.user is not None and c.user.issysadmin:
             <dt>Is SysAdmin:</dt>          <dd>${(person and person.issysadmin) or 'False'}</dd>
             % endif
-            % if c.user and ((c.user.site_id == person.site_id) or (c.user.issysadmin)):
+            % if c.user is not None and ((c.user.site_id == person.site_id) or (c.user.issysadmin)):
             <dt>AuthN:</dt>          <dd>${(person and person.authn) or ''}</dd>
             <dt>Xml WS:</dt>          <dd><a href="/api/xml/person/${(c.person and c.person.hashedemail) or ''}">View XML</a></dd>
             % endif
+            % if c.user is not None and c.user.site_id == person.site_id:
+            <dt>Email:</dt>                 <dd>${(person and person.email) or '' }</dd>
             <dt><a href="http://www.gravatar.com/emails">Gravatar</a>:</dt>             
                                             <dd>
                                             % if person and person.hashedemail:
                                             <img alt="" src="http://www.gravatar.com/avatar/${person.hashedemail}?s=48" class="avatar avatar-48" height="48" width="48">
                                             % endif
                                             </dd>
+                                            
+            % endif
 
         </dl>
         <div class="clear"></div>

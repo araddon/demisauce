@@ -11,15 +11,14 @@
 <div class="yui-g">
     <div class="yui-u first">
         <div class="box boxc">
-
             % if c.person:
                 ${mns_us.personview(c.person)}
             % endif
-
         </div>
+        % if c.user is not None and c.user.site_id == person.site_id:
         <div class="box box2">
             <h3 style="">Groups</h3>
-            % if c.person.id == c.user.id:
+            % if c.user is not None and c.person.id == c.user.id:
                 <div class="boxlinks right"  style="margin-top:-27px;margin-right:-13px;height:25px;">
                     <a id="group_popup_admin" href="javascript:void(0);">Add Group</a>
                 </div>
@@ -40,8 +39,8 @@
 
             % endif
         </div>
+        % endif
     </div>
-
 
 
     <div class="yui-u">
@@ -49,6 +48,7 @@
             <h3 style="">Comments</h3>
             ${mns_us.commentlist(c.comments,c.person)}
         </div>
+        % if c.user is not None and (c.user.site_id == c.person.site_id):
         <div class="box box2">
             <h3 style="">Help/Feedback/Support Tickets</h3>
             ${mns_us.helplist(c.helptickets)}
@@ -72,7 +72,7 @@
                 no person?
             %endif
         </div>
-
+        % endif
     </div>
 </div>
 

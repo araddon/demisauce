@@ -71,7 +71,7 @@ ${h.form(h.url(action='edit'), method='post', id="site_form")}
         </div>
         <div class="yui-u">
             <div>
-                ${h.link_to('view users', '/api/xml/person/')}
+                ${h.link_to('view users', '/site/view/%s' % (item and item.id) or '0')}
 
                 <div class="box2" style="margin:10px 0px;">
                     ${h.remote_html('root/help/site/edit')}

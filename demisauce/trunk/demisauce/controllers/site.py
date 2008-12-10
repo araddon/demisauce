@@ -23,23 +23,26 @@ class SiteValidation(formencode.Schema):
     email = formencode.All(validators.Email(resolve_domain=False),
                            validators.String(not_empty=True))
 
-class SiteController(NeedsadminController):
+class SiteController(BaseController):
     
     def index(self):
         return self.view(c.user.site_id)
     
     def view(self,id = 0):
-        if id > 0 and c.user.issysadmin:
+        if id > 0 and (c.user is not None) and c.user.issysadmin:
             c.item = Site.saget(id)
-            
         else:
-            c.item = Site.get(-1,c.user.site_id)
+            c.item = Site.get(-1,id)
+            if not c.item.public:
+                c.item = None
         return render('/site/site.html')
     
+    @requires_role('admin')
     def cmntconfig(self):
         c.item = Site.get(-1,c.user.site_id)
         return render('/site/comment.html')
     
+    @requires_role('admin')
     def help(self,id = 0):
         if id > 0:
             c.item = Site.get(-1,id)
@@ -48,6 +51,7 @@ class SiteController(NeedsadminController):
             c.item = Site.get(-1,c.user.site_id)
         return render('/help/help.html')
     
+    @requires_role('admin')
     @rest.dispatch_on(POST="edit_POST")
     def edit(self,id = 0):
         id = int(id)
@@ -58,6 +62,7 @@ class SiteController(NeedsadminController):
         c.base_url = config['demisauce.url']
         return render('/site/site_edit.html')
     
+    @requires_role('admin')
     @validate(schema=SiteValidation(), form='edit')
     def edit_POST(self,id = 0):
         """

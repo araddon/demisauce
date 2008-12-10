@@ -18,13 +18,12 @@
 
     <br />
     ${h.form(h.url(action='edit'),  class_="", method='post', id="service_form")}
-        <input type="hidden" id="app_id" name="app_id" value="${(item and item.id) or '0'}">
         
         <div class="base_form main_form" id="FormWrapper">
             <div class="yui-gc" >
                 <div class="yui-u first">
                     <div>
-                        <input type="hidden" id="objectid" name="objectid" value="item and item.id) or '0'}">
+                        <input type="hidden" id="service_id" name="service_id" value="${(item and item.id) or '0'}">
                         <h1>Service Add/Edit</h1>
                         <strong>Bold</strong> fields are required.
                         <div class="required">
@@ -48,24 +47,31 @@
                         </div>
                         <div class="optional">
                             <label for="app">app:</label>
-                            ${h.select("app", c.app_list[0][0],c.app_list )} <a href="javascript:void(0);" id="add_new_app" objid="0">Add New App</a>
+                            ${h.select("app", ((item and item.app_id) or c.app_list[0][0]),c.app_list, id='app')} <a href="javascript:void(0);" id="add_new_app" objid="0">Add New App</a>
+                        </div>
+                        <div class="required">
+                            <label for="format">Format</label>
+                            ${h.text_field('format', value=(item and item.format) or '', size=40)}
+                        </div>
+                        <div class="optional">
+                            <label for="method_url">Method URL</label>
+                            ${h.text_field('method_url', value=(item and item.method_url) or '', size=160)}
                         </div>
                     </div>
                 </div>
                 <div class="yui-u">
                     <div class="tiny_form">
-                        % if item:
-                            ${h.link_to('view xml', '/api/xml/service/%s' % (item and item.key) or '')}
+                        % if item and item.id > 0:
+                            ${h.link_to('view xml', '/api/xml/service/%s/%s' % (((item and item.app) and item.app.slug) or 'demisauce',(item and item.key) or ''))}
                             <br />
                             ${h.link_to('view html', h.url(controller="services",action="view", id=item.id))}
                         % endif
                         
-
                         <div class="optional">
                             <fieldset> 
-                                <legend>Auth Method?</legend>
-                                ${h.radio_button('authn', '0',checked=(app and app.authn == 0))} demisauce <br />
-                                ${h.radio_button('authn', '1',checked=(app and app.authn == 1))} oauth <br />
+                                <legend>List In Public List?</legend>
+                                ${h.radio_button('list_public', '1',checked=(item and item.list_public == 1))} Yes <br />
+                                ${h.radio_button('list_public', '0',checked=(item and item.list_public == 0))} No <br />
                             </fieldset> 
                         </div>
                         <div class="box2" style="margin:10px 0px;">
@@ -86,12 +92,30 @@
         $(document).ready(function(){
             $('#service_form').slugeditor({slugfrom: '#name'});
             $('#add_new_app').click(function(){
-                jQuery.facebox($('#hidden_app_div').html());
+                var app_form = $('#hidden_app_div').html();
+                $('#app_form').attr('id','old_app_form');
+                jQuery.facebox(app_form);
+                $('#app_form').dshints();
+                $('#app_form').submit(function() { 
+                    var app_name = $('#app_form #app_name').val();
+                    $('#app_form').ajaxSubmit({success: function(responseText, statusText)  {
+                        if (statusText == "success") {
+                            newid = responseText;
+                            $('#service_form #app').append("<option value=\"" + newid + "\">"+ app_name + "</option>");
+                            //alert(responseText + app_name);
+                            $('#facebox .close').trigger('click');
+                            $('#old_app_form').attr('id','app_form');
+                        } else {
+                            alert(statusText)
+                        }
+                    }});
+                    return false; 
+                });
             });
         });
     </script>
     <div id="hidden_app_div" style="display:none">
-        ${app_form(app)}
+        ${app_form(None)}
     </div>
 
 </%def>
@@ -100,11 +124,11 @@
     <div class="base_form small_form" id="FormWrapper">
         <div>
             <div style="margin:12px 12px">
-                <input type="hidden" id="group_id" name="group_id" value="${(item and item.id) or '0'}">
+                <input type="hidden" id="app_id" name="app_id" value="${(item and item.id) or '0'}">
                 <h3>App Add/Edit</h3>
                <div class="required">
-                    <label for="name">App Name</label>
-                    ${h.text_field('name', value=(item and item.name) or '', size=40)}
+                    <label for="app_name">App Name</label>
+                    ${h.text_field('app_name', value=(item and item.name) or '', size=40)}
                 </div>
                 <div class="required">
                      <label for="base_url">Base Url</label>
@@ -129,6 +153,11 @@
         </div>
     </div>
     ${h.end_form()}
+    <script type="text/javascript">
+    $(document).ready(function(){
+
+    });
+    </script>
 </%def>
 
 
@@ -168,7 +197,7 @@
                                 % endif
                             </dd>
     <dt>Created:</dt>       <dd>${(item.created).strftime("%b %d, %Y") or ''}</dd>
-    <dt>Site:</dt>          <dd>${item.site.name}</dd>
+    <dt>Site:</dt>          <dd>${h.link_to(item.site.name, h.url(controller="site",action="view", id=item.id))}</dd>   
     <dt>Site URL:</dt>      <dd>${item.site.base_url}</dd>
     <dt>Service URL:</dt>   <dd>${item.method_url}</dd>
     <dt>Description:</dt>   <dd>${item.description}</dd>
@@ -191,14 +220,20 @@
     </thead>
     <tbody>
     % for item in items:
-        <tr class="${h.cycle("", "alternate") }">
-            <td>${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}</td>
-            <td>${h.link_to('View Xml', "/api/xml/service/%s/%s" % (item.app.slug,item.key))}</td>
-            <td>${h.link_to('Edit', h.url(controller="service",action="edit", id=item.id), class_="title")}</td>
-            <td>${(item.created).strftime("%b %d, %Y") or ''}</td>
-            <td>${h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}</td>
-        </tr>
-        
+        % if item.site_id == c.site_id or item.list_public or (c.user is not None and c.user.issysadmin):
+            <tr class="${h.cycle("", "alternate") }">
+                <td>${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}</td>
+                <td>${h.link_to('View Xml', "/api/xml/service/%s/%s" % (item.app.slug,item.key))}</td>
+                % if item.site_id == c.site_id or (c.user is not None and c.user.issysadmin):
+                    <td>${h.link_to('Edit', h.url(controller="service",action="edit", id=item.id), class_="title")}</td>
+                % else:
+                    <td></td>
+                % endif
+                
+                <td>${(item.created).strftime("%b %d, %Y") or ''}</td>
+                <td>${h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}</td>
+            </tr>
+        % endif
     % endfor
     </tbody>
 </table>

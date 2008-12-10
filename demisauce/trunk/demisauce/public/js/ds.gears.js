@@ -15,7 +15,6 @@
         resource_store_name:'gears_store_name',
         resource_store:null,
         managed_store_name:'demisauce_managed_store',
-        managed_store_manifest:'/GearsSamplesAndTools/samples/simple/gears_manifest.json',
         managed_store:null,
         local_server:null,
         loaded:false,
@@ -59,7 +58,6 @@
         load_db: function(){
             this.local_server = google.gears.factory.create("beta.localserver");
             this.resource_store = this.local_server.openStore(this.resource_store_name);
-            //this.managed_store = this.local_server.createManagedStore(this.managed_store_name);
             this.loaded = true;
         },
         init_debug: function () {
@@ -104,21 +102,18 @@
         },
         create_store: function(){
             //if (!this.loaded) return;
-            
-            //this.managed_store.manifestUrl = this.managed_store_manifest;
-            //this.managed_store.checkForUpdate();
             this.resource_store = this.local_server.createStore(this.resource_store_name);
             var self = this;
             var out_msg = 'now available offline:';
             //$('img,script')
             var files_to_capture = [];
             $('script[gears=true]').each(function (){
-                alert(this.src);
+                //alert(this.src);
                 files_to_capture.push(this.src);
             });
-            alert('before capture' + files_to_capture[0])
+            //alert('before capture' + files_to_capture[0])
             self.resource_store.capture(files_to_capture,function (url,success,captureId){
-                alert('in capture ' + url + + (success ? 'succeeded' : 'failed'))
+                //alert('in capture ' + url + + (success ? 'succeeded' : 'failed'))
                 out_msg += ', ' + url;
             });
             //alert(out_msg);

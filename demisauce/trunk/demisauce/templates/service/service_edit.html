@@ -1,0 +1,16 @@
+<%namespace name="service" file="service_bits.html"/>
+<%inherit file="../_base1col.html"/>
+
+
+<%def name="title()">Services and Applications Add/Edit </%def>
+
+
+<div class="bar1">
+    <h3>Services Add Edit</h3>
+</div>
+
+
+% if c.item:
+    ${service.form(c.service,c.item)}
+% endif
+

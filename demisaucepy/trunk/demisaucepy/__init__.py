@@ -45,12 +45,16 @@ def UrlFormatter(url_format,sub_dict):
 
 class ServiceDefinition(object):
     """
-    service definition for a remote service
+    service definition used by ServiceClient for a remote service.   
+    Accepts everything by paramaters or accepts {name,format,app_slug} and 
+    load the rest of the definition from demisauce service definition
     
     :name: name of remote service
     :format: format (json,xml,html,rss) of remote service
     :app_slug: url friendly name of app  (demisauce,phpdemo,djangodemo):  entered
         into web admin when signing up
+    :cache: True/Fals to use cache default = True
+    :cache_time: in seconds, default = 15 minutes
     :method_url:  url part of this service (many services/app=base_url)
     :url_format:  a simple string substitution of any of available values
     :api_key: secret api key for service
@@ -62,11 +66,12 @@ class ServiceDefinition(object):
     """
     _service_keys = ['name']
     def __init__(self, name,format='xml', data={},app_slug='demisauce',
-            base_url=None,api_key=None,local_key='id',cache=True):
+            base_url=None,api_key=None,local_key='id',cache=True,cache_time=900):
         self.name = name
         self.format = format
         self.app_slug = app_slug
         self.cache = cache
+        self.cache_time = cache_time # 15 minutes
         self.url_format = "{base_url}/api/{format}/{service}/{key}?apikey={api_key}"
         self.data = data
         self.isdefined = False
@@ -87,6 +92,7 @@ class ServiceDefinition(object):
         ns.app_slug = self.app_slug
         ns.data = self.data
         ns.cache = self.cache
+        ns.cache_time = self.cache_time
         ns.isdefined = self.isdefined
         ns.needs_service_def = False
         ns.api_key = self.api_key
@@ -132,6 +138,8 @@ class ServiceDefinition(object):
                 self.url_format = None
             if hasattr(model,'format') and model.format != None:
                 self.format = model.format
+            if hasattr(model,'cache_time') and model.cache_time != None:
+                self.cache_time = model.cache_time
             
         else:
             log.debug('no base url on service definition get')
@@ -253,14 +261,17 @@ class XmlRpcServiceTransport(ServiceTransportBase):
                                            GAEXMLRPCTransport())
         else:
             rpc_server = xmlrpclib.ServerProxy(url)
-        
-        t = tuple([s for s in 'x'.split(',')])
+        #response.data = rpc_server.wp.getPages(1,'admin','admin')
+        #response.data = rpc_server.blogger.getUsersBlogs('','admin','admin')
+        #response.data = rpc_server.metaWeblog.getRecentPosts(1,'admin', 'admin', 5)
+        #response.data = getattr(getattr(rpc_server,'metaWeblog'),'getRecentPosts')(1,'admin', 'admin', 5)
+        t = tuple([s for s in '1,admin,admin,5'.split(',')])
         response.data = getattr(rpc_server,'metaWeblog.getRecentPosts')(t)
         response.format = 'xmlrpc'
         response.xmlrpc = xmlrpcreflector.parse_result(response.data)
         logging.debug('request successful?')
         return response
-        
+    
 
 class HttpServiceTransport(ServiceTransportBase):
     def connect(self):
@@ -316,6 +327,16 @@ class ServiceClientBase(object):
         raise NotImplementedError
 
 class ServiceClient(ServiceClientBase):
+    """
+    ::
+        client = ServiceClient(service=ServiceDefinition(
+            name='feedback_badge',
+            format='xml',
+            app_slug='demisauce'
+        ))
+        client.fetch_service(request=resource)
+        return client.response.data
+    """
     def __init__(self,service,transport=None):
         self.service = service # ServiceDefinition
         self.transport = transport or HttpServiceTransport()
@@ -403,21 +424,22 @@ class ServiceClient(ServiceClientBase):
             self.service.load_definition(request_key=request)
         
         if self.service.format == 'xmlrpc':
-            print 'about to create xmrpcservicetransport'
+            log.debug('about to create xmlrpc servicetransport')
             self.transport = XmlRpcServiceTransport()
             self.transport.service = self.service
         url = self.get_url(request=request)
         self.response.url = url
         cache_key = self.cache_key(url=url)
         log.debug('about to check cache for url=%s' % url)
-        print 'url = %s' % url
+        #print 'url = %s' % url
         if not self.check_cache(cache_key):
             self.response = self.transport.fetch(url,data=data,extra_headers=self.extra_headers)
             if self.response.success:
                 log.debug('success for service %s, %s' % (self.service.name,cache))
                 #print self.response.data
                 if cache is not None and self.use_cache:
-                    cache.set(cache_key,self.response)
+                    log.debug('setting cache key= %s, %s' % (cache_key,self.service.cache_time))
+                    cache.set(cache_key,self.response,int(self.service.cache_time)) # TODO:  cachetime
             else:
                 log.error('service error on fetch')
                 print self.response.data
@@ -431,7 +453,7 @@ def demisauce_ws_get(method,resource_id,data={},cfgl={},format='html',extra_head
 
 
 def demisauce_ws(method,resource_id,verb='get',data={},cfgl={},
-        format='html',extra_headers={},app='demisauce',cache=True):
+        format='html',extra_headers={},app='demisauce',cache=True,cache_time=900):
     """
     Core web service get
     api/format/method/rid?queryparams
@@ -447,13 +469,13 @@ def demisauce_ws(method,resource_id,verb='get',data={},cfgl={},
                 (post=add/update, get=read, delete=delete)
     returns
     """
-    service = ServiceDefinition(
+    client = ServiceClient(service=ServiceDefinition(
         name=method,
         format=format,
         app_slug=app,
-        cache=cache
-    )
-    client = ServiceClient(service=service)
+        cache=cache,
+        cache_time=cache_time
+    ))
     client.use_cache = cache
     client.extra_headers = extra_headers
     response = client.fetch_service(request=resource_id,data=data)

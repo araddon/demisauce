@@ -15,13 +15,14 @@
             <dt>Name,Email:</dt>             <dd><a href="/account/view/${item.person_id}" body="#ticket_person_details_body" id="ticket_person_details">${item.authorname}</a>,
                                                 ${item.email}</dd>
             % else:
-            <dt>Name:</dt>             <dd>${item.authorname}, ${item.email}</dd>
+            <dt>Name:</dt>              <dd>${item.authorname}, ${item.email}</dd>
             % endif
             <dt>Category:</dt>          <dd>${item.category}</dd>
-            <dt>url:</dt>              <dd>${item.url}</dd>
-            <dt>Content:</dt>          <dd>${h.truncate(item.content, 100)}</dd>
-            <dt>More..:</dt>          <dd><a href="#" id="ticket_details" body="#ticket_details_body" >details</a></dd>
-            <!--<dt>Status:</dt>           <dd>${item.status}</dd>-->
+            <dt>Date:</dt>              <dd>${(item.created).strftime("%b %d, %Y %H:%m") or ''}</dd>
+            <dt>url:</dt>               <dd>${item.url}</dd>
+            <dt>Content:</dt>           <dd>${h.truncate(item.content, 100)}</dd>
+            <dt>More..:</dt>            <dd><a href="#" id="ticket_details" body="#ticket_details_body" >details</a></dd>
+            <!--<dt>Status:</dt>        <dd>${item.status}</dd>-->
         </dl>
         <div class="clear"></div>
         <div id="ticket_person_details_body" style="display:none;">

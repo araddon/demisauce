@@ -5,7 +5,7 @@
     <div id="profilesettings">
         <div class="actionbar">
             <span class="h3">Site Settings</span>
-            % if site.id == c.user.site_id:
+            % if c.user is not None and  site.id == c.user.site_id:
             <div class="boxlinks right"  style="margin-top:-27px;margin-right:-13px;height:25px;">
                 <a id="site${site.id}" href="/site/edit/${site.id}">Edit</a>
             </div>
@@ -14,16 +14,19 @@
         <div class="clear"></div>
         <dl>
             <dt>Name:</dt>                  <dd>${site.name}</dd>
-            <dt>Email:</dt>                 <dd>${site.email}</dd>
+            
             <dt>Slug:</dt>                 <dd>${site.slug}<img alt="help?" title="This is going to be the url for users to embed this sites javascript" 
                 src="/images/icon_help.png" class="demisauce_help_tip" /></dd>
             <dt>Base Url:</dt>              <dd>${h.link_to(site.base_url ,h.url('%s' % str(site.base_url)))}</dd>
-            <dt>Comment Url:</dt>           <dd>${h.link_to(site.site_url ,h.url('%s' % str(site.site_url)))}</dd>
             <dt>Description:</dt>            <dd>${site.description}</dd>
             <dt>Site Created:</dt>          <dd>${site.created.strftime("%b %d, %Y") or ''}</dd>
+            % if c.user is not None and (c.user.issysadmin or site.id == c.user.site_id):
+                <dt>Email:</dt>                 <dd>${site.email}</dd>
             <dt>ApiKey:</dt>                <dd>${site.key}</dd>
             <dt>SharedSecret:</dt>         <dd>${site.sharedsecret}</dd>
             <dt>Is Public:</dt>                <dd>${(site and site.public) or 'False'}</dd>
+            % endif
+            
             % if c.user and c.user.issysadmin:
             <dt>Is Enabled:</dt>          <dd id="site">${(site and site.enabled) or 'False'},  
                                                 % if not site.enabled:

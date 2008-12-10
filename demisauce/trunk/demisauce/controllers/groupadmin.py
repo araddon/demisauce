@@ -59,6 +59,12 @@ class GroupadminController(SecureController):
         
         return render('/group/group_admin.html')
     
+    def view(self,id=0):
+        c.item = Group.get(c.user.site_id,id)
+        if not c.item or not c.item.site_id == c.user.site_id:
+            c.item = None
+        return render('/group/group_view.html')
+    
     @rest.dispatch_on(POST="group_submit")
     def addedit(self,id=0):
         return self.viewlist(id)

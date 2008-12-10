@@ -57,8 +57,10 @@ class Filter(JsonSerializeable):
         for clause in self.clauses.keys():
             filter_function = getattr(self, "filterby_%s" % clause)
             filter_function(self.clauses[clause])
+            print self.clauses[clause]
             
         q = self.qry
+        
         self.count = q.count()# ?? persist once per?
         if self.offset == 0:
             #self.count = q.count()

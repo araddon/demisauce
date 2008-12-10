@@ -89,6 +89,8 @@ def is_current_filter(filter='',value=''):
     if filter == None or filters == None or filters.context == '':
         return ''
     fltr = filters.current()
+    if not hasattr(fltr, "clauses"):
+        return ''
     for k in fltr.clauses.keys():
         if fltr.clauses[k] == value:
             return toreturn

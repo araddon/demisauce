@@ -22,35 +22,21 @@
 
 
 <%def name="sidebar_top()">
-
+    % if c.user is not None:
     <div >
         ${service.actions()}
     </div>
     <br />
+    
     <div class="bar1">
         <span class="h3">Filter By</span>
     </div>
-    <div style="margin:8px;padding:0px;"><h4>Status</h4></div>
+    <div style="margin:8px;padding:0px;"><h4></h4></div>
     <ul class="filter" style="margin:8px;">
-        <li><a href="#" class="">New</a></li>
-        <li><a href="#" class="">complete</a></li>
-        <li><a href="#" class="">recent</a></li>
+        <li><a href="/service/owner/mine" class="${h.is_current_filter(filter='owner',value='mine')}">Owned By Me</a></li>
+        <li><a href="/service/owner/all" class="${h.is_current_filter(filter='owner',value='all')}">All</a></li>
+        <li><a href="#" class=""></a></li>
     </ul>
-    <div style="margin:8px;padding:0px;"><h4>Tag</h4></div>
-    <div id="tag_cloud_div" class="tag_cloud" style="margin:5px;font-size:100%;">
-         ${h.tag_cloud(site_id=c.site_id,tag_type='help',link='/helpadmin/tag/',cachetime=-5)}
-     </div>
-    <br />
-    % if c.item and hasattr(c.item,'comments'):
-        <div class="bar1">
-            <span class="h3">Comment on This Feedback</span>
-        </div>
-        
-        ${c.item.comments.views.summary}
-    % endif
-
-    % if c.item and hasattr(c.item,'isuser'):
-    <br />
     % endif
 </%def>
 

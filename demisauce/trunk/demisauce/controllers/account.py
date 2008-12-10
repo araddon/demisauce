@@ -372,9 +372,11 @@ class AccountController(BaseController):
                 c.comments = person.recent_comments(5)
             c.helptickets = c.person.help_tickets()
             c.activities_by_day = Activity.stats_by_person(person.site_id,person.id)
-            if c.user.issysadmin:
+            if c.user is None:
                 pass
-            elif c.user.isadmin:
+            elif c.user is not None and c.user.issysadmin:
+                pass
+            elif c.user is not None and c.user.isadmin:
                 pass
             else:
                 if c.user.site_id == c.person.site_id:

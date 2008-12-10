@@ -35,38 +35,51 @@
             </div>
         </div>
         <div class="yui-u">
-            <div class="box box2">
-                <h3 style="">Users</h3>
-                % if c.item and c.item.users:
-                    % for user in c.item.users:
-                        <div>${h.link_to(user.displayname,h.url("/account/view/%s" % user.id))}, ${(user.verified and "Verified") or 'Not Verified'} </div>
-                    % endfor
-                % endif
-                % if c.item.id == c.user.site.id:
-                <div id="inviteusersformdiv"></div>
-                <div class="actionbar" id="actionbarusers" style="height:34px; ">
-                    <div class="boxlinks right"  style="margin-top:-4px;">
-                        <ul>
-                            <li><a href="javascript:void(0)" id="inviteusers" objid="${(item and item.id) or '0'}">
-                                <img  alt="Invite users" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
-                                Invite Users</a></li>
-                        </ul>
-                        <script type="text/javascript">
-                            $(document).ready(function(){
-                                $("#inviteusers").click(function() {
-                                    $("#inviteusersformdiv").show();
-                                    $("#actionbarusers").hide();
-                                    $.get("/account/inviteusers" ,function(data){
-                                        $("#inviteusersformdiv").html(data);
-                                        $("#inviteusersformdiv").show();
+                
+                % if c.user is not None and c.item.id == c.user.site.id:
+                    <div class="box box2">
+                        <h3 style="">Users</h3>
+                        % if c.item and c.item.users:
+                            % for user in c.item.users:
+                                <div>${h.link_to(user.displayname,h.url("/account/view/%s" % user.id))}, ${(user.verified and "Verified") or 'Not Verified'} </div>
+                            % endfor
+                        % endif
+                        <div id="inviteusersformdiv"></div>
+                        <div class="actionbar" id="actionbarusers" style="height:34px; ">
+                            <div class="boxlinks right"  style="margin-top:-4px;">
+                                <ul>
+                                    <li><a href="javascript:void(0)" id="inviteusers" objid="${(item and item.id) or '0'}">
+                                        <img  alt="Invite users" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                                        Invite Users</a></li>
+                                </ul>
+                                <script type="text/javascript">
+                                    $(document).ready(function(){
+                                        $("#inviteusers").click(function() {
+                                            $("#inviteusersformdiv").show();
+                                            $("#actionbarusers").hide();
+                                            $.get("/account/inviteusers" ,function(data){
+                                                $("#inviteusersformdiv").html(data);
+                                                $("#inviteusersformdiv").show();
+                                            });
+                                        });
                                     });
-                                });
-                            });
-                        </script>
+                                </script>
+                            </div>
+                        </div>
                     </div>
-                </div>
                 % endif
-            </div>
+            
+                <div class="box box2">
+                    <h3 style="">Services</h3>
+                    % if c.item is not None and c.item.services:
+                        % for item in c.item.services:
+                            <div>
+                                ${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}: 
+                                ${h.link_to('View Xml', "/api/xml/service/%s/%s" % (item.app.slug,item.key))}
+                            </div>
+                        % endfor
+                    % endif
+                </div>
         </div>
     </div>
 % endif
