@@ -431,7 +431,7 @@ class ServiceClient(ServiceClientBase):
         self.response.url = url
         cache_key = self.cache_key(url=url)
         log.debug('about to check cache for url=%s' % url)
-        #print 'url = %s' % url
+        #print('url = %s' % (url))
         if not self.check_cache(cache_key):
             self.response = self.transport.fetch(url,data=data,extra_headers=self.extra_headers)
             if self.response.success:
@@ -442,7 +442,7 @@ class ServiceClient(ServiceClientBase):
                     cache.set(cache_key,self.response,int(self.service.cache_time)) # TODO:  cachetime
             else:
                 log.error('service error on fetch')
-                print self.response.data
+                print('self.response.data = %s' % (self.response.data))
         log.debug('returning from fetch %s' % (self.response))
         return self.response
     

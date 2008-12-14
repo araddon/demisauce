@@ -1,3 +1,7 @@
+"""
+This code [especially CacheBase] is from Django, so that license is
+intact
+"""
 import os, logging
 try:
     from google.appengine.api import memcache
@@ -15,6 +19,14 @@ try:
     from beaker import exceptions
 except ImportError:
     pass
+    
+try:
+    import cmemcache as memcache
+except ImportError:
+    try:
+        import memcache
+    except:
+        pass
 
 cache = None
 isgae = False
@@ -39,7 +51,13 @@ class DummyCache(object):
         return False
 
 class CacheBase(object):
-    """ducktype a django cache"""
+    """ducktype a django cache
+    Credits:  Django:
+    http://code.djangoproject.com/browser/django/trunk/django/core/cache/backends/base.py
+    """
+    def __init__(self,default_timeout = 300):
+        self.default_timeout = default_timeout
+    
     def add(self, key, value, timeout=None):
         self.set(key,value,timeout)
     
@@ -82,7 +100,34 @@ class CacheBase(object):
         return self.has_key(key)
     
 
-                
+class MemcacheCache(CacheBase):
+    def __init__(self, servers, default_timeout = 300):
+        super(MemcacheCache,self).__init__(default_timeout = default_timeout)
+        self._cache = memcache.Client(servers)
+    
+    def add(self, key, value, timeout=0):
+        return self._cache.add(key, value, timeout or self.default_timeout)
+    
+    def get(self, key, default=None):
+        val = self._cache.get(key)
+        if val is None:
+            return default
+        else:
+            return val
+    
+    def set(self, key, value, timeout=0):
+        self._cache.set(key, value, timeout or self.default_timeout)
+    
+    def delete(self, key):
+        self._cache.delete(key)
+    
+    def get_many(self, keys):
+        return self._cache.get_multi(keys)
+    
+    def close(self, **kwargs):
+        self._cache.disconnect_all()
+    
+
 class PylonsCache(CacheBase):
     """ducktype a django cache and wrap the pylons cache
     See django api: 
@@ -95,7 +140,7 @@ class PylonsCache(CacheBase):
         try:
             myvalue = mycache.get_value(key)
         except KeyError:
-            return None
+            return default
         return myvalue
     
     def set(self, key, value, timeout=None):
@@ -117,7 +162,7 @@ class GaeCache(object):
     """
     def get(self, key, default=None):
         val = memcache.get(key)
-        if val == None and default is not None:
+        if val == None:
             return default
         else:
             return val
@@ -129,6 +174,5 @@ class GaeCache(object):
     def delete(self, key):
         return memcache.delete(key)
     
-
 
 
