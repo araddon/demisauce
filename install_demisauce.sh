@@ -1,8 +1,21 @@
 #!/usr/bin/env bash
 #  install_demisauce.sh demisauce_home_dirdemisaucedb_pwd
+function die
+{
+    echo $*
+    exit 1
+}
+#----------  Start of program
+ARGS=2
+if [ $# -ne "$ARGS" ]
+then
+    echo "Usage: install_demisauce.sh demisauce_dir  demisauce_db_pwd_for_web  all"
+    die 
+else
+    DEMISAUCE_HOME=$1
+    DEMISAUCE_MYSQL_PWD=$2
+fi
 
-DEMISAUCE_HOME=$1
-DEMISAUCE_MYSQL_PWD=$2
 
 #TODO add version/date to this get
 mkdir -p $DEMISAUCE_HOME
@@ -13,18 +26,17 @@ git clone -q git://github.com/araddon/demisauce.git
 
 
 cd /tmp
+echo "--- installing python-mysql -------------"
+apt-get install --yes --force-yes -q python-mysqldb
 wget http://peak.telecommunity.com/dist/ez_setup.py
 python ez_setup.py
 rm -f ez_setup.py
-sudo wget http://peak.telecommunity.com/dist/ez_setup.py
-sudo python ez_setup.py
-sudo rm ez_setup.py
+
 easy_install -U flup # part of proxy server
 easy_install sqlalchemy==0.4.8
 easy_install pylons==0.9.6.2
 easy_install tempita
-python "$DEMISAUCE_HOME/demisauce/demisaucepy/trunk/setup.py" install
-easy_install Genshi==0.5.1
+#easy_install Genshi==0.5.1
 easy_install webhelpers==0.6
 http://code.google.com/p/gdata-python-client/
 wget http://gdata-python-client.googlecode.com/files/gdata.py-1.2.3.tar.gz
@@ -35,6 +47,8 @@ python setup.py install
 cd ..
 rm -rf gdata.py-1.2.3
 
+cd "$DEMISAUCE_HOME/demisauce/demisaucepy/trunk/"
+python setup.py install
 
 cd "$DEMISAUCE_HOME/demisauce/demisauce/trunk"
 python setup.py install  # can't i get rid of this?  why is it needed?
@@ -50,3 +64,4 @@ perl -pi -e "s/\#sqlalchemy.default.url\ =\ mysql/\sqlalchemy.default.url\ =\ my
 perl -pi -e "s/ds_web:password/ds_web:$DEMISAUCE_MYSQL_PWD/g" production.ini || echo "Could not change mysql pwd"
 
 paster serve --daemon production.ini
+
