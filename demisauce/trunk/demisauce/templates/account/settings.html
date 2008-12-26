@@ -15,7 +15,7 @@
                 ${mns_us.personview(c.person)}
             % endif
         </div>
-        % if c.user is not None and c.user.site_id == person.site_id:
+        % if c.user is not None and c.user.site_id == c.person.site_id:
         <div class="box box2">
             <h3 style="">Groups</h3>
             % if c.user is not None and c.person.id == c.user.id:

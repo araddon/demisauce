@@ -6,7 +6,7 @@ import datetime
 from xmlnode import XMLNode
 from demisaucepy import cfg
 from demisaucepy import ServiceDefinition, ServiceClient, \
-    ServiceResponse
+    ServiceResponse, demisauce_ws
 
 log = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class Comment(RemoteService):
         name = urllib.quote_plus(name)
         dsitem = demisauce_ws('comment',name,format='xml')
         if dsitem.success == True:
-            poll = dsitem.xml_node.comment
+            poll = dsitem.model.comment
             poll._xml = dsitem.data
             return poll
         else:
@@ -128,7 +128,7 @@ class Poll(RemoteService):
         name = urllib.quote_plus(name)
         dsitem = demisauce_ws('poll',name,format='xml')
         if dsitem.success == True:
-            poll = dsitem.xml_node.poll
+            poll = dsitem.model
             poll._xml = dsitem.data
             return poll
         else:

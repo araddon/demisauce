@@ -162,7 +162,7 @@ class ServiceResponse(object):
     
     def handle_response(self):
         pass
-        
+    
     def get_xmlnode(self):
         if self.__xmlnode__ == None and self.data != None:
             self.__xmlnode__ = XMLNode(self.data)
@@ -202,6 +202,7 @@ class ServiceTransportBase(object):
         self.service = service
         self.connected = False
         self.authorized = False
+    
     def connect(self):
         raise NotImplementedError
     def fetch(self):
@@ -210,7 +211,7 @@ class ServiceTransportBase(object):
 class GaeServiceTransport(ServiceTransportBase):
     def fetch(self):
         raise NotImplementedError
-        
+    
 
 class GAEXMLRPCTransport(object):
     """Handles an HTTP transaction to an XML-RPC server.

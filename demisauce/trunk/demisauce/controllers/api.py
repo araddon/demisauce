@@ -338,7 +338,7 @@ class ApiController(BaseController):
         site = request.environ['site']
         if site:
             p = None
-            c.polls = None
+            c.polls = []
             if id != '' and id != None:
                 id = str(urllib.unquote_plus(id))
             
@@ -346,7 +346,9 @@ class ApiController(BaseController):
                 c.polls = poll.Poll.by_site(site.id)
             else:
                 p = poll.Poll.by_key(site.id,id)
-                if type(p) != list:
+                if p is None:
+                    c.polls = []
+                elif type(p) != list:
                     c.polls = [p]
             class pollrest(RestApiMethod):
                 def get(self, **kw):

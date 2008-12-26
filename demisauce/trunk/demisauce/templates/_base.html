@@ -84,6 +84,8 @@
                 <li><a href="/site/cmntconfig" class="${h.is_current(['/site/cmntconfig'])}">Comment System</a></li>
                 <li><a href="/groupadmin" class="${h.is_current(['/groupadmin'])}">Groups</a></li>
                 <li><a href="/poll" class="${h.is_current(['/poll'])}">Polls</a></li>
+            % elif c.user and c.user.isadmin and ('current' == h.is_current(['/service'])):
+                <li><a href="/service/apps" class="${h.is_current(['/service/apps'])}">Apps</a></li>
             % elif c.user and c.user.issysadmin and ('current' == h.is_current(['/admin','/environment', '/home/css','/home/formcss'])):
                 <li><a href="/admin" class="${h.is_current(['/admin'])}">Site's</a></li>
                 <li><a href="/environment" class="${h.is_current(['/environment'])}">environment</a></li>

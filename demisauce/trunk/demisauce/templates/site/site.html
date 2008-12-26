@@ -1,4 +1,5 @@
 <%namespace name="site" file="site_bits.html"/>
+<%namespace name="service" file="../service/service_bits.html"/>
 <%inherit file="../_base1col.html"/>
 
 
@@ -48,7 +49,7 @@
                         <div class="actionbar" id="actionbarusers" style="height:34px; ">
                             <div class="boxlinks right"  style="margin-top:-4px;">
                                 <ul>
-                                    <li><a href="javascript:void(0)" id="inviteusers" objid="${(item and item.id) or '0'}">
+                                    <li><a href="javascript:void(0)" id="inviteusers" objid="${(c.item and c.item.id) or '0'}">
                                         <img  alt="Invite users" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
                                         Invite Users</a></li>
                                 </ul>
@@ -72,12 +73,7 @@
                 <div class="box box2">
                     <h3 style="">Services</h3>
                     % if c.item is not None and c.item.services:
-                        % for item in c.item.services:
-                            <div>
-                                ${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}: 
-                                ${h.link_to('View Xml', "/api/xml/service/%s/%s" % (item.app.slug,item.key))}
-                            </div>
-                        % endfor
+                        ${service.minilist(c.item.services)}
                     % endif
                 </div>
         </div>

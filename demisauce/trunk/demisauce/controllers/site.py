@@ -31,6 +31,8 @@ class SiteController(BaseController):
     def view(self,id = 0):
         if id > 0 and (c.user is not None) and c.user.issysadmin:
             c.item = Site.saget(id)
+        elif id is None or id == '' and c.user:
+            c.item = Site.get(-1,c.user.site_id)
         else:
             c.item = Site.get(-1,id)
             if not c.item.public:

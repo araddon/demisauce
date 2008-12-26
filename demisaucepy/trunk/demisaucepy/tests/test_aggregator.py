@@ -45,6 +45,7 @@ class test_aggregator(TestDSBase):
     Test aggregation
     """
     def test_aggregator_hasa(self):
+        """Test the declarative mapping aggregator"""
         p = Person('aaron','sysadmin@demisauce.org')
         assert type(p.personext) != None
         assert p.personext.model.email == 'sysadmin@demisauce.org'

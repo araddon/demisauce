@@ -70,7 +70,7 @@ Demisauce can be installed following these `instructions
     author_email='',
     url='http://demisauce.googlecode.com/',
     download_url='http://demisauce.googlecode.com/files/demisaucepy-0.1.0.tar.gz',
-    install_requires=["elementtree>=1.1"],
+    install_requires=["elementtree>=1.1","nose>=0.10.4"],
     license='MIT',
     packages=find_packages(exclude=['ez_setup', 'examples']),
     include_package_data=True,

@@ -197,11 +197,40 @@
                                 % endif
                             </dd>
     <dt>Created:</dt>       <dd>${(item.created).strftime("%b %d, %Y") or ''}</dd>
-    <dt>Site:</dt>          <dd>${h.link_to(item.site.name, h.url(controller="site",action="view", id=item.id))}</dd>   
+    <dt>Site:</dt>          <dd>${h.link_to(item.site.name, h.url(controller="site",action="view", id=item.site_id))}</dd>   
     <dt>Site URL:</dt>      <dd>${item.site.base_url}</dd>
-    <dt>Service URL:</dt>   <dd>${item.method_url}</dd>
+    <dt>App:</dt>           <dd>${item.app.name}</dd>
+    <dt>Service URL:</dt>   <dd>${item.method_url or 'na'}</dd>
+    <dt>View XML:</dt>      <dd>${h.link_to('View Xml', "/api/xml/service/%s/%s" % (item.app.slug,item.key))}</dd>
     <dt>Description:</dt>   <dd>${item.description}</dd>
+    
+</dl>
+    
 
+    
+</%def>
+<%def name="app_view(item)">
+<dl>
+    <dt>Name:</dt>          <dd><h3>${item.name}</h3></dd>
+    % if c.user and c.user.isadmin and c.user.site_id == item.site_id:
+    <dt>Edit:</dt>        <dd>
+                                
+                                    ${h.link_to('Edit', h.url(controller="service",action="appeditmain", id=item.id))}
+                                
+                            </dd>
+    % endif
+    <dt>Author:</dt>        <dd>
+                                % if c.user and c.user.isadmin and c.user.site_id == item.site_id:
+                                    ${h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}
+                                % else:
+                                    ${item.owner.displayname}
+                                % endif
+                            </dd>
+    <dt>Created:</dt>       <dd>${(item.created).strftime("%b %d, %Y") or ''}</dd>
+    <dt>Site:</dt>          <dd>${h.link_to(item.site.name, h.url(controller="site",action="view", id=item.site_id))}</dd>   
+    <dt>Description:</dt>   <dd>${item.description}</dd>
+    <dt>Public:</dt>           <dd>${item.list_public}</dd>
+    
 </dl>
     
 
@@ -212,10 +241,9 @@
     <thead>
         <tr>
             <th>View</th>
-            <th>Xml</th>
             <th></th>
             <th>Date</th>
-            <th>Author</th>
+            <th>Application</th>
         </tr>
     </thead>
     <tbody>
@@ -223,7 +251,7 @@
         % if item.site_id == c.site_id or item.list_public or (c.user is not None and c.user.issysadmin):
             <tr class="${h.cycle("", "alternate") }">
                 <td>${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}</td>
-                <td>${h.link_to('View Xml', "/api/xml/service/%s/%s" % (item.app.slug,item.key))}</td>
+                
                 % if item.site_id == c.site_id or (c.user is not None and c.user.issysadmin):
                     <td>${h.link_to('Edit', h.url(controller="service",action="edit", id=item.id), class_="title")}</td>
                 % else:
@@ -231,10 +259,26 @@
                 % endif
                 
                 <td>${(item.created).strftime("%b %d, %Y") or ''}</td>
-                <td>${h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}</td>
+                <td>${h.link_to(item.app.name, h.url(controller="site",action="view", id=item.app_id))}</td>
             </tr>
         % endif
     % endfor
     </tbody>
 </table>
+</%def>
+
+<%def name="minilist(items)">
+% for item in items:
+    <div>
+        ${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}
+    </div>
+% endfor
+</%def>
+
+<%def name="appminilist(items)">
+% for item in items:
+    <div>
+        ${h.link_to(item.name, h.url(controller="service",action="appview", id=item.id), class_="xtitle")}
+    </div>
+% endfor
 </%def>

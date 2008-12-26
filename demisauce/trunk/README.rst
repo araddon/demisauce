@@ -66,3 +66,7 @@ includes test folder for doctests::
     OR
     
     python setup.py test
+    
+to load a fresh set of data for testing::
+    
+    $paster setup-app library_test.ini

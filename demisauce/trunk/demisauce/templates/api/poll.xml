@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <demisauce>
+
 % for item in c.polls:
     <poll id="${item.id}" key="${item.key}">
         <name>${item.name}</name>

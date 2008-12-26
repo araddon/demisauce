@@ -14,6 +14,7 @@ class test_poll_api(TestDSBase):
         """
         pollname = Person.create_random_email()
         p = Poll.by_name('what-should-the-new-features-be')
+        #print p._xml
         assert p != None
         assert 'features' in p.name
         assert p.questions != None

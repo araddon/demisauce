@@ -18,6 +18,7 @@ app_table = Table("app", meta.metadata,
         Column("site_id", Integer, ForeignKey('site.id')),
         Column("owner_id", Integer, ForeignKey('person.id')),
         Column("created", DateTime,default=datetime.now()),
+        Column("list_public", Boolean, default=False),
         Column("name", DBString(50)),
         Column("slug", DBString(50)),
         Column("base_url", DBString(255)),
@@ -56,6 +57,7 @@ service_table = Table("service", meta.metadata,
         Column("app_id", Integer, ForeignKey('app.id')),
         Column("owner_id", Integer, ForeignKey('person.id')),
         Column("created", DateTime,default=datetime.now()),
+        Column("last_update",DateTime,default=datetime.now(),onupdate=datetime.now()),
         Column("cache_time", Integer, default=900),
         Column("list_public", Boolean, default=False),
         Column("format", DBString(30)),
@@ -97,5 +99,11 @@ class Service(ModelBase):
         #return meta.DBSession.query(Service).filter_by(key=str(key).lower()).options(eagerload('site'))
         return meta.DBSession.query(Service).filter_by(key=str(servicekey).lower())\
             .join('app').filter_by(slug=str(appkey).lower()).first()
-        
+    
+    @classmethod
+    def recent_updates(cls,ct=10):
+        """Class method to get all recently updated public services"""
+        #return meta.DBSession.query(Service).filter_by(key=str(key).lower()).options(eagerload('site'))
+        return meta.DBSession.query(Service).filter_by(list_public=True
+            ).order_by(Service.last_update.desc()).limit(ct)
     

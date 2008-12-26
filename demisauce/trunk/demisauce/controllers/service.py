@@ -86,12 +86,19 @@ class ServiceController(BaseController):
     #@requires_role('admin')
     def index(self):
         c.services = Service.all()
+        c.recent = Service.recent_updates(5)
         return render('/service/service.html')
     
     def view(self,id=0):
         c.item = Service.get(-1,id)
         return render('/service/service.html')
-        
+    
+    def appview(self,id=0):
+        c.item = App.get(-1,id)
+        if not (c.item.list_public or (c.user and c.user.site_id == c.item.site_id)):
+            c.item = None
+        return render('/service/app.html')
+    
     def owner(self,id=0):
         filter = id
         log.info('other=%s,filter=%s' % (self.other,filter))
@@ -102,6 +109,11 @@ class ServiceController(BaseController):
             self.filters.set(ServiceFilter(name='owner'))
             self.filters.current().clauses['owner'] = 'all' # filter value
         return self._filter(offset=0,limit=20)
+    
+    @requires_role('admin')
+    def apps(self,id=0):
+        c.apps = App.all()
+        return render('/service/app.html')
     
     @requires_role('admin')
     def appedit(self,id=0):

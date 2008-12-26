@@ -38,6 +38,26 @@
         <li><a href="#" class=""></a></li>
     </ul>
     % endif
+    
+    
+    % if c.item:
+        <div class="box box2">
+             <h3 style="">Other Services for ${c.item.site.name}</h3>
+             % if c.item is not None and c.item.site.services:
+                 ${service.minilist(c.item.site.services)}
+             % endif
+         </div>
+    % else:
+        <div class="box box2">
+            <h3 style="">Recent Updated Services</h3>
+            % if c.recent:
+                ${service.minilist(c.recent)}
+            % endif
+        </div>
+
+    % endif
+
+
 </%def>
 
 

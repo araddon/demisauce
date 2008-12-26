@@ -23,9 +23,10 @@ class test_person_group_api(TestDSBase):
         hashed_email = hash_email(email)
         dsitem = demisauce_ws('person',hashed_email,data=person_data,format='xml')
         assert dsitem.success == True
-        plist = [pl for pl in dsitem.xml_node]
+        print dsitem.data
+        plist = [pl for pl in dsitem.model]
         assert len(plist) == 1, 'ensure length of array of nodes is 1'
-        p = dsitem.xml_node.person
+        p = dsitem.model.person
         assert p != None, 'p should not be none'
         assert p.id > 0, 'userid should be returned'
         assert p.hashedemail == hashed_email
@@ -40,7 +41,9 @@ class test_person_group_api(TestDSBase):
         }
         dsitem2 = demisauce_ws('person',hashed_email,data=person_data,format='xml')
         assert dsitem2.success == True
-        p2 = dsitem2.xml_node.person
+        #assert True == False
+        print dsitem2.data
+        p2 = dsitem2.model
         assert p2.displayname == 'library UPDATE', 'p2.displayname should have been updated'
         assert p2.id == p.id, 'userid should be same as other'
         assert p2.authn == 'google'
@@ -53,5 +56,5 @@ class test_person_group_api(TestDSBase):
             'name':'group added by web service',
             'authn':'local'
         }
-        assert True == True
+        assert True == False
 
