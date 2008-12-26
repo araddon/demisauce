@@ -112,7 +112,7 @@ class HelpadminController(SecureController):
             c.item = qry[0]
         elif offset == 0 and hf.count > 0: #viewlist existing
             c.helptickets = qry
-        elif hf.count <= hf.offset:
+        elif hf.count <= hf.offset and hf.offset > 0:
             return self.index()
         else:
             c.helptickets = qry
