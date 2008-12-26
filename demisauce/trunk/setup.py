@@ -42,7 +42,7 @@ Demisauce can be installed following these `instructions
         "Topic :: Software Development :: Libraries :: Python Modules",
     ], 
     url='http://demisauce.googlecode.com',
-    install_requires=["Pylons>=0.9.6",'sqlalchemy>=0.4.6',
+    install_requires=["Pylons==0.9.6.2",'sqlalchemy==0.4.8',
         'demisaucepy>=0.0.2','tempita','simplejson'],
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,

@@ -60,8 +60,6 @@ then
 EOL
     mysql -uroot -p$MYSQL_ROOT_PWD < demisauce.sql || die "Could not set up database for Demisauce.  Is your root password correct?"
     rm -f demisauce.sql
-    # mysql -u root -p$MYSQL_ROOT_PWD -Bse "use mysql; delete from user where user = '';"
-    # mysql -u root -p$MYSQL_ROOT_PWD -Bse "create database demisauce;GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP ON demisauce.* TO 'ds_web'@'%' IDENTIFIED BY '$DEMISAUCE_MYSQL_PWD';"
 fi
 
 if [ $SERVER_ROLE = "all" ] || [ $SERVER_ROLE = "web" ] 
