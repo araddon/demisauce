@@ -31,6 +31,7 @@ app_instance_uuid = ${app_instance_uuid}
 #beaker.session.data_dir = %(here)s/data/sessions
 
 # connection information for DemiSauce:  http://www.demisauce.org
+demisauce.appname = demisauce
 demisauce.url = http://localhost:4950
 demisauce.apikey = ${demisuace_apikey}
 demisauce.cache = beaker

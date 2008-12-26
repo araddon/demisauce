@@ -116,7 +116,7 @@ class HelpController(BaseController):
                 return render('/help/help_feedback.html')
             
         else:
-            log.error('feedback from came in with no site %s' % request.params)
+            log.error('feedback from came in with no site id=%s, params= %s' % (id,request.params))
         return render('/help/help_feedback.html')
     
 

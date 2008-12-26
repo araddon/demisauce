@@ -190,7 +190,7 @@ class BaseController(WSGIController):
             request.environ['filters'] = self.filters
         c.base_url = h.base_url()
         c.help_url = h.help_url()
-        c.adminsite_slug = 'demisauce.com'
+        c.adminsite_slug = config['demisauce.appname']
         c.demisauce_url = config['demisauce.url']
     
     @print_timing

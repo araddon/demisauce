@@ -3,7 +3,7 @@ site = '''
     "class": "demisauce.model.site.Site", 
     "data": [
         {
-            "name": "demisauce.com", 
+            "name": "demisauce", 
             "key": "a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202", 
             "email": "sysadmin@demisauce.org", 
             "base_url": "http://localhost:4950",
