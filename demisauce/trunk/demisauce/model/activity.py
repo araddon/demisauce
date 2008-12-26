@@ -64,7 +64,7 @@ class Activity(ModelBase):
     @classmethod
     def categories(cls,site_id=0,person_id=0):
         #q = text("""SELECT count(id), activity FROM activity where person_id=1 group by month, activity""")
-        q = text("""SELECT count(id) as ct, category FROM activity where person_id=%s AND category not NULL group by category order by ct desc""" % person_id)
+        q = text("""SELECT count(id) as ct, category FROM activity where person_id=%s AND category is not NULL group by category order by ct desc""" % person_id)
         res = meta.engine.execute(q)
         act = [a for a in res]
         return act
