@@ -9,6 +9,7 @@ email_to = you@yourdomain.com
 smtp_server = localhost
 error_email_from = paste@localhost
 logfile = console
+#logfile = /home/demisauce/log
 
 [server:main]
 use = egg:Paste#http
@@ -39,8 +40,7 @@ demisauce.cacheduration = 5
 # pylons.database.session_context.
 # %(here) may include a ':' character on Windows environments; this can
 # invalidate the URI when specifying a SQLite db via path name
-#sqlalchemy.default.url = sqlite:///%(here)s/db/demisauce.db
-#sqlalchemy.default.url = mysql://demisauce:password@localhost/demisauce_dev
+#sqlalchemy.default.url = mysql://ds_web:password@localhost/demisauce
 
 # uses sqlite by default, change to mysql above
 sqlalchemy.default.url = sqlite:///%(here)s/db/demisauce${demisauce_file}.db
