@@ -19,8 +19,9 @@ except ImportError:
         from pylons import config
         ENV = "PYLONS"
         LOG_FILE = config['logfile']
-    except ImportError:
+    except (ImportError,KeyError):
         ENV = "OTHER"
+        LOG_FILE = 'log.log'
 
 def setup_logging():
     """
