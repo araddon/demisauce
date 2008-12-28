@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# chmod +x install.sh
-#  install.sh mysql_password  demisaucedb_pwd all
+# 
+#  chmod +x install.sh
+#  usage:   $install.sh mysql_root_password  demisauce_mysql_pwd role(all|web|db|memcached)
 #
 #  Starting from this base:   
 #       apt-get update
@@ -10,7 +11,6 @@
 #       # Install VMware tools: 
 #           http://samj.net/2008/06/installing-vmware-tools-in-ubuntu-804.html
 # ----------------------------------------------------------------------------
-DEMISAUCE_HOME='/home/demisauce'
 function die
 {
     echo $*
@@ -19,15 +19,28 @@ function die
 # Get all arguments if not supplied
 function askArgs
 {
-    echo "Please enter your MySQL root password:"
+    echo "Please enter your MySQL root password: or \
+    return to accept [demisauce]"
     read MYSQL_ROOT_PWD
-    echo "Please enter password for the MySQL password for the demisauce web app"
+    if [ "$MYSQL_ROOT_PWD" = "" ] ; then
+        MYSQL_ROOT_PWD="demisauce"
+    fi
+    echo "Please enter password for the MySQL password for the demisauce web app or \
+    return to accept [demisauce]"
     read DEMISAUCE_MYSQL_PWD
-    echo "Please enter 'web', 'db', 'phpweb', 'memcache', or 'all' Role for server"
+    if [ "$DEMISAUCE_MYSQL_PWD" = "" ] ; then
+        DEMISAUCE_MYSQL_PWD="demisauce"
+    fi
+    echo "Please enter 'web', 'db', 'phpweb', 'memcache', or 'all' Role for server: or \
+    return to accept [all]"
     read SERVER_ROLE
+    if [ "$SERVER_ROLE" = "" ] ; then
+        SERVER_ROLE="all"
+    fi
 }
 
 #-----------------------------------  Start of program
+DEMISAUCE_HOME='/home/demisauce'
 ARGS=3
 if [ $# -ne "$ARGS" ]
 then
@@ -54,17 +67,19 @@ apt-get install --yes --force-yes -q wget unzip cron
 if [ $SERVER_ROLE = "all" ] || [ $SERVER_ROLE = "db" ] 
 then
     echo "----   Starting MySQL install  ------------"
+    # suppress interactive screens asking for pwd of root
     echo "mysql-server mysql-server/root_password select $MYSQL_ROOT_PWD" | debconf-set-selections
     echo "mysql-server mysql-server/root_password_again select $MYSQL_ROOT_PWD" | debconf-set-selections
     apt-get install -y mysql-server
     netstat -na | grep 3306 > /dev/null && echo 'mysql is running on 3306' || die "MySQL does not appear to be running on port 3306."
     cat <<EOL > demisauce.sql
     create database if not exists demisauce character set utf8;
+    use mysql;
     delete from user where user = '';
     GRANT ALL PRIVILEGES ON demisauce.* TO 'ds_web'@'localhost' IDENTIFIED BY '$DEMISAUCE_MYSQL_PWD' WITH GRANT OPTION;
     flush privileges;
 EOL
-    mysql -uroot -p$MYSQL_ROOT_PWD < demisauce.sql || die "Could not set up database for Demisauce.  Is your root password correct?"
+    mysql -uroot -p$MYSQL_ROOT_PWD < demisauce.sql || die "Could not set up database for Demisauce."
     rm -f demisauce.sql
 fi
 
@@ -99,12 +114,11 @@ then
 EOL
     echo "modifying /etc/apache2/mods-available/proxy.conf to allow proxy from local"
     #comment out deny all, and enable from localhost
-    perl -pi -e s/Deny from all/\#Deny\ from\ all/g /etc/apache2/mods-available/proxy.conf || die "Could not comment out Deny All"
+    perl -pi -e s/Deny\ from\ all/\#Deny\ from\ all/g /etc/apache2/mods-available/proxy.conf || die "Could not comment out Deny All"
     perl -pi -e s/\#Allow\ from\ \.example\.com/Allow\ from\ localhost/g /etc/apache2/mods-available/proxy.conf || die "failed to allow localhost proxy"
     
-    echo "modifying /etc/apache2/sites-available/default to be blank"
-    #blank out the file
-    perl -pi -e s/.*//g /etc/apache2/sites-available/default || die "Could not comment out Deny All"
+    echo "----- Creating new /etc/apache2/sites-available/default  file  ------------"
+    rm -f /etc/apache2/sites-available/default
     cat <<EOL > /etc/apache2/sites-available/default
     <VirtualHost *>
             ServerAdmin webmaster@localhost
