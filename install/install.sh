@@ -2,8 +2,14 @@
 # chmod +x install.sh
 #  install.sh mysql_password  demisaucedb_pwd all
 #
-# http://developer.amazonwebservices.com/connect/entry.jspa?externalID=1085
-# http://docs.amazonwebservices.com/AWSEC2/2008-02-01/DeveloperGuide/index.html?CLTRG-run-instances.html
+#  Starting from this base:   
+#       apt-get update
+#       apt-get install openssh-server 
+#  If VMWare:
+#       apt-get install build-essential linux-headers-generic 
+#       # Install VMware tools: 
+#           http://samj.net/2008/06/installing-vmware-tools-in-ubuntu-804.html
+# ----------------------------------------------------------------------------
 DEMISAUCE_HOME='/home/demisauce'
 function die
 {
@@ -43,7 +49,7 @@ cd /tmp
 # Upgrade/install packages
 sudo apt-get -y update
 # some basics
-apt-get install --yes --force-yes -q wget unzip
+apt-get install --yes --force-yes -q wget unzip cron
 
 if [ $SERVER_ROLE = "all" ] || [ $SERVER_ROLE = "db" ] 
 then
@@ -65,34 +71,57 @@ fi
 if [ $SERVER_ROLE = "all" ] || [ $SERVER_ROLE = "web" ] 
 then
     echo "----  installing git-core ------------"
-    apt-get install --yes --force-yes -q git-core # needed to get recent build from git
+    apt-get install --yes --force-yes -q git-core  # needed to get recent build from git
     echo "----  installing apache  -------------"
     apt-get install --yes --force-yes -q apache2 
     apt-get install --yes --force-yes -q libapache2-mod-fcgid  #  What is this for again?
     # http://wiki.pylonshq.com/display/pylonscookbook/Apache+as+a+reverse+proxy+for+Pylons
     # http://serbiancafe.wordpress.com/2006/10/20/apaches-proxypass-on-ubuntu/
-    sudo a2enmod proxy
-    sudo a2enmod proxy_http
+    a2enmod proxy
+    a2enmod proxy_http
+    a2enmod rewrite
     cat <<EOL > /etc/apache2/httpd.conf
     <VirtualHost *>
-        #ServerName demisauce.dev
-        #ServerAlias demisauce.dev
-
-        # Logfiles  (folders must exist)
-        #ErrorLog  /home/demisauce/log/error.log
-        #CustomLog /home/demisauce/log/access.log combined
-
-        # Proxy
-        ProxyPass / http://localhost:4950/ retry=5
-        ProxyPassReverse / http://localhost:4950/
-        ProxyPreserveHost On
-        <Proxy *>
-            Order deny,allow
-            Allow from all
-        </Proxy>
+            ServerAdmin webmaster@localhost
+            DocumentRoot /home/demisauce/demisauce/demisauce/trunk/demisauce/public/
+            
+            RewriteEngine On
+            #RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} -f
+            RewriteCond %{REQUEST_FILENAME} !\.(js|css|gif|jpg|png|ico|txt|swf|mp3|pdf|ps|wav|mid|midi|flv|zip|rar|gz|tar|bmp)$ [NC]
+            RewriteRule ^/(.*) http://127.0.0.1:4950/$1 [P]
+            
+            <Directory />
+                    Options FollowSymLinks
+                    allow from all
+                    AllowOverride None
+            </Directory>
     </VirtualHost>
 EOL
-
+    echo "modifying /etc/apache2/mods-available/proxy.conf to allow proxy from local"
+    #comment out deny all, and enable from localhost
+    perl -pi -e s/Deny from all/\#Deny\ from\ all/g /etc/apache2/mods-available/proxy.conf || die "Could not comment out Deny All"
+    perl -pi -e s/\#Allow\ from\ \.example\.com/Allow\ from\ localhost/g /etc/apache2/mods-available/proxy.conf || die "failed to allow localhost proxy"
+    
+    echo "modifying /etc/apache2/sites-available/default to be blank"
+    #blank out the file
+    perl -pi -e s/.*//g /etc/apache2/sites-available/default || die "Could not comment out Deny All"
+    cat <<EOL > /etc/apache2/sites-available/default
+    <VirtualHost *>
+            ServerAdmin webmaster@localhost
+            DocumentRoot /home/demisauce/demisauce/demisauce/trunk/demisauce/public/
+            
+            RewriteEngine On
+            #RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} -f
+            RewriteCond %{REQUEST_FILENAME} !\.(js|css|gif|jpg|png|ico|txt|swf|mp3|pdf|ps|wav|mid|midi|flv|zip|rar|gz|tar|bmp)$ [NC]
+            RewriteRule ^/(.*) http://127.0.0.1:4950/$1 [P]
+            
+            <Directory />
+                    Options FollowSymLinks
+                    allow from all
+                    AllowOverride None
+            </Directory>
+    </VirtualHost>
+EOL
 fi
 
 if [ $SERVER_ROLE = "all" ] || [ $SERVER_ROLE = "memcache" ] 
@@ -118,12 +147,7 @@ then
     /etc/init.d/apache2 restart
 fi
 
-
 # install the demisauce python web app
 #./install_demisauce.sh $DEMISAUCE_HOME $DEMISAUCE_MYSQL_PWD
 
-
 #./install_wordpress.sh
-
-
-

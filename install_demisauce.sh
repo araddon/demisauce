@@ -53,7 +53,7 @@ easy_install tempita
 easy_install webhelpers==0.6  # todo:  not needed after pylons .9.7
 python setup.py install  # can't i get rid of this?  why is it needed?
 
-echo "------  setting up production.ini    -----------\n------------------------------"
+echo "------  setting up production.ini    -----------\n"
 paster make-config demisauce production.ini
 # replace console logging with file:   logfile = console
 perl -pi -e "s/logfile\ =\ console/logfile\ =\ $DEMISAUCE_HOME\/log\/paster.log/g" production.ini || echo "Could not change logging "
@@ -64,5 +64,16 @@ perl -pi -e "s/ds_web:password/ds_web:$DEMISAUCE_MYSQL_PWD/g" production.ini || 
 
 paster setup-app production.ini
 
-paster serve --daemon production.ini
+echo "-----  create init.d startup scripts for demisauce available at /etc/init.d/demisauce_web (start|stop|restart) ------------"
+mv $DEMISAUCE_HOME/install_initd.sh /etc/init.d/demisauce_web
+chmod +x /etc/init.d/demisauce_web
+/etc/init.d/install_initd.sh "$DEMISAUCE_HOME/demisauce/demisauce/trunk"
+/etc/init.d/demisauce_web start
+#paster serve --daemon production.ini
+echo "-----  Creating cron job to restart paster if it fails -----------"
+cat <<EOL > /var/spool/cron/crontabs/root.tmp
+ */2 * * * * /etc/init.d/demisauce_web start
+EOL
+crontab /var/spool/cron/crontabs/root.tmp
+
 
