@@ -19,20 +19,20 @@ function die
 # Get all arguments if not supplied
 function askArgs
 {
-    echo "Please enter your MySQL root password: or \
-    return to accept [demisauce]"
+    echo -en "Please enter your MySQL root password: or 
+return to accept [demisauce]"
     read MYSQL_ROOT_PWD
     if [ "$MYSQL_ROOT_PWD" = "" ] ; then
         MYSQL_ROOT_PWD="demisauce"
     fi
-    echo "Please enter password for the MySQL password for the demisauce web app or \
-    return to accept [demisauce]"
+    echo -en "Please enter password for the MySQL password for the demisauce web app or
+return to accept [demisauce]"
     read DEMISAUCE_MYSQL_PWD
     if [ "$DEMISAUCE_MYSQL_PWD" = "" ] ; then
         DEMISAUCE_MYSQL_PWD="demisauce"
     fi
-    echo "Please enter 'web', 'db', 'phpweb', 'memcache', or 'all' Role for server: or \
-    return to accept [all]"
+    echo -en "Please enter server role (web|db|phpweb|memcache|all): or
+return to accept [all]"
     read SERVER_ROLE
     if [ "$SERVER_ROLE" = "" ] ; then
         SERVER_ROLE="all"
@@ -41,11 +41,11 @@ function askArgs
 
 #-----------------------------------  Start of program
 DEMISAUCE_HOME='/home/demisauce'
+DEMISAUCE_WEB_HOME=$DEMISAUCE_HOME/current_web
 ARGS=3
 if [ $# -ne "$ARGS" ]
 then
-    if [ $# -ne "0" ]
-    then
+    if [ $# -ne "0" ] ; then
         echo "Usage: install.sh mysql_password  demisauce_db_pwd all"
         echo "You can also just run ./install.sh to have the script guide you through the setup process."
         die 
@@ -57,7 +57,7 @@ else
     DEMISAUCE_MYSQL_PWD=$2
     SERVER_ROLE=$3
 fi
-
+die
 cd /tmp
 # Upgrade/install packages
 sudo apt-get -y update
@@ -98,7 +98,7 @@ then
     cat <<EOL > /etc/apache2/httpd.conf
     <VirtualHost *>
             ServerAdmin webmaster@localhost
-            DocumentRoot /home/demisauce/demisauce/demisauce/trunk/demisauce/public/
+            DocumentRoot $DEMISAUCE_WEB_HOME/demisauce/public/
             
             RewriteEngine On
             #RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} -f
@@ -122,7 +122,7 @@ EOL
     cat <<EOL > /etc/apache2/sites-available/default
     <VirtualHost *>
             ServerAdmin webmaster@localhost
-            DocumentRoot /home/demisauce/demisauce/demisauce/trunk/demisauce/public/
+            DocumentRoot $DEMISAUCE_WEB_HOME/demisauce/public/
             
             RewriteEngine On
             #RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} -f
@@ -162,6 +162,6 @@ then
 fi
 
 # install the demisauce python web app
-#./install_demisauce.sh $DEMISAUCE_HOME $DEMISAUCE_MYSQL_PWD
+#./install_demisauce.sh install -d $DEMISAUCE_HOME -p $DEMISAUCE_MYSQL_PWD
 
 #./install_wordpress.sh
