@@ -5,16 +5,17 @@
 # 
 # Command line options:
 #
-#    -d NAME                - Directory to install into:  defaults to /home/demisauce
-#    -p PWD                 - Password for MySQL:  Defaults to a demisauce
+#   -d NAME                 - Directory to install into:  defaults to /home/demisauce
+#   -p PWD                  - Password for MySQL:  Defaults to a demisauce
+#   -r ROLE                 - Role (prod|dev) should it set up con jobs etc? default=prod
 #
 # Examples:
 #
 #   Build Demisauce on your machine
 #
-#   $./install_demisauce install      \
-#   -d    /home/demisauce               \
-#   -p   mysecret
+#   $./install_demisauce install    \
+#   -d    /home/demisauce           \
+#   -p   $ecr3t
 # 
 #   Upgrade Demisauce from source
 #
@@ -47,13 +48,19 @@ function askArgs
     if [ "$home" != "" ] ; then
         DEMISAUCE_HOME=$home
     fi
+    echo -en "Please enter 'prod' or 'dev', for just base or include cron jobs: or \
+    return to accept:  'prod'   :   "
+    read role
+    if [ "$role" != "" ] ; then
+        INSTALL_ROLE=$role
+    fi
 }
 
 #----------  Start of program
 UPGRADE_OR_INSTALL='install'
 DEMISAUCE_HOME="/home/demisauce"
 DEMISAUCE_MYSQL_PWD="demisauce"
-
+INSTALL_ROLE="prod"
 if [ $# -eq "0" ] ; then
     askArgs
 else 
@@ -64,6 +71,7 @@ else
             case $1 in
                 -d) DEMISAUCE_HOME=$2;                              shift 2 ;;
                 -p) DEMISAUCE_MYSQL_PWD=$2;                         shift 2 ;;
+                -r) INSTALL_ROLE=$2;                                shift 2 ;;
                 *)             echo "$0: Unrecognized option: $2" >&2; exit 1;
             esac
         done
@@ -133,20 +141,25 @@ perl -pi -e "s/sqlalchemy.default.url\ =\ sqlite/\#sqlalchemy.default.url\ =\ sq
 perl -pi -e "s/\#sqlalchemy.default.url\ =\ mysql/\sqlalchemy.default.url\ =\ mysql/g" production.ini || echo "Could not un-comment mysql"
 perl -pi -e "s/ds_web:password/ds_web:$DEMISAUCE_MYSQL_PWD/g" production.ini || echo "Could not change mysql pwd"
 
-paster setup-app production.ini
 
-echo "-----  create init.d startup scripts for demisauce   
-available at /etc/init.d/demisauce_web (start|stop|restart) ------------"
-rm -f /etc/init.d/demisauce_web
-mv $DEMISAUCE_VERSION_HOME/demisauce/install/install_initd.sh /etc/init.d/demisauce_web
-chmod +x /etc/init.d/demisauce_web
-#/etc/init.d/install_initd.sh "$DEMISAUCE_HOME/demisauce/demisauce/trunk"
-/etc/init.d/demisauce_web start
-#paster serve --daemon production.ini
-echo "-----  Creating cron job to restart paster if it fails -----------"
-cat <<EOL > /var/spool/cron/crontabs/root.tmp
- */2 * * * * /etc/init.d/demisauce_web start
+if [ $INSTALL_ROLE = "prod" ] ; then
+    paster setup-app production.ini
+    echo "-----  create init.d startup scripts for demisauce   
+    available at /etc/init.d/demisauce_web (start|stop|restart) ------------"
+    rm -f /etc/init.d/demisauce_web
+    mv $DEMISAUCE_VERSION_HOME/demisauce/install/install_initd.sh /etc/init.d/demisauce_web
+    chmod +x /etc/init.d/demisauce_web
+    #/etc/init.d/install_initd.sh "$DEMISAUCE_HOME/demisauce/demisauce/trunk"
+    /etc/init.d/demisauce_web start
+    #paster serve --daemon production.ini
+    echo "-----  Creating cron job to restart paster if it fails -----------"
+    cat <<EOL > /var/spool/cron/crontabs/root.tmp
+     */2 * * * * /etc/init.d/demisauce_web start
 EOL
-crontab /var/spool/cron/crontabs/root.tmp
+    crontab /var/spool/cron/crontabs/root.tmp
+elif [ $INSTALL_ROLE = "dev" ] ; then
+    paster setup-app devmysql.ini
+fi
+
 
 
