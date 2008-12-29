@@ -5,11 +5,15 @@
 #
 #  Starting from this base:   
 #       apt-get update
-#       apt-get install openssh-server 
+#       apt-get install openssh-server wget
 #  If VMWare:
 #       apt-get install build-essential linux-headers-generic 
 #       # Install VMware tools: 
 #           http://samj.net/2008/06/installing-vmware-tools-in-ubuntu-804.html
+# ----------------------------------------------------------------------------
+#  TODO
+#   - consider changing log level in apache2/sites-available/default
+#   - other than ubuntu?
 # ----------------------------------------------------------------------------
 function die
 {
@@ -57,7 +61,7 @@ else
     DEMISAUCE_MYSQL_PWD=$2
     SERVER_ROLE=$3
 fi
-die
+
 cd /tmp
 # Upgrade/install packages
 sudo apt-get -y update
@@ -95,46 +99,36 @@ then
     a2enmod proxy
     a2enmod proxy_http
     a2enmod rewrite
-    cat <<EOL > /etc/apache2/httpd.conf
-    <VirtualHost *>
-            ServerAdmin webmaster@localhost
-            DocumentRoot $DEMISAUCE_WEB_HOME/demisauce/public/
-            
-            RewriteEngine On
-            #RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} -f
-            RewriteCond %{REQUEST_FILENAME} !\.(js|css|gif|jpg|png|ico|txt|swf|mp3|pdf|ps|wav|mid|midi|flv|zip|rar|gz|tar|bmp)$ [NC]
-            RewriteRule ^/(.*) http://127.0.0.1:4950/$1 [P]
-            
-            <Directory />
-                    Options FollowSymLinks
-                    allow from all
-                    AllowOverride None
-            </Directory>
-    </VirtualHost>
-EOL
     echo "modifying /etc/apache2/mods-available/proxy.conf to allow proxy from local"
     #comment out deny all, and enable from localhost
     perl -pi -e s/Deny\ from\ all/\#Deny\ from\ all/g /etc/apache2/mods-available/proxy.conf || die "Could not comment out Deny All"
     perl -pi -e s/\#Allow\ from\ \.example\.com/Allow\ from\ localhost/g /etc/apache2/mods-available/proxy.conf || die "failed to allow localhost proxy"
     
     echo "----- Creating new /etc/apache2/sites-available/default  file  ------------"
-    rm -f /etc/apache2/sites-available/default
+    mv /etc/apache2/sites-available/default /etc/apache2/sites-available/default.bak
     cat <<EOL > /etc/apache2/sites-available/default
-    <VirtualHost *>
-            ServerAdmin webmaster@localhost
-            DocumentRoot $DEMISAUCE_WEB_HOME/demisauce/public/
-            
-            RewriteEngine On
-            #RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} -f
-            RewriteCond %{REQUEST_FILENAME} !\.(js|css|gif|jpg|png|ico|txt|swf|mp3|pdf|ps|wav|mid|midi|flv|zip|rar|gz|tar|bmp)$ [NC]
-            RewriteRule ^/(.*) http://127.0.0.1:4950/$1 [P]
-            
-            <Directory />
-                    Options FollowSymLinks
-                    allow from all
-                    AllowOverride None
-            </Directory>
-    </VirtualHost>
+<VirtualHost *>
+        ServerAdmin webmaster@localhost
+        DocumentRoot $DEMISAUCE_WEB_HOME/demisauce/public/
+        
+        RewriteEngine On
+        #RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} -f
+        RewriteCond %{REQUEST_FILENAME} !\.(js|css|gif|jpg|png|ico|txt|swf|mp3|pdf|ps|wav|mid|midi|flv|zip|rar|gz|tar|bmp)$ [NC]
+        RewriteRule ^/(.*) http://127.0.0.1:4950/$1 [P]
+        
+        <Directory />
+                Options FollowSymLinks
+                allow from all
+                AllowOverride None
+        </Directory>
+        
+        ErrorLog /var/log/apache2/error.log
+        # Possible values include: debug, info, notice, warn, error, crit,
+        # alert, emerg.
+        LogLevel info
+        CustomLog /var/log/apache2/access.log combined
+        ServerSignature On
+</VirtualHost>
 EOL
 fi
 
