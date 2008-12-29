@@ -106,6 +106,7 @@ then
     
     echo "----- Creating new /etc/apache2/sites-available/default  file  ------------"
     mv /etc/apache2/sites-available/default /etc/apache2/sites-available/default.bak
+    PASTER_HOST=http://127.0.0.1:4950/\$1
     cat <<EOL > /etc/apache2/sites-available/default
 <VirtualHost *>
         ServerAdmin webmaster@localhost
@@ -114,7 +115,7 @@ then
         RewriteEngine On
         #RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} -f
         RewriteCond %{REQUEST_FILENAME} !\.(js|css|gif|jpg|png|ico|txt|swf|mp3|pdf|ps|wav|mid|midi|flv|zip|rar|gz|tar|bmp)$ [NC]
-        RewriteRule ^/(.*) http://127.0.0.1:4950/$1 [P]
+        RewriteRule ^/(.*) $PASTER_HOST [P]
         
         <Directory />
                 Options FollowSymLinks
@@ -156,6 +157,9 @@ then
 fi
 
 # install the demisauce python web app
-#./install_demisauce.sh install -d $DEMISAUCE_HOME -p $DEMISAUCE_MYSQL_PWD
+cd /tmp
+wget http://github.com/araddon/demisauce/raw/master/install/install_demisauce.sh
+chmod +x install_demisauce.sh
+#./install_demisauce.sh install -d $DEMISAUCE_HOME -p $DEMISAUCE_MYSQL_PWD -r prod
 
 #./install_wordpress.sh
