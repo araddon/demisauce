@@ -15,7 +15,6 @@ Copy to /tmp/install.sh and run::
 
     cd /tmp
     wget http://github.com/araddon/demisauce/raw/master/install/install.sh
-    wget http://github.com/araddon/demisauce/raw/master/install/install_demisauce.sh
     chmod +x install.sh 
     ./install.sh
 

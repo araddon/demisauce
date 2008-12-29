@@ -160,6 +160,6 @@ fi
 cd /tmp
 wget http://github.com/araddon/demisauce/raw/master/install/install_demisauce.sh
 chmod +x install_demisauce.sh
-#./install_demisauce.sh install -d $DEMISAUCE_HOME -p $DEMISAUCE_MYSQL_PWD -r prod
+./install_demisauce.sh install -d $DEMISAUCE_HOME -p $DEMISAUCE_MYSQL_PWD -r prod
 
 #./install_wordpress.sh

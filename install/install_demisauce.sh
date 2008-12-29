@@ -135,7 +135,8 @@ python setup.py develop  # is this bad, at least it doesn't move items to path?
 echo "------  setting up production.ini    -----------"
 paster make-config demisauce production.ini
 # replace console logging with file:   logfile = console
-perl -pi -e "s/logfile\ =\ console/logfile\ =\ $DEMISAUCE_HOME\/log\/paster.log/g" production.ini || echo "Could not change logging "
+escaped_demisauce_home="${$DEMISAUCE_HOME//\//\/}"
+perl -pi -e "s/logfile\ =\ console/logfile\ =\ $escaped_demisauce_home\/log\/paster.log/g" production.ini || echo "Could not change logging "
 # replace sqllite with mysql and change pwd
 perl -pi -e "s/sqlalchemy.default.url\ =\ sqlite/\#sqlalchemy.default.url\ =\ sqlite/g" production.ini || echo "Could not comment out sqllite"
 perl -pi -e "s/\#sqlalchemy.default.url\ =\ mysql/\sqlalchemy.default.url\ =\ mysql/g" production.ini || echo "Could not un-comment mysql"
