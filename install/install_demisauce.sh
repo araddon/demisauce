@@ -83,50 +83,48 @@ VERSION_FOLDER=`python -c "from datetime import datetime as d; print d.now().str
 mkdir -p $DEMISAUCE_HOME
 mkdir -p "$DEMISAUCE_HOME/log"  # make log directory
 # reassign home to versioned folder
-DEMISAUCE_HOME=$DEMISAUCE_HOME/$VERSION_FOLDER
-echo "New Home:  $DEMISAUCE_HOME"
-mkdir -p $DEMISAUCE_HOME # new one w version
-cd $DEMISAUCE_HOME
+DEMISAUCE_VERSION_HOME=$DEMISAUCE_HOME/$VERSION_FOLDER
+echo "New Home:  $DEMISAUCE_VERSION_HOME"
+mkdir -p $DEMISAUCE_VERSION_HOME # new one w version
+cd $DEMISAUCE_VERSION_HOME
 
-echo "\n---- Downloading Demisauce SRC from github ------------"
+echo "---- Downloading Demisauce SRC from github ------------"
 git clone -q git://github.com/araddon/demisauce.git
 #Create /home/demisauce/current_web pointing to /home/demisauce/2008122812/demisauce/demisauce/trunk
-ln -s $DEMISAUCE_HOME/demisauce/trunk $DEMISAUCE_WEB_HOME
+ln -s $DEMISAUCE_VERSION_HOME/demisauce/demisauce/trunk $DEMISAUCE_WEB_HOME
 
 
 
 cd /tmp  # what if it doesn't have tmp?
-echo "\n---- installing python-mysql -------------"
+echo "---- installing python-mysql -------------"
 apt-get install --yes --force-yes -q python-mysqldb
 
-echo "\n---- installing easy_install python instller ------------"
+echo "---- installing easy_install python instller ------------"
 wget http://peak.telecommunity.com/dist/ez_setup.py
 python ez_setup.py
 rm -f ez_setup.py
 
 easy_install -U flup # part of proxy server
 
-echo '\n---- installing GData ---------'
+echo '---- installing GData ---------'
 easy_install http://gdata-python-client.googlecode.com/files/gdata.py-1.2.3.tar.gz
 
-echo '\n---- installing DemisaucePY ---------'
-cd "$DEMISAUCE_HOME/demisauce/demisaucepy/trunk/"
+echo '---- installing DemisaucePY ---------'
+cd "$DEMISAUCE_VERSION_HOME/demisauce/demisaucepy/trunk/"
 python setup.py install
 
-cd "$DEMISAUCE_HOME/demisauce/demisauce/trunk"
+cd "$DEMISAUCE_VERSION_HOME/demisauce/demisauce/trunk"
 # items i should be able to remove due to dependencies?
-easy_install sqlalchemy==0.4.8
-easy_install pylons==0.9.6.2
-easy_install tempita
-#easy_install Genshi==0.5.1   ?? dependencies?
-easy_install webhelpers==0.6  # todo:  not needed after pylons .9.7?
-
-die
+#easy_install sqlalchemy==0.4.8
+#easy_install pylons==0.9.6.2
+#easy_install tempita
+#easy_install Genshi==0.5.1   #?? should not be needed!
+#easy_install webhelpers==0.6  # todo:  not needed after pylons .9.7?
 
 #python setup.py install  # can't i get rid of this?  why is it needed?
 python setup.py develop  # is this bad, at least it doesn't move items to path?
 
-echo "------  setting up production.ini    -----------\n"
+echo "------  setting up production.ini    -----------"
 paster make-config demisauce production.ini
 # replace console logging with file:   logfile = console
 perl -pi -e "s/logfile\ =\ console/logfile\ =\ $DEMISAUCE_HOME\/log\/paster.log/g" production.ini || echo "Could not change logging "
@@ -138,9 +136,9 @@ perl -pi -e "s/ds_web:password/ds_web:$DEMISAUCE_MYSQL_PWD/g" production.ini || 
 paster setup-app production.ini
 
 echo "-----  create init.d startup scripts for demisauce   
-available at /etc/init.d/demisauce_web (start|stop|restart) \n------------"
+available at /etc/init.d/demisauce_web (start|stop|restart) ------------"
 rm -f /etc/init.d/demisauce_web
-mv $DEMISAUCE_HOME/demisauce/install/install_initd.sh /etc/init.d/demisauce_web
+mv $DEMISAUCE_VERSION_HOME/demisauce/install/install_initd.sh /etc/init.d/demisauce_web
 chmod +x /etc/init.d/demisauce_web
 #/etc/init.d/install_initd.sh "$DEMISAUCE_HOME/demisauce/demisauce/trunk"
 /etc/init.d/demisauce_web start
