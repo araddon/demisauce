@@ -87,7 +87,7 @@ echo "Demisauce web Home:   $DEMISAUCE_WEB_HOME"
 
 #  each new version stored in different named version, then point to current
 #  like:    /demisauce/2008122811   (yyyymmddhh)
-VERSION_FOLDER=`python -c "from datetime import datetime as d; print d.now().strftime('%Y%m%d%H')"` 
+VERSION_FOLDER=$(date +"%y%m%d%H")
 mkdir -p $DEMISAUCE_HOME
 mkdir -p "$DEMISAUCE_HOME/log"  # make log directory
 # reassign home to versioned folder
@@ -136,6 +136,7 @@ echo "------  setting up production.ini    -----------"
 paster make-config demisauce production.ini
 # replace console logging with file:   logfile = console
 escaped_demisauce_home="${$DEMISAUCE_HOME//\//\/}"
+echo "escaped demisauce home  $escaped_demisauce_home"
 perl -pi -e "s/logfile\ =\ console/logfile\ =\ $escaped_demisauce_home\/log\/paster.log/g" production.ini || echo "Could not change logging "
 # replace sqllite with mysql and change pwd
 perl -pi -e "s/sqlalchemy.default.url\ =\ sqlite/\#sqlalchemy.default.url\ =\ sqlite/g" production.ini || echo "Could not comment out sqllite"
