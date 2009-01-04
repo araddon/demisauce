@@ -61,6 +61,8 @@ UPGRADE_OR_INSTALL='install'
 DEMISAUCE_HOME="/home/demisauce"
 DEMISAUCE_MYSQL_PWD="demisauce"
 INSTALL_ROLE="prod"
+EC2_HOSTNAME=`GET http://169.254.169.254/latest/meta-data/public-hostname`
+
 if [ $# -eq "0" ] ; then
     askArgs
 else 
@@ -135,14 +137,14 @@ python setup.py develop  # is this bad, at least it doesn't move items to path?
 echo "------  setting up production.ini    -----------"
 paster make-config demisauce production.ini
 # replace console logging with file:   logfile = console
-escaped_demisauce_home="${$DEMISAUCE_HOME//\//\/}"
+escaped_demisauce_home="${DEMISAUCE_HOME//\//\/}"
 echo "escaped demisauce home  $escaped_demisauce_home"
 perl -pi -e "s/logfile\ =\ console/logfile\ =\ $escaped_demisauce_home\/log\/paster.log/g" production.ini || echo "Could not change logging "
 # replace sqllite with mysql and change pwd
 perl -pi -e "s/sqlalchemy.default.url\ =\ sqlite/\#sqlalchemy.default.url\ =\ sqlite/g" production.ini || echo "Could not comment out sqllite"
 perl -pi -e "s/\#sqlalchemy.default.url\ =\ mysql/\sqlalchemy.default.url\ =\ mysql/g" production.ini || echo "Could not un-comment mysql"
 perl -pi -e "s/ds_web:password/ds_web:$DEMISAUCE_MYSQL_PWD/g" production.ini || echo "Could not change mysql pwd"
-
+perl -pi -e "s/http:\/\/localhost:4950/http:\/\/$EC2_HOSTNAME/g" production.ini || echo "Failed attempting to update Hostname"
 
 if [ $INSTALL_ROLE = "prod" ] ; then
     paster setup-app production.ini
