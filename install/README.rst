@@ -1,7 +1,7 @@
 This is the main installer and it is assumed you are doing a server install, or on a VMWare if this is a server and not development as that is the recommended install.
 
-Installation and Setup
-======================
+Installation and Setup EC2 or Ubuntu VM
+========================================
 This installation uses Ubuntu JEOS
 
 Get `Ubuntu JEOS <http://www.ubuntu.com/products/whatisubuntu/serveredition/jeos>`_ and start the install by doing updates and adding SSH and wget::
@@ -18,4 +18,11 @@ Copy to /tmp/install.sh and run::
     chmod +x install.sh 
     ./install.sh
 
+EC2 Install
+===========
+Assuming you have the Install Code folder from demisauce
+
+Run this from a command line::
+
+    python start_ec2.py amazon_access_key secret_access_key
 

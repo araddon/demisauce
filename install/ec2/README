@@ -1,0 +1,47 @@
+This is one of a collection of interface libraries that can be used to interact
+with the Amazon EC2 system in a number of different languages.  They each
+expose one main interface class, AWSAuthConnection.  This performs all the
+operations using the appropriate libraries for the language, including header
+signing.
+
+
+Usage:
+
+The public methods on AWSAuthConnection closely mirror the EC2 Query API, and
+as such the Query API Reference in the EC2 Developer Guide should be consulted.
+
+An example client is provided as a starting point.
+
+
+Prerequisites:
+
+An Amazon Web Services Developer account signed up for Amazon EC2.
+
+
+Dependencies:
+
+The ElementTree XML library <http://effbot.org/zone/element-index.htm> is
+required for versions of Python prior to 2.5.  From version 2.5, the Python
+standard library includes ElementTree and it does not have to be installed
+separately.
+
+
+Limitations:
+
+These libraries have nearly non-existent error handling.  All errors from lower
+libraries are simply passed up.  The response code in the returned object needs
+to be checked after each request to verify whether the request succeeded.
+
+It is our intention that these libraries act as a starting point for future
+development.  They are meant to show off the various operations and provide an
+example of how to negotiate the authentication process.
+
+
+
+This software code is made available "AS IS" without warranties of any kind.
+You may copy, display, modify and redistribute the software code either by
+itself or as incorporated into your code; provided that you do not remove any
+proprietary notices.  Your use of this software code is at your own risk and
+you waive any claim against Amazon Web Services LLC or its affiliates with
+respect to your use of this software code. (c) 2007 Amazon Web Services LLC or
+its affiliates.  All rights reserved.
