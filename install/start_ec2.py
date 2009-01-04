@@ -8,7 +8,7 @@ import sys, os
 from ec2 import EC2
 import threading, time
 
-AMI = "ami-1c5db975" # Ubuntu 8.04 small
+AMI = "ami-1c5db975" # Ubuntu 8.04 small  http://alestic.com/
 KEY_PAIR = "gsg-keypair"
 EC2_BIN = "~/.ec2/bin/" # Amazon EC2 system scripts directory
 DOT_EC2 = "~/.ec2/" # users' keys directory
@@ -32,8 +32,9 @@ def start_ds_server(access_key_id, secret_access_key):
     print('after connection, about to start instance')
     run_response =  conn.run_instances(AMI,keyName=KEY_PAIR)
     instance_id = run_response.instanceId
-    print('about to sleep to wait for 30 secs, then describe instances to get address')
-    time.sleep(30)
+    print('about to sleep to wait for 60 secs, then describe instances to get address')
+    print("You must type Yes for adding RSA fingerprint")
+    time.sleep(60)
     instance_info = conn.describe_instances([instance_id])
     print("Amazon InstanceId= %s" % (instance_info.instanceId))
     print('Amazon dnsName = %s' % (instance_info.dnsName))
@@ -41,9 +42,12 @@ def start_ds_server(access_key_id, secret_access_key):
     os.system("scp -i ~/.ec2/id_rsa-%s ~/.ec2/{cert,pk}-*.pem root@%s:/mnt/" % (KEY_PAIR,instance_info.dnsName))
     # move up the demisauce install file
     os.system("scp -i ~/.ec2/id_rsa-%s %s root@%s:/mnt/" % (KEY_PAIR,DS_INSTALL_FILE,instance_info.dnsName))
-    # print out ssh command
+    # ssh onto machine
     ssh_cmd = 'ssh -i %sid_rsa-%s root@%s' % (DOT_EC2,KEY_PAIR,instance_info.dnsName)
-    print(ssh_cmd)
+    print("About to ssh into box at:  %s" % ssh_cmd)
+    print("Run this command:   chmod +x /mnt/install.sh")
+    print("Then run:  /mnt/install.sh and answer questions")
+    os.system(ssh_cmd)
     print("Your Demisauce server is available at http://%s" % (instance_info.dnsName))
 
 def bundle_ds_server():
