@@ -198,7 +198,7 @@
                             </dd>
     <dt>Created:</dt>       <dd>${(item.created).strftime("%b %d, %Y") or ''}</dd>
     <dt>Site:</dt>          <dd>${h.link_to(item.site.name, h.url(controller="site",action="view", id=item.site_id))}</dd>   
-    <dt>Site URL:</dt>      <dd>${item.site.base_url}</dd>
+    <dt>Site URL:</dt>      <dd>${item.app.base_url}</dd>
     <dt>App:</dt>           <dd>${item.app.name}</dd>
     <dt>Service URL:</dt>   <dd>${item.method_url or 'na'}</dd>
     <dt>View XML:</dt>      <dd>${h.link_to('View Xml', "/api/xml/service/%s/%s" % (item.app.slug,item.key))}</dd>

@@ -53,7 +53,7 @@ class ServiceDefinition(object):
     :format: format (json,xml,html,rss) of remote service
     :app_slug: url friendly name of app  (demisauce,phpdemo,djangodemo):  entered
         into web admin when signing up
-    :cache: True/Fals to use cache default = True
+    :cache: True/False to use cache default = True
     :cache_time: in seconds, default = 15 minutes
     :method_url:  url part of this service (many services/app=base_url)
     :url_format:  a simple string substitution of any of available values
@@ -84,6 +84,28 @@ class ServiceDefinition(object):
             self.api_key = cfg.CFG['demisauce.apikey']
         if base_url == None:
             self.base_url = cfg.CFG['demisauce.url']
+    
+    def get_url(self,request):
+        urlformat = ''
+        if self.method_url is not None and self.method_url != "None":
+            # use service.method_url not url_format
+            urlformat =  '{base_url}/%s' % (self.method_url)
+        else:
+            urlformat = self.url_format
+        d = {}
+        try:
+            d = {"base_url":self.base_url,
+                "format":self.format,
+                "service":self.name,
+                "method_url":self.method_url,
+                "key":request, 
+                "request":request,
+                "app_slug":self.app_slug,
+                "api_key":self.api_key}
+        except AttributeError, e:
+            raise RetrievalError('Attribute URL problems')
+        print('urlformat=%s, d=%s' % (urlformat,d))
+        return UrlFormatter(urlformat, d)
     
     def clone(self):
         """Create a clone of this service definition"""
@@ -121,7 +143,9 @@ class ServiceDefinition(object):
         client.use_cache = self.cache
         #client.connect()
         #client.authorize()
+        #print('about to call request= %s/%s' % (self.app_slug, self.name))
         response = client.fetch_service(request=('%s/%s' % (self.app_slug, self.name)))
+        #print response.data
         # setup more service definition
         #log.debug('after service load %s, %s' % (self.app_slug, self.name))
         model = response.model
@@ -349,28 +373,6 @@ class ServiceClient(ServiceClientBase):
         self._cache_key = None
         log.debug('ServiceClient init %s' % (service.name))
     
-    def get_url(self,request):
-        urlformat = ''
-        if self.service.method_url is not None and self.service.method_url != "None":
-            # use service.method_url not url_format
-            urlformat =  '{base_url}/%s' % (self.service.method_url)
-        else:
-            urlformat = self.service.url_format
-        d = {}
-        try:
-            d = {"base_url":self.service.base_url,
-                "format":self.service.format,
-                "service":self.service.name,
-                "method_url":self.service.method_url,
-                "key":request, 
-                "request":request,
-                "app_slug":self.service.app_slug,
-                "api_key":self.service.api_key}
-        except AttributeError, e:
-            raise RetrievalError('Attribute URL problems')
-        
-        return UrlFormatter(urlformat, d)
-    
     def connect(self,request='service',headers={}):
         self.transport.connect(request=request)
     
@@ -428,7 +430,7 @@ class ServiceClient(ServiceClientBase):
             log.debug('about to create xmlrpc servicetransport')
             self.transport = XmlRpcServiceTransport()
             self.transport.service = self.service
-        url = self.get_url(request=request)
+        url = self.service.get_url(request=request)
         self.response.url = url
         cache_key = self.cache_key(url=url)
         log.debug('about to check cache for url=%s' % url)
