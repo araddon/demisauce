@@ -13,7 +13,8 @@
 # ----------------------------------------------------------------------------
 #  TODO
 #   - consider changing log level in apache2/sites-available/default
-#   - other than ubuntu?
+#   - other than ubuntu (move to puppet/capistrano?)
+#   - security hardening:  https://help.ubuntu.com/community/Security
 # ----------------------------------------------------------------------------
 function die
 {
@@ -45,6 +46,8 @@ return to accept [all]"
 
 #-----------------------------------  Start of program
 DEMISAUCE_HOME='/home/demisauce'
+MYSQL_HOME='/mnt/mysql'
+ZRM_HOME='/mnt/mysql-zrm'
 DEMISAUCE_WEB_HOME=$DEMISAUCE_HOME/current_web
 ARGS=3
 if [ $# -ne "$ARGS" ]
@@ -77,14 +80,51 @@ then
     apt-get install -y mysql-server
     netstat -na | grep 3306 > /dev/null && echo 'mysql is running on 3306' || die "MySQL does not appear to be running on port 3306."
     cat <<EOL > demisauce.sql
-    create database if not exists demisauce character set utf8;
+    create database if not exists demisauce DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
     use mysql;
     delete from user where user = '';
     GRANT ALL PRIVILEGES ON demisauce.* TO 'ds_web'@'localhost' IDENTIFIED BY '$DEMISAUCE_MYSQL_PWD' WITH GRANT OPTION;
+    grant select, insert, update, create, drop, reload, shutdown, alter, super, lock tables, replication client on *.* to 'backup-user'@'localhost' identified by '$DEMISAUCE_MYSQL_PWD'; 
     flush privileges;
 EOL
     mysql -uroot -p$MYSQL_ROOT_PWD < demisauce.sql || die "Could not set up database for Demisauce."
     rm -f demisauce.sql
+    mkdir -p $MYSQL_HOME
+    mkdir -p "$MYSQL_HOME/tmp"
+    chown mysql $MYSQL_HOME
+    chown mysql "$MYSQL_HOME/tmp"
+    /etc/init.d/mysql stop
+    mv /var/lib/mysql/* $MYSQL_HOME
+    escaped_mysql_home="${MYSQL_HOME//\//\/}"
+    echo "New escaped_mysql_home = $escaped_mysql_home"
+    rmdir /var/lib/mysql
+    # update datadir=/mnt/mysql and tmpdir=/mnt/mysql/tmp/
+    echo "---- making changes to /etc/mysql/my.cnf  "
+    perl -pi -e "s/\/var\/lib\/mysql/$escaped_mysql_home/g" /etc/mysql/my.cnf || die "could not change my.cnf"
+    perl -pi -e "s/\/tmp/$escaped_mysql_home\/tmp/g" /etc/mysql/my.cnf || die "could not change my.cnf"
+    perl -pi -e "s/skip\-external\-locking/skip\-external\-locking\nlog\-bin/g" /etc/mysql/my.cnf || die "could not change my.cnf"
+    
+    # install zamanda backup , zamanda depends on mailx
+    echo "----  Installing Zamanda Backup for MySql, needs mailx for sending emails"
+    apt-get --yes --force-yes -q install mailx libxml-parser-perl libdbd-mysql-perl
+    # if no mail transport agent defined mailx dependency will get one here
+    apt-get -f install 
+    cd /tmp
+    wget http://www.zmanda.com/downloads/community/ZRM-MySQL/2.1/Debian/mysql-zrm_2.1_all.deb
+    dpkg -i mysql-zrm*.deb 
+    
+    mkdir -p "$ZRM_HOME/demisauce"
+    cat <<EOL > $ZRM_HOME/demisauce/mysql-zrm.conf
+    host="localhost"
+    databases="demisauce"
+    password="$MYSQL_ROOT_PWD"
+    user="root"
+    compress=1
+    mysql-binlog-path="$MYSQL_HOME"
+EOL
+    chown mysql "$ZRM_HOME/demisauce"
+    chown mysql "$ZRM_HOME/demisauce/mysql-zrm.conf"
+    /etc/init.d/mysql restart
 fi
 
 if [ $SERVER_ROLE = "all" ] || [ $SERVER_ROLE = "web" ] 

@@ -1,4 +1,4 @@
-This is the main installer and it is assumed you are doing a server install, or on a VMWare if this is a server and not development as that is the recommended install.
+This is the main installer and it is assumed you are doing a server install, or on a VMWare.   As Demisauce is meant to be services used by your app, the recommended install is in vm/kvm/xen for development, not onto your actual machine.  
 
 Installation and Setup EC2 or Ubuntu VM
 ========================================
@@ -20,7 +20,7 @@ Copy to /tmp/install.sh and run::
 
 EC2 Install
 ===========
-Assuming you have the Install Code folder from demisauce
+Assuming you have the  path/to/demisauce/install folder
 
 Run this from a command line::
 

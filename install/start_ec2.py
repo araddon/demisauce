@@ -51,6 +51,7 @@ def start_ds_server(access_key_id, secret_access_key):
     print("Your Demisauce server is available at http://%s" % (instance_info.dnsName))
 
 def bundle_ds_server():
+    """Starts a Demisauce EC2 image and bundles it"""
     #ec2-bundle-vol -d /mnt -k /mnt/pk-*.pem -c /mnt/cert-*.pem -u AWSAccountID -r i386 -p DemisauceBase
     #ec2-upload-bundle -b <your-s3-bucket> -m /mnt/sampleimage.manifest.xml -a <aws-access-key-id> -s <aws-secret-access-key> 
     #ec2-register <your-s3-bucket>/sampleimage.manifest.xml
@@ -58,11 +59,17 @@ def bundle_ds_server():
 
 
 if __name__=='__main__':
-    if len(sys.argv) < 3:
-        print 'usage:   python start_ec2.py access_key secrete_access_key'
+    if len(sys.argv) < 4:
+        print 'usage:   python start_ec2.py (start|bundle) access_key secrete_access_key'
     else:
-        access_key, secrete_access_key = sys.argv[1], sys.argv[2]
-        #test_demisauce(access_key, secrete_access_key)
-        start_ds_server(access_key, secrete_access_key)
-
+        method = sys.argv[1]
+        access_key, secrete_access_key = sys.argv[2], sys.argv[3]
+        if method == 'test':
+            test_demisauce(access_key, secrete_access_key)
+        elif method == 'start':
+            start_ds_server(access_key, secrete_access_key)
+        elif method == 'bundle'
+            start_ds_server(access_key, secrete_access_key)
+        else:
+            print('Command:  %s not recognized' % method)
 

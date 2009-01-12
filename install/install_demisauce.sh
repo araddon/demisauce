@@ -61,7 +61,17 @@ UPGRADE_OR_INSTALL='install'
 DEMISAUCE_HOME="/home/demisauce"
 DEMISAUCE_MYSQL_PWD="demisauce"
 INSTALL_ROLE="prod"
-EC2_HOSTNAME=`GET http://169.254.169.254/latest/meta-data/public-hostname`
+
+ec2-describe-images > /dev/null && hasec2="true" || hasec2="false"
+echo "hasec2?  $hasec2 "
+
+if [ "$hasec2" = 'true' ] ; then
+    echo " true loop for is ec2"
+    HOSTNAME=`GET http://169.254.169.254/latest/meta-data/public-hostname`
+else
+    HOSTNAME="localhost:4950"
+fi
+
 
 if [ $# -eq "0" ] ; then
     askArgs
@@ -144,7 +154,7 @@ perl -pi -e "s/logfile\ =\ console/logfile\ =\ $escaped_demisauce_home\/log\/pas
 perl -pi -e "s/sqlalchemy.default.url\ =\ sqlite/\#sqlalchemy.default.url\ =\ sqlite/g" production.ini || echo "Could not comment out sqllite"
 perl -pi -e "s/\#sqlalchemy.default.url\ =\ mysql/\sqlalchemy.default.url\ =\ mysql/g" production.ini || echo "Could not un-comment mysql"
 perl -pi -e "s/ds_web:password/ds_web:$DEMISAUCE_MYSQL_PWD/g" production.ini || echo "Could not change mysql pwd"
-perl -pi -e "s/http:\/\/localhost:4950/http:\/\/$EC2_HOSTNAME/g" production.ini || echo "Failed attempting to update Hostname"
+perl -pi -e "s/http:\/\/localhost:4950/http:\/\/$HOSTNAME/g" production.ini || echo "Failed attempting to update Hostname"
 
 if [ $INSTALL_ROLE = "prod" ] ; then
     paster setup-app production.ini

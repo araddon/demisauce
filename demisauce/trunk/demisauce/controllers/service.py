@@ -6,6 +6,7 @@ from formencode import Invalid, validators
 from formencode.validators import *
 import formencode
 
+from demisauce.lib import slugify
 from demisauce.lib.base import *
 from demisauce.lib.filter import FilterList, Filter
 from demisauce.lib.helpers import dspager
@@ -128,6 +129,7 @@ class ServiceController(BaseController):
         else:
             app = App.get(site.id,id)
         
+        app.slug = slugify(sanitize(request.POST['app_name']))
         app.name = sanitize(request.POST['app_name'])
         app.description = sanitize(request.POST['description'])
         app.base_url = sanitize(request.POST['base_url'])

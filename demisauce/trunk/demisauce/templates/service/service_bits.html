@@ -70,8 +70,8 @@
                         <div class="optional">
                             <fieldset> 
                                 <legend>List In Public List?</legend>
-                                ${h.radio_button('list_public', '1',checked=(item and item.list_public == 1))} Yes <br />
-                                ${h.radio_button('list_public', '0',checked=(item and item.list_public == 0))} No <br />
+                                ${h.radio_button('list_public', '1',checked=(item and item.list_public == True))} Yes <br />
+                                ${h.radio_button('list_public', '0',checked=(item and item.list_public == False))} No <br />
                             </fieldset> 
                         </div>
                         <div class="box2" style="margin:10px 0px;">
@@ -102,6 +102,7 @@
                         if (statusText == "success") {
                             newid = responseText;
                             $('#service_form #app').append("<option value=\"" + newid + "\">"+ app_name + "</option>");
+                            $('#service_form #app').val(newid); 
                             //alert(responseText + app_name);
                             $('#facebox .close').trigger('click');
                             $('#old_app_form').attr('id','app_form');
@@ -243,7 +244,7 @@
             <th>View</th>
             <th></th>
             <th>Date</th>
-            <th>Application</th>
+            <th>Site</th>
         </tr>
     </thead>
     <tbody>
@@ -259,7 +260,7 @@
                 % endif
                 
                 <td>${(item.created).strftime("%b %d, %Y") or ''}</td>
-                <td>${h.link_to(item.app.name, h.url(controller="site",action="view", id=item.app_id))}</td>
+                <td>${h.link_to(item.site.name, h.url(controller="site",action="view", id=item.site_id))}</td>
             </tr>
         % endif
     % endfor
