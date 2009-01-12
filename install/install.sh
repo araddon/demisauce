@@ -118,7 +118,7 @@ EOL
     host="localhost"
     databases="demisauce"
     password="$MYSQL_ROOT_PWD"
-    user="root"
+    user="backup-user"
     compress=1
     mysql-binlog-path="$MYSQL_HOME"
 EOL
