@@ -19,10 +19,12 @@ log = logging.getLogger(__name__)
 
 def google_auth_url(return_url):
     import urllib
-    from gdata import auth as gauth
+    from gdata import auth
     url = urllib.urlencode({'url':return_url})
-    return gauth.GenerateAuthSubUrl('%s/comment/googleauth?%s' % (config['demisauce.url'],url), 
-            'http://www.google.com/m8/feeds',False,True)
+    next = '%s/comment/googleauth?%s' % (config['demisauce.url'],url)
+    scope = 'http://www.google.com/m8/feeds'
+    auth_sub_url = auth.GenerateAuthSubUrl(next, scope, secure=False, session=True)
+    return auth_sub_url
 
 def compute_userhash():
     if 'HTTP_USER_AGENT' in request.environ and 'REMOTE_ADDR' in request.environ:
@@ -72,6 +74,8 @@ class CommentController(BaseController):
         import gdata.contacts
         import gdata.contacts.service
         authsub_token = request.GET['token']
+        log.info('calling gdata_authsubtoke = %s' % (authsub_token))
+        #TODO:  upgrade to gdata 1.2+ which breaks this
         gd_client = gdata.contacts.service.ContactsService()
         gd_client.auth_token = authsub_token
         gd_client.UpgradeToSessionToken()
