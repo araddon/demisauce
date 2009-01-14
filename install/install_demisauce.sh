@@ -54,6 +54,12 @@ function askArgs
     if [ "$role" != "" ] ; then
         INSTALL_ROLE=$role
     fi
+    echo -en "Please enter 'ec2' or 'vm' \
+    return to accept:  'ec2'   :   "
+    read vmorec2
+    if [ "$vmorec2" != "" ] ; then
+        VMOREC2=$vmorec2
+    fi
 }
 
 #----------  Start of program
@@ -61,14 +67,16 @@ UPGRADE_OR_INSTALL='install'
 DEMISAUCE_HOME="/home/demisauce"
 DEMISAUCE_MYSQL_PWD="demisauce"
 INSTALL_ROLE="prod"
+VMOREC2="ec2"
 
-ec2-describe-images > /dev/null && hasec2="true" || hasec2="false"
-echo "hasec2?  $hasec2 "
+#ec2-describe-images > /dev/null && hasec2="true" || hasec2="false"
+#echo "hasec2?  $hasec2 "
 
-if [ "$hasec2" = 'true' ] ; then
-    echo " true loop for is ec2"
+if [ "$VMOREC2" = 'ec2' ] ; then
+    echo " It appears to be EC2"
     HOSTNAME=`GET http://169.254.169.254/latest/meta-data/public-hostname`
 else
+    echo "It appears to NOT be ec2, JEOS?"
     HOSTNAME="localhost:4950"
 fi
 
@@ -84,6 +92,7 @@ else
                 -d) DEMISAUCE_HOME=$2;                              shift 2 ;;
                 -p) DEMISAUCE_MYSQL_PWD=$2;                         shift 2 ;;
                 -r) INSTALL_ROLE=$2;                                shift 2 ;;
+                -e) VMOREC2=$2;                                     shift 2 ;;
                 *)             echo "$0: Unrecognized option: $2" >&2; exit 1;
             esac
         done
@@ -176,4 +185,5 @@ elif [ $INSTALL_ROLE = "dev" ] ; then
 fi
 
 
-
+echo "---------------------"
+echo "--- Your server is available at:   $HOSTNAME"

@@ -16,6 +16,9 @@
 #   - other than ubuntu (move to puppet/capistrano?)
 #   - security hardening:  https://help.ubuntu.com/community/Security
 # ----------------------------------------------------------------------------
+# Password locations:
+#  - /home/demisauce/current_web/production.ini (mysql)
+#  - /etc/mysql-zrm/demisauce/mysql-zrm.conf  (mysql-backup pwd)
 function die
 {
     echo $*
@@ -42,28 +45,21 @@ return to accept [all]"
     if [ "$SERVER_ROLE" = "" ] ; then
         SERVER_ROLE="all"
     fi
+    echo -en "Please enter 'ec2' or 'vm' \
+    return to accept:  'ec2'   :   "
+    read vmorec2
+    if [ "$vmorec2" != "" ] ; then
+        VMOREC2=$vmorec2
+    fi
 }
 
 #-----------------------------------  Start of program
 DEMISAUCE_HOME='/home/demisauce'
-MYSQL_HOME='/mnt/mysql'
-ZRM_HOME='/mnt/mysql-zrm'
+MYSQL_HOME='/vol/lib'
+ZRM_HOME='/vol/mysql-zrm'
 DEMISAUCE_WEB_HOME=$DEMISAUCE_HOME/current_web
-ARGS=3
-if [ $# -ne "$ARGS" ]
-then
-    if [ $# -ne "0" ] ; then
-        echo "Usage: install.sh mysql_password  demisauce_db_pwd all"
-        echo "You can also just run ./install.sh to have the script guide you through the setup process."
-        die 
-    else
-        askArgs
-    fi
-else
-    MYSQL_ROOT_PWD=$1
-    DEMISAUCE_MYSQL_PWD=$2
-    SERVER_ROLE=$3
-fi
+VMOREC2="ec2"
+SERVER_ROLE='all'
 
 cd /tmp
 # Upgrade/install packages
@@ -78,6 +74,7 @@ then
     echo "mysql-server mysql-server/root_password select $MYSQL_ROOT_PWD" | debconf-set-selections
     echo "mysql-server mysql-server/root_password_again select $MYSQL_ROOT_PWD" | debconf-set-selections
     apt-get install -y mysql-server
+    apt-get install --yes --force-yes -q xfsprogs
     netstat -na | grep 3306 > /dev/null && echo 'mysql is running on 3306' || die "MySQL does not appear to be running on port 3306."
     cat <<EOL > demisauce.sql
     create database if not exists demisauce DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
@@ -89,20 +86,44 @@ then
 EOL
     mysql -uroot -p$MYSQL_ROOT_PWD < demisauce.sql || die "Could not set up database for Demisauce."
     rm -f demisauce.sql
-    mkdir -p $MYSQL_HOME
-    mkdir -p "$MYSQL_HOME/tmp"
-    chown mysql $MYSQL_HOME
-    chown mysql "$MYSQL_HOME/tmp"
+    
     /etc/init.d/mysql stop
-    mv /var/lib/mysql/* $MYSQL_HOME
-    escaped_mysql_home="${MYSQL_HOME//\//\/}"
+    killall mysqld_safe
+    
+    if [ "$VMOREC2" = 'ec2' ] ; then
+        echo " It appears to be EC2, creating xfs fs"
+        
+    fi
+    mkfs.xfs /dev/sdh
+    echo "/dev/sdh /vol xfs noatime 0 0" >> /etc/fstab
+    mkdir /vol
+    mount /vol
+    mkdir /vol/lib /vol/log
+    chown mysql:mysql /vol/lib
+    chown mysql:mysql /vol/log
+    mv /var/lib/mysql /vol/lib/
+    mv /var/log/mysql /vol/log/
+    test -f /vol/log/mysql/mysql-bin.index &&
+      perl -pi -e 's%/var/log/%/vol/log/%' /vol/log/mysql/mysql-bin.index
+    #chown mysql:mysql "$MYSQL_HOME/tmp"
+    escaped_mysql_home="\/vol\/lib"
     echo "New escaped_mysql_home = $escaped_mysql_home"
-    rmdir /var/lib/mysql
+    #rmdir /var/lib/mysql
     # update datadir=/mnt/mysql and tmpdir=/mnt/mysql/tmp/
     echo "---- making changes to /etc/mysql/my.cnf  "
-    perl -pi -e "s/\/var\/lib\/mysql/$escaped_mysql_home/g" /etc/mysql/my.cnf || die "could not change my.cnf"
-    perl -pi -e "s/\/tmp/$escaped_mysql_home\/tmp/g" /etc/mysql/my.cnf || die "could not change my.cnf"
-    perl -pi -e "s/skip\-external\-locking/skip\-external\-locking\nlog\-bin/g" /etc/mysql/my.cnf || die "could not change my.cnf"
+    #perl -pi -e "s/\/var\/lib\/mysql/$escaped_mysql_home/g" /etc/mysql/my.cnf || die "could not change my.cnf"
+    #perl -pi -e "s/\/tmp/$escaped_mysql_home\/tmp/g" /etc/mysql/my.cnf || die "could not change my.cnf"
+    #perl -pi -e "s/skip\-external\-locking/skip\-external\-locking\nlog\-bin/g" /etc/mysql/my.cnf || die "could not change my.cnf"
+    cat > /etc/mysql/conf.d/mysql-ec2.cnf <<EOM
+    [mysqld]
+    innodb_file_per_table
+    datadir          = /vol/lib/mysql
+    log_bin          = /vol/log/mysql/mysql-bin.log
+    max_binlog_size  = 1000M
+    #log_slow_queries = /vol/log/mysql/mysql-slow.log
+    #long_query_time  = 10
+EOM
+    rsync -aR /etc/mysql /vol/
     
     # install zamanda backup , zamanda depends on mailx
     echo "----  Installing Zamanda Backup for MySql, needs mailx for sending emails"
@@ -112,9 +133,14 @@ EOL
     cd /tmp
     wget http://www.zmanda.com/downloads/community/ZRM-MySQL/2.1/Debian/mysql-zrm_2.1_all.deb
     dpkg -i mysql-zrm*.deb 
+    rm mysql-zrm*.deb 
+    # change from /var/lib/mysql-zrm to $ZRM_HOME
+    escaped_zrm_home="${ZRM_HOME//\//\/}"
+    echo "----changing ZRM backup root to:  $escaped_zrm_home "
+    perl -pi -e "s/\#destination=\/var\/lib\/mysql\-zrm/$escaped_zrm_home/g" /etc/mysql-zrm/mysql-zrm.conf || die "could not change mysql-zrm.conf"
     
-    mkdir -p "$ZRM_HOME/demisauce"
-    cat <<EOL > $ZRM_HOME/demisauce/mysql-zrm.conf
+    mkdir -p "/etc/mysql-zrm/demisauce"
+    cat <<EOL > /etc/mysql-zrm/demisauce/mysql-zrm.conf
     host="localhost"
     databases="demisauce"
     password="$MYSQL_ROOT_PWD"
@@ -122,9 +148,9 @@ EOL
     compress=1
     mysql-binlog-path="$MYSQL_HOME"
 EOL
-    chown mysql "$ZRM_HOME/demisauce"
-    chown mysql "$ZRM_HOME/demisauce/mysql-zrm.conf"
-    /etc/init.d/mysql restart
+    chown mysql:mysql "/etc/mysql-zrm/demisauce"
+    chown mysql:mysql "/etc/mysql-zrm/demisauce/mysql-zrm.conf"
+    /etc/init.d/mysql start
 fi
 
 if [ $SERVER_ROLE = "all" ] || [ $SERVER_ROLE = "web" ] 
@@ -200,6 +226,6 @@ fi
 cd /tmp
 wget http://github.com/araddon/demisauce/raw/master/install/install_demisauce.sh
 chmod +x install_demisauce.sh
-./install_demisauce.sh install -d $DEMISAUCE_HOME -p $DEMISAUCE_MYSQL_PWD -r prod
+./install_demisauce.sh install -d $DEMISAUCE_HOME -p $DEMISAUCE_MYSQL_PWD -r prod -e $VMOREC2
 
 #./install_wordpress.sh
