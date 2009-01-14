@@ -136,7 +136,7 @@ rm -f ez_setup.py
 easy_install -U flup # part of proxy server
 
 echo '---- installing GData ---------'
-easy_install http://gdata-python-client.googlecode.com/files/gdata.py-1.2.3.tar.gz
+easy_install http://gdata-python-client.googlecode.com/files/gdata.py-1.1.1.tar.gz
 
 echo '---- installing DemisaucePY ---------'
 cd "$DEMISAUCE_VERSION_HOME/demisauce/demisaucepy/trunk/"
