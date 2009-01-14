@@ -45,7 +45,7 @@ return to accept [all]"
     if [ "$SERVER_ROLE" = "" ] ; then
         SERVER_ROLE="all"
     fi
-    echo -en "Please enter 'ec2' or 'vm' \
+    echo -en "Please enter 'ec2' or 'vm' 
     return to accept:  'ec2'   :   "
     read vmorec2
     if [ "$vmorec2" != "" ] ; then
@@ -60,6 +60,8 @@ ZRM_HOME='/vol/mysql-zrm'
 DEMISAUCE_WEB_HOME=$DEMISAUCE_HOME/current_web
 VMOREC2="ec2"
 SERVER_ROLE='all'
+
+askArgs
 
 cd /tmp
 # Upgrade/install packages
@@ -92,12 +94,14 @@ EOL
     
     if [ "$VMOREC2" = 'ec2' ] ; then
         echo " It appears to be EC2, creating xfs fs"
-        
+        mkfs.xfs /dev/sdh
+        echo "/dev/sdh /vol xfs noatime 0 0" >> /etc/fstab
+        mkdir /vol
+        mount /vol
+    else
+        # vm
+        mkdir /vol
     fi
-    mkfs.xfs /dev/sdh
-    echo "/dev/sdh /vol xfs noatime 0 0" >> /etc/fstab
-    mkdir /vol
-    mount /vol
     mkdir /vol/lib /vol/log
     chown mysql:mysql /vol/lib
     chown mysql:mysql /vol/log
