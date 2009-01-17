@@ -67,7 +67,7 @@ cd /tmp
 # Upgrade/install packages
 sudo apt-get -y update
 # some basics
-apt-get install --yes --force-yes -q wget unzip cron
+apt-get install --yes --force-yes -q wget unzip cron rsync
 
 if [ $SERVER_ROLE = "all" ] || [ $SERVER_ROLE = "db" ] 
 then
