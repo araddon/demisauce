@@ -47,7 +47,7 @@
                         </div>
                         <div class="optional">
                             <label for="app">app:</label>
-                            ${h.select("app", ((item and item.app_id) or c.app_list[0][0]),c.app_list, id='app')} <a href="javascript:void(0);" id="add_new_app" objid="0">Add New App</a>
+                            ${h.select("app", [(item and item.app_id) or c.app_list[0][0]],c.app_list, id='app')} <a href="javascript:void(0);" id="add_new_app" objid="0">Add New App</a>
                         </div>
                         <div class="required">
                             <label for="format">Format</label>
@@ -118,6 +118,7 @@
     <div id="hidden_app_div" style="display:none">
         ${app_form(None)}
     </div>
+    <div class="clear"></div>
 
 </%def>
 <%def name="app_form(item)">
