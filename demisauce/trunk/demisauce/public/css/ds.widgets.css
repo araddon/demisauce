@@ -49,7 +49,7 @@ padding:8px 8px 4px;
 	idea - http://www.humanized.com/weblog/2006/09/11/monolog_boxes_and_transparent_messages
 	home - http://humanmsg.googlecode.com
 */
-html, body {height: 100%; /* Damn you IE! */}
+html, body {heightxx: 100%; /* Damn you IE! */}
 .humanMsg {font: normal 20px/50px Helvetica, Arial, Sans-Serif;letter-spacing: -1px;position: fixed;top: 130px;left: 25%;
     width: 50%;color: white;background-color: #000;text-align: center;display: none;opacity: 0;z-index: 100000;
 -moz-border-radius:3px;}
