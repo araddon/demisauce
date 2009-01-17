@@ -47,6 +47,7 @@ def setup_site(user):
         emailitem.template = e['template']
         emailitem.from_name = e['from_name']
         emailitem.from_email = e['from_email']
+        emailitem.key = emailitem.makekey(emailitem.subject)
         emailitem.save()
     
 
