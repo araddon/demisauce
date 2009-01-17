@@ -13,7 +13,7 @@
         <h3 style="margin:0px;" >Verify your Invitation</h3>
             <div class="instructions"><b>Welcome!</b>To set up your site you need to provide
                 a little more info, and select a password!</div>
-        <fieldset style="margin-top:0px;" class="small">
+        <fieldset style="margin-top:0px;text-align:left;padding:10px 10px 10px 25px; " class="small">
             <div class="required">
                 <label for="displayname">Display Name</label>
                 ${h.text_field('displayname', value='', size=40)}
@@ -32,7 +32,7 @@
             </div>
         </fieldset>
         <div class="actions">
-            <input type="submit" class="primaryAction" id="submit" value="Create Account &#187;">    &nbsp;&nbsp;
+            <input type="submit" class="primary" id="submit" value="Create Account &#187;">    &nbsp;&nbsp;
             <a href="/" id="cancel">cancel</a>
         </div>
     ${h.end_form()}
