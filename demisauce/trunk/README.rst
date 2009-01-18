@@ -12,13 +12,13 @@ Install _Demisauce: http://github.com/araddon/demisauce/tree/master using git
 
 Make a config file as follows::
 
-    paster make-config demisauce config.ini
+    paster make-config demisauce development.ini
 
-Tweak the config file as appropriate and then setup the application,
-there is a development_ini.sample file which should be close to
-what you need.::
+Tweak the config file as appropriate for your database and settings.
+Also, you can run command line tool to update admin email/pwd and host url::
 
-    paster setup-app config.ini
+    paster setup-app development.ini
+    paster updatesite -p yourpwd -e sysadmin@demisauce.org -h http://yoursite.com -i development.ini
 
 the paster "setup-app" will output a "site key" (an api key to update into your
 ini setting).  It will also give you your username, password::
