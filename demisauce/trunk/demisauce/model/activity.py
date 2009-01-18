@@ -78,3 +78,11 @@ class Activity(ModelBase):
         return act
     
 
+def add_activity(user=None, **kwargs):
+    """Create and save an activity::
+    
+        add_activity(user,activity="Changing Password", category="Account")
+    
+    """
+    a = Activity(site_id=user.site_id,person_id=user.id,**kwargs)
+    a.save()

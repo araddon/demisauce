@@ -7,12 +7,21 @@ from demisauce.model.activity import Activity
 from demisauce.model.person import Person, PersonValidation, \
     GuestValidation, PersonEditValidation, InviteValidation
 from demisauce.model.comment import Comment
-from demisauce.model.activity import Activity
+from demisauce.model.activity import Activity, add_activity
 from formencode import Invalid, validators
 from formencode.validators import *
 import formencode, urllib
 
 log = logging.getLogger(__name__)
+
+class PasswordChangeValidation(formencode.Schema):
+    allow_extra_fields = True
+    filter_extra_fields = False
+    password = formencode.All(validators.NotEmpty())
+    password1 = formencode.All(validators.NotEmpty(),validators.MinLength(5))
+    password2 = formencode.All(validators.NotEmpty(),validators.MinLength(5))
+    chained_validators = [validators.FieldsMatch('password1', 'password2')]
+    
 
 class AccountController(BaseController):
     requires_auth = False
@@ -353,6 +362,24 @@ class AccountController(BaseController):
             c.person = user
             c.user = user
             self.start_session(user)
+        return render('/account/settings.html')
+    
+    @validate(schema=PasswordChangeValidation(), form='edit')
+    def change_pwd(self):
+        if c.user:
+            user = meta.DBSession.query(Person).filter_by(
+                            email=c.user.email.lower()).first()
+            c.person = user
+            if user.is_authenticated(self.form_result['password']):
+                #a = Activity(site_id=user.site_id,person_id=user.id,activity='Changing Password',category='account')
+                #a.save()
+                add_activity(user,activity='Changing Password',category='account')
+                user.set_password(self.form_result['password1'])
+                user.save()
+                h.add_alert("Your Password was updated")
+            else:
+                h.add_error("We were not able to verify the \
+                    existing password, please try again")
         return render('/account/settings.html')
     
     def settings(self):

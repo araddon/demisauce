@@ -3,48 +3,66 @@
 <%def name="title()">Demisuace Account Edit</%def>
 
 <%def name="form(item)">
-    ${h.form(h.url(action='edit'), method='post')}
-
-<div class="base_form main_form" id="FormWrapper" >
-    <div class="yui-gc" >
-        <div class="yui-u first" >
-            <div style="min-height:400px;">
-                <input type="hidden" id="objectid" name="objectid" value="item and item.id) or '0'}">
-                <h1>Profile Settings</h1>
-                <strong>Bold</strong> fields are required.
-                <div class="required">
-                    <label for="email">Email</label>
-                    ${h.text_field('email', value=(item and item.email) or '', size=40)}
-                </div>
-                <div class="required">
-                    <label for="displayname">Name</label>
-                    ${h.text_field('displayname', value=(item and item.displayname) or '', size=40)}
-                </div>
-                <div class="optional">
-                    <label for="url">Url:</label>
-                    ${h.text_field("url", value=(item and item.url) or '', size=40)}
-                </div>
-            </div>
-        </div>
-        <div class="yui-u">
-            <div>
-                ${h.link_to('view user xml', '/api/xml/person/%s' % item.hashedemail)}
-                
-                <div class="box2" style="margin:10px 0px;">
-                    ${h.remote_html('root/help/account/edit')}
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="actions">
-        <input type="submit" class="primary" id="submit" value="Save &#187;">
-        &nbsp;&nbsp;<a href="/account/settings" id="cancelnode">cancel</a>
-    </div>
-</div>
-
-        
     
-        ${h.end_form()}
+        <div class="yui-gc" >
+            <div class="yui-u first" >
+                ${h.form(h.url(action='edit'), method='post')}
+                <div style="padding: 12px;" class="base_form main_form">
+                    <input type="hidden" id="objectid" name="objectid" value="item and item.id) or '0'}">
+                    <h1>User Settings</h1>
+                    <strong>Bold</strong> fields are required.
+                    <div class="required">
+                        <label for="email">Email</label>
+                        ${h.text_field('email', value=(item and item.email) or '', size=40)}
+                    </div>
+                    <div class="required">
+                        <label for="displayname">Name</label>
+                        ${h.text_field('displayname', value=(item and item.displayname) or '', size=40)}
+                    </div>
+                    <div class="optional">
+                        <label for="url">Url:</label>
+                        ${h.text_field("url", value=(item and item.url) or '', size=40)}
+                    </div>
+                    <div class="actions">
+                        <input type="submit" class="primary" id="submit" value="Save &#187;">
+                        &nbsp;&nbsp;<a href="/account/settings" id="cancelnode">cancel</a>
+                    </div>
+                </div>
+                ${h.end_form()}
+                ${h.form(h.url(action='change_pwd'), method='post')}
+                <div style="padding: 12px;" class="base_form main_form">
+                    <input type="hidden" id="objectid" name="objectid" value="item and item.id) or '0'}">
+                    <h1>Change Password</h1>
+                    <div class="required">
+                        <label for="password">Current Password</label>
+                        ${h.text_field('password', type="password", size=40)}
+                    </div>
+                    <div class="required">
+                        <label for="newpassword1">New Password</label>
+                        ${h.text_field('password1', type="password", size=40)}
+                    </div>
+                    <div class="required">
+                        <label for="newpassword1">New Password Repeat:</label>
+                        ${h.text_field('password2', type="password", size=40)}
+                    </div>
+                    <div class="actions">
+                        <input type="submit" class="primary" id="submit" value="Update &#187;">
+                        &nbsp;&nbsp;<a href="/account/settings" id="cancelnode">cancel</a>
+                    </div>
+                </div>
+                ${h.end_form()}
+            </div>
+            <div class="yui-u">
+                <div>
+                    ${h.link_to('view user xml', '/api/xml/person/%s' % item.hashedemail)}
+                
+                    <div class="box2" style="margin:10px 0px;">
+                        ${h.remote_html('root/help/account/edit')}
+                    </div>
+                </div>
+            </div>
+        </div>
+
 </%def>
 
 % if c.user and c.person:
