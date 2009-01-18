@@ -271,9 +271,11 @@
 
 <%def name="minilist(items)">
 % for item in items:
-    <div>
-        ${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}
-    </div>
+    % if item.site_id == c.site_id or item.list_public or (c.user is not None and c.user.issysadmin):
+        <div>
+            ${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}
+        </div>
+    % endif
 % endfor
 </%def>
 

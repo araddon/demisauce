@@ -86,7 +86,7 @@ class ServiceController(BaseController):
     
     #@requires_role('admin')
     def index(self):
-        c.services = Service.all()
+        c.services = Service.all().filter_by(list_public=1)
         c.recent = Service.recent_updates(5)
         return render('/service/service.html')
     
@@ -142,8 +142,10 @@ class ServiceController(BaseController):
         if self.form_result['service_id'] == "0":
             item = Service(site_id=c.site_id, name=sanitize(self.form_result['name']))
             item.owner_id = c.user.id
+        elif c.user.issysadmin:
+            item = Service.get(-1,int(self.form_result['service_id']))
         else:
-            item = Service.get(c.site_id,self.form_result['service_id'])
+            item = Service.get(c.site_id,int(self.form_result['service_id']))
         
         item.name = sanitize(self.form_result['name'])
         item.key = sanitize(self.form_result['real_permalink'])
@@ -151,10 +153,9 @@ class ServiceController(BaseController):
         item.format = sanitize(self.form_result['format'])
         item.method_url = sanitize(self.form_result['method_url'])
         if 'list_public' in self.form_result:
-            item.list_public = self.form_result['list_public']
+            item.list_public = int(self.form_result['list_public'])
         if 'app' in self.form_result:
             item.app_id = self.form_result['app']
-        print 'app_id = %s, item.app_id=%s' % (self.form_result['app'],item.app_id)
         if item.id > 0:
             item.save()
         else:
