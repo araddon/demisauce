@@ -1,18 +1,10 @@
-Demisauce:  Core web application with web services used to host/serve services.
-Demisaucepy:  Python library API's for integrating with DemiSauce
-                Web Services
-DemiSauce.org:  future web site for demisauce.org
+====================================================
+Demisauce:  An Integration as a Service Appliance
+====================================================
+Demisauce is a collection of capability that can be used within your app via services instead of using native components.  It is essentially a service oriented plug in tool.
 
-INSTALL INSTRUCTIONS:
+INSTALL INSTRUCTIONS
+---------------------
 
-http://code.google.com/p/demisauce/wiki/InstallationInstructions
-
-
-=====================
-To do development, run this in the demisauce and demisaucepy roots
-
-pathtodemisauce/demisauce/demisauce/trunk/$ python setup.py develop
-
-pathtodemisauce/demisauce/demisaucepy/trunk/$ python setup.py develop
-
+http://github.com/araddon/demisauce/tree/1d24ccb7c757a362441bb249d970525c34fc27a7/install
 
