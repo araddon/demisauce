@@ -183,7 +183,7 @@ class BaseController(WSGIController):
         c.site = self.site
         c.debug = False
         if 'debug' in config:
-            c.debug = config['debug']
+            c.debug = asbool(config['debug']) 
         if c.user:
             c.site_id = c.user.site_id
             self.filters = FilterList(site_id=c.site_id)
