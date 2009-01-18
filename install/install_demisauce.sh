@@ -77,7 +77,10 @@ if [ "$VMOREC2" = 'ec2' ] ; then
     HOSTNAME=`GET http://169.254.169.254/latest/meta-data/public-hostname`
 else
     echo "It appears to NOT be ec2, JEOS?"
-    HOSTNAME="localhost:4950"
+    # IP="$(wget -o/dev/null -O- http://jackson.io/ip/)"
+    # http://jackson.io/ip/service.html
+    #TODO: this doesn't work on mac
+    HOSTNAME=`ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | > cut -d: -f2 | awk '{ print $1}'`
 fi
 
 
@@ -143,14 +146,8 @@ cd "$DEMISAUCE_VERSION_HOME/demisauce/demisaucepy/trunk/"
 python setup.py install
 
 cd "$DEMISAUCE_VERSION_HOME/demisauce/demisauce/trunk"
-# items i should be able to remove due to dependencies?
-#easy_install sqlalchemy==0.4.8
-#easy_install pylons==0.9.6.2
-#easy_install tempita
-#easy_install Genshi==0.5.1   #?? should not be needed!
-#easy_install webhelpers==0.6  # todo:  not needed after pylons .9.7?
 
-#python setup.py install  # can't i get rid of this?  why is it needed?
+# can't i get rid of this?  why is it needed?
 python setup.py develop  # is this bad, at least it doesn't move items to path?
 
 echo "------  setting up production.ini    -----------"
@@ -165,8 +162,11 @@ perl -pi -e "s/\#sqlalchemy.default.url\ =\ mysql/\sqlalchemy.default.url\ =\ my
 perl -pi -e "s/ds_web:password/ds_web:$DEMISAUCE_MYSQL_PWD/g" production.ini || echo "Could not change mysql pwd"
 perl -pi -e "s/http:\/\/localhost:4950/http:\/\/$HOSTNAME/g" production.ini || echo "Failed attempting to update Hostname"
 
+HOSTNAME2="http://$HOSTNAME"
 if [ $INSTALL_ROLE = "prod" ] ; then
     paster setup-app production.ini
+    
+    paster updatesite -s $HOSTNAME2 -i production.ini
     echo "-----  create init.d startup scripts for demisauce   
     available at /etc/init.d/demisauce_web (start|stop|restart) ------------"
     rm -f /etc/init.d/demisauce_web
@@ -182,6 +182,7 @@ EOL
     crontab /var/spool/cron/crontabs/root.tmp
 elif [ $INSTALL_ROLE = "dev" ] ; then
     paster setup-app devmysql.ini
+    paster updatesite -s $HOSTNAME2 -i devmysql.ini
 fi
 
 
