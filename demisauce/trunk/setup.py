@@ -59,6 +59,7 @@ Demisauce can be installed following these `instructions
 
     [paste.paster_command]
     dataload = demisauce.websetup:SetupTestData
+    updatesite = demisauce.websetup:ChangeBaseSite
     
     [paste.app_install]
     main = demisauce.lib.dsinstaller:DemisauceInstaller

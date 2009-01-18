@@ -33,6 +33,53 @@ from demisauce.config.environment import load_environment
 
 log = logging.getLogger(__name__)
 
+class ChangeBaseSite(command.Command):
+    """
+    This is run from the command line like this::
+    
+        paster updatesite -p admin_password -e admin_email -h http://yoursite.com -i production.ini
+    
+    It updates the base admin site
+    """
+    max_args = 4
+    min_args = 0
+    usage = "updatesite"
+    summary = "Updates data for base admin site"
+    group_name = "demisauce"
+    parser = command.Command.standard_parser(verbose=True)
+    parser.add_option('--ini','-i',
+                      dest='cfgfile',
+                      default='library_test.ini',
+                      help="Enter the ini file to load")
+    parser.add_option('--password','-p',
+                      dest='adminpwd',
+                      default='admin',
+                      help="Enter a password for Admin user [default user = sysadmin@demisauce.org, pwd = admin]")
+    parser.add_option('--adminemail','-e',
+                    dest='adminemail',
+                    default='sysadmin@demisauce.org',
+                    help="Enter the email of admin user [default = sysadmin@demisauce.org]")
+    parser.add_option('--site','-s',
+                    dest='site',
+                    default='http://localhost:4950',
+                    help="Enter the host address of new site [default = http://localhost:4950]")
+    
+    def command(self):
+        print('new email = %s, new pwd = %s, new host = %s' % (self.options.adminpwd, 
+            self.options.adminemail,self.options.site))
+        conf_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        ini_file = os.path.join(conf_dir, self.options.cfgfile)
+        conf = appconfig('config:' + ini_file)
+        load_environment(conf.global_conf, conf.local_conf)
+        s = meta.DBSession.query(site.Site).filter_by(id=1).first()
+        s.email = self.options.adminemail
+        s.base_url = self.options.site
+        s.save()
+        p = meta.DBSession.query(person.Person).filter_by(id=1).first()
+        p.set_password(self.options.adminpwd)
+        p.email = self.options.adminemail
+        p.save()
+
 class SetupTestData(command.Command):
     """
     This is run from the command line like this::
