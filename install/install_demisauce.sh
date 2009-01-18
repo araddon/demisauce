@@ -69,20 +69,10 @@ DEMISAUCE_MYSQL_PWD="demisauce"
 INSTALL_ROLE="prod"
 VMOREC2="ec2"
 
-#ec2-describe-images > /dev/null && hasec2="true" || hasec2="false"
-#echo "hasec2?  $hasec2 "
-
-if [ "$VMOREC2" = 'ec2' ] ; then
-    echo " It appears to be EC2"
-    HOSTNAME=`GET http://169.254.169.254/latest/meta-data/public-hostname`
-else
-    echo "It appears to NOT be ec2, JEOS?"
-    # IP="$(wget -o/dev/null -O- http://jackson.io/ip/)"
-    # http://jackson.io/ip/service.html
-    #TODO: this doesn't work on mac
-    HOSTNAME=`ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | > cut -d: -f2 | awk '{ print $1}'`
-fi
-
+# IP="$(wget -o/dev/null -O- http://jackson.io/ip/)"
+# http://jackson.io/ip/service.html
+#TODO: this doesn't work on mac
+HOSTNAME=`ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | > cut -d: -f2 | awk '{ print $1}'`
 
 if [ $# -eq "0" ] ; then
     askArgs
