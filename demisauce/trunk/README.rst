@@ -18,7 +18,7 @@ Tweak the config file as appropriate for your database and settings.
 Also, you can run command line tool to update admin email/pwd and host url::
 
     paster setup-app development.ini
-    paster updatesite -p yourpwd -e sysadmin@demisauce.org -h http://yoursite.com -i development.ini
+    paster updatesite -p yourpwd -e sysadmin@demisauce.org -s http://yoursite.com -i development.ini
 
 the paster "setup-app" will output a "site key" (an api key to update into your
 ini setting).  It will also give you your username, password::

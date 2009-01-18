@@ -1,14 +1,5 @@
 This is the main installer and it is assumed you are doing a server install, or on a VMWare.   As Demisauce is meant to be services used by your app, the recommended install is in vm/kvm/xen for development, not onto your actual machine.  
 
-Run Pre-Build Amazon AMI
-========================================
-There is a pre build AMI on Amazon
-
-Change The passwords::
-
-    python start_ec2.py amazon_access_key secret_access_key
-
-
 Installation and Setup EC2 or Ubuntu VM
 ========================================
 This installation uses Ubuntu JEOS
