@@ -4,7 +4,7 @@ intact
 """
 import os, logging
 try:
-    from google.appengine.api import memcache
+    from google.appengine.api import memcache as gaememcache
 except ImportError:
     pass
 try:
@@ -161,7 +161,7 @@ class GaeCache(object):
     http://code.google.com/appengine/docs/memcache/
     """
     def get(self, key, default=None):
-        val = memcache.get(key)
+        val = gaememcache.get(key)
         if val == None:
             return default
         else:
@@ -169,10 +169,10 @@ class GaeCache(object):
         
     
     def set(self, key, value, timeout=0):
-        return  memcache.add(key, value, timeout)
+        return  gaememcache.add(key, value, timeout)
     
     def delete(self, key):
-        return memcache.delete(key)
+        return gaememcache.delete(key)
     
 
 
