@@ -1,0 +1,38 @@
+<%namespace name="service" file="service_bits.html"/>
+<%inherit file="../_base2col.html"/>
+
+
+<%def name="title()">Services and Applications Add/Edit </%def>
+
+
+<div class="bar1">
+    <h3>Application</h3>
+</div>
+
+
+% if c.item:
+    ${service.app_form(c.item)}
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('#app_form').dshints();
+            $('#app_form').submit(function() { 
+                $('#app_form').ajaxSubmit({success: function(responseText, statusText)  {
+                    if (statusText == "success") {
+                        alert('success')
+                    } else {
+                        alert(statusText)
+                    }
+                }});
+                return false; 
+            });
+        });
+    </script>
+% else:
+No app
+    
+% endif
+
+
+
+
+

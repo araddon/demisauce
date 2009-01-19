@@ -113,8 +113,15 @@ class ServiceController(BaseController):
     
     @requires_role('admin')
     def apps(self,id=0):
-        c.apps = App.all()
+        c.apps = App.by_site(c.site_id)
         return render('/service/app.html')
+        
+    @requires_role('admin')
+    def appeditform(self,id=0):
+        c.item = App.get(-1,id)
+        if not (c.item.list_public or (c.user and c.user.site_id == c.item.site_id)):
+            c.item = None
+        return render('/service/app_edit.html')
     
     @requires_role('admin')
     def appedit(self,id=0):
