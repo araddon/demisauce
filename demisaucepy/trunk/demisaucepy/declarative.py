@@ -59,6 +59,7 @@ def service_view(service,resource,format='view',app='demisauce'):
     elif format == 'xmlrpc':
         print client.response.data
     else:
+        raise Exception('Eror, other format type?  %s' % (client.response.message))
         print client.response.message
         return []
 
@@ -84,14 +85,15 @@ class ServiceHandler(object):
         try:
             response = client.fetch_service(request=self.key())
         except Exception, e:
-            log.error('what the heck? %s' % e)
+            log.error('Error on Service def get_service fetch? %s' % e)
         if response and response.success == True and self.service.format == 'view':
             #print response.data
             return response.data
         elif response and self.service.format == 'xml':
             return response
         else:
-            print response.message
+            log.error('On Service definition fetch, found unexpected type?  msg=%s %s' % 
+                (self.service.format,response.message))
             return []
     
     def add_cookies(self,ckie_dict={}):

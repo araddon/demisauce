@@ -92,6 +92,7 @@ class ServiceDefinition(object):
             urlformat =  '{base_url}/%s' % (self.method_url)
         else:
             urlformat = self.url_format
+        urlformat = urlformat.replace('//','/')
         d = {}
         try:
             d = {"base_url":self.base_url,
@@ -104,7 +105,7 @@ class ServiceDefinition(object):
                 "api_key":self.api_key}
         except AttributeError, e:
             raise RetrievalError('Attribute URL problems')
-        print('urlformat=%s, d=%s' % (urlformat,d))
+        #print('urlformat=%s, d=%s' % (urlformat,d))
         return UrlFormatter(urlformat, d)
     
     def clone(self):
@@ -445,7 +446,7 @@ class ServiceClient(ServiceClientBase):
                     cache.set(cache_key,self.response,int(self.service.cache_time)) # TODO:  cachetime
             else:
                 log.error('service error on fetch')
-                print('self.response.data = %s' % (self.response.data))
+                #print('self.response.data = %s' % (self.response.data))
         log.debug('returning from fetch %s' % (self.response))
         return self.response
     
