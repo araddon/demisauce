@@ -144,7 +144,7 @@ service = '''
             "name": "Poll Html Service", 
             "key": "poll",
             "views": "",
-            "description": "This is the publicly hosted html for polls"
+            "description": "Simple Polls, embeddable within your application"
         },{
             "site_id": "1",
             "app_id": "1",

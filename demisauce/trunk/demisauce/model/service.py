@@ -37,10 +37,13 @@ class App(ModelBase):
     :name: name of the service
     :description:  description of service
     :base_url:  base url of site (http://localhost:4950 if dev etc)
+    :site:  site of this app
     :authn:  which authN method?
     :cache:  where to cache (memcached, config etc)
     :env:   [dev,test,prod] (needed???  or ?:  leave for later)
     """
+    def __init__(self, **kwargs):
+        super(App, self).__init__(**kwargs)
     
     @classmethod
     def by_site(cls,site_id):

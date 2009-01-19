@@ -190,7 +190,13 @@
 </%def>
 <%def name="detail_view(item)">
 <dl>
-    <dt>Name:</dt>          <dd><h3>${item.name}</h3></dd>
+    <dt>Name:</dt>          <dd><h3>${item.name}
+        % if item.site_id == c.site_id or (c.user is not None and c.user.issysadmin):
+            ${h.link_to('Edit', h.url(controller="service",action="edit", id=item.id), class_="title")}
+        % else:
+        
+        % endif
+    </h3></dd>
     <dt>Author:</dt>        <dd>
                                 % if c.user and c.user.isadmin and c.user.site_id == item.site_id:
                                     ${h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}
@@ -239,34 +245,16 @@
     
 </%def>
 <%def name="publicview(items)">
-<table class="dsadmin">
-    <thead>
-        <tr>
-            <th>View</th>
-            <th></th>
-            <th>Date</th>
-            <th>Site</th>
-        </tr>
-    </thead>
-    <tbody>
     % for item in items:
         % if item.site_id == c.site_id or item.list_public or (c.user is not None and c.user.issysadmin):
-            <tr class="${h.cycle("", "alternate") }">
-                <td>${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}</td>
+            <div class="${h.cycle("", "alternate") }">
+                ${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}
                 
-                % if item.site_id == c.site_id or (c.user is not None and c.user.issysadmin):
-                    <td>${h.link_to('Edit', h.url(controller="service",action="edit", id=item.id), class_="title")}</td>
-                % else:
-                    <td></td>
-                % endif
-                
-                <td>${(item.created).strftime("%b %d, %Y") or ''}</td>
-                <td>${h.link_to(item.site.name, h.url(controller="site",action="view", id=item.site_id))}</td>
-            </tr>
+                ${h.simple_format(h.truncate(item.description, 120))}
+                <br />
+            </div>
         % endif
     % endfor
-    </tbody>
-</table>
 </%def>
 
 <%def name="minilist(items)">

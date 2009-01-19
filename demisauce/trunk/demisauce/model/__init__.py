@@ -34,8 +34,14 @@ def test_connect():
 def setup_site(user):
     """does the base site setup for a new account
     """
-    from demisauce.model import cms, email
+    from demisauce.model import cms, email, service
     from demisauce.fixturedata import site_emails
+    from demisauce.lib import slugify
+    app = service.App(site_id=user.site_id,owner_id=user.id)
+    app.slug = slugify(user.site.name)
+    app.name = user.site.name
+    app.base_url = user.site.base_url
+    app.save()
     cmsitem = meta.DBSession.query(cms.Cmsitem).filter_by(site_id=user.site_id,
         item_type='root').first()
     if not cmsitem:
