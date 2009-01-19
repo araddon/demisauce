@@ -16,7 +16,7 @@ class ErrorController(BaseController):
     This behaviour can be altered by changing the parameters to the
     ErrorDocuments middleware in your config/middleware.py file.
     """
-    def documentxx(self):
+    def document(self):
         """Render the error document"""
         c.code = request.params.get('code', '')
         #print 'in error.py controller'
@@ -49,7 +49,7 @@ class ErrorController(BaseController):
             #return render('/environment.html')
             #return self.pylons_default()
     
-    def document(self):
+    def documentxx(self):
         """Render the error document"""
         page = error_document_template % \
             dict(prefix=request.environ.get('SCRIPT_NAME', ''),
