@@ -59,8 +59,8 @@ def service_view(service,resource,format='view',app='demisauce'):
     elif format == 'xmlrpc':
         print client.response.data
     else:
-        raise Exception('Eror, other format type?  %s' % (client.response.message))
-        print client.response.message
+        #raise Exception('Eror, other format type?  %s' % (client.response.message))
+        #print client.response.message
         return []
 
 class ServiceHandler(object):

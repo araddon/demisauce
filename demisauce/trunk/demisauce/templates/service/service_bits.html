@@ -220,6 +220,7 @@
 <%def name="app_view(item)">
 <dl>
     <dt>Name:</dt>          <dd><h3>${item.name}</h3></dd>
+    <dt>Slug:</dt>          <dd>${item.slug}</dd>
     % if c.user and c.user.isadmin and c.user.site_id == item.site_id:
     <dt>Edit:</dt>        <dd>
                                 
@@ -235,9 +236,10 @@
                                 % endif
                             </dd>
     <dt>Created:</dt>       <dd>${(item.created).strftime("%b %d, %Y") or ''}</dd>
-    <dt>Site:</dt>          <dd>${h.link_to(item.site.name, h.url(controller="site",action="view", id=item.site_id))}</dd>   
+    <dt>Site:</dt>          <dd>${h.link_to(item.site.name, h.url(controller="site",action="view", id=item.site_id))}</dd>  
+    <dt>base_url:</dt>      <dd>${item.base_url}</dd> 
     <dt>Description:</dt>   <dd>${item.description}</dd>
-    <dt>Public:</dt>           <dd>${item.list_public}</dd>
+    <dt>Public:</dt>        <dd>${item.list_public}</dd>
     
 </dl>
     

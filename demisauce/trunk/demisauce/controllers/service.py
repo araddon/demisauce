@@ -100,6 +100,10 @@ class ServiceController(BaseController):
             c.item = None
         return render('/service/app.html')
     
+    @requires_role('admin')
+    def raiseerror(self,id=0):
+        raise Exception('for testing')
+    
     def owner(self,id=0):
         filter = id
         log.info('other=%s,filter=%s' % (self.other,filter))

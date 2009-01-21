@@ -55,8 +55,8 @@ class PollpublicController(BaseController):
                 poll.responses.append(pollresponse)
                 poll.save()
                 poll.update_vote(pollresponse)
-                htmlid = 'poll_answer_%s' % a.id
-                poll.results = rendertf('/poll/poll_results.html',locals())
+                htmlid = 'ds-poll-results-%s' % poll.id
+                poll_html(poll)
                 poll.save()
         
         data = {'success':True,'html':poll.results,'key':poll.key,'htmlid':htmlid}

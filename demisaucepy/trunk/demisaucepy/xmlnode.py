@@ -60,8 +60,10 @@ Example:
     email id= 12, subject = The Goalswarm Password you requested
 
 """
-import elementtree.ElementTree as ET
-from elementtree.ElementTree import XML
+#import elementtree.ElementTree as ET
+#from elementtree.ElementTree import XML
+import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import XML
 
 __all__ = ('XMLNode', )
 

@@ -2,7 +2,13 @@ http://dev.mysql.com/doc/refman/5.0/en/alter-table.html
 ADD [COLUMN] col_name column_definition [FIRST | AFTER col_name ]
 MODIFY [COLUMN] col_name column_definition [FIRST | AFTER col_name]
 
+1/20/09 
+#NOT YET: ALTER TABLE activity ADD ip varchar(16) NOT NULL after `ref_url`;
 
+
+
+
+----- Implemented   
 CREATE TABLE `poll` (
   `id` int(11) NOT NULL auto_increment,
   `site_id` int(11) default 0,

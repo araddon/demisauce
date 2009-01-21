@@ -192,6 +192,7 @@
             var self = this;
             $('div.ds-poll-vote,.ds-poll-question',$(self.element)).hide();
             $(this.options.view_selector,$(self.element)).children().show();
+            $('#ds-poll-results-' + self.poll_id).show();
             return this;
         },
         vote: function(el) {
