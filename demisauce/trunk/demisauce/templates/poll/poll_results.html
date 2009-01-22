@@ -2,14 +2,14 @@
 {{if poll}}
 <div id="{{htmlid}}" class="ds-poll-results" style="display:none;">
     {{for q in poll.questions}}
-    <div class="ds-poll-question-response" >
+    <ul class="ds-poll-question-response" >
         {{for o in q.options}}
-        <div>
+        <li>
             {{o.option}}: <b>{{o.count}}</b>
-        </div>
+        </li>
         {{endfor}}
     
-    </div>
+    </ul>
     {{endfor}}
 </div>
 {{else}}

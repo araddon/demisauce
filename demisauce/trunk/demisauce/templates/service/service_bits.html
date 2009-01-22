@@ -197,6 +197,7 @@
         
         % endif
     </h3></dd>
+    <dt>key:</dt>          <dd>${item.key}</dd>
     <dt>Author:</dt>        <dd>
                                 % if c.user and c.user.isadmin and c.user.site_id == item.site_id:
                                     ${h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}

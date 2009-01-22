@@ -239,7 +239,11 @@ class AccountController(BaseController):
                 dnew['displayname'] = user.displayname
                 dnew['email'] = user.email
                 dnew['title'] = 'welcome'
-                scheduler.add_interval_task(send_emails,0,('thank_you_for_registering_with_demisauce',[user.email],dnew) , initialdelay=delay)
+                scheduler.add_interval_task(send_emails,0,('thank_you_for_registering_with_demisauce',
+                    [user.email],dnew) , initialdelay=delay)
+                if 'demisauce.admin' in config:
+                    scheduler.add_interval_task(send_emails,0,('a-new-user-has-registered',
+                        [config['demisauce.admin']],dnew) , initialdelay=8)
             
             h.add_alert("Thank You!")
             return redirect_wsave(controller='home',action='index')

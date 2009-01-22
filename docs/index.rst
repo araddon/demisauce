@@ -8,17 +8,7 @@ Contents:
 .. toctree::
    :maxdepth: 5
    
-   activities
-   
-   javascript
-   
-   api_python
-   
-   
-   modules
-   memail
-   polls
-   
+   getstarted
    
 
 Indices and tables

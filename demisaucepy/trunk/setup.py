@@ -1,35 +1,8 @@
-"""
-Demisauce
-===========
 
-`Demisauce
-<http://www.demisauce.org>`_ is a set of web services to be utilized
-within other applications.  Instead of building on top of a content management
-framework etc, you can utilize these web services.  See more at the web site.
-
-* Content Management:  Get Chunks of Content (XML, Html) for inclusion
-  in the output of your pages using your templating.
-
-* Email templates:  get email template (XML) for sending of emails.
-
-* Polls:
-
-* Comment System
-
-
-Download and Installation
--------------------------
-
-Demisauce can be installed with `Easy Install
-<http://peak.telecommunity.com/DevCenter/EasyInstall>`_ by typing::
-
-    > easy_install demisaucepy
-
-"""
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.1.0'
+version = '0.1.1'
 
 setup(name='demisaucepy',
       version=version,
@@ -39,23 +12,30 @@ Demisauce
 ===========
 
 `Demisauce
-<http://demisauce.googlecode.com>`_ is a set of web services to be utilized
-within other applications.  Instead of building on top of a content management
-framework etc, you can utilize these web services.
-
-* Content Management:  Get Chunks of Content (XML, Html) for inclusion
-  in the output of your pages using your templating.
+<http://www.demisauce.com>`_ is a set of web services to be utilized
+within other applications.  Instead of building on top of a framework
+you can utilize these web services as components in your app.  Or get the 
+`source code <http://http://github.com/araddon/demisauce/tree/master>`_
 
 * Email templates:  get email template (XML) for sending of emails.
 
-* Administration pages to edit email, content items for use in your app.
+* Polls:  Simple embeddable polls, embed on server side with caching
+  for high performance.
+
+* Comment System:  embed comments related to your articles, books, items, etc
+
+* Activity Graphs and tracking.
+
+* Help and feedback system.
 
 
 Download and Installation
 -------------------------
 
-Demisauce can be installed following these `instructions
-<http://code.google.com/p/demisauce/wiki/InstallationInstructions>`_
+Demisauce can be installed with `Easy Install
+<http://peak.telecommunity.com/DevCenter/EasyInstall>`_ by typing::
+
+  > easy_install demisaucepy
 
 """,
     classifiers=["Development Status :: 2 - Pre-Alpha",
@@ -68,8 +48,8 @@ Demisauce can be installed following these `instructions
     keywords='python',
     author='Aaron Raddon',
     author_email='',
-    url='http://demisauce.googlecode.com/',
-    download_url='http://demisauce.googlecode.com/files/demisaucepy-0.1.0.tar.gz',
+    url='http://github.com/araddon/demisauce',
+    download_url='http://demisauce.googlecode.com/files/demisaucepy-0.1.1.tar.gz',
     install_requires=["elementtree>=1.1","nose>=0.10.4"],
     license='MIT',
     packages=find_packages(exclude=['ez_setup', 'examples']),

@@ -6,6 +6,11 @@ from django.core.cache import cache
 
 log = logging.getLogger(__name__)
 
+def simple(request):
+    t = loader.get_template('simple.html')
+    rc = RequestContext(request,{})
+    return HttpResponse(t.render(rc))
+
 def index(request):
     entry_list = Entry.objects.all().order_by('-pub_date')[:5]
     log.debug('entry_list ct = %s' % len(entry_list))
@@ -14,10 +19,6 @@ def index(request):
         'entry_list': entry_list,
     })
     #cache.delete('e3bc6199e87646230dd144246318eea2') # service definition
-    #cache.delete('d3a6ac5d5c0f2ce6a9d647a08b36debd') # feedback badge html
-    #cache.delete('a9e72e94a16e5e65f9acc9b9a83ca049') # poll service
-    #cache.delete('0ebe41b686e32db935e18b92e7ea9ee3')  #phphelloworld service
-    #log.debug(dir(request.user))
     return HttpResponse(t.render(rc))
 
 def view(request,id=''):

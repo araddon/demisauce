@@ -17,6 +17,7 @@ urlpatterns = patterns('',
     # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
     
     (r'^$', 'djangodemo.blog.views.index'),
+    (r'^simple/$', 'djangodemo.blog.views.simple'),
     (r'^blog/$', 'djangodemo.blog.views.index'),
     (r'^blog/view/(?P<id>\d+)', 'djangodemo.blog.views.view'),
     (r'^status/cache/$', 'djangodemo.blog.memcached_status.view'),

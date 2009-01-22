@@ -155,6 +155,16 @@ service = '''
             "views": "",
             "description": "Comment html and form "
         },{
+            "site_id": "1",
+            "app_id": "1",
+            "owner_id": "1",
+            "list_public" : "1",
+            "name": "Email Template service", 
+            "method_url": "{base_url}/api/xml/email/{key}?apikey={api_key}", 
+            "key": "email",
+            "format": "xml",
+            "description": "Email template"
+        },{
             "site_id": "2",
             "app_id": "3",
             "owner_id": "3",
@@ -235,6 +245,17 @@ or at:   http://demisauce.googlecode.com
         },    
         {
             "site_id": "1", 
+            "subject":"A new user has registered",
+            "key":"a-new-user-has-registered",
+            "from_email":"guest@demisauce.org",
+            "from_name":"Demisauce Admin",
+            "template": "A new user has signed up at demisauce.
+\nTheir Email address $email and $displayname
+\n\nThank You
+\n\nThe Demisauce Team"
+        },    
+        {
+            "site_id": "1", 
             "subject":"Comment Notification",
             "key":"comment-notification",
             "from_email":"guest@demisauce.org",
@@ -245,7 +266,6 @@ or at:   http://demisauce.googlecode.com
 \nDemisauce Team"
         }]
 }'''
-
 comment = '''
 {
     "class": "demisauce.model.comment.Comment", 

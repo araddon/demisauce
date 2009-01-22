@@ -30,12 +30,13 @@ app_instance_uuid = ${app_instance_uuid}
 #beaker.cache.data_dir = %(here)s/data/cache
 #beaker.session.data_dir = %(here)s/data/sessions
 
-# connection information for DemiSauce:  http://www.demisauce.org
+# connection information for your DemiSauce Registry Server 
 demisauce.appname = demisauce
 demisauce.url = http://localhost:4950
 demisauce.apikey = ${demisuace_apikey}
 demisauce.cache = beaker
 demisauce.cacheduration = 5
+demisauce.admin = youremail@youremail.com
 
 # Specify the database for SQLAlchemy to use via
 # pylons.database.session_context.

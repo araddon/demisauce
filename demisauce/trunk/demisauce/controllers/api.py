@@ -220,6 +220,7 @@ class ApiController(BaseController):
         
         if not c.emailtemplates:
             log.info('no email templates?  Should be site=%s' % site)
+            c.emailtemplates = []
         
         kw.update({'format':format})
         return email()(**kw)

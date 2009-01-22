@@ -34,24 +34,25 @@ def send_emails(email_template,recipient_list,substitution_dict=None):
     to recipient list using scheduler which runs in the background
     allowing this current request to continue processing
     """
-    #print 'in send_emails 1=%s, 2=%s, 3=%s' % (email_template,recipient_list,substitution_dict)
     from demisauce.lib import mail
     from demisaucepy import pylons_helper, demisauce_ws_get
     import urllib
     
-    #/api/email/html/your_slug_title_here?apikey=f3f5de7f8376daf29ce3232ca606904ff4adc929
     resource_id = urllib.quote_plus(email_template)
     response = demisauce_ws_get('email',resource_id,format='xml',cache=False)
     if response.success:
         t = response.model
         from string import Template
-        s = Template(t.template)
-        template = s.substitute(substitution_dict)
-        mail.send_mail_toeach((t.subject,
+        if hasattr(t,'template'):
+            s = Template(t.template)
+            template = s.substitute(substitution_dict)
+            mail.send_mail_toeach((t.subject,
                 template, '%s<%s>' % (t.from_name,t.from_email), recipient_list))
-        log.debug('sent emails to %s' % recipient_list)
+            log.debug('sent emails to %s' % recipient_list)
+        else:
+            log.error('Error retrieving that template 1')
     elif not emails.success:
-        log.error('Error retrieving that template')
+        log.error('Error retrieving that template 2')
         return False
 
 

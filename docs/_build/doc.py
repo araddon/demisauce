@@ -3,6 +3,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 class MainPage(webapp.RequestHandler):
   def get(self):
+      #temp
       self.redirect("/static/index.html")
     
 
