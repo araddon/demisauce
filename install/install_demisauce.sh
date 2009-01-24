@@ -72,7 +72,7 @@ VMOREC2="ec2"
 # IP="$(wget -o/dev/null -O- http://jackson.io/ip/)"
 # http://jackson.io/ip/service.html
 #TODO: this doesn't work on mac
-HOSTNAME=`ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | > cut -d: -f2 | awk '{ print $1}'`
+HOSTNAME=`ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}'`
 
 if [ $# -eq "0" ] ; then
     askArgs
