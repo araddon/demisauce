@@ -119,7 +119,7 @@ class ServiceController(BaseController):
     def apps(self,id=0):
         c.apps = App.by_site(c.site_id)
         return render('/service/app.html')
-        
+    
     @requires_role('admin')
     def appeditform(self,id=0):
         c.item = App.get(-1,id)
@@ -142,6 +142,7 @@ class ServiceController(BaseController):
         
         app.slug = slugify(sanitize(request.POST['app_name']))
         app.name = sanitize(request.POST['app_name'])
+        app.authn = sanitize(request.POST['authn'])
         app.description = sanitize(request.POST['description'])
         app.base_url = sanitize(request.POST['base_url'])
         app.save()

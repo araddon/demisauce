@@ -8,6 +8,7 @@
         <authn>${item.app.authn}</authn>
         <method_url>${item.method_url and item.method_url or ''}</method_url>
         <slug>${item.app.slug }</slug>
+        <authn>${item.app.authn }</authn>
         <cache_time>${item.cache_time }</cache_time>
         <format>${item.format and item.format or ''}</format>
         <description><![CDATA[${item.description}]]></description>

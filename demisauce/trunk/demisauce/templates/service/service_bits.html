@@ -143,9 +143,10 @@
                 <div class="optional">
                     <fieldset> 
                         <legend>Auth Method?</legend>
-                        ${h.radio_button('authn', '0',checked=(item and item.authn == 0))} demisauce <br />
-                        ${h.radio_button('authn', '1',checked=(item and item.authn == 1))} oauth <br />
-                        ${h.radio_button('authn', '2',checked=(item and item.authn == 2))} CAS <br />
+                        ${h.radio_button('authn', 'demisauce',checked=(item and str(item.authn)  == 'demisauce'))} demisauce <br />
+                        ${h.radio_button('authn', 'oauth',checked=(item and str(item.authn)  == 'oauth'))} oauth <br />
+                        ${h.radio_button('authn', 'CAS',checked=(item and str(item.authn)  == 'CAS'))} CAS <br />
+                        ${h.radio_button('authn', 'None',checked=(item and str(item.authn) == 'None'))} None <br />
                     </fieldset> 
                 </div>
             </div>
@@ -209,6 +210,7 @@
     <dt>Site:</dt>          <dd>${h.link_to(item.site.name, h.url(controller="site",action="view", id=item.site_id))}</dd>   
     <dt>Site URL:</dt>      <dd>${item.app.base_url}</dd>
     <dt>App:</dt>           <dd>${item.app.name}</dd>
+    <dt>AuthN:</dt>         <dd>${item.app.authn}</dd>
     <dt>Service URL:</dt>   <dd>${item.method_url or 'na'}</dd>
     <dt>View XML:</dt>      <dd>${h.link_to('View Xml', "/api/xml/service/%s/%s" % (item.app.slug,item.key))}</dd>
     <dt>Description:</dt>   <dd>${item.description}</dd>

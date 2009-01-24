@@ -23,7 +23,7 @@ app_table = Table("app", meta.metadata,
         Column("slug", DBString(50)),
         Column("base_url", DBString(255)),
         Column("url_format", DBString(255),nullable=True),
-        Column("authn", DBString(50)),
+        Column("authn", DBString(50),default='None'),
         Column("description", DBText),
     )
 

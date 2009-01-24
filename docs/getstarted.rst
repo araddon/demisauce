@@ -4,9 +4,9 @@ Demisauce Getting started with Django
 ================================================
 
 This tutorial will walk through the creation of a simple blog using `Demisauce <http://www.demisauce.com/>`_ 
-services.  First, step, go to Demisauce and *signup* (top right) on demisauce.com, OR `install demisauce <http://github.com/araddon/demisauce/tree/1cd6ec9b9743bade739bb36bbde5630f877c1848/install>`_.  
+services.  First, go to Demisauce and *signup* (top right) on demisauce.com, OR `install demisauce <http://github.com/araddon/demisauce/tree/1cd6ec9b9743bade739bb36bbde5630f877c1848/install>`_.  
 Currently signups on demisauce.com are limited so send an email to the 
-`Help group <http://groups.google.com/group/demisauce>`_ and I will enable your account.  
+`discussion group <http://groups.google.com/group/demisauce>`_ and I will enable your account.  
 
 The full source code for this application can be found on `Github <http://github.com/araddon/demisauce/tree/1cd6ec9b9743bade739bb36bbde5630f877c1848/demos/djangodemo>`_ so you can 
 also pull from there and view that application.
@@ -18,7 +18,8 @@ Create a Django Demo Application
 Create Django App
 ------------------
 See the documentation on `Django Docs <http://docs.djangoproject.com/en/dev/intro/tutorial01/#intro-tutorial01>`_ 
-and follow the part of installing and starting a new app, and where it says to create the app *polls* we will actually be running.
+and follow the part of installing and starting a new app, and where it says to create the app *polls* we will actually be 
+createing an app called *blog*.
 It is easiest to use Sqlite as the db for this demo::
 
     python manage.py startapp blog
@@ -59,14 +60,15 @@ Then enter that apikey, and url to your *settings.py* like this::
     # apikey from account page, service url of demisauce server.
     DEMISAUCE_APIKEY = 'a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202'
     DEMISAUCE_URL = 'http://localhost:4951'
+    # your app name, used to make your urls unique
     DEMISAUCE_APPNAME = 'djangodemo'
     # if you have memcached
     CACHE_BACKEND = 'memcached://192.168.125.128:11211/'
     #CACHE_BACKEND = 'locmem:///'
     
 
-Now Create a view following the `Django tuturial <http://docs.djangoproject.com/en/dev/intro/tutorial03/#intro-tutorial03>`_, 
-called *simple*, first add to the urls.py::
+Now Create a view following the `Django tuturial <http://docs.djangoproject.com/en/dev/intro/tutorial03/#intro-tutorial03>`_  
+called *simple* by first adding to the urls.py::
     
     urlpatterns = patterns('',
         (r'^simple/$', 'djangodemo.blog.views.simple'),
@@ -97,7 +99,8 @@ and, your page should look like
     <img src="http://demisaucepub.s3.amazonaws.com/s3/firstbadge.png" border="0" />
     
 
-So, now we have the basics of how to use a service from Demisauce.
+So, now we have the basics of how to use a service from Demisauce.  The feedback badge is an
+html service, to fully function it would need javascript as well.
 
 Creating a Demisauce Mapped Service
 ------------------------------------
@@ -106,7 +109,7 @@ Demisauce python library currently provides a mapping layer, to allow local mode
 to remote services, similar to ORM, where the service url's are automatically generated based on this relationship.  
 We are going to add comments to our blog entry model, but first some style.  
 
-Download a css/template from  `Free Css Templates <http://www.freecsstemplates.org/>` and
+Download a css/template from  `Free Css Templates <http://www.freecsstemplates.org/>`_ and
 start working on the blog, add 3 new lines to the to the *url.py*:
 
 .. code-block:: python
@@ -151,6 +154,8 @@ Then run this from the command line to sync schema to DB::
     python manage.py syncdb
 
 
+Creating Views
+---------------
 
 And add the new methods to *blog/views.py*, see the source at `github <http://github.com/araddon/demisauce/blob/1cd6ec9b9743bade739bb36bbde5630f877c1848/demos/djangodemo/blog/views.py>`_
 
@@ -177,7 +182,7 @@ And add the new methods to *blog/views.py*, see the source at `github <http://gi
         })
         return HttpResponse(t.render(rc))
 
-Now create the *index.html* view page.
+Now create the *index.html* view page. 
 
 .. code-block:: python
     

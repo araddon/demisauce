@@ -26,7 +26,7 @@ DATABASE_HOST = ''             # Set to empty string for localhost. Not used wit
 DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
 
 #CACHE_BACKEND = 'locmem:///'
-CACHE_BACKEND = 'memcached://192.168.125.128:11211/'
+CACHE_BACKEND = 'memcached://192.168.0.106:11211/'
 
 
 # Local time zone for this installation. Choices can be found here:
