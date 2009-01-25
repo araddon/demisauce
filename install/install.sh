@@ -182,9 +182,20 @@ then
         ServerAdmin webmaster@localhost
         DocumentRoot $DEMISAUCE_WEB_HOME/demisauce/public/
         
+        Alias /blog /home/demisauce/wordpress
+        <Directory "/home/demisauce/wordpress">
+            AllowOverride None
+            Order allow,deny
+            Allow from all
+        </Directory>
+        
         RewriteEngine On
+        #RewriteLog /home/demisauce/log/apacherw.txt
+        #RewriteLogLevel 3
         #RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} -f
-        RewriteCond %{REQUEST_FILENAME} !\.(js|css|gif|jpg|png|ico|txt|swf|mp3|pdf|ps|wav|mid|midi|flv|zip|rar|gz|tar|bmp)$ [NC]
+        #RewriteCond %{PATH_INFO} !^/blog/$ # can't get this to work?
+        RewriteCond %{REQUEST_FILENAME} !\.(php|js|css|gif|jpg|png|ico|txt|swf|mp3|pdf|ps|wav|mid|midi|flv|zip|rar|gz|tar|bmp)$ [NC]
+        RewriteCond %{REQUEST_URI} !^/blog(.*)$ [NC]
         RewriteRule ^/(.*) $PASTER_HOST [P]
         
         <Directory />

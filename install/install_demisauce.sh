@@ -72,6 +72,8 @@ VMOREC2="ec2"
 # IP="$(wget -o/dev/null -O- http://jackson.io/ip/)"
 # http://jackson.io/ip/service.html
 #TODO: this doesn't work on mac
+#linux$  eth0   inet addr:192.168.0.106  Bcast:192.168.0.255  Mask:255.255.255.0
+#mac$ en0   inet 192.168.0.101 netmask 0xffffff00 broadcast 192.168.0.255
 HOSTNAME=`ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}'`
 
 if [ $# -eq "0" ] ; then

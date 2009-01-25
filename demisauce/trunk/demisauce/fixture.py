@@ -209,7 +209,7 @@ service = '''
             "description": "An Idea, Problem, Feedback set of services."
         },{
             "site_id": "1",
-            "app_id": "7",
+            "app_id": "6",
             "owner_id": "1",
             "list_public": "1",
             "name": "Delicious Tags Html Page", 
