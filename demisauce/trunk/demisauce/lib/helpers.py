@@ -19,6 +19,9 @@ from pylons.controllers.util import redirect_to
 import webhelpers.paginate
 import math
 
+def wordpress_page():
+    """Get a wordpress page"""
+    pass
 
 def dspager(qry,perpage=15):
     temp = """

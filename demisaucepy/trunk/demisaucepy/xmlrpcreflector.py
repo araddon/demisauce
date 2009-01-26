@@ -6,6 +6,8 @@ def parse_result(xml_list):
     Recursive call to process this dict
     """
     result = []
+    if type(xml_list) is dict:
+        xml_list = [xml_list]
     for row in xml_list:
         if type(row) is not dict and type(row) is not list:
             result.append(row)

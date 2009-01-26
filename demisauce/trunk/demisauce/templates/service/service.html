@@ -42,6 +42,12 @@
     
     % if c.item:
         <div class="box box2">
+             <h3 style="">Other Services for App: ${c.item.app.name}</h3>
+             % if c.item is not None and c.item.app.services:
+                 ${service.minilist(c.item.app.services)}
+             % endif
+         </div>
+        <div class="box box2">
              <h3 style="">Other Services for ${c.item.site.name}</h3>
              % if c.item is not None and c.item.site.services:
                  ${service.minilist(c.item.site.services)}

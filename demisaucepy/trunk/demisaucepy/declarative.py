@@ -20,7 +20,7 @@ from demisaucepy import cfg
 from demisaucepy.cache import cache
 from demisaucepy import demisauce_ws, hash_email, \
     ServiceDefinition, ServiceClient, RetrievalError, \
-    UrlFormatter
+    args_substitute
 
 
 DSDEBUG = False
@@ -108,7 +108,7 @@ class ServiceHandler(object):
         d = {"app_slug":self.this_app_slug,
             "class_name":self.model_instance.__class__.__name__,
             "local_key":str(getattr(self.model_instance,self.local_key))}
-        return UrlFormatter(self.key_format, d)
+        return args_substitute(self.key_format, d)
     
     def __getattr__(self,get_what):
         log.debug('ServiceHandler __getattr__  %s' % (get_what))

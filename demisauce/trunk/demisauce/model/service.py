@@ -34,13 +34,13 @@ class App(ModelBase):
     info about service, partly from declatative (in code)
     partly from app registration/webadmin, partly config ???
     
-    :name: name of the service
-    :description:  description of service
+    :name: name of the Application
+    :slug: url/app friendly key for this app
+    :description:  description of Application
     :base_url:  base url of site (http://localhost:4950 if dev etc)
     :site:  site of this app
     :authn:  which authN method?
-    :cache:  where to cache (memcached, config etc)
-    :env:   [dev,test,prod] (needed???  or ?:  leave for later)
+    :list_public:  True/False to show publicly for other users and accounts
     """
     def __init__(self, **kwargs):
         super(App, self).__init__(**kwargs)

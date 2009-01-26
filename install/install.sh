@@ -184,7 +184,7 @@ then
         
         Alias /blog /home/demisauce/wordpress
         <Directory "/home/demisauce/wordpress">
-            AllowOverride None
+            AllowOverride All
             Order allow,deny
             Allow from all
         </Directory>
@@ -193,7 +193,6 @@ then
         #RewriteLog /home/demisauce/log/apacherw.txt
         #RewriteLogLevel 3
         #RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} -f
-        #RewriteCond %{PATH_INFO} !^/blog/$ # can't get this to work?
         RewriteCond %{REQUEST_FILENAME} !\.(php|js|css|gif|jpg|png|ico|txt|swf|mp3|pdf|ps|wav|mid|midi|flv|zip|rar|gz|tar|bmp)$ [NC]
         RewriteCond %{REQUEST_URI} !^/blog(.*)$ [NC]
         RewriteRule ^/(.*) $PASTER_HOST [P]

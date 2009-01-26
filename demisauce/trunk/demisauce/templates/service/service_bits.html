@@ -132,6 +132,17 @@
                     <label for="app_name">App Name</label>
                     ${h.text_field('app_name', value=(item and item.name) or '', size=40)}
                 </div>
+                <div class="required" id="permalink_div2" style="display:block;">
+                    <label for="slug">Permalink:</label>
+                    <span id="permalink2" class="secondary">
+                        <span id="editable-slug-span2" title="Click to edit this part of the permalink">${(item and item.slug) or ''}</span>
+                        <a href="javascript:void(0)" id="editable-slug-href2">Edit</a>
+                    </span>
+                    <input type="hidden"  size="100" id="permalink2"  value="${(item and item.slug) or ''}" />
+                    <br />
+                    <input type="text" id="real_permalink2" name="real_permalink2" 
+                        value="${(item and item.slug) or ''}" style="display:none;"/>
+                </div>
                 <div class="required">
                      <label for="base_url">Base Url</label>
                      ${h.text_field('base_url', value=(item and item.base_url) or '', size=40)}
@@ -145,7 +156,7 @@
                         <legend>Auth Method?</legend>
                         ${h.radio_button('authn', 'demisauce',checked=(item and str(item.authn)  == 'demisauce'))} demisauce <br />
                         ${h.radio_button('authn', 'oauth',checked=(item and str(item.authn)  == 'oauth'))} oauth <br />
-                        ${h.radio_button('authn', 'CAS',checked=(item and str(item.authn)  == 'CAS'))} CAS <br />
+                        ${h.radio_button('authn', 'xmlrpc',checked=(item and str(item.authn)  == 'xmlrpc'))} xmlrpc <br />
                         ${h.radio_button('authn', 'None',checked=(item and str(item.authn) == 'None'))} None <br />
                     </fieldset> 
                 </div>
@@ -158,7 +169,11 @@
     ${h.end_form()}
     <script type="text/javascript">
     $(document).ready(function(){
-
+        $('#app_form').slugeditor({permalink_sel: '#real_permalink2',
+                permalink_span: '#editable-slug-span2',
+                permalink_edit: '#editable-slug-href2',
+                permalink_div: '#permalink_div2',
+                slugfrom: '#app_name'});
     });
     </script>
 </%def>
@@ -213,6 +228,7 @@
     <dt>AuthN:</dt>         <dd>${item.app.authn}</dd>
     <dt>Service URL:</dt>   <dd>${item.method_url or 'na'}</dd>
     <dt>View XML:</dt>      <dd>${h.link_to('View Xml', "/api/xml/service/%s/%s" % (item.app.slug,item.key))}</dd>
+    <dt>Cache Time:</dt>    <dd>${item.cache_time}</dd>
     <dt>Description:</dt>   <dd>${item.description}</dd>
     
 </dl>
@@ -222,15 +238,13 @@
 </%def>
 <%def name="app_view(item)">
 <dl>
-    <dt>Name:</dt>          <dd><h3>${item.name}</h3></dd>
+    <dt>Name:</dt>          <dd><h3>${item.name}
+                    % if c.user and c.user.isadmin and c.user.site_id == item.site_id:
+                            ${h.link_to('Edit', h.url(controller="service",action="appeditform", id=item.id))}
+                    % endif
+    </h3></dd>
     <dt>Slug:</dt>          <dd>${item.slug}</dd>
-    % if c.user and c.user.isadmin and c.user.site_id == item.site_id:
-    <dt>Edit:</dt>        <dd>
-                                
-                                    ${h.link_to('Edit', h.url(controller="service",action="appeditform", id=item.id))}
-                                
-                            </dd>
-    % endif
+
     <dt>Author:</dt>        <dd>
                                 % if c.user and c.user.isadmin and c.user.site_id == item.site_id:
                                     ${h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}

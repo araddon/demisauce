@@ -122,9 +122,12 @@ class ServiceController(BaseController):
     
     @requires_role('admin')
     def appeditform(self,id=0):
-        c.item = App.get(-1,id)
-        if not (c.item.list_public or (c.user and c.user.site_id == c.item.site_id)):
-            c.item = None
+        if id == 0 or id == None or id == '0':
+            c.item = App()
+        else:
+            c.item = App.get(-1,id)
+            if not (c.item.list_public or (c.user and c.user.site_id == c.item.site_id)):
+                c.item = None
         return render('/service/app_edit.html')
     
     @requires_role('admin')
@@ -140,7 +143,7 @@ class ServiceController(BaseController):
         else:
             app = App.get(site.id,id)
         
-        app.slug = slugify(sanitize(request.POST['app_name']))
+        app.slug = sanitize(request.POST['real_permalink2'])
         app.name = sanitize(request.POST['app_name'])
         app.authn = sanitize(request.POST['authn'])
         app.description = sanitize(request.POST['description'])

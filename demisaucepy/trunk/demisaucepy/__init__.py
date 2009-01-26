@@ -37,7 +37,7 @@ def LoadConfig(file, config={}):
 def hash_email(email):
     return hashlib.md5(email.lower()).hexdigest()
 
-def UrlFormatter(url_format,sub_dict):
+def args_substitute(url_format,sub_dict):
     for k in sub_dict.keys():
         if sub_dict[k] is not None:
             url_format = url_format.replace('{%s}'%k,sub_dict[k])
@@ -85,28 +85,38 @@ class ServiceDefinition(object):
         if base_url == None:
             self.base_url = cfg.CFG['demisauce.url']
     
+    def substitute_args(self,pattern,data={},request=''):
+        """Create a dictionary of all name/value pairs
+        you could reasonably expect to use in substitution"""
+        data.update({"base_url":self.base_url,
+            "format":self.format,
+            "service":self.name,
+            "key":request, 
+            "request":request,
+            "app_slug":self.app_slug,
+            "api_key":self.api_key})
+        #print('substituteargs = %s' % (data))
+        return args_substitute(pattern, data)
+    
     def get_url(self,request):
         urlformat = ''
-        if self.method_url is not None and self.method_url != "None":
+        if self.format == 'xmlrpc':
+            urlformat = self.base_url
+        elif self.method_url is not None and self.method_url != "None" and \
+            self.method_url.find('{base_url}') < 0:
             # use service.method_url not url_format
-            urlformat =  '{base_url}/%s' % (self.method_url)
+            if self.method_url.find('/') == 0:
+                urlformat =  '{base_url}%s' % (self.method_url)
+            else:
+                urlformat =  '{base_url}/%s' % (self.method_url)
         else:
             urlformat = self.url_format
-        urlformat = urlformat.replace('//','/')
-        d = {}
+        url = ''
         try:
-            d = {"base_url":self.base_url,
-                "format":self.format,
-                "service":self.name,
-                "method_url":self.method_url,
-                "key":request, 
-                "request":request,
-                "app_slug":self.app_slug,
-                "api_key":self.api_key}
+            url = self.substitute_args(urlformat,request=request)
         except AttributeError, e:
             raise RetrievalError('Attribute URL problems')
-        #print('urlformat=%s, d=%s' % (urlformat,d))
-        return UrlFormatter(urlformat, d)
+        return url
     
     def clone(self):
         """Create a clone of this service definition"""
@@ -144,7 +154,6 @@ class ServiceDefinition(object):
         client.use_cache = self.cache
         #client.connect()
         #client.authorize()
-        #print('about to call request= %s/%s' % (self.app_slug, self.name))
         response = client.fetch_service(request=('%s/%s' % (self.app_slug, self.name)))
         #print response.data
         # setup more service definition
@@ -278,9 +287,13 @@ class GAEXMLRPCTransport(object):
     
 
 class XmlRpcServiceTransport(ServiceTransportBase):
+    def __init__(self, request=None,**kwargs):
+        super(XmlRpcServiceTransport, self).__init__(**kwargs)
+        self.request = request
+    
     #http://svn.python.org/projects/python/trunk/Lib/xmlrpclib.py
     def fetch(self,url,data={},extra_headers={},response=None):
-        print 'in xmlrpcservicetransport: %s' % url
+        #print('in xmlrpcservicetransport: %s' % url)
         response = response or ServiceResponse()
         if openanything.ISGAE == True:
             rpc_server = xmlrpclib.ServerProxy(url,
@@ -291,11 +304,22 @@ class XmlRpcServiceTransport(ServiceTransportBase):
         #response.data = rpc_server.blogger.getUsersBlogs('','admin','admin')
         #response.data = rpc_server.metaWeblog.getRecentPosts(1,'admin', 'admin', 5)
         #response.data = getattr(getattr(rpc_server,'metaWeblog'),'getRecentPosts')(1,'admin', 'admin', 5)
-        t = tuple([s for s in '1,admin,admin,5'.split(',')])
-        response.data = getattr(rpc_server,'metaWeblog.getRecentPosts')(t)
-        response.format = 'xmlrpc'
-        response.xmlrpc = xmlrpcreflector.parse_result(response.data)
-        logging.debug('request successful?')
+        #print('inXmlRpcTransport.fetch data=%s' % (data))
+        #print('inXmlRpcTransport.fetch method_url=%s' % (self.service.method_url))
+        # wp.getPage,{blog_id},{request},{user},{password}
+        args = self.service.substitute_args(self.service.method_url,data=data,request=self.request)
+        args = args.split(',')
+        if len(args) > 0:
+            method = args[0]
+            t = tuple([s for s in args[1:]])
+            #response.data = getattr(rpc_server,'metaWeblog.getRecentPosts')(t)
+            #print('inXmlRpcTransport.fetch args=%s' % (args))
+            response.data = getattr(rpc_server,method)(t)
+            #print('In XmlrpcFetch, data= %s' % (response.data))
+            response.format = 'xmlrpc'
+            response.xmlrpc = xmlrpcreflector.parse_result(response.data)
+        response.success = True
+        #print('exiting xmlrpc.fetch')
         return response
     
 
@@ -429,14 +453,15 @@ class ServiceClient(ServiceClientBase):
         
         if self.service.format == 'xmlrpc':
             log.debug('about to create xmlrpc servicetransport')
-            self.transport = XmlRpcServiceTransport()
+            self.transport = XmlRpcServiceTransport(request=request)
             self.transport.service = self.service
         url = self.service.get_url(request=request)
         self.response.url = url
+        #print('About to call fetch_service url= %s' % (url))
         cache_key = self.cache_key(url=url)
         log.debug('about to check cache for url=%s' % url)
-        #print('url = %s' % (url))
         if not self.check_cache(cache_key):
+            #print('no cache found')
             self.response = self.transport.fetch(url,data=data,extra_headers=self.extra_headers)
             if self.response.success:
                 log.debug('success for service %s, %s' % (self.service.name,cache))

@@ -99,51 +99,50 @@ app = '''
             "name": "demisauce.com", 
             "list_public" : "1",
             "slug": "demisauce",
-            "url_format":"{base_url}/api/{format}/{service}/{key}?apikey={api_key}",
             "base_url": "http://localhost:4951", 
-            "authn": "0"
+            "authn": "demisauce"
         },{
             "site_id": "1",
             "owner_id": "1",
             "name": "demisauce.com alternate api", 
-            "slug": "demisauce",
+            "slug": "demisaucealt",
             "base_url": "http://localhost:4951", 
-            "authn": "0"
+            "authn": "demisauce"
         },{
             "site_id": "2",
             "owner_id": "3",
             "name": "djangodemo", 
             "slug": "djangodemo",
             "base_url": "http://djangodemo.test:8001", 
-            "authn": "3"
+            "authn": "none"
         },{
             "site_id": "3",
             "owner_id": "4",
             "name": "phpdemo", 
             "slug": "phpdemo",
             "base_url": "http://demisauce.test", 
-            "authn": "3"
+            "authn": "none"
         },{
             "site_id": "1",
             "owner_id": "1",
             "name": "wordpress", 
             "slug": "wordpress",
-            "base_url": "http://192.168.125.133/blog/xmlrpc.php", 
-            "authn": "3"
+            "base_url": "http://192.168.0.106/blog/xmlrpc.php", 
+            "authn": "xmlrpc"
         },{
             "site_id": "1",
             "owner_id": "1",
             "name": "delicious.com", 
             "slug": "deliciouscom",
             "base_url": "http://delicious.com", 
-            "authn": "3"
+            "authn": "none"
         },{
             "site_id": "1",
             "owner_id": "1",
             "name": "delicious feeds", 
             "slug": "deliciousfeeds",
             "base_url": "http://feeds.delicious.com", 
-            "authn": "3"
+            "authn": "none"
         }]
 }'''
 
@@ -157,6 +156,7 @@ service = '''
             "owner_id": "1",
             "list_public": "1",
             "name": "Poll Html Service", 
+            "method_url": "/api/{format}/poll/{key}?apikey={api_key}", 
             "key": "poll",
             "views": "",
             "description": "Simple Polls, embeddable within your application"
@@ -166,6 +166,7 @@ service = '''
             "owner_id": "1",
             "list_public": "1",
             "name": "Comment Html Service", 
+            "method_url": "/api/{format}/comment/{key}?apikey={api_key}", 
             "key": "comment",
             "views": "",
             "description": "Comment html and form "
@@ -175,7 +176,7 @@ service = '''
             "owner_id": "1",
             "list_public": "1",
             "name": "Email Template service", 
-            "method_url": "{base_url}/api/xml/email/{key}?apikey={api_key}", 
+            "method_url": "/api/xml/email/{key}?apikey={api_key}", 
             "key": "email",
             "format": "xml",
             "description": "Email template"
@@ -220,9 +221,9 @@ service = '''
         },{
             "site_id": "1",
             "app_id": "5",
-            "owner_id": "4",
+            "owner_id": "1",
             "name": "Wordpress content service", 
-            "method_url": "blog/xmlrpc.php", 
+            "method_url": "metaWeblog.getRecentPosts", 
             "key": "wordpress",
             "format": "xmlrpc",
             "views": "",

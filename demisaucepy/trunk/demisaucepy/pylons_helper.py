@@ -55,6 +55,11 @@ def demisauce_xmlnodes(**kwargs):
     raise NotImplementedError
     
 
+def wordpress_page(page_id):
+    """wordpress content"""
+    
+    return ''
+
 def remote_html(resource_id='',routes_dict=None,append_path=False,**kwargs):
     """
     Accepts a key of which content is desired
