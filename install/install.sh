@@ -7,9 +7,7 @@
 #       apt-get update
 #       apt-get install openssh-server wget
 #  If VMWare:
-#       apt-get install build-essential linux-headers-generic 
-#       # Install VMware tools: 
-#           http://samj.net/2008/06/installing-vmware-tools-in-ubuntu-804.html
+#       execute the install_openvmtools.sh script first
 # ----------------------------------------------------------------------------
 #  TODO
 #   - consider changing log level in apache2/sites-available/default
@@ -23,6 +21,12 @@ function die
 {
     echo $*
     exit 1
+}
+function checkRoot
+{
+    if [ ! $( id -u ) -eq 0 ]; then
+        die "Must have super-user rights to run this script.  Run with the command 'sudo $0'"
+    fi
 }
 # Get all arguments if not supplied
 function askArgs
@@ -61,11 +65,12 @@ DEMISAUCE_WEB_HOME=$DEMISAUCE_HOME/current_web
 VMOREC2="ec2"
 SERVER_ROLE='all'
 
+checkRoot
 askArgs
 
 cd /tmp
 # Upgrade/install packages
-sudo apt-get -y update
+apt-get -y update
 # some basics
 apt-get install --yes --force-yes -q wget unzip cron rsync
 
