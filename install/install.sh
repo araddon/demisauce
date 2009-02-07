@@ -194,13 +194,14 @@ then
             Allow from all
         </Directory>
         
+        RewriteMap SERVERS rnd:/home/demisauce/servers.conf
         RewriteEngine On
         #RewriteLog /home/demisauce/log/apacherw.txt
         #RewriteLogLevel 3
         #RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} -f
         RewriteCond %{REQUEST_FILENAME} !\.(php|js|css|gif|jpg|png|ico|txt|swf|mp3|pdf|ps|wav|mid|midi|flv|zip|rar|gz|tar|bmp)$ [NC]
         RewriteCond %{REQUEST_URI} !^/blog(.*)$ [NC]
-        RewriteRule ^/(.*) $PASTER_HOST [P]
+        RewriteRule ^/(.*) ${SERVERS:FIRST}/\$ [P]
         
         <Directory />
                 Options FollowSymLinks
@@ -215,6 +216,12 @@ then
         CustomLog /var/log/apache2/access.log combined
         ServerSignature On
 </VirtualHost>
+EOL
+    cat <<EOL > /home/demisauce/servers.conf
+DEMI1 127.0.0.1:4950
+DEMI2 127.0.0.1:4951
+DEMI3 127.0.0.1:4952
+FIRST 127.0.0.1:4950|127.0.0.1:4951|127.0.0.1:4952
 EOL
 fi
 

@@ -25,7 +25,7 @@ class DSMiddleware(object):
     
     #@dowork_after
     def __call__(self, environ, start_response):
-        #log.debug('testing in middleware')
+        log.debug('testing in middleware')
         return self.wrap_app(environ, start_response)
     
 

@@ -41,7 +41,6 @@ def make_app(global_conf, full_stack=True, **app_conf):
     # CUSTOM MIDDLEWARE HERE (filtered by error handling middlewares)
     app = mid.DSMiddleware(app)
     
-    
     #logging.basicConfig()
     #logging.getLogger('sqlalchemy').setLevel(logging.WARNING)
     

@@ -11,7 +11,12 @@ from demisauce.model import init_model
 
 #from jinja2 import Environment, PackageLoader
 
-
+has_amqp = False
+try:
+    import amqplib.client_0_8 as amqp
+    has_amqp = True
+except ImportError:
+    pass
 
 def load_engines(config,engines):
     # could be a comprehension but was a bit to long
