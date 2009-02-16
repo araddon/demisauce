@@ -72,7 +72,8 @@ cd /tmp
 # Upgrade/install packages
 apt-get -y update
 # some basics
-apt-get install --yes --force-yes -q wget unzip cron rsync
+apt-get install --yes --force-yes -q wget unzip cron rsync python-setuptools
+
 
 if [ $SERVER_ROLE = "all" ] || [ $SERVER_ROLE = "db" ] 
 then
