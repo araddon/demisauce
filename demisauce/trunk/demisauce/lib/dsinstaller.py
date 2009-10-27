@@ -17,7 +17,7 @@ class DemisauceInstaller(Installer):
         Creates the custom api key 
         """
         import hashlib, random
-        key = hashlib.sha.new(str(random.random())).hexdigest()
+        key = hashlib.md5(str(random.random())).hexdigest()
         vars['demisuace_apikey'] = key
         vars['demisauce_file'] = filename.split('.')[0]
         # go back to normal processor

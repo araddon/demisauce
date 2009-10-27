@@ -125,8 +125,9 @@ python setup.py install
 
 cd "$DEMISAUCE_VERSION_HOME/demisauce/demisauce/trunk"
 
+echo '---- installing Demisauce ---------'
 # can't i get rid of this?  why is it needed?
-python setup.py install  # is this bad, at least it doesn't move items to path?
+python setup.py develop  # is this bad, at least it doesn't move items to path?
 echo " calling pwd next"
 pwd
 echo "------  setting up production.ini    -----------"
