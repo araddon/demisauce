@@ -43,7 +43,7 @@ function askArgs
         DEMISAUCE_MYSQL_PWD=$pwd
     fi
     echo -en "Please enter home directory to install into: or \
-    return to accept:   /home/demisauce:   "
+    return to accept:   /home/demisauce/ds:   "
     read home
     if [ "$home" != "" ] ; then
         DEMISAUCE_HOME=$home
@@ -64,7 +64,7 @@ function askArgs
 
 #----------  Start of program
 UPGRADE_OR_INSTALL='install'
-DEMISAUCE_HOME="/home/demisauce"
+DEMISAUCE_HOME="/home/demisauce/ds"
 DEMISAUCE_MYSQL_PWD="demisauce"
 INSTALL_ROLE="prod"
 VMOREC2="ec2"
@@ -96,13 +96,13 @@ else
     fi
 fi
 
-DEMISAUCE_WEB_HOME="$DEMISAUCE_HOME/current_web"
+DEMISAUCE_WEB_HOME="$DEMISAUCE_HOME/demisauce_web"
 echo "DEMISAUCE_HOME = $DEMISAUCE_HOME; DEMISAUCE_MYSQL_PWD = $DEMISAUCE_MYSQL_PWD \
     install or upgrade? = $UPGRADE_OR_INSTALL"
 echo "Demisauce web Home:   $DEMISAUCE_WEB_HOME"
 
 #  each new version stored in different named version, then point to current
-#  like:    /demisauce/2008122811   (yyyymmddhh)
+#  like:    /demisauce/ds/2008122811   (yyyymmddhh)
 VERSION_FOLDER=$(date +"%y%m%d%H")
 mkdir -p $DEMISAUCE_HOME
 mkdir -p "$DEMISAUCE_HOME/log"  # make log directory
@@ -114,24 +114,10 @@ cd $DEMISAUCE_VERSION_HOME
 
 echo "---- Downloading Demisauce SRC from github ------------"
 git clone -q git://github.com/araddon/demisauce.git
-#Create /home/demisauce/current_web pointing to /home/demisauce/2008122812/demisauce/demisauce/trunk
+#Create /home/demisauce/current_web pointing to /home/demisauce/ds/2008122812/demisauce/demisauce/trunk
 ln -s $DEMISAUCE_VERSION_HOME/demisauce/demisauce/trunk $DEMISAUCE_WEB_HOME
 
 
-
-cd /tmp  # what if it doesn't have tmp?
-echo "---- installing python-mysql -------------"
-apt-get install --yes --force-yes -q python-mysqldb
-
-echo "---- installing easy_install python instller ------------"
-wget http://peak.telecommunity.com/dist/ez_setup.py
-python ez_setup.py
-rm -f ez_setup.py
-
-easy_install -U flup # part of proxy server
-
-echo '---- installing GData ---------'
-easy_install http://gdata-python-client.googlecode.com/files/gdata.py-1.1.1.tar.gz
 
 echo '---- installing DemisaucePY ---------'
 cd "$DEMISAUCE_VERSION_HOME/demisauce/demisaucepy/trunk/"

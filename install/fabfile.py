@@ -1,9 +1,5 @@
-# http://lethain.com/entry/2008/nov/04/deploying-django-with-fabric/
-# http://wp.uberdose.com/2006/10/16/ssh-automatic-login/
-# http://stii.co.za/python/upgrade-wordpress-using-python-fabric/
-# http://en.wikipedia.org/wiki/Secure_copy
 """
-$ fab vm build -p 
+    see documentaiton:  http://github.com/araddon/demisauce/tree/master/install
 """
 from __future__ import with_statement # needed for python 2.5
 from fabric.api import *
@@ -32,6 +28,8 @@ def vm101():
     env.user = 'demisauce'
     env.path = '/home/demisauce' 
     env.os = 'ubuntu8.04'
+    env.type = 'vm'
+    env.environment = 'dev'
 
 def vm106():
     "The dev VM linux machine"
@@ -39,6 +37,8 @@ def vm106():
     env.user = 'demisauce'
     env.path = '/home/demisauce' 
     env.os = 'ubuntu9.04'
+    env.type = 'vm'
+    env.environment = 'dev'
 
 def vm107():
     "The dev VM linux machine"
@@ -46,21 +46,25 @@ def vm107():
     env.user = 'demisauce'
     env.path = '/home/demisauce' 
     env.os = 'ubuntu9.04'
+    env.type = 'vm'
+    env.environment = 'dev'
 
 def ec2prod():
     "The dev VM linux machine"
     env.hosts = ['192.168.0.107']
     env.user = 'demisauce'
     env.path = '/home/demisauce' 
+    env.type = 'ec2'
     env.os = 'ubuntu9.04'
+    env.environment = 'prod'
 
 
 #   Tasks   =======================
-def deploy():
-    'Deploy the app to the target environment'
-    local("python setup.py sdist")
-    put("bin/bundle.zip", "bundle.zip")
-    sudo("./install.sh bundle.zip")
+def release(userdbpwd):
+    'Deploy a new/updated release to the target environment'
+    _nginx_release()
+    _demisauce_deploy_code(userdbpwd)
+    sudo("/etc/init.d/nginx restart")
 
 def _initial_setup():
     """sets up new server by doing installs, folder creations etc"""
@@ -75,12 +79,12 @@ def _memcached():
     #comment out line for -l 127.0.0.1 which restricts to only local machine
     sudo('perl -pi -e s/-l\ 127.0.0.1/\#-l\ 127.0.0.1/g /etc/memcached.conf')
 
-def _mysql(mysqlpwd,vm_or_ec2):
+def _mysql(rootmysqlpwd,mysqlpwd):
     put('%(local_path)s/install/install_mysql.sh' % env, '/tmp/install_mysql.sh' % env)
-    sudo('chmod +x /tmp/install_mysql.sh; /tmp/install_mysql.sh %s %s %s' % (mysqlpwd,mysqlpwd,vm_or_ec2))
+    sudo('chmod +x /tmp/install_mysql.sh; /tmp/install_mysql.sh %s %s %s' % (rootmysqlpwd,mysqlpwd,env.type))
     sudo('rm /tmp/install_mysql.sh')
 
-def _zamanda(mysqlpwd,vm_or_ec2):
+def _zamanda(mysqlpwd):
     """ install backup tools"""
     """setting myhostname: demisauce
     [192.168.0.107] out: setting alias maps
@@ -95,7 +99,7 @@ def _zamanda(mysqlpwd,vm_or_ec2):
     
     """
     put('%(local_path)s/install/install_zamanda.sh' % env, '/tmp/install_zamanda.sh' % env)
-    sudo('chmod +x /tmp/install_zamanda.sh; /tmp/install_zamanda.sh %s %s %s' % (mysqlpwd,mysqlpwd,vm_or_ec2))
+    sudo('chmod +x /tmp/install_zamanda.sh; /tmp/install_zamanda.sh %s %s %s' % (mysqlpwd,mysqlpwd,env.type))
     sudo('rm /tmp/install_zamanda.sh')
 
 def _nginx():
@@ -105,19 +109,18 @@ apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E9EEF4A1""")
     sudo("apt-get -y update; apt-get -y install nginx")
     get('/etc/nginx/mime.types', '%s/nginx/mime.types' % INSTALL_ROOT)
     get('/etc/nginx/nginx.conf', '%s/nginx/nginx.conf' % INSTALL_ROOT)
+    sudo("mkdir -p /vol/log/nginx")
 
-def nginx_release():
+def _nginx_release():
     sudo("/etc/init.d/nginx stop")
     with cd("/etc/nginx"):
         sudo("rm nginx.conf")
-        sudo("rm sites-available/default; rm sites-enabled/default")
+        sudo("rm sites-enabled/demisauce;")
     put('%s/nginx/nginx.conf' % INSTALL_ROOT, '/tmp/nginx.conf')
-    put('%s/nginx/sites-available/default' % INSTALL_ROOT, '/tmp/sites-available-default')
-    put('%s/nginx/sites-enabled/default' % INSTALL_ROOT, '/tmp/sites-enabled-default')
+    put('%s/nginx/sites-enabled/demisauce' % INSTALL_ROOT, '/tmp/sa-ds')
     sudo('mv /tmp/nginx.conf /etc/nginx/nginx.conf')
-    sudo('mv /tmp/sites-available-default /etc/nginx/sites-available/default')
-    sudo('mv /tmp/sites-enabled-default /etc/nginx/sites-enabled/default')
-    sudo("/etc/init.d/nginx restart")
+    sudo('mv /tmp/sa-ds /etc/nginx/sites-enabled/demisauce')
+
 
 def _gearman():
     """Install Gearman, requires base linux"""
@@ -160,41 +163,29 @@ def _linux_base():
     sudo("apt-get -y update; apt-get -y install wget unzip cron rsync python-setuptools")
     sudo("apt-get -y install build-essential git-core; apt-get -y update")
 
-def _demisauce(dsmysqlpwd,vm_or_ec2):
+def _demisauce_pre_reqs():
+    """Install the python modules necessary"""
+    sudo('apt-get -y install python-mysqldb')
+    sudo('easy_install http://gdata-python-client.googlecode.com/files/gdata.py-1.1.1.tar.gz')
+
+def _demisauce_deploy_code(dsmysqlpwd):
     put('%(local_path)s/install/install_demisauce.sh' % env, '/tmp/install_demisauce.sh' % env)
-    sudo('chmod +x /tmp/install_demisauce.sh; /tmp/install_demisauce.sh install -d %s -p %s -r prod -e %s' % ("/home/demisauce",dsmysqlpwd,vm_or_ec2))
+    sudo('chmod +x /tmp/install_demisauce.sh; /tmp/install_demisauce.sh install -d %s -p %s -r %s -e %s' % \
+            ("/home/demisauce/ds",dsmysqlpwd,env.environment,env.type))
     sudo('rm /tmp/install_demisauce.sh')
-    #install.sh mysql_root_password  demisauce_mysql_pwd vm
 
+def ec2_save_image():
+    """Takes an instance on EC2 and saves to S3"""
+    raise NotImplemented("needs to be done")
 
-def build_vm107(ospwd="",dbpwd=""):
-    require('hosts', provided_by=[vm107])
+def build_all(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
+    require('hosts', provided_by=[vm107,vm106,ec2prod])
     #_linux_base()
     #_gearman() # includes memcached
     #_memcached()
-    #_mysql(dbpwd,'vm')
-    #_zamanda(dbpwd,'vm')
-    _nginx()
-    #_demisauce(dbpwd,'vm')
+    #_mysql(rootmysqlpwd,dbpwd)
+    #_zamanda(dbpwd)
+    #_nginx()
+    _demisauce_pre_reqs()
+    release(dbpwd)
 
-def build_vm106(ospwd="",dbpwd=""):
-    require('hosts', provided_by=[vm106])
-    #_linux_base()
-    #_gearman() # includes memcached
-    #_memcached()
-    _mysql(dbpwd,'vm')
-    #_zamanda(dbpwd,'vm')
-    #_demisauce(dbpwd,'vm')
-
-def build_vm101(ospwd="",dbpwd=""):
-    require('hosts', provided_by=[vm101])
-    #_linux_base()
-    #_gearman()
-
-def build_newec2prod(ospwd="",dbpwd=""):
-    require('hosts', provided_by=[ec2prod])
-    #_linux_base()
-    #_gearman()
-    #_mysql(dbpwd,'vm')
-    #_zamanda(dbpwd,'vm')
-    #_demisauce(dbpwd,'ec2')

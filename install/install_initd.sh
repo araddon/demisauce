@@ -1,5 +1,5 @@
 #!/bin/sh -e
-DEMISAUCE_HOME="/home/demisauce/current_web/"
+DEMISAUCE_HOME="/home/demisauce/ds/current_web/"
 cd $DEMISAUCE_HOME
 case "$1" in
   start)

@@ -1,0 +1,33 @@
+# the demisauce pylons web app configuration
+server {
+	listen   80;
+	server_name  demisauce;
+
+	access_log  /vol/log/nginx/localhost.access.log;
+
+	location /static {
+		root   /home/demisauce/current_web/static;
+        proxy_set_header  X-Real-IP  $remote_addr;
+	}
+	
+	location / {
+		proxy_pass        http://192.168.0.100:8001;
+        proxy_set_header  X-Real-IP  $remote_addr;
+	}
+
+	#error_page  404  /404.html;
+
+	# redirect server error pages to the static page /50x.html
+	#
+	#error_page   500 502 503 504  /50x.html;
+	#location = /50x.html {
+	#	root   /var/www/nginx-default;
+	#}
+
+	# deny access to .htaccess files, if Apache's document root
+	# concurs with nginx's one
+	#
+	#location ~ /\.ht {
+		#deny  all;
+	#}
+}
