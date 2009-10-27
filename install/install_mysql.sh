@@ -94,21 +94,37 @@ else
     # vm
     mkdir /vol
 fi
-mkdir /vol/lib /vol/log
-chown mysql:mysql /vol/lib
-chown mysql:mysql /vol/log
+mkdir /vol/lib /vol/log /vol/tmp
+#sudo chown -R mysql:mysql
+chown -R mysql:mysql /vol/lib
+chown -R mysql:mysql /vol/log
+chown -R mysql:mysql /vol/tmp
+
+
 mv /var/lib/mysql /vol/lib/
 mv /var/log/mysql /vol/log/
 test -f /vol/log/mysql/mysql-bin.index &&
   perl -pi -e 's%/var/log/%/vol/log/%' /vol/log/mysql/mysql-bin.index
-#chown mysql:mysql "$MYSQL_HOME/tmp"
+
 escaped_mysql_home="\/vol\/lib"
 echo "New escaped_mysql_home = $escaped_mysql_home"
-#rmdir /var/lib/mysql
-# update datadir=/mnt/mysql and tmpdir=/mnt/mysql/tmp/
+#  http://ubuntuforums.org/showthread.php?t=831147
+# update apparmor 
+#  /var/log/mysql.log rw,
+#  /var/log/mysql.err rw,
+#  /vol/lib/mysql/ r,
+#  /vol/lib/mysql/** rwk,
+#  /vol/log/mysql/ r,
+#  /vol/log/mysql/* rw,
+#  /var/run/mysqld/mysqld.pid w,
+#  /var/run/mysqld/mysqld.sock w,
+echo "---- /etc/apparmor.d/usr.sbin.mysqld  "
+perl -pi -e "s/\/var\/lib\/mysql\//\/vol\/lib\/mysql\//g" /etc/apparmor.d/usr.sbin.mysqld || die "could not change apparmor.d/usr.sbin.mysqld"
+perl -pi -e "s/\/var\/log\/mysql\//\/vol\/log\/mysql\//g" /etc/apparmor.d/usr.sbin.mysqld || die "could not change apparmor.d/usr.sbin.mysqld"
 echo "---- making changes to /etc/mysql/my.cnf  "
+# update datadir=/vol/lib/mysql and tmpdir=/vol/tmp/
 perl -pi -e "s/\/var\/lib\/mysql/$escaped_mysql_home/g" /etc/mysql/my.cnf || die "could not change my.cnf"
-perl -pi -e "s/\/tmp/$escaped_mysql_home\/tmp/g" /etc/mysql/my.cnf || die "could not change my.cnf"
+perl -pi -e "s/\/tmp/\/vol\/tmp/g" /etc/mysql/my.cnf || die "could not change my.cnf"
 perl -pi -e "s/skip\-external\-locking/skip\-external\-locking\nlog\-bin/g" /etc/mysql/my.cnf || die "could not change my.cnf"
 cat > /etc/mysql/conf.d/mysql-ec2.cnf <<EOM
 [mysqld]
@@ -120,6 +136,9 @@ max_binlog_size  = 1000M
 #long_query_time  = 10
 EOM
 rsync -aR /etc/mysql /vol/
+
+/etc/init.d/apparmor restart
+/etc/init.d/mysql restart
 
 
  

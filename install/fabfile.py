@@ -81,9 +81,43 @@ def _mysql(mysqlpwd,vm_or_ec2):
     sudo('rm /tmp/install_mysql.sh')
 
 def _zamanda(mysqlpwd,vm_or_ec2):
+    """ install backup tools"""
+    """setting myhostname: demisauce
+    [192.168.0.107] out: setting alias maps
+    [192.168.0.107] out: setting alias database
+    [192.168.0.107] out: mailname is not a fully qualified domain name.  Not changing /etc/mailname.
+    [192.168.0.107] out: setting destinations: /etc/mailname, demisauce, localhost.localdomain, localhost
+    [192.168.0.107] out: setting relayhost: 
+    [192.168.0.107] out: setting mynetworks: 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+    [192.168.0.107] out: setting mailbox_size_limit: 0
+    [192.168.0.107] out: setting recipient_delimiter: +
+    [192.168.0.107] out: setting inet_interfaces: all
+    
+    """
     put('%(local_path)s/install/install_zamanda.sh' % env, '/tmp/install_zamanda.sh' % env)
     sudo('chmod +x /tmp/install_zamanda.sh; /tmp/install_zamanda.sh %s %s %s' % (mysqlpwd,mysqlpwd,vm_or_ec2))
     sudo('rm /tmp/install_zamanda.sh')
+
+def _nginx():
+    """Installs Nginx"""
+    sudo("""echo "deb http://ppa.launchpad.net/jdub/devel/ubuntu hardy main" >> /etc/apt/sources.list
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E9EEF4A1""")
+    sudo("apt-get -y update; apt-get -y install nginx")
+    get('/etc/nginx/mime.types', '%s/nginx/mime.types' % INSTALL_ROOT)
+    get('/etc/nginx/nginx.conf', '%s/nginx/nginx.conf' % INSTALL_ROOT)
+
+def nginx_release():
+    sudo("/etc/init.d/nginx stop")
+    with cd("/etc/nginx"):
+        sudo("rm nginx.conf")
+        sudo("rm sites-available/default; rm sites-enabled/default")
+    put('%s/nginx/nginx.conf' % INSTALL_ROOT, '/tmp/nginx.conf')
+    put('%s/nginx/sites-available/default' % INSTALL_ROOT, '/tmp/sites-available-default')
+    put('%s/nginx/sites-enabled/default' % INSTALL_ROOT, '/tmp/sites-enabled-default')
+    sudo('mv /tmp/nginx.conf /etc/nginx/nginx.conf')
+    sudo('mv /tmp/sites-available-default /etc/nginx/sites-available/default')
+    sudo('mv /tmp/sites-enabled-default /etc/nginx/sites-enabled/default')
+    sudo("/etc/init.d/nginx restart")
 
 def _gearman():
     """Install Gearman, requires base linux"""
@@ -138,8 +172,9 @@ def build_vm107(ospwd="",dbpwd=""):
     #_linux_base()
     #_gearman() # includes memcached
     #_memcached()
-    _mysql(dbpwd,'vm')
+    #_mysql(dbpwd,'vm')
     #_zamanda(dbpwd,'vm')
+    _nginx()
     #_demisauce(dbpwd,'vm')
 
 def build_vm106(ospwd="",dbpwd=""):
