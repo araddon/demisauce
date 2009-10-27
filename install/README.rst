@@ -4,8 +4,7 @@ This is the main installer and it is assumed you are doing a server install, or 
 
 Simple Workflow:  Setup a VM/EC2 image for trial of Demisauce
 ===============================================================
-This uses `Fabric <http://docs.fabfile.org>`_  for installation
-download and install.
+This uses `Fabric <http://docs.fabfile.org>`_  for installation download and install.
 
 
 If doing local VM install, Get `Ubuntu Server <http://www.ubuntu.com/getubuntu/download-server>`_ and start the install by doing updates and adding SSH and wget.  This also prints out the IP address (use bridging in vm if you want access via web from your desktop)::
@@ -14,8 +13,7 @@ If doing local VM install, Get `Ubuntu Server <http://www.ubuntu.com/getubuntu/d
     apt-get install openssh-server wget
     ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}
 
-Download `Demisauce Source <http://github.com/araddon/demisauce>`_  using
- `git <http://git-scm.com/>`_ ::
+Download `Demisauce Source <http://github.com/araddon/demisauce>`_  using `git <http://git-scm.com/>`_ ::
 
     git clone git://github.com/araddon/demisauce.git
     
@@ -30,9 +28,11 @@ Follow steps in Simple Worflow to install Fabric, and download
 VM's for dev on local.   
 
 **1. Build Base Image (Dev, Test, Prod)**
-    Build a machine from Scratch (see #2 for upgrades)::
+    Build a machine from Scratch (see #2 for upgrades), you need to do the one step manually because it times out quite often::
     
-        fab vm107 build_all:rootmysqlpwd="demisauce",userdbpwd="demisauce" -p demisauce
+        fab vm107 build_step1:rootmysqlpwd="demisauce",userdbpwd="demisauce" -p demisauce
+        apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C73E014
+        fab vm107 build_step2:rootmysqlpwd="demisauce",userdbpwd="demisauce" -p demisauce
 
 **2. Deploy Latest code to your env (Dev, Test, Prod)**
     Get latest set of source code, and potentially DB changes to deploy to Dev, Test or Prod machine(s). Note, this does *Not* include db script updates (see below)::

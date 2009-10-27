@@ -122,7 +122,7 @@ def _nginx_release():
     sudo('mv /tmp/sa-ds /etc/nginx/sites-enabled/demisauce')
 
 
-def _gearman():
+def _gearmanDrizzle():
     """Install Gearman, requires base linux"""
     sudo("cp /etc/apt/sources.list /etc/apt/sources.list.orig")
     if env.os == 'ubuntu8.04':
@@ -135,10 +135,10 @@ deb-src http://ppa.launchpad.net/drizzle-developers/ppa/ubuntu jaunty main" >> /
         sudo("""echo "deb http://ppa.launchpad.net/drizzle-developers/ppa/ubuntu karmic main
 deb-src http://ppa.launchpad.net/drizzle-developers/ppa/ubuntu karmic main" >> /etc/apt/sources.list""")
     
-    sudo("apt-get update; apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 06899068")
-    sudo("apt-get update; apt-get install -y gearman gearman-job-server gearman-tools libgearman2 libgearman-dev libgearman-dbg libgearman-doc")
+    sudo("apt-get -y update; apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 06899068")
+    sudo("apt-get -y update; apt-get install -y gearman gearman-job-server gearman-tools libgearman2 libgearman-dev libgearman-dbg libgearman-doc")
 
-def _gearmanDrizzle():
+def _gearman():
     """Install Gearman, requires base linux"""
     sudo("cp /etc/apt/sources.list /etc/apt/sources.list.orig")
     if env.os == 'ubuntu8.04':
@@ -151,8 +151,16 @@ deb-src http://ppa.launchpad.net/gearman-developers/ppa/ubuntu jaunty main" >> /
         sudo("""echo "deb http://ppa.launchpad.net/gearman-developers/ppa/ubuntu karmic main
 deb-src http://ppa.launchpad.net/gearman-developers/ppa/ubuntu karmic main" >> /etc/apt/sources.list""")
     
-    sudo("apt-get update; apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C73E014")
-    sudo("apt-get update; apt-get install -y gearman gearman-job-server gearman-tools libgearman2 libgearman-dev libgearman-dbg libgearman-doc")
+    sudo("apt-get -y --force-yes update")
+    sudo("apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C73E014")
+
+
+def _gearman_step2():
+    """you need to manually update key before this
+    because it keeps !#%!#$ timing out"""
+    sudo("apt-get -y update")
+    sudo("apt-get install -y gearman gearman-job-server gearman-tools libgearman2 libgearman-dev libgearman-dbg libgearman-doc")
+
 
 def _linux_base():
     """Installs base Linux essentials (ubuntu install)"""
@@ -178,14 +186,19 @@ def ec2_save_image():
     """Takes an instance on EC2 and saves to S3"""
     raise NotImplemented("needs to be done")
 
-def build_all(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
+def build_step1(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
     require('hosts', provided_by=[vm107,vm106,ec2prod])
     #_linux_base()
-    #_gearman() # includes memcached
-    #_memcached()
-    #_mysql(rootmysqlpwd,dbpwd)
-    #_zamanda(dbpwd)
-    #_nginx()
+    #_gearmanDrizzle() # includes memcached
+    _gearman()
+    
+def build_step2(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
+    require('hosts', provided_by=[vm107,vm106,ec2prod])
+    _gearman_step2()
+    _memcached()
+    _mysql(rootmysqlpwd,userdbpwd)
+    _zamanda(userdbpwd)
+    _nginx()
     _demisauce_pre_reqs()
-    release(userdbpwd)
+    #release(userdbpwd)
 
