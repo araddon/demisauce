@@ -143,7 +143,11 @@ perl -pi -e "s/ds_web:password/ds_web:$DEMISAUCE_MYSQL_PWD/g" production.ini || 
 perl -pi -e "s/http:\/\/localhost:4950/http:\/\/$HOSTNAME/g" production.ini || echo "Failed attempting to update Hostname"
 
 HOSTNAME2="http://$HOSTNAME"
-if [ $INSTALL_ROLE = "prod" ] ; then
+if [ $INSTALL_ROLE = "desktop" ] ; then
+    paster setup-app devmysql.ini
+    paster updatesite -s $HOSTNAME2 -i devmysql.ini
+else
+
     echo "Now calling paster setup-app production.ini"
     paster setup-app production.ini
     
@@ -161,9 +165,6 @@ if [ $INSTALL_ROLE = "prod" ] ; then
      */2 * * * * /etc/init.d/demisauce_web start
 EOL
     crontab /var/spool/cron/crontabs/root.tmp
-elif [ $INSTALL_ROLE = "dev" ] ; then
-    paster setup-app devmysql.ini
-    paster updatesite -s $HOSTNAME2 -i devmysql.ini
 fi
 
 

@@ -51,7 +51,7 @@ class Site(ModelBase):
     
     @classmethod
     def create_sitekey(cls):
-        return hashlib.sha.new(str(random.random())).hexdigest()
+        return hashlib.md5.new(str(random.random())).hexdigest()
     
     def __str__(self):
         return '''{id:%s,name:'%s',slug:'%s',base_url:'%s'}''' % (self.id,

@@ -21,5 +21,5 @@ class DemisauceInstaller(Installer):
         vars['demisuace_apikey'] = key
         vars['demisauce_file'] = filename.split('.')[0]
         # go back to normal processor
-        #print("Trying to create Config:  %s" % (filename))
+        print("Trying to create Config:  %s" % (filename))
         Installer.write_config(self, command, filename, vars)

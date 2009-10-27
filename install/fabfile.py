@@ -47,7 +47,7 @@ def vm107():
     env.path = '/home/demisauce' 
     env.os = 'ubuntu9.04'
     env.type = 'vm'
-    env.environment = 'dev'
+    env.environment = 'prod'
 
 def ec2prod():
     "The dev VM linux machine"

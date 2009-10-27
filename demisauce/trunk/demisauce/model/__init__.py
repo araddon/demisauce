@@ -16,7 +16,7 @@ def init_model(enginelocal):
     Call me before using any of the tables or classes in the model.
     """
     
-    sm = orm.sessionmaker(autoflush=True, transactional=True, bind=enginelocal)
+    sm = orm.sessionmaker(autoflush=True, bind=enginelocal)
     meta.engine = enginelocal
     meta.DBSession = orm.scoped_session(sm)
 
