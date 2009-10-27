@@ -11,7 +11,7 @@ server {
 	access_log  /var/log/nginx/localhost.access.log;
 
 	location /static {
-		#root   /home/demisauce;
+		#root   /home/demisauce/current_web/static;
 		#autoindex on;
 		proxy_pass        http://192.168.0.100:8001;
         proxy_set_header  X-Real-IP  $remote_addr;
