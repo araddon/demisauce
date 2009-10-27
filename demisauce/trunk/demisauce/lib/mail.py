@@ -3,7 +3,7 @@
 from pylons import config
 from email.MIMEText import MIMEText
 from email.Header import Header
-import smtplib, rfc822
+import smtplib, rfc822, logging
 
 DEFAULT_CHARSET = 'utf-8'
 def default_from_email():
@@ -15,6 +15,7 @@ DEFAULT_FROM_EMAIL = default_from_email()
 DEFAULT_FROM_NAME = 'Demisauce Admin'
 SMTP_USERNAME = ('smtp_username' in config and config['smtp_username']) or None
 SMTP_PASSWORD = ('smtp_password' in config and config['smtp_password']) or None
+SMTP_PORT = 587 if 'gmail.com' in config['smtp_server'] else 25
 
 class BadHeaderError(ValueError):
     pass
@@ -53,8 +54,15 @@ def send_mail_toeach(datatuple, fail_silently=False,
         smtp_server = config.has_key('smtp_server') and config['smtp_server'] or None
         if smtp_server == None or smtp_server == '':
             return
-        server = smtplib.SMTP(config['smtp_server'], 25)
-        if auth_user and auth_password:
+        server = smtplib.SMTP(config['smtp_server'], SMTP_PORT)
+        if 'gmail.com' in config['smtp_server']:
+            # different logon
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            logging.error("What:  uname = %s   pwd = %s" % (auth_user, auth_password))
+            server.login(auth_user, auth_password)
+        elif auth_user and auth_password:
             server.login(auth_user, auth_password)
     except:
         if fail_silently:
@@ -77,7 +85,10 @@ def send_mail_toeach(datatuple, fail_silently=False,
                 raise
             
     try:
-        server.quit()
+        if 'gmail.com' in config['smtp_server']:
+            server.close()
+        elif auth_user and auth_password:
+            server.quit()
     except:
         if fail_silently:
             return
@@ -95,8 +106,14 @@ def send_mass_mail(datatuple, fail_silently=False,
     If auth_user and auth_password are set, they're used to log in.
     """
     try:
-        server = smtplib.SMTP(config['smtp_server'], 25)
-        if auth_user and auth_password:
+        server = smtplib.SMTP(config['smtp_server'], SMTP_PORT)
+        if 'gmail.com' in config['smtp_server']:
+            # different logon
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(auth_user, auth_password)
+        elif auth_user and auth_password:
             server.login(auth_user, auth_password)
     except:
         if fail_silently:
@@ -119,7 +136,10 @@ def send_mass_mail(datatuple, fail_silently=False,
             if not fail_silently:
                 raise
     try:
-        server.quit()
+        if 'gmail.com' in config['smtp_server']:
+            server.close()
+        elif auth_user and auth_password:
+            server.quit()
     except:
         if fail_silently:
             return

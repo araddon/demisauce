@@ -3,7 +3,7 @@ from sqlalchemy import Column, MetaData, ForeignKey, Table
 from sqlalchemy.sql import and_, select, func
 from sqlalchemy.types import Integer, String as DBString, \
     DateTime, Text as DBText, Boolean
-from sqlalchemy.orm import mapper, relation, MapperExtension, EXT_PASS
+from sqlalchemy.orm import mapper, relation, MapperExtension, EXT_CONTINUE
 from sqlalchemy.orm import class_mapper
 from demisauce.model import ModelBase, meta
 from demisauce.model.site import Site

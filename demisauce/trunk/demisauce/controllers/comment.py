@@ -14,7 +14,6 @@ from demisauce.model.site import Site
 from datetime import datetime, timedelta
 import simplejson
 
-
 log = logging.getLogger(__name__)
 
 def google_auth_url(return_url):
@@ -156,7 +155,8 @@ class CommentController(BaseController):
                 item.ip = request.environ['HTTP_X_FORWARDED_FOR']
             elif 'REMOTE_ADDR' in request.environ:
                 item.ip = request.environ['REMOTE_ADDR']
-            
+            item.user_agent = request.environ['HTTP_USER_AGENT']
+            item.referrer = request.environ['HTTP_REFERER']
             item.comment = sanitize(self.form_result['comment'])
             if self.form_result.has_key('type'):
                 item.type = sanitize(self.form_result['type'])
@@ -234,6 +234,8 @@ class CommentController(BaseController):
             elif 'REMOTE_ADDR' in request.environ:
                 item.ip = request.environ['REMOTE_ADDR']
             
+            item.user_agent = request.environ['HTTP_USER_AGENT']
+            item.referrer = request.environ['HTTP_REFERER']
             if 'comment' in request.params:
                 item.comment = sanitize(request.params['comment'])
             if 'type' in request.params:

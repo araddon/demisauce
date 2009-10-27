@@ -3,7 +3,7 @@ from pylons import config
 from sqlalchemy import Column, MetaData, ForeignKey, Table
 from sqlalchemy.types import Integer, String as DBString, DateTime
 from sqlalchemy.types import Text as DBText
-from sqlalchemy.orm import mapper, relation, MapperExtension, EXT_PASS
+from sqlalchemy.orm import mapper, relation, MapperExtension, EXT_CONTINUE
 from demisauce import model
 #from demisauce.model import mapping
 from demisauce.model import meta, ModelBase
@@ -100,7 +100,7 @@ class CmsMapperExt(MapperExtension):
     """will update children count etc"""
     def before_update(self, mapper, connection, instance):
         #instance.__onupdate__()
-        return EXT_PASS
+        return EXT_CONTINUE
     
 
 

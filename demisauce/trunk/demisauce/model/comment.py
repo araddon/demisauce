@@ -7,6 +7,7 @@ from sqlalchemy.types import Integer, String as DBString, DateTime, \
 from demisauce.model import ModelBase, meta
 from demisauce.model import site
 from demisauce import model
+from demisauce.lib import akismet
 
 from datetime import datetime
 import logging
@@ -42,6 +43,27 @@ class Comment(ModelBase):
     def __init__(self, **kwargs):
         self.type = 'comment'
         super(Comment, self).__init__(**kwargs)
+    
+    
+    def save(self):
+        """Check for spam first"""
+        if 'akismet_api_key' in config:
+            ak = akismet.Akismet(
+                        key=config['akismet_api_key'],
+                        blog_url='http://www.demisauce.com/'
+                    )
+            if ak.verify_key():
+                    data = {
+                        'user_ip': self.ip,
+                        'user_agent': self.user_agent,
+                        'referrer': self.referrer,
+                        'comment_type': 'comment',
+                        'comment_author': u'%s' % self.authorname,
+                    }
+            if ak.comment_check(u'%s' % self.comment, data=data, build_data=True):
+                # true returns = spam
+                self.is_public = False
+        super(Comment, self).save()
     
     def set_email(self,email):
         import hashlib

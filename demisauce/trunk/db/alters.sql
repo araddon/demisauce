@@ -1,12 +1,12 @@
 http://dev.mysql.com/doc/refman/5.0/en/alter-table.html
 ADD [COLUMN] col_name column_definition [FIRST | AFTER col_name ]
 MODIFY [COLUMN] col_name column_definition [FIRST | AFTER col_name]
+10/23/09:
+ALTER TABLE comment ADD is_public tinyint(1) default '0' after `isuser`;
+
 
 1/20/09 
 #NOT YET: ALTER TABLE activity ADD ip varchar(16) NOT NULL after `ref_url`;
-
-
-
 
 ----- Implemented   
 CREATE TABLE `poll` (

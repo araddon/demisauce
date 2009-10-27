@@ -68,6 +68,7 @@ SERVER_ROLE='all'
 checkRoot
 askArgs
 
+
 cd /tmp
 # Upgrade/install packages
 apt-get -y update
@@ -121,9 +122,9 @@ EOL
     #rmdir /var/lib/mysql
     # update datadir=/mnt/mysql and tmpdir=/mnt/mysql/tmp/
     echo "---- making changes to /etc/mysql/my.cnf  "
-    #perl -pi -e "s/\/var\/lib\/mysql/$escaped_mysql_home/g" /etc/mysql/my.cnf || die "could not change my.cnf"
-    #perl -pi -e "s/\/tmp/$escaped_mysql_home\/tmp/g" /etc/mysql/my.cnf || die "could not change my.cnf"
-    #perl -pi -e "s/skip\-external\-locking/skip\-external\-locking\nlog\-bin/g" /etc/mysql/my.cnf || die "could not change my.cnf"
+    perl -pi -e "s/\/var\/lib\/mysql/$escaped_mysql_home/g" /etc/mysql/my.cnf || die "could not change my.cnf"
+    perl -pi -e "s/\/tmp/$escaped_mysql_home\/tmp/g" /etc/mysql/my.cnf || die "could not change my.cnf"
+    perl -pi -e "s/skip\-external\-locking/skip\-external\-locking\nlog\-bin/g" /etc/mysql/my.cnf || die "could not change my.cnf"
     cat > /etc/mysql/conf.d/mysql-ec2.cnf <<EOM
     [mysqld]
     innodb_file_per_table
@@ -162,6 +163,8 @@ EOL
     chown mysql:mysql "/etc/mysql-zrm/demisauce/mysql-zrm.conf"
     /etc/init.d/mysql start
 fi
+
+die
 
 if [ $SERVER_ROLE = "all" ] || [ $SERVER_ROLE = "web" ] 
 then

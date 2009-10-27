@@ -66,14 +66,15 @@ the HTML tag in question if it's allowed, otherwise a null string."""
 
 def LinkChecker(match_obj):
     """LinkChecker(match_obj) - Used by the Sanitize function to validate links.
-
-Given an re module match object as a parameter containing link tag, it
-will return a link tag with the actual link URL validated through
-Pretty_Link() using the normal 'lenient' methods."""
+    
+    Given an re module match object as a parameter containing link tag, it
+    will return a link tag with the actual link URL validated through
+    Pretty_Link() using the normal 'lenient' methods.
+    """
     
     return match_obj.group(1) + Pretty_Link(match_obj.group(2)) + match_obj.group(3)
 
-    
+
 def Sanitize(Content):    # for your protection
     """Sanitize(Content) - Sanitizes HTML strings for your protection.
 
