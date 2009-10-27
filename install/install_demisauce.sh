@@ -96,7 +96,7 @@ else
     fi
 fi
 
-DEMISAUCE_WEB_HOME="$DEMISAUCE_HOME/demisauce_web"
+DEMISAUCE_WEB_HOME="$DEMISAUCE_HOME/current_web"
 echo "DEMISAUCE_HOME = $DEMISAUCE_HOME; DEMISAUCE_MYSQL_PWD = $DEMISAUCE_MYSQL_PWD \
     install or upgrade? = $UPGRADE_OR_INSTALL"
 echo "Demisauce web Home:   $DEMISAUCE_WEB_HOME"
@@ -126,7 +126,7 @@ python setup.py install
 cd "$DEMISAUCE_VERSION_HOME/demisauce/demisauce/trunk"
 
 # can't i get rid of this?  why is it needed?
-python setup.py develop  # is this bad, at least it doesn't move items to path?
+python setup.py install  # is this bad, at least it doesn't move items to path?
 echo " calling pwd next"
 pwd
 echo "------  setting up production.ini    -----------"
