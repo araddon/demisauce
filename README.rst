@@ -7,7 +7,5 @@ it as an appliance in your environment, see below.
 INSTALL INSTRUCTIONS
 ---------------------
 
-.. include:: install/README.rst
-
 http://github.com/araddon/demisauce/tree/master/install
 
