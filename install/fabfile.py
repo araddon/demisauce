@@ -187,5 +187,5 @@ def build_all(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
     #_zamanda(dbpwd)
     #_nginx()
     _demisauce_pre_reqs()
-    release(dbpwd)
+    release(userdbpwd)
 

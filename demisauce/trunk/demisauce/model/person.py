@@ -5,7 +5,7 @@ from sqlalchemy.types import Integer, String as DBString, DateTime, Boolean
 from sqlalchemy.sql import and_
 from datetime import datetime
 import formencode
-import sha, random, hashlib, string
+import random, hashlib, string
 from formencode import Invalid, validators
 from formencode.validators import *
 
@@ -139,7 +139,7 @@ class Person(ModelBase):
         
         returns the value of user_unquieid
         """
-        return sha.new(str(random.random())).hexdigest()
+        return hashlib.sha.new(str(random.random())).hexdigest()
     
     @classmethod
     def create_random_email(cls,domain='@demisauce.org'):
@@ -147,7 +147,7 @@ class Person(ModelBase):
         create a random email for testing
         accepts a @demisauce.org domain argument optionally
         """
-        return '%s%s' % (sha.new(str(random.random())).hexdigest(),
+        return '%s%s' % (hashlib.sha.new(str(random.random())).hexdigest(),
             domain)
     
     @classmethod
@@ -163,7 +163,6 @@ class Person(ModelBase):
         return hashlib.md5(email.lower()).hexdigest()
     
     def set_email(self,email):
-        import hashlib
         self.email = email.lower()
         self.hashedemail = hashlib.md5(email.lower()).hexdigest()
     
@@ -171,26 +170,23 @@ class Person(ModelBase):
         """
         creates random salt
         """
-        import sha, random
-        self.random_salt = sha.new(str(random.random())).hexdigest()[:15]
+        self.random_salt = hashlib.sha.new(str(random.random())).hexdigest()[:15]
     
     def set_password(self, raw_password):
-        import sha, random
         if self.random_salt == None or len(self.random_salt) < 5:
             self.create_user_salt()
-        self.hashed_password = sha.new(self.random_salt+raw_password).hexdigest()
+        self.hashed_password = hashlib.sha.new(self.random_salt+raw_password).hexdigest()
     
     def is_authenticated(self, supplied_pwd):
         """
         Returns a boolean of whether the supplied password was correct.
         """
-        import sha
         if self.random_salt == None: return False
-        return (self.hashed_password == sha.new(self.random_salt+supplied_pwd).hexdigest())
+        return (self.hashed_password == hashlib.sha.new(self.random_salt+supplied_pwd).hexdigest())
     
     def public_token(self):
         """create's a token for user """
-        return sha.new(self.random_salt+str(self.id)).hexdigest()
+        return hashlib.sha.new(self.random_salt+str(self.id)).hexdigest()
     
     def help_tickets(self,ct=10):
         """Returns list of help tickets i have submited"""

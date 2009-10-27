@@ -8,7 +8,7 @@ from demisauce import lib
 #from demisauce.model import mapping
 from demisauce.model import meta, ModelBase
 from datetime import datetime
-import re
+import re, hashlib, random
 
 site_table = Table("site", meta.metadata,
         Column("id", Integer, primary_key=True),
@@ -51,8 +51,7 @@ class Site(ModelBase):
     
     @classmethod
     def create_sitekey(cls):
-        import sha, random
-        return sha.new(str(random.random())).hexdigest()
+        return hashlib.sha.new(str(random.random())).hexdigest()
     
     def __str__(self):
         return '''{id:%s,name:'%s',slug:'%s',base_url:'%s'}''' % (self.id,

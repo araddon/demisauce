@@ -16,10 +16,10 @@ class DemisauceInstaller(Installer):
         
         Creates the custom api key 
         """
-        import sha, random
-        key = sha.new(str(random.random())).hexdigest()
+        import hashlib, random
+        key = hashlib.sha.new(str(random.random())).hexdigest()
         vars['demisuace_apikey'] = key
         vars['demisauce_file'] = filename.split('.')[0]
         # go back to normal processor
-        print("Trying to create Config:  %s" % (filename))
+        #print("Trying to create Config:  %s" % (filename))
         Installer.write_config(self, command, filename, vars)

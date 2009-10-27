@@ -127,7 +127,8 @@ cd "$DEMISAUCE_VERSION_HOME/demisauce/demisauce/trunk"
 
 # can't i get rid of this?  why is it needed?
 python setup.py develop  # is this bad, at least it doesn't move items to path?
-
+echo " calling pwd next"
+pwd
 echo "------  setting up production.ini    -----------"
 paster make-config demisauce production.ini
 # replace console logging with file:   logfile = console
@@ -142,6 +143,7 @@ perl -pi -e "s/http:\/\/localhost:4950/http:\/\/$HOSTNAME/g" production.ini || e
 
 HOSTNAME2="http://$HOSTNAME"
 if [ $INSTALL_ROLE = "prod" ] ; then
+    echo "Now calling paster setup-app production.ini"
     paster setup-app production.ini
     
     paster updatesite -s $HOSTNAME2 -i production.ini

@@ -3,6 +3,7 @@ import ConfigParser
 import string
 import openanything
 import datetime
+import random, hashlib
 from xmlnode import XMLNode
 from demisaucepy import cfg
 from demisaucepy import ServiceDefinition, ServiceClient, \
@@ -57,8 +58,7 @@ class Person(RemoteService):
         create a random email for testing
         accepts a @demisauce.org domain argument optionally
         """
-        import sha, random, hashlib
-        return '%s%s' % (sha.new(str(random.random())).hexdigest(),
+        return '%s%s' % (hashlib.sha.new(str(random.random())).hexdigest(),
             domain)
     
     @classmethod

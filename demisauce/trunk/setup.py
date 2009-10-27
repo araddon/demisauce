@@ -7,7 +7,7 @@ except ImportError:
 
 setup(
     name='demisauce',
-    version="0.1.0",
+    version="0.1.1",
     description='Shared Services for use within your application via rest',
     author='Aaron Raddon',
       long_description="""
