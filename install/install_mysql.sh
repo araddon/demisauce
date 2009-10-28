@@ -110,6 +110,8 @@ escaped_mysql_home="\/vol\/lib"
 echo "New escaped_mysql_home = $escaped_mysql_home"
 #  http://ubuntuforums.org/showthread.php?t=831147
 # update apparmor 
+#  /vol/tmp/ rw,
+#  /vol/tmp/* rw,
 #  /var/log/mysql.log rw,
 #  /var/log/mysql.err rw,
 #  /vol/lib/mysql/ r,
@@ -121,6 +123,11 @@ echo "New escaped_mysql_home = $escaped_mysql_home"
 echo "---- /etc/apparmor.d/usr.sbin.mysqld  "
 perl -pi -e "s/\/var\/lib\/mysql\//\/vol\/lib\/mysql\//g" /etc/apparmor.d/usr.sbin.mysqld || die "could not change apparmor.d/usr.sbin.mysqld"
 perl -pi -e "s/\/var\/log\/mysql\//\/vol\/log\/mysql\//g" /etc/apparmor.d/usr.sbin.mysqld || die "could not change apparmor.d/usr.sbin.mysqld"
+perl -pi -e "s/network tcp,/network tcp,\n\n  \/vol\/tmp\/ rw,\n  \/vol\/tmp\/* rw,/g" /etc/apparmor.d/usr.sbin.mysqld || die "problems with apparmor.d/usr.sbin.mysqld"
+
+
+/vol/tmp/ rw,
+/vol/tmp/* rw,
 echo "---- making changes to /etc/mysql/my.cnf  "
 # update datadir=/vol/lib/mysql and tmpdir=/vol/tmp/
 perl -pi -e "s/\/var\/lib\/mysql/$escaped_mysql_home/g" /etc/mysql/my.cnf || die "could not change my.cnf"

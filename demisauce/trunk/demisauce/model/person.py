@@ -23,7 +23,7 @@ person_table = Table("person", meta.metadata,
         Column("foreign_id", Integer, default=0),
         Column("email", DBString(255)),
         Column("displayname", DBString(50)),
-        Column("created", DateTime,default=datetime.now()),
+        Column("created", DateTime,default=datetime.now),
         Column("last_login", DateTime),
         Column("waitinglist", Integer, default=1),
         Column("verified", Boolean, default=False),
@@ -139,7 +139,7 @@ class Person(ModelBase):
         
         returns the value of user_unquieid
         """
-        return hashlib.md5.new(str(random.random())).hexdigest()
+        return hashlib.md5(str(random.random())).hexdigest()
     
     @classmethod
     def create_random_email(cls,domain='@demisauce.org'):
@@ -147,7 +147,7 @@ class Person(ModelBase):
         create a random email for testing
         accepts a @demisauce.org domain argument optionally
         """
-        return '%s%s' % (hashlib.md5.new(str(random.random())).hexdigest(),
+        return '%s%s' % (hashlib.md5(str(random.random())).hexdigest(),
             domain)
     
     @classmethod
@@ -170,23 +170,23 @@ class Person(ModelBase):
         """
         creates random salt
         """
-        self.random_salt = hashlib.md5.new(str(random.random())).hexdigest()[:15]
+        self.random_salt = hashlib.md5(str(random.random())).hexdigest()[:15]
     
     def set_password(self, raw_password):
         if self.random_salt == None or len(self.random_salt) < 5:
             self.create_user_salt()
-        self.hashed_password = hashlib.md5.new(self.random_salt+raw_password).hexdigest()
+        self.hashed_password = hashlib.sha1(self.random_salt+raw_password).hexdigest()
     
     def is_authenticated(self, supplied_pwd):
         """
         Returns a boolean of whether the supplied password was correct.
         """
         if self.random_salt == None: return False
-        return (self.hashed_password == hashlib.md5.new(self.random_salt+supplied_pwd).hexdigest())
+        return (self.hashed_password == hashlib.sha1(self.random_salt+supplied_pwd).hexdigest())
     
     def public_token(self):
         """create's a token for user """
-        return hashlib.md5.new(self.random_salt+str(self.id)).hexdigest()
+        return hashlib.md5(self.random_salt+str(self.id)).hexdigest()
     
     def help_tickets(self,ct=10):
         """Returns list of help tickets i have submited"""

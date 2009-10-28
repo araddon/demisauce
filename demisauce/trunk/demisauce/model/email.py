@@ -22,7 +22,7 @@ email_table = Table("email", meta.metadata,
         Column("from_name", DBString(120), nullable=True),
         Column("to", DBString(1000), nullable=True),
         Column("template", DBText, default=''),
-        Column("created", DateTime,default=datetime.now()),
+        Column("created", DateTime,default=datetime.now),
     )
 
 class Email(ModelBase):

@@ -42,7 +42,9 @@
                         <h3 style="">Users</h3>
                         % if c.item and c.item.users:
                             % for user in c.item.users:
-                                <div>${h.link_to(user.displayname,h.url("/account/view/%s" % user.id))}, ${(user.verified and "Verified") or 'Not Verified'} </div>
+                                % if user.verified:
+                                    <div><a href="/account/view/${user.id}">${user.displayname}</a></div>
+                                % endif
                             % endfor
                         % endif
                         <div id="inviteusersformdiv"></div>

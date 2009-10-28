@@ -253,7 +253,7 @@ def error_box():
     s = ''
     if (c.form_errors and len(c.form_errors) > 0) or \
         (c.msg_errors and len(c.msg_errors) > 0):
-        s += '<img src="/images/dialog-error.png" class="ib"/>'
+        s += '<img src="/images/error.png" class="ib"/>'
     if (c.form_errors and len(c.form_errors) > 0):
         s += 'There were errors on the form highlighted below'
     s += ''.join(["%s <br />" % (x)  for x in c.msg_errors])

@@ -175,5 +175,8 @@ class ModelBase(object):
     @classmethod
     def saget(cls,id=0):
         """Class method to get by id"""
+        print("getting cls=%s    id=%s  idtype = %s" %(cls,id,type(id)))
+        item = meta.DBSession.query(cls).get(id)
+        print("item.id = %s, type = %s" % (item.id,type(item.id)))
         return meta.DBSession.query(cls).get(id)
     

@@ -3,15 +3,23 @@ server {
 	listen   80;
 	server_name  demisauce;
 
-	access_log  /vol/log/nginx/localhost.access.log;
+	access_log  /vol/log/nginx/demisauce.access.log;
 
-	location /static {
-		root   /home/demisauce/current_web/static;
-        proxy_set_header  X-Real-IP  $remote_addr;
+	location /js {
+		root   /home/demisauce/ds/current_web/demisauce/public;
+	}
+	location /css {
+		root   /home/demisauce/ds/current_web/demisauce/public;
+	}
+	location /s3 {
+		root   /home/demisauce/ds/current_web/demisauce/public;
+	}
+	location /images {
+		root   /home/demisauce/ds/current_web/demisauce/public;
 	}
 	
 	location / {
-		proxy_pass        http://192.168.0.100:8001;
+		proxy_pass        http://localhost:4950;
         proxy_set_header  X-Real-IP  $remote_addr;
 	}
 

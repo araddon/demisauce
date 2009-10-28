@@ -52,7 +52,9 @@
 <table class="dsadmin">
     <thead>
         <tr >
-            <th class="check-column"><input type="checkbox"/></th>
+            <th class="check-column">
+                <input id="selectallcomments" type="checkbox"/>
+                <a  href="#" class="deleteallcomments">Delete</a></th>
             <th>Author</th>
             <th>Date</th>
             
@@ -62,10 +64,11 @@
     <tbody>
     % for item in items:
         <tr class="${h.cycle("", "alternate") }">
-            <td><input type="checkbox"/></td>
+            <td><input value="/comment/delete/${item.id}" class="comments" name="comments" type="checkbox"/></td>
             <td>
+                <a rel='/comment/delete/${item.id}' href="#" class="deletecomment">Delete</a>
                 % if item.isuser:
-                    ${h.link_to(item.email, '/account/viewh/%s' % item.hashedemail, class_="xtitle")}
+                    <a href='/account/viewh/${item.hashedemail}'  class_="xtitle"> item.email</a>
                 % else:
                     ${item.email}, ${item.isuser}
                 % endif
@@ -74,12 +77,35 @@
                 % endif
             </td>
             <td>${(item.created).strftime("%b %d, %Y %H:%m") or ''}</td>
-            <td>${h.simple_format(h.truncate(item.comment, 50))}</td>
+            <td><pre>${h.simple_format(h.truncate(item.comment.replace("<",""), 50))}</pre></td>
         </tr>
         
     % endfor
     </tbody>
 </table>
+<script type="text/javascript">
+$(document).ready(function(){
+    $(document).ready(function(){
+        $('a.deletecomment').click(function(){
+            $.get($(this).attr("rel"), function(data){ });
+            $(this).parent().parent().hide();
+             return false;
+        });
+        $('#selectallcomments').click(function(){
+            $("input.comments[type='checkbox']").attr('checked', true);
+        });
+        $('a.deleteallcomments').click(function(){
+            $('input.comments[checked]').each(function(){
+                $.get($(this).val(), function(data){ });
+            });
+            $(this).parent().parent().parent().parent().hide()
+            return false;
+        });
+
+    });
+});
+</script>
+
 ${items.dspagerhtml}
 </%def>
 <%def name="list(cmsitems)">

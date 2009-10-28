@@ -14,7 +14,7 @@ rating_table = Table("rating", meta.metadata,
         Column("person_id", Integer, default=0),
         Column("obj_id", Integer),
         Column("entry", Integer),
-        Column("created", DateTime,default=datetime.now()),
+        Column("created", DateTime,default=datetime.now),
         Column("username", DBString(50)),
         Column("type", DBString(255)),
     )

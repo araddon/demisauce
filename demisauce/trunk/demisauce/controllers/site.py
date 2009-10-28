@@ -29,9 +29,10 @@ class SiteController(BaseController):
         return self.view(c.user.site_id)
     
     def view(self,id = 0):
+        id = int(id) if id not None else 0
         if id > 0 and (c.user is not None) and c.user.issysadmin:
             c.item = Site.saget(id)
-        elif id is None or id == '' and c.user:
+        elif id is None or id == 0 and c.user:
             c.item = Site.get(-1,c.user.site_id)
         else:
             c.item = Site.get(-1,id)

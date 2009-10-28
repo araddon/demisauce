@@ -8,6 +8,7 @@
 #   -d NAME                 - Directory to install into:  defaults to /home/demisauce
 #   -p PWD                  - Password for MySQL:  Defaults to a demisauce
 #   -r ROLE                 - Role (prod|dev) should it set up con jobs etc? default=prod
+#   -s SOURCE               - Source location (Github or local)
 #
 # Examples:
 #
@@ -60,6 +61,12 @@ function askArgs
     if [ "$vmorec2" != "" ] ; then
         VMOREC2=$vmorec2
     fi
+    echo -en "location of source code? enter 'github' or 'local' \
+    return to accept:  'github'   :   "
+    read sourceloc
+    if [ "$sourceloc" != "" ] ; then
+        VMOREC2=$SOURCE
+    fi
 }
 
 #----------  Start of program
@@ -68,6 +75,7 @@ DEMISAUCE_HOME="/home/demisauce/ds"
 DEMISAUCE_MYSQL_PWD="demisauce"
 INSTALL_ROLE="prod"
 VMOREC2="ec2"
+SOURCE="github"
 
 # IP="$(wget -o/dev/null -O- http://jackson.io/ip/)"
 # http://jackson.io/ip/service.html
@@ -88,6 +96,7 @@ else
                 -p) DEMISAUCE_MYSQL_PWD=$2;                         shift 2 ;;
                 -r) INSTALL_ROLE=$2;                                shift 2 ;;
                 -e) VMOREC2=$2;                                     shift 2 ;;
+                -s) SOURCE=$2;                                      shift 2 ;;
                 *)             echo "$0: Unrecognized option: $2" >&2; exit 1;
             esac
         done
@@ -101,36 +110,43 @@ echo "DEMISAUCE_HOME = $DEMISAUCE_HOME; DEMISAUCE_MYSQL_PWD = $DEMISAUCE_MYSQL_P
     install or upgrade? = $UPGRADE_OR_INSTALL"
 echo "Demisauce web Home:   $DEMISAUCE_WEB_HOME"
 
-#  each new version stored in different named version, then point to current
-#  like:    /demisauce/ds/2008122811   (yyyymmddhh)
-VERSION_FOLDER=$(date +"%y%m%d%H")
+
 mkdir -p $DEMISAUCE_HOME
 mkdir -p "$DEMISAUCE_HOME/log"  # make log directory
-# reassign home to versioned folder
-DEMISAUCE_VERSION_HOME=$DEMISAUCE_HOME/$VERSION_FOLDER
-echo "New Home:  $DEMISAUCE_VERSION_HOME"
-mkdir -p $DEMISAUCE_VERSION_HOME # new one w version
-cd $DEMISAUCE_VERSION_HOME
 
-echo "---- Downloading Demisauce SRC from github ------------"
-git clone -q git://github.com/araddon/demisauce.git
-#Create /home/demisauce/current_web pointing to /home/demisauce/ds/2008122812/demisauce/demisauce/trunk
-ln -s $DEMISAUCE_VERSION_HOME/demisauce/demisauce/trunk $DEMISAUCE_WEB_HOME
 
+
+if [ $SOURCE = "github" ] ; then
+  #  each new version stored in different named version, then point to current
+  #  like:    /demisauce/ds/2008122811   (yyyymmddhh)
+  VERSION_FOLDER=$(date +"%y%m%d%H")
+  # reassign home to versioned folder
+  DEMISAUCE_VERSION_HOME=$DEMISAUCE_HOME/$VERSION_FOLDER
+  echo "New Home:  $DEMISAUCE_VERSION_HOME"
+  mkdir -p $DEMISAUCE_VERSION_HOME # new one w version
+  cd $DEMISAUCE_VERSION_HOME
+  echo "---- Downloading Demisauce SRC from github ------------"
+  git clone -q git://github.com/araddon/demisauce.git
+  #Create /home/demisauce/current_web pointing to /home/demisauce/ds/2008122812/demisauce/demisauce/trunk
+  ln -s $DEMISAUCE_VERSION_HOME/demisauce/demisauce/trunk $DEMISAUCE_WEB_HOME
+else
+  echo "---- source you have pushed via rsync, no download   ------------"
+
+fi
 
 
 echo '---- installing DemisaucePY ---------'
-cd "$DEMISAUCE_VERSION_HOME/demisauce/demisaucepy/trunk/"
+cd "$DEMISAUCE_HOME/current/demisaucepy/trunk/"
 python setup.py install
 
-cd "$DEMISAUCE_VERSION_HOME/demisauce/demisauce/trunk"
-
+cd "$DEMISAUCE_HOME/current_web"
 echo '---- installing Demisauce ---------'
 # can't i get rid of this?  why is it needed?
 python setup.py develop  # is this bad, at least it doesn't move items to path?
-echo " calling pwd next"
-pwd
+
+
 echo "------  setting up production.ini    -----------"
+rm -f production.ini
 paster make-config demisauce production.ini
 # replace console logging with file:   logfile = console
 escaped_demisauce_home="${DEMISAUCE_HOME//\//\/}"
@@ -155,14 +171,14 @@ else
     echo "-----  create init.d startup scripts for demisauce   
     available at /etc/init.d/demisauce_web (start|stop|restart) ------------"
     rm -f /etc/init.d/demisauce_web
-    mv $DEMISAUCE_VERSION_HOME/demisauce/install/install_initd.sh /etc/init.d/demisauce_web
+    mv $DEMISAUCE_HOME/current/install/install_initd.sh /etc/init.d/demisauce_web
     chmod +x /etc/init.d/demisauce_web
     #/etc/init.d/install_initd.sh "$DEMISAUCE_HOME/demisauce/demisauce/trunk"
     /etc/init.d/demisauce_web start
     #paster serve --daemon production.ini
     echo "-----  Creating cron job to restart paster if it fails -----------"
     cat <<EOL > /var/spool/cron/crontabs/root.tmp
-     */2 * * * * /etc/init.d/demisauce_web start
+*/2 * * * * /etc/init.d/demisauce_web start
 EOL
     crontab /var/spool/cron/crontabs/root.tmp
 fi

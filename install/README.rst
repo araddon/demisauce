@@ -53,6 +53,7 @@ VM's for dev on local.
     Verify that changes work
 
 **7. Linse, Lather, Repeat:  Do on prod after test**
+    Repeat the steps for the dev, test, prod environments
 
 **8. Take image of EC2 Prod machine**
     After building a machine (#1) and deploying code and data (#2,5) if you are on EC2 save a copy of machine to S3.

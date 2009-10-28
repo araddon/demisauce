@@ -58,7 +58,7 @@ class Person(RemoteService):
         create a random email for testing
         accepts a @demisauce.org domain argument optionally
         """
-        return '%s%s' % (hashlib.sha.new(str(random.random())).hexdigest(),
+        return '%s%s' % (hashlib.md5(str(random.random())).hexdigest(),
             domain)
     
     @classmethod
