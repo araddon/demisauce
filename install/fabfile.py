@@ -64,8 +64,6 @@ vm107 = _server(base_config,{"desc":"VMware 107 Demisauce Server","host"  : "192
 ec2prod = _server(base_config,{"desc":"EC2 Prod 1","host"  : "aws.amazon.com","mailhostname" : 'smtp.demisauce.org'})
 imac = _server(base_config,{"desc":"iMac Desktop Dev", "os": "osx", "host"  : "localhost","user":"aaron"})
 
-#print "\nvm106 = %s" % vm106
-#print "\nvm107 = %s" % vm107
 """{'mailhostname': 'localhost', 
     'show': None, 'key_filename': None, 'reject_unknown_hosts': False, 
     'project_name': 'demisauce', 'roledefs': {}, 'redis_version': 'redis-1.02', 
@@ -78,29 +76,8 @@ imac = _server(base_config,{"desc":"iMac Desktop Dev", "os": "osx", "host"  : "l
     'host': '192.168.0.106', 'port': '22', 'user': 'demisauce', 'path': '/home/demisauce', 
     'password': 'xyz', 'rcfile': '/Users/aaron/.fabricrc', 'desc': 'VMware 106 Demisauce Server', 
     'roles': [], 'local_path': '/Users/aaron/Dropbox/demisauce', 'use_shell': True, 
-    'hosts': ['192.168.0.106'], 'mysql_root_pwd': 'demisauce', 'warn_only': False, 'os': 'ubuntu9.04'} """
-
-def _vm106():
-    "The dev VM linux machine"
-    env.hosts = ['192.168.0.106']
-    env.user = 'demisauce'
-    env.path = '/home/demisauce' 
-    env.os = 'ubuntu9.04'
-    env.type = 'vm'
-    env.environment = 'dev'
-    env.mailhostname = 'demisauce106.localhost'
-
-def _vm107():
-    "The dev VM linux machine"
-    env.hosts = ['192.168.0.107']
-    env.user = 'demisauce'
-    env.path = '/home/demisauce' 
-    env.os = 'ubuntu9.04'
-    env.type = 'vm'
-    env.environment = 'prod'
-    env.mailhostname = 'demisauce107.localhost'
-
-
+    'hosts': ['192.168.0.106'], 'mysql_root_pwd': 'demisauce', 'warn_only': False, 'os': 'ubuntu9.04'} 
+"""
 # ===== Private Tasks ==========
 def _nginx_release():
     sudo("/etc/init.d/nginx stop")
@@ -200,13 +177,13 @@ def _linux_base():
     First you have installed base ubuntu and ssh, wget:
     sudo apt-get -y update; sudo apt-get -y install openssh-server wget
     """
-    sudo("apt-get -y update; apt-get -y install wget unzip cron rsync python-setuptools python-dev")
+    sudo("apt-get -y update; apt-get -y install wget unzip cron rsync python-setuptools python-dev python-virtualenv")
     sudo("apt-get -y install build-essential git-core; apt-get -y update")
     sudo("easy_install -U pip")
 
 def _demisauce_pre_reqs():
     """install python-mysqldb, gdata, boto(amazon api's)"""
-    sudo('apt-get -y install python-mysqldb')
+    sudo('apt-get -y install python-mysqldb python-memcache')
     sudo('easy_install http://gdata-python-client.googlecode.com/files/gdata.py-1.1.1.tar.gz')
     sudo('easy_install http://boto.googlecode.com/files/boto-1.8d.tar.gz')
 
@@ -229,6 +206,11 @@ def release(userdbpwd):
     sudo('rm /tmp/install_demisauce.sh')
     
     sudo("/etc/init.d/nginx restart")
+
+def simple_push():
+    """Simple release, just web sync"""
+    rsync_project('/home/demisauce/ds/current_web/',local_dir='%(local_path)s/demisauce/trunk' % env)
+    restart_web()
 
 def db_backup_apply():
     """Apply a backup """
@@ -274,5 +256,8 @@ def build_step2(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
     _zamanda(userdbpwd)
     _nginx()
     _demisauce_pre_reqs()
+
+
+
 
 

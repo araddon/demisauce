@@ -50,7 +50,7 @@ Demisauce can be installed with `Easy Install
     author_email='',
     url='http://github.com/araddon/demisauce',
     download_url='http://demisauce.googlecode.com/files/demisaucepy-0.1.1.tar.gz',
-    install_requires=["elementtree>=1.1","nose>=0.10.4"],
+    install_requires=["elementtree>=1.1","nose>=0.10.4","memcache"],
     license='MIT',
     packages=find_packages(exclude=['ez_setup', 'examples']),
     include_package_data=True,

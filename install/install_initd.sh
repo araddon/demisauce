@@ -48,13 +48,13 @@ isRunning(){
         fi
 }
 start() {
-        log_daemon_msg "Starting $DESCRIPTION"
         isRunning
         isAlive=$?
         if [ "${isAlive}" -eq $TRUE ]; then
             # ok, im using cron to keep running, so ignore this
             return 0
         else
+            log_daemon_msg "Starting $DESCRIPTION"
             paster serve --daemon --pid-file=$PIDFILE production.ini start
             chmod 400 $DEMISAUCE_HOME/$PIDFILE
             log_end_msg $SCRIPT_OK
