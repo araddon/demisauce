@@ -1,41 +1,43 @@
 # the demisauce pylons web app configuration
+
+
+upstream pylonspaster {
+        server 127.0.0.1:4950;
+        #server 127.0.0.1:4951;
+        #server 127.0.0.1:4952;
+}
+
 server {
-	listen   80;
-	server_name  demisauce;
-
-	access_log  /vol/log/nginx/demisauce.access.log;
-
-	location /js {
-		root   /home/demisauce/ds/current_web/demisauce/public;
-	}
-	location /css {
-		root   /home/demisauce/ds/current_web/demisauce/public;
-	}
-	location /s3 {
-		root   /home/demisauce/ds/current_web/demisauce/public;
-	}
-	location /images {
-		root   /home/demisauce/ds/current_web/demisauce/public;
-	}
-	
-	location / {
-		proxy_pass        http://localhost:4950;
-        proxy_set_header  X-Real-IP  $remote_addr;
-	}
-
-	#error_page  404  /404.html;
-
-	# redirect server error pages to the static page /50x.html
-	#
-	#error_page   500 502 503 504  /50x.html;
-	#location = /50x.html {
-	#	root   /var/www/nginx-default;
-	#}
-
-	# deny access to .htaccess files, if Apache's document root
-	# concurs with nginx's one
-	#
-	#location ~ /\.ht {
-		#deny  all;
-	#}
+    listen   80;
+    server_name  demisauce;
+    
+    access_log  /vol/log/nginx/demisauce.access.log;
+    
+    location /js {
+        root   /home/demisauce/ds/current_web/demisauce/public;
+    }
+    location /css {
+        root   /home/demisauce/ds/current_web/demisauce/public;
+    }
+    location /s3 {
+        root   /home/demisauce/ds/current_web/demisauce/public;
+    }
+    location /images {
+        root   /home/demisauce/ds/current_web/demisauce/public;
+    }
+    location = /favicon.ico {
+        root   /home/demisauce/ds/current_web/demisauce/public;
+    }
+    location = /robots.txt {
+        root   /home/demisauce/ds/current_web/demisauce/public;
+    }
+    
+    location / {
+        proxy_pass_header Server;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Scheme $scheme;
+        proxy_pass http://pylonspaster;
+    }
 }
