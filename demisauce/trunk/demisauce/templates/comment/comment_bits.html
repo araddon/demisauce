@@ -68,7 +68,7 @@
             <td>
                 <a rel='/comment/delete/${item.id}' href="#" class="deletecomment">Delete</a>
                 % if item.isuser:
-                    <a href='/account/viewh/${item.hashedemail}'  class_="xtitle"> item.email</a>
+                    <a href='/account/viewh/${item.hashedemail}'  class_="xtitle">${item.email}</a>
                 % else:
                     ${item.email}, ${item.isuser}
                 % endif

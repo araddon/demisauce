@@ -5,12 +5,11 @@ from __future__ import with_statement # needed for python 2.5
 from fabric.api import *
 from fabric.contrib.project import rsync_project
 import os, simplejson, datetime
-#from optparse import OptionParser
-#import fab_recipes
 
-# TODO
-#  - allow for remote networking on mysql  bind-address = 192.168.0.106 to allow from other servers in local
-#  - 
+# TODO:  convert paster/ds over to supervisord
+# TODO /etc/init.d/demisauce_web is owned by demisauce instead of root
+# TODO persistent state?   between runs?  
+
 # =============    globals
 env.project_name = 'demisauce'
 INSTALL_ROOT = os.path.dirname(os.path.realpath(__file__))
@@ -18,6 +17,7 @@ PROJECT_ROOT = os.path.realpath(INSTALL_ROOT + '/../' )
 env.path = "/home/demisauce"
 env.local_path = PROJECT_ROOT
 env.redis_version = "redis-1.02"
+env.keys_added = False
 
 # ============   environments
 class _server(object):
@@ -48,10 +48,11 @@ class _server(object):
 
 base_config = {
     "host"  : "localhost",
+    "ip"    : "192.168.0.1",
     "user" : "demisauce",
     "path" : "/home/demisauce",
     "desc" : "Default demisauce server",
-    "os"   : "ubuntu9.04",
+    "os"   : "ubuntu9.10",
     "type" : 'vm',
     "environment" : 'dev',
     "mailhostname" : 'demisauce.org',
@@ -59,9 +60,11 @@ base_config = {
 }
 
 # environments  ========================
-vm106 = _server(base_config,{"desc":"VMware 106 Demisauce Server","host"  : "192.168.0.106"})
-vm107 = _server(base_config,{"desc":"VMware 107 Demisauce Server","host"  : "192.168.0.107"})
-ec2prod = _server(base_config,{"desc":"EC2 Prod 1","host"  : "aws.amazon.com","mailhostname" : 'smtp.demisauce.org'})
+vm112 = _server(base_config,{"desc":"VMware 112 Demisauce Server","host"  : "192.168.0.112", "ip":"192.168.0.112"})
+vm115 = _server(base_config,{"desc":"VMware 115 Demisauce Server","host"  : "192.168.0.115", "ip":"192.168.0.115"})
+vm117 = _server(base_config,{"desc":"KVM 117 Demisauce Server","host"  : "192.168.0.117", "ip":"192.168.0.117"})
+ec2prod = _server(base_config,{"desc":"EC2 Prod 1","host"  : "aws.amazon.com",
+    "mailhostname" : 'smtp.demisauce.org', "ip":"192.168.0.112"})
 imac = _server(base_config,{"desc":"iMac Desktop Dev", "os": "osx", "host"  : "localhost","user":"aaron"})
 
 """{'mailhostname': 'localhost', 
@@ -88,9 +91,8 @@ def _nginx_release():
         with cd("/etc/nginx"):
             sudo("rm nginx.conf")
             sudo("rm sites-enabled/demisauce;")
-            sudo("rm sites-enabled/defaultmd5")
-    put('%s/nginx/nginx.conf' % INSTALL_ROOT, '/tmp/nginx.conf')
-    put('%s/nginx/sites-enabled/demisauce' % INSTALL_ROOT, '/tmp/sa-ds')
+    put('%s/recipes/etc/nginx/nginx.conf' % INSTALL_ROOT, '/tmp/nginx.conf')
+    put('%s/recipes/etc/nginx/sites-enabled/demisauce' % INSTALL_ROOT, '/tmp/sa-ds')
     sudo('mv /tmp/nginx.conf /etc/nginx/nginx.conf')
     sudo('mv /tmp/sa-ds /etc/nginx/sites-enabled/demisauce')
 
@@ -104,6 +106,19 @@ def _mysql(rootmysqlpwd,mysqlpwd):
     put('%(local_path)s/install/install_mysql.sh' % env, '/tmp/install_mysql.sh' % env)
     sudo('chmod +x /tmp/install_mysql.sh; /tmp/install_mysql.sh %s %s %s' % (rootmysqlpwd,mysqlpwd,env.type))
     sudo('rm /tmp/install_mysql.sh')
+    if env.environment == 'dev':
+        """mysql -u[user] -p[pass] <<QUERY_INPUT
+        [mysql commands]
+        QUERY_INPUT
+        or
+        mysql -u[user] -p[pass] -e"use mysql;  select * from user;"  """
+        run("""mysql -uroot -p%(pwd)s <<QUERY_INPUT
+            use mysql; 
+            update user set host = '%(host)s' where user = 'ds_web' and host = 'localhost';
+            \nQUERY_INPUT""" % ({'pwd':'demisauce', 'host':'%'}))
+        
+        sudo('perl -pi -e "s/127.0.0.1/127.0.0.1\nbind-address = %s\n/g" /etc/mysql/my.cnf' % (env.ip))
+        sudo('/etc/init.d/mysql restart')
 
 def _zamanda(mysqlpwd):
     """ install backup tools"""
@@ -118,19 +133,47 @@ def _zamanda(mysqlpwd):
     setting recipient_delimiter: +
     setting inet_interfaces: all
     """
-    require('mailhostname', provided_by=[vm107,vm106,ec2prod])
     put('%(local_path)s/install/install_zamanda.sh' % env, '/tmp/install_zamanda.sh' % env)
     sudo('chmod +x /tmp/install_zamanda.sh; /tmp/install_zamanda.sh %s %s %s' % (mysqlpwd,mysqlpwd,env.type))
     sudo('rm /tmp/install_zamanda.sh')
+    #sudo('echo "%(mailhostname)s" >> /etc/mailname' % env)
+
+def _postfix():
+    """Install Postfix mail server"""
+    sudo('mkdir -p /etc/postfix')
+    put('%s/recipes/etc/postfix/main.cf' % INSTALL_ROOT, '/tmp/main.cf')
+    sudo('mv /tmp/main.cf /etc/postfix/main.cf')
     sudo('echo "%(mailhostname)s" >> /etc/mailname' % env)
+    sudo("env DEBIAN_FRONTEND=noninteractive apt-get -y install postfix")
+    
+    # These are all the options, but we only use a couple above
+    #  http://reductivelabs.com/trac/puppet/wiki/Recipes/DebianPreseed
+    """postfix postfix/root_address    string  
+        postfix postfix/rfc1035_violation   boolean false
+        postfix postfix/mydomain_warning    boolean 
+        postfix postfix/mynetworks  string  127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+        postfix postfix/mailname    string  demisauce.org
+        postfix postfix/tlsmgr_upgrade_warning  boolean 
+        postfix postfix/recipient_delim string  +
+        postfix postfix/main_mailer_type    select  Internet Site
+        postfix postfix/destinations    string  demisauce.org, demisauce, localhost.localdomain, localhost
+        postfix postfix/retry_upgrade_warning   boolean 
+        postfix postfix/kernel_version_warning  boolean 
+        postfix postfix/not_configured  error   
+        postfix postfix/mailbox_limit   string  0
+        postfix postfix/relayhost   string  
+        postfix postfix/procmail    boolean false
+        postfix postfix/bad_recipient_delimiter error   
+        postfix postfix/protocols   select  all
+        postfix postfix/chattr  boolean false
+    """
 
 def _nginx():
     """Installs Nginx"""
-    sudo("""echo "deb http://ppa.launchpad.net/jdub/devel/ubuntu hardy main" >> /etc/apt/sources.list
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E9EEF4A1""")
     sudo("apt-get -y update; apt-get -y install nginx")
     #get('/etc/nginx/mime.types', '%s/nginx/mime.types' % INSTALL_ROOT)
     #get('/etc/nginx/nginx.conf', '%s/nginx/nginx.conf' % INSTALL_ROOT)
+    sudo("rm /etc/nginx/sites-enabled/default")
     sudo("mkdir -p /vol/log/nginx")
 
 def _gearmanDrizzle():
@@ -149,8 +192,9 @@ deb-src http://ppa.launchpad.net/drizzle-developers/ppa/ubuntu karmic main" >> /
     sudo("apt-get -y update; apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 06899068")
     sudo("apt-get -y update; apt-get install -y gearman gearman-job-server gearman-tools libgearman2 libgearman-dev libgearman-dbg libgearman-doc")
 
-def _gearman():
-    """Install Gearman, requires base linux"""
+def _gearman_sources():
+    """Adds sources for gearman, tries to get key"""
+    # sources for gearman
     sudo("cp /etc/apt/sources.list /etc/apt/sources.list.orig")
     if env.os == 'ubuntu8.04':
         sudo("""echo "deb http://ppa.launchpad.net/gearman-developers/ppa/ubuntu hardy main
@@ -162,10 +206,8 @@ deb-src http://ppa.launchpad.net/gearman-developers/ppa/ubuntu jaunty main" >> /
         sudo("""echo "deb http://ppa.launchpad.net/gearman-developers/ppa/ubuntu karmic main
 deb-src http://ppa.launchpad.net/gearman-developers/ppa/ubuntu karmic main" >> /etc/apt/sources.list""")
     
-    sudo("apt-get -y --force-yes update")
-    sudo("apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C73E014")
 
-def _gearman_step2():
+def _gearman():
     """you need to manually update key before this
     because it keeps !#%!#$ timing out"""
     sudo("apt-get -y update")
@@ -187,7 +229,94 @@ def _demisauce_pre_reqs():
     sudo('easy_install http://gdata-python-client.googlecode.com/files/gdata.py-1.1.1.tar.gz')
     sudo('easy_install http://boto.googlecode.com/files/boto-1.8d.tar.gz')
 
+def _exists(path):
+    with settings(
+        hide('warnings', 'running', 'stdout', 'stderr'),
+        warn_only=True
+    ):
+        if run("[ -d %s ] && echo $? " % path) == '0':
+            return True
+        else:
+            #run('ls /etc/redhat-release'):
+            return False
+
+def _redis_restart():
+    if run('ps -A | grep redis-server'):
+        print("Redis already running ")
+        # this doesn't work, try the init-functions 
+        #sudo("kill `ps -A | grep redis-server | cut -b2-5`")
+    else:
+        if run('ls /var/run | grep redis.pid'):
+            # dead pid file
+            sudo("rm /var/run/redis.pid")
+    # run the server
+    sudo('/opt/%(redis_version)s/redis-server %(path)s/redis/redis.conf' % env)
+
+def _redis_install():
+    """install redis"""
+    with settings(
+        hide('warnings', 'running', 'stdout', 'stderr'),
+        warn_only=True
+    ):
+        if not run('ls /opt | grep %(redis_version)s' % env):
+            with cd("/opt"):
+                print("----  installing redis   ----------")
+                sudo("wget http://redis.googlecode.com/files/redis-1.02.tar.gz; tar xvzf redis*.tar.gz")
+                sudo("rm redis*.tar.gz; cd redis*; make")
+        with cd('/vol'): #/home/demisauce
+            if not run('ls | grep redis'):
+                sudo('mkdir -p redis', pty=True)
+            if not run('ls redis | grep data'):
+                sudo('mkdir -p redis/data', pty=True)
+                sudo('chown demisauce redis')
+
+def _redis_conf_update():
+    put('%(local_path)s/install/recipes/vol/redis/redis.conf' % env, '/vol/redis/redis.conf')
+
+def _supervisord_install():
+    sudo("easy_install supervisor")
+    
+
 #   Tasks   =======================
+def _x_supervisor_update():
+    """Refresh conf file for supervisord, restart"""
+    put('%(local_path)s/install/recipes/etc/supervisord.conf' % env, '/tmp/supervisord.conf' % env)
+    sudo('mv /tmp/supervisord.conf /etc/supervisord.conf')
+    #sudo('/usr/local/bin/supervisord')
+    sudo('/etc/init.d/supervisord restart')
+
+def add_sources():
+    """This often times out, so run it first"""
+    # sources for nginx
+    sudo('echo "deb http://ppa.launchpad.net/jdub/devel/ubuntu hardy main" >> /etc/apt/sources.list')
+    #sudo("""echo "deb http://ppa.launchpad.net/jdub/devel/ubuntu hardy main" >> /etc/apt/sources.list
+    #    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E9EEF4A1""")
+    _gearman_sources()
+    
+    with settings(hide('warnings'),warn_only=True):
+        # key for nginx
+        keeptrying, attempt = True, 1
+        while keeptrying == True:
+            print("about to try to get key, may take a while or time out, attempt #%s" % attempt)
+            attempt += 1
+            output = sudo("apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C73E014")
+            #print("just ran, .failed = %s, .return_code = %s,  string=%s" % (output.failed,output.return_code,output))
+            keeptrying = output.failed
+        
+        # key for gearman
+        keeptrying, attempt = True, 1
+        while keeptrying == True:
+            print("about to try to get key, may take a while or time out, attempt #%s" % attempt)
+            attempt += 1
+            output = sudo('apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E9EEF4A1')
+            #print("just ran, .failed = %s, .return_code = %s,  string=%s" % (output.failed,output.return_code,output))
+            keeptrying = output.failed # if failed = True, keep trying
+            
+    env.keys_added = True
+    
+    # do update before getting keys
+    sudo("apt-get -y --force-yes update")
+
 def release(userdbpwd):
     'Deploy a new/updated release to the target environment'
     _nginx_release()
@@ -208,14 +337,20 @@ def release(userdbpwd):
     sudo("/etc/init.d/nginx restart")
 
 def simple_push():
-    """Simple release, just web sync"""
-    rsync_project('/home/demisauce/ds/current_web/',local_dir='%(local_path)s/demisauce/trunk' % env)
+    """Simple release, just web sync, no new folders"""
+    rsync_project('/home/demisauce/ds/current_web/',local_dir='%(local_path)s/demisauce/trunk/' % env)
     restart_web()
+
+def sync_etc():
+    """Configuration Sync"""
+    rsync_project('/home/demisauce/',local_dir='%(local_path)s/install/recipes/etc' % env)
+    
 
 def db_backup_apply():
     """Apply a backup """
     require("mysql_root_pwd")
-    sudo("mysql -uroot -pdemisauce < /home/demisauce/ds/current/backup-file.sql ")
+    print("Mysql_root_pwd = %s" % env.mysql_root_pwd)
+    #sudo("mysql -uroot -p%(mysql_root_pwd)s < /home/demisauce/ds/current/backup-file.sql " % env)
 
 def release_nginx():
     """Updates nginx config, and restarts
@@ -238,24 +373,41 @@ def db_sqldump(pwd):
     """Takes a full sql dump"""
     sudo("mysqldump -uroot -p%s demisauce > backup-file.sql" % pwd)
 
-def build_step1(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
-    """Build base demisauce linux install, then manually run::
+def build(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
+    """base linux install, then manually run::
         apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C73E014
         as it will timeout
     """
-    require('hosts', provided_by=[vm107,vm106,ec2prod])
+    sudo("apt-get -y install rsync")
+    sync_etc() # do this first to force rsynch/ssh pwd at beginning to it doesn't 255 error timeout
+    
+    add_sources()
     _linux_base()
+    # this would only work if we have a more persistent "state" across runs
+    #if not env.keys_added:
+    #    print("You need to run add_sources first, as it times out quite often we do that first in case it times out")
+    #    return
     _gearman()
-
-def build_step2(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
-    """Step two updating keys, installs gearman,mysql,memcached,nginx, python dependencies"""
-    require('hosts', provided_by=[vm107,vm106,ec2prod])
-    _gearman_step2()
     _memcached()
+    _postfix()# must be installed before zamanda which installs it in interactive mode
     _mysql(rootmysqlpwd,userdbpwd)
     _zamanda(userdbpwd)
     _nginx()
     _demisauce_pre_reqs()
+    _redis_install()
+    _redis_conf_update()
+    _supervisord_install()
+    sudo("rsync  -pthrvz  /home/demisauce/etc /") #redis, nginx, supervisor init.d and .conf files
+    #supervisor_update() # also starts supervisord
+    sudo('/etc/init.d/supervisord restart')
+    sudo('sudo update-rc.d supervisord defaults')
+    
+def all(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
+    """Build AND Release"""
+    build(rootmysqlpwd=rootmysqlpwd,userdbpwd=userdbpwd)
+    release(userdbpwd=userdbpwd)
+
+
 
 
 

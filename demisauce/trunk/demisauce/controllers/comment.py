@@ -150,11 +150,8 @@ class CommentController(BaseController):
                     item.set_email(sanitize(self.form_result['email']))
                 if item.blog == "your blog url":
                     item.blog = ''
-            # prod environment proxy: apache
-            if 'HTTP_X_FORWARDED_FOR' in request.environ:
-                item.ip = request.environ['HTTP_X_FORWARDED_FOR']
-            elif 'REMOTE_ADDR' in request.environ:
-                item.ip = request.environ['REMOTE_ADDR']
+            
+            item.ip = request.environ['HTTP_X_REAL_IP']
             item.user_agent = request.environ['HTTP_USER_AGENT']
             item.referrer = request.environ['HTTP_REFERER']
             item.comment = sanitize(self.form_result['comment'])
@@ -228,12 +225,7 @@ class CommentController(BaseController):
                 if item.blog == "your blog url":
                     item.blog = ''
             
-            # prod environment proxy: apache
-            if 'HTTP_X_FORWARDED_FOR' in request.environ:
-                item.ip = request.environ['HTTP_X_FORWARDED_FOR']
-            elif 'REMOTE_ADDR' in request.environ:
-                item.ip = request.environ['REMOTE_ADDR']
-            
+            item.ip = request.environ['HTTP_X_REAL_IP']
             item.user_agent = request.environ['HTTP_USER_AGENT']
             item.referrer = request.environ['HTTP_REFERER']
             if 'comment' in request.params:

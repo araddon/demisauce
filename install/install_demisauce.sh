@@ -178,7 +178,7 @@ else
     #paster serve --daemon production.ini
     echo "-----  Creating cron job to restart paster if it fails -----------"
     cat <<EOL > /var/spool/cron/crontabs/root.tmp
-*/2 * * * * /etc/init.d/demisauce_web start
+*/5 * * * * /etc/init.d/demisauce_web start
 EOL
     crontab /var/spool/cron/crontabs/root.tmp
 fi

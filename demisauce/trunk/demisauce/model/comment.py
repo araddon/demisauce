@@ -53,16 +53,16 @@ class Comment(ModelBase):
                         blog_url='http://www.demisauce.com/'
                     )
             if ak.verify_key():
-                    data = {
-                        'user_ip': self.ip,
-                        'user_agent': self.user_agent,
-                        'referrer': self.referrer,
-                        'comment_type': 'comment',
-                        'comment_author': u'%s' % self.authorname,
-                    }
-            if ak.comment_check(u'%s' % self.comment, data=data, build_data=True):
-                # true returns = spam
-                self.is_public = False
+                data = {
+                    'user_ip': self.ip,
+                    'user_agent': self.user_agent,
+                    'referrer': self.referrer,
+                    'comment_type': 'comment',
+                    'comment_author': u'%s' % self.authorname,
+                }
+                if ak.comment_check(u'%s' % self.comment, data=data, build_data=True):
+                    # true returns = spam
+                    self.is_public = False
         super(Comment, self).save()
     
     def set_email(self,email):

@@ -193,6 +193,15 @@ class BaseController(WSGIController):
         c.help_url = h.help_url()
         c.adminsite_slug = config['demisauce.appname']
         c.demisauce_url = config['demisauce.url']
+        
+        #translate different web/app server ip addresss
+        if 'HTTP_X_FORWARDED_FOR' in request.environ:
+            request.environ['HTTP_X_REAL_IP'] = request.environ['HTTP_X_FORWARDED_FOR']
+        elif 'REMOTE_ADDR' in request.environ:
+            request.environ['HTTP_X_REAL_IP'] = request.environ['REMOTE_ADDR']
+        elif 'HTTP_X_REAL_IP' in request.environ:
+            # allready set correctly
+            pass
     
     @print_timing
     def __call__(self, environ, start_response):

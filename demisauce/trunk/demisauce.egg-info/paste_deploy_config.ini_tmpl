@@ -24,6 +24,9 @@ beaker.session.key = demisauce
 beaker.session.secret = ${app_instance_secret}
 app_instance_uuid = ${app_instance_uuid}
 
+# use your api key from admin on wordpress.com
+akismet_api_key = 123abc456
+
 # If you'd like to fine-tune the individual locations of the cache data dirs
 # for the Cache data, or the Session saves, un-comment the desired settings
 # here:

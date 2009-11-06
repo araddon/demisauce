@@ -173,6 +173,36 @@ def create_data_new(classtype,drop=False):
     else:
         print 'no class'
 
+def create_fixture_data(classtype):
+    models = None
+    if classtype in dir(fixture):
+        json_list = getattr(fixture, classtype)
+        #print json_list
+        models = model.ModelBase.from_json(json_list)
+    if classtype == 'person':
+        [m.after_load() for m in models]
+    elif classtype == 'email':
+        [m.after_load() for m in models]
+    elif classtype == 'poll':
+        for m in models:
+            questions = model.ModelBase.from_json(fixture.poll_question)
+            options = model.ModelBase.from_json(fixture.poll_question_option)
+            for q in questions:
+                m.questions.append(q)
+                for o in options:
+                    q.options.append(o)
+    elif (classtype == 'app'):
+        json_list = getattr(fixture, 'service')
+        models.extend(model.ModelBase.from_json(json_list))
+    
+    if models:
+        for m in models:
+            #print m.to_json()
+            m.save()
+    else:
+        print 'no class'
+
+
 def create_data(ini_file):
     """
     Creates initial data
@@ -187,7 +217,7 @@ def create_data(ini_file):
     s = meta.DBSession.query(site.Site).get(1)
     key = conf['demisauce.apikey']
     if not s:
-        create_data_new('site')
+        create_fixture_data('site')
         s = meta.DBSession.query(site.Site).get(1)
     
     if s.key != key:
@@ -196,7 +226,7 @@ def create_data(ini_file):
     user = meta.DBSession.query(person.Person).filter_by(site_id=s.id,id=1).first()
     if not user:
         # pwd = raw_input('Enter the Password for admin: ')
-        create_data_new('person',True)
+        create_fixture_data('person')
         user = person.Person.get(1,1)
     
     cmsitem = cms.Cmsitem.get_root(site_id=s.id)
@@ -220,11 +250,11 @@ def create_data(ini_file):
         cmsitem.save()
         print 'created items   '
         
-    create_data_new('comment',True)
-    create_data_new('poll',True)
-    create_data_new('email',True)
-    create_data_new('app',True)
-    create_data_new('tag',True)
+    create_fixture_data('comment')
+    create_fixture_data('poll')
+    create_fixture_data('email')
+    create_fixture_data('app')
+    create_fixture_data('tag')
 
     
 def setup_config(command, filename, section, vars):

@@ -133,8 +133,9 @@ echo "---- making changes to /etc/mysql/my.cnf  "
 perl -pi -e "s/\/var\/lib\/mysql/$escaped_mysql_home/g" /etc/mysql/my.cnf || die "could not change my.cnf"
 perl -pi -e "s/\/tmp/\/vol\/tmp/g" /etc/mysql/my.cnf || die "could not change my.cnf"
 perl -pi -e "s/skip\-external\-locking/skip\-external\-locking\nlog\-bin/g" /etc/mysql/my.cnf || die "could not change my.cnf"
-cat > /etc/mysql/conf.d/mysql-ec2.cnf <<EOM
+cat > /etc/mysql/conf.d/demisauce.cnf <<EOM
 [mysqld]
+default-storage-engine = InnoDB
 innodb_file_per_table
 datadir          = /vol/lib/mysql
 log_bin          = /vol/log/mysql/mysql-bin.log
