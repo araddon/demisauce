@@ -1,0 +1,22 @@
+# Tomcat auto-start
+#
+# description: Auto-starts tomcat
+# processname: tomcat
+# pidfile: /var/run/tomcat.pid
+
+export JAVA_HOME=/usr/lib/jvm/default-java
+export JAVA_OPTS="$JAVA_OPTS -Dsolr.solr.home=/usr/local/tomcat6/dssolr"
+
+case $1 in
+start)
+   sh /usr/local/tomcat6/bin/startup.sh
+   ;;
+stop)
+   sh /usr/local/tomcat6/bin/shutdown.sh
+   ;;
+restart)
+   sh /usr/local/tomcat6/bin/shutdown.sh
+   sh /usr/local/tomcat6/bin/startup.sh
+   ;;
+esac
+exit 0

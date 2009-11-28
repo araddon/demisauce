@@ -239,6 +239,7 @@ class has_many(ServiceProperty):
         super(has_many, self).__init__(name,**kwargs)
         self.islist = True
     
+
 def make_declarative(dict_):
     for attr_name in dict_.keys():
         attr = dict_[attr_name]
