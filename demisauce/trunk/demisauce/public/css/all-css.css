@@ -39,13 +39,9 @@ li{list-style:none;margin:0;}
 */
 body {text-align: center; background-color:; ; margin:0px;	padding:0px;}
 body,html {background-colorx:#EEEEEE;heightxx:100%;}
-#page-wrapper {clearxx:both;
-  min-height: 100%;
-  height: auto !important;
-  height: 100%;
-  margin:0 auto -14em;
-}
-
+#page-wrapper {clearxx:both;min-height: 100%; height: auto !important;height: 100%; margin:0 auto -15em;}
+/* push down the content, same height as footer since it floats */
+.push{height:1em;padding-bottom:0em;}
 #hd {height:65px;padding:min-width: 950px;background:#000;}
 #mainnav {height:30px;padding:min-width: 950px;background:#000;}
 #bd #yui-main .yui-b {min-heightx:600px;padding:0px 4px 4px 4px;}

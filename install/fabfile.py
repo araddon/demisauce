@@ -61,13 +61,14 @@ base_config = {
 
 # environments  ========================
 d6 = _server(base_config,{"desc":"VMware 115 Demisauce Server","host"  : "192.168.0.115", "ip":"192.168.0.115"})
-d5 = _server(base_config,{"desc":"KVM 117 Demisauce Server","host"  : "192.168.0.117", "ip":"192.168.0.117"})
-d4 = _server(base_config,{"desc":"KVM 1.7 Demisauce Server","host"  : "192.168.0.117", "ip":"192.168.0.117"})
+d5 = _server(base_config,{"desc":"KVM 117 Demisauce Server","host"  : "192.168.1.8", "ip":"192.168.1.8"})
+d4 = _server(base_config,{"desc":"KVM 1.7 Demisauce Server","host"  : "192.168.1.7", "ip":"192.168.1.7"})
 s1 = _server(base_config,{"desc":"KVM 1.5 Demisauce Solr Server","host"  : "192.168.1.5", "ip":"192.168.1.5"})
 s2 = _server(base_config,{"desc":"KVM Demisauce Solr Server","host"  : "192.168.1.14", "ip":"192.168.1.14"})
 ec2prod = _server(base_config,{"desc":"EC2 Prod 1","host"  : "aws.amazon.com",
     "mailhostname" : 'smtp.demisauce.org', "ip":"192.168.0.112"})
 imac = _server(base_config,{"desc":"iMac Desktop Dev", "os": "osx", "host"  : "localhost","user":"aaron"})
+ubuntu1 = _server(base_config,{"desc":"HP Ubuntu Desktop", "host"  : "192.168.1.4","user":"aaron"})
 
 """{'mailhostname': 'localhost', 
     'show': None, 'key_filename': None, 'reject_unknown_hosts': False, 
@@ -227,10 +228,19 @@ def _linux_base():
 
 def _demisauce_pre_reqs():
     """install python-mysqldb, gdata, boto(amazon api's)"""
+    sudo("mkdir -p /home/demisauce/lib")
+    with cd("/home/demisauce/lib"):
+        sudo("git clone git://github.com/leah/python-oauth.git oauth")
+        with cd("oauth"):
+            sudo("python setup.py install")
     sudo('apt-get -y install python-mysqldb python-memcache')
+    sudo('apt-get -y install python-imaging')  # imaging library for image resize
     sudo('easy_install http://gdata-python-client.googlecode.com/files/gdata.py-1.1.1.tar.gz')
     sudo('easy_install http://boto.googlecode.com/files/boto-1.8d.tar.gz')
     sudo('easy_install http://www.crummy.com/software/BeautifulSoup/download/3.x/BeautifulSoup-3.1.0.tar.gz')
+    sudo("apt-get install -y libgearman2")
+    sudo('pip install http://github.com/samuel/python-gearman/tarball/master')
+    
 
 def _exists(path):
     with settings(
@@ -279,6 +289,33 @@ def _redis_conf_update():
 def _supervisord_install():
     sudo("easy_install supervisor")
     
+
+def _install_solr():
+    "install solr"
+    #http://justin-hayes.com/2009-04-08/installing-apache-tomcat-6-and-solr-nightly-on-ubuntu-804
+    sudo("apt-get install -y default-jdk default-jre") 
+    with cd("/tmp"):
+        sudo("rm -rf *")
+        run("wget http://mirror.its.uidaho.edu/pub/apache/lucene/solr/1.4.0/apache-solr-1.4.0.tgz")
+        run("wget http://www.alliedquotes.com/mirrors/apache/tomcat/tomcat-6/v6.0.20/bin/apache-tomcat-6.0.20.tar.gz")
+        run("tar xfzv apache-solr-1.4.0.tgz")
+        run("tar xfzv apache-tomcat-6.0.20.tar.gz")
+        sudo("mv apache-tomcat-6.0.20/ /usr/local/tomcat6/")
+        sudo("cp apache-solr-1.4.0/dist/apache-solr-1.4.0.war /usr/local/tomcat6/webapps/dssolr.war")
+        sudo("cp -r apache-solr-1.4.0/example/solr/ /usr/local/tomcat6/dssolr/")
+    sudo("mkdir -p /usr/local/tomcat6/conf/Catalina/localhost/")
+    sudo("""cat <<EOL > /usr/local/tomcat6/conf/Catalina/localhost/dssolr.xml
+<Context docBase="/usr/local/tomcat6/webapps/dssolr.war" debug="0" crossContext="true" >
+    <Environment name="solr/home" type="java.lang.String" value="/usr/local/tomcat6/dssolr" override="true" />
+</Context>
+EOL
+""")
+    sudo("rsync  -pthrvz  /vol/solr/conf /usr/local/tomcat6/dssolr/")
+    sudo("rsync  -pthrvz  /home/demisauce/etc /") 
+    sudo("chmod 755 /etc/init.d/tomcat6")
+    sudo("sudo update-rc.d tomcat6 start 91 2 3 4 5 . stop 20 0 1 6 .")
+    sudo("/etc/init.d/tomcat6 start")
+
 
 #   Tasks   =======================
 def _x_supervisor_update():
@@ -401,6 +438,7 @@ def build(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
     _redis_install()
     _redis_conf_update()
     _supervisord_install()
+    _install_solr()
     # move from temp home to /etc
     sudo("rsync  -pthrvz  /home/demisauce/etc /") 
     #supervisor_update() # also starts supervisord
@@ -419,34 +457,15 @@ def build_solr(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
     
     add_sources()
     _linux_base()
-    install_solr()
+    _install_solr()
 
-def install_solr():
-    "install solr"
-    #http://justin-hayes.com/2009-04-08/installing-apache-tomcat-6-and-solr-nightly-on-ubuntu-804
-    sudo("apt-get install -y default-jdk default-jre") 
-    with cd("/tmp"):
-        sudo("rm -rf *")
-        run("wget http://mirror.its.uidaho.edu/pub/apache/lucene/solr/1.4.0/apache-solr-1.4.0.tgz")
-        run("wget http://www.alliedquotes.com/mirrors/apache/tomcat/tomcat-6/v6.0.20/bin/apache-tomcat-6.0.20.tar.gz")
-        run("tar xfzv apache-solr-1.4.0.tgz")
-        run("tar xfzv apache-tomcat-6.0.20.tar.gz")
-        sudo("mv apache-tomcat-6.0.20/ /usr/local/tomcat6/")
-        sudo("cp apache-solr-1.4.0/dist/apache-solr-1.4.0.war /usr/local/tomcat6/webapps/dssolr.war")
-        sudo("cp -r apache-solr-1.4.0/example/solr/ /usr/local/tomcat6/dssolr/")
-    sudo("mkdir -p /usr/local/tomcat6/conf/Catalina/localhost/")
-    sudo("""cat <<EOL > /usr/local/tomcat6/conf/Catalina/localhost/dssolr.xml
-<Context docBase="/usr/local/tomcat6/webapps/dssolr.war" debug="0" crossContext="true" >
-    <Environment name="solr/home" type="java.lang.String" value="/usr/local/tomcat6/dssolr" override="true" />
-</Context>
-EOL
-""")
-    sudo("rsync  -pthrvz  /vol/solr/conf /usr/local/tomcat6/dssolr/")
-    sudo("rsync  -pthrvz  /home/demisauce/etc /") 
-    sudo("chmod 755 /etc/init.d/tomcat6")
-    sudo("sudo update-rc.d tomcat6 start 91 2 3 4 5 . stop 20 0 1 6 .")
-    sudo("/etc/init.d/tomcat6 start")
-
+def install_dev():
+    "install on dev linux machine"
+    #sudo("apt-get -y install rsync")
+    #add_sources()
+    #_linux_base()
+    _demisauce_pre_reqs()
+    
 
 
 

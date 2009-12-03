@@ -1011,8 +1011,10 @@
   <queryResponseWriter name="xslt" class="org.apache.solr.request.XSLTResponseWriter">
     <int name="xsltCacheLifetimeSeconds">5</int>
   </queryResponseWriter>
-
-
+  <!--
+  <queryParser name="spatial" class="   .tier.SpatialTierQueryParserPlugin" />
+  -->
+  
   <!-- example of registering a query parser
   <queryParser name="lucene" class="org.apache.solr.search.LuceneQParserPlugin"/>
   -->

@@ -11,6 +11,9 @@ from demisauce.model.activity import Activity, add_activity
 from formencode import Invalid, validators
 from formencode.validators import *
 import formencode, urllib
+import demisaucepy.cache_setup
+from demisaucepy.cache import cache
+
 
 log = logging.getLogger(__name__)
 
@@ -443,4 +446,20 @@ class AccountController(BaseController):
             c.person = person
         return render('/account/profile_mini.html')
     
+    def pre_init_user(self):
+        'a push from app to say we are about to get this user and its good'
+        user_key = request.params['user_key']
+        site_slug = request.params['site_slug']
+        cache.set(user_key,site_slug)
+        return ''
+    
+    def init_user(self,user_key=None):
+        # Need site?   
+        site_slug = cache.get(user_key)
+        if site_slug:
+            site = Site.by_slug(site_slug)
+            user = meta.DBSession.query(Person).filter_by(
+                site_id=site.id, hashedemail=user_key).first()
+            self.start_session(user)
+            return "success"
 
