@@ -61,7 +61,7 @@ base_config = {
 
 # environments  ========================
 d6 = _server(base_config,{"desc":"VMware 115 Demisauce Server","host"  : "192.168.0.115", "ip":"192.168.0.115"})
-d5 = _server(base_config,{"desc":"KVM 117 Demisauce Server","host"  : "192.168.1.8", "ip":"192.168.1.8"})
+d5 = _server(base_config,{"desc":"KVM 1.9 Demisauce Server","host"  : "192.168.1.9", "ip":"192.168.1.9"})
 d4 = _server(base_config,{"desc":"KVM 1.7 Demisauce Server","host"  : "192.168.1.7", "ip":"192.168.1.7"})
 s1 = _server(base_config,{"desc":"KVM 1.5 Demisauce Solr Server","host"  : "192.168.1.5", "ip":"192.168.1.5"})
 s2 = _server(base_config,{"desc":"KVM Demisauce Solr Server","host"  : "192.168.1.14", "ip":"192.168.1.14"})
@@ -87,6 +87,8 @@ ubuntu1 = _server(base_config,{"desc":"HP Ubuntu Desktop", "host"  : "192.168.1.
 # ===== Private Tasks ==========
 def _nginx_release():
     sudo("/etc/init.d/nginx stop")
+    with settings(hide('warnings', 'stderr'),warn_only=True):
+        sudo("rm /etc/nginx/sites-enabled/default")
     with settings(
         hide('warnings', 'running', 'stdout', 'stderr'),
         warn_only=True
@@ -103,6 +105,7 @@ def _memcached():
     sudo("apt-get install --yes --force-yes -q memcached")
     print("SECURITY NOTICE:  Enabling memcached from remote")
     #comment out line for -l 127.0.0.1 which restricts to only local machine
+    sudo("rm /etc/default/memcached") # new file synced over in build rsync
     sudo('perl -pi -e s/-l\ 127.0.0.1/\#-l\ 127.0.0.1/g /etc/memcached.conf')
 
 def _mysql(rootmysqlpwd,mysqlpwd):
@@ -223,24 +226,35 @@ def _linux_base():
     sudo apt-get -y update; sudo apt-get -y install openssh-server wget
     """
     sudo("apt-get -y update; apt-get -y install wget unzip cron rsync python-setuptools python-dev python-virtualenv")
-    sudo("apt-get -y install build-essential git-core; apt-get -y update")
+    sudo("apt-get -y install build-essential git-core mercurial; apt-get -y update")
     sudo("easy_install -U pip")
 
 def _demisauce_pre_reqs():
-    """install python-mysqldb, gdata, boto(amazon api's)"""
+    """install python-mysqldb, gdata, boto(amazon api's), solr, oauth"""
     sudo("mkdir -p /home/demisauce/lib")
+    
     with cd("/home/demisauce/lib"):
+        
         sudo("git clone git://github.com/leah/python-oauth.git oauth")
         with cd("oauth"):
             sudo("python setup.py install")
-    sudo('apt-get -y install python-mysqldb python-memcache')
-    sudo('apt-get -y install python-imaging')  # imaging library for image resize
-    sudo('easy_install http://gdata-python-client.googlecode.com/files/gdata.py-1.1.1.tar.gz')
-    sudo('easy_install http://boto.googlecode.com/files/boto-1.8d.tar.gz')
-    sudo('easy_install http://www.crummy.com/software/BeautifulSoup/download/3.x/BeautifulSoup-3.1.0.tar.gz')
-    sudo("apt-get install -y libgearman2")
-    sudo('pip install http://github.com/samuel/python-gearman/tarball/master')
-    
+        
+        sudo("git clone git://github.com/araddon/redis-py.git")
+        with cd("redis-py"):
+            sudo("python setup.py install")
+        
+        sudo("hg clone http://bitbucket.org/araddon/python-solr/")
+        with cd("python-solr"):
+            sudo("python setup.py install")
+        
+        sudo('apt-get -y install python-mysqldb python-memcache')
+        sudo('apt-get -y install python-imaging')  # imaging library for image resize
+        sudo('easy_install http://gdata-python-client.googlecode.com/files/gdata.py-1.1.1.tar.gz')
+        sudo('easy_install http://boto.googlecode.com/files/boto-1.8d.tar.gz')
+        sudo('easy_install http://www.crummy.com/software/BeautifulSoup/download/3.x/BeautifulSoup-3.1.0.tar.gz')
+        sudo("apt-get install -y libgearman2")
+        sudo('pip install http://github.com/samuel/python-gearman/tarball/master')
+        sudo("pip install http://github.com/samuel/python-scrubber/tarball/master")
 
 def _exists(path):
     with settings(
@@ -357,8 +371,8 @@ def add_sources():
     # do update before getting keys
     sudo("apt-get -y --force-yes update")
 
-def release(userdbpwd):
-    'Deploy a new/updated release to the target environment'
+def release(userdbpwd="demisauce"):
+    'Deploy a new/updated demisauce web release to the target server'
     _nginx_release()
     with settings(hide('warnings', 'running', 'stdout', 'stderr'),warn_only=True):
         sudo("rm /home/demisauce/ds/current; rm /home/demisauce/ds/current_web")
@@ -420,6 +434,7 @@ def build(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
         as it will timeout
     """
     sudo("apt-get -y install rsync")
+    
     sync_etc() # do this first to force rsynch/ssh pwd at beginning to it doesn't 255 error timeout
     
     add_sources()
@@ -461,12 +476,17 @@ def build_solr(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
 
 def install_dev():
     "install on dev linux machine"
-    #sudo("apt-get -y install rsync")
-    #add_sources()
-    #_linux_base()
+    sudo("apt-get -y install rsync")
+    add_sources()
+    _linux_base()
     _demisauce_pre_reqs()
     
 
+def solr_conf():
+    """Configuration Sync"""
+    rsync_project('/vol/',local_dir='%(local_path)s/install/recipes/vol/' % env)
+    sudo("rsync  -pthrvz  /vol/solr/conf /usr/local/tomcat6/dssolr/")
+    sudo("/etc/init.d/tomcat6 restart")
 
 
 

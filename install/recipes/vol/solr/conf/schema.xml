@@ -429,30 +429,42 @@
    <field name="id" type="string" indexed="true" stored="true" required="true" /> 
    <field name="region_id" type="int" indexed="true" stored="true" /> 
    <field name="producer_id" type="int" indexed="true" stored="true" /> 
-   <field name="sku" type="textTight" indexed="true" stored="true" omitNorms="true"/>
-   <field name="name" type="textgen" indexed="true" stored="true"/>
-   <field name="alphanamesort" type="alphaOnlySort" indexed="true" stored="false"/>
+   <field name="category_id" type="int" indexed="true" stored="true" /> 
+   <field name="in_stock" type="boolean" indexed="true" stored="true" />
    <field name="producer" type="textgen" indexed="true" stored="true" omitNorms="true"/>
-   <field name="cat" type="text_ws" indexed="true" stored="true" multiValued="true" omitNorms="true" />
+   <field name="name" type="textgen" indexed="true" stored="true"/>
+   <field name="food" type="textgen" indexed="true" stored="true"/>
+   <!-- use type="string" so that it is exact match -->
+   <field name="tags" type="string" indexed="true" stored="false" multiValued="true"/>
+   <field name="cat" type="string" indexed="true" stored="false" multiValued="true" />
+   
+   <!-- non-tokenized version of producer to make it easier to sort or group
+        results by producer.  copied from "producer" via copyField -->
+   <field name="producer_exact" type="string" indexed="true" stored="false"/>
+   <field name="food_exact" type="string" indexed="true" stored="false"/>
+   <field name="description" type="text" indexed="true" stored="true"/>
+   <field name="comments" type="text" indexed="true" stored="true"/>
+   
+   
+   <field name="sku" type="textTight" indexed="true" stored="true" omitNorms="true"/>
+   <field name="alphanamesort" type="alphaOnlySort" indexed="true" stored="false"/>
    <field name="features" type="text" indexed="true" stored="true" multiValued="true"/>
-   <field name="tags" type="text" indexed="true" stored="true" multiValued="true"/>
    <field name="includes" type="text" indexed="true" stored="true" termVectors="true" termPositions="true" termOffsets="true" />
-
    <field name="weight" type="float" indexed="true" stored="true"/>
    <field name="price"  type="float" indexed="true" stored="true"/>
    <field name="popularity" type="int" indexed="true" stored="true" />
-   <field name="instock" type="boolean" indexed="true" stored="true" />
+   
 
 
    <!-- Common metadata fields, named specifically to match up with
      SolrCell metadata when parsing rich documents such as Word, PDF.
      Some fields are multiValued only because Tika currently may return
      multiple values for them.
+     
+     moved out of this section: AR:  comments, description
    -->
    <field name="title" type="text" indexed="true" stored="true" multiValued="true"/>
    <field name="subject" type="text" indexed="true" stored="true"/>
-   <field name="description" type="text" indexed="true" stored="true"/>
-   <field name="comments" type="text" indexed="true" stored="true"/>
    <field name="author" type="textgen" indexed="true" stored="true"/>
    <field name="keywords" type="textgen" indexed="true" stored="true"/>
    <field name="category" type="textgen" indexed="true" stored="true"/>
@@ -467,11 +479,7 @@
 
    <!-- catchall text field that indexes tokens both normally and in reverse for efficient
         leading wildcard queries. -->
-   <field name="text_rev" type="text_rev" indexed="true" stored="false" multiValued="true"/>
-
-   <!-- non-tokenized version of producer to make it easier to sort or group
-        results by manufacturer.  copied from "producer" via copyField -->
-   <field name="producer_exact" type="string" indexed="true" stored="false"/>
+   <field name="textgen" type="textgen" indexed="true" stored="false" multiValued="true"/>
 
    <field name="payloads" type="payloads" indexed="true" stored="true"/>
 
@@ -538,11 +546,23 @@
 
    <copyField source="cat" dest="text"/>
    <copyField source="name" dest="text"/>
+   <copyField source="food" dest="text"/>
    <copyField source="producer" dest="text"/>
    <copyField source="features" dest="text"/>
    <copyField source="tags" dest="text"/>
    <copyField source="includes" dest="text"/>
+   
    <copyField source="producer" dest="producer_exact"/>
+   <copyField source="food" dest="food_exact"/>
+   
+   <copyField source="cat" dest="textgen"/>
+   <copyField source="name" dest="textgen"/>
+   <copyField source="food" dest="textgen"/>
+   <copyField source="producer" dest="textgen"/>
+   <copyField source="features" dest="textgen"/>
+   <copyField source="tags" dest="textgen"/>
+   <copyField source="includes" dest="textgen"/>
+   <copyField source="producer" dest="textgen"/>
 	
    <!-- Above, multiple source fields are copied to the [text] field. 
 	  Another way to map multiple source fields to the same 

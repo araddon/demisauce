@@ -116,7 +116,14 @@ def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT
 
 
 def fetch(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT,extra_headers={}):
-    '''Fetch data and metadata from a URL, file, stream, or string'''
+    '''Fetch data and metadata from a URL, file, stream, or string
+    
+    example::
+        
+        import demisaucepy as ds
+        
+        result = ds.openanything.fetch('http://www.google.com')
+    '''
     result = {}
     f = openAnything(source, data, etag, lastmodified, agent,extra_headers=extra_headers)
     result['data'] = f.read()

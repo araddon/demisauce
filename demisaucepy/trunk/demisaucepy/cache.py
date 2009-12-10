@@ -103,7 +103,7 @@ class CacheBase(object):
 class MemcacheCache(CacheBase):
     def __init__(self, servers, default_timeout = 300):
         super(MemcacheCache,self).__init__(default_timeout = default_timeout)
-        self._cache = memcache.Client(servers)
+        self._cache = memcache.Client(servers,debug=0)
     
     def add(self, key, value, timeout=0):
         return self._cache.add(key, value, timeout or self.default_timeout)
