@@ -59,7 +59,7 @@ base_config = {
     "mailhostname" : 'demisauce.org',
     "mysql_root_pwd": "demisauce",
 }
-
+vmlocal = _server(base_config,{"desc":"LocalHost","host"  : "127.0.0.1", "ip":"127.0.0.1"})
 d6 = _server(base_config,{"desc":"VMware 115 Demisauce Server","host"  : "192.168.0.115", "ip":"192.168.0.115"})
 d5 = _server(base_config,{"desc":"KVM 1.9 Demisauce Server","host"  : "192.168.1.9", "ip":"192.168.1.9"})
 d4 = _server(base_config,{"desc":"KVM 1.7 Demisauce Server","host"  : "192.168.1.7", "ip":"192.168.1.7"})
