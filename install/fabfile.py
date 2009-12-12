@@ -6,9 +6,10 @@ from fabric.api import *
 from fabric.contrib.project import rsync_project
 import os, simplejson, datetime
 
+# TODO:  build a bootstrap.sh that installs fab, uses local ip, runs this inside vm
 # TODO:  convert paster/ds over to supervisord
 # TODO /etc/init.d/demisauce_web is owned by demisauce instead of root
-# TODO persistent state?   between runs?  
+# TODO persistent state?   between runs?  couchdb?  json file on server?
 
 # =============    globals
 env.project_name = 'demisauce'
@@ -59,7 +60,6 @@ base_config = {
     "mysql_root_pwd": "demisauce",
 }
 
-# environments  ========================
 d6 = _server(base_config,{"desc":"VMware 115 Demisauce Server","host"  : "192.168.0.115", "ip":"192.168.0.115"})
 d5 = _server(base_config,{"desc":"KVM 1.9 Demisauce Server","host"  : "192.168.1.9", "ip":"192.168.1.9"})
 d4 = _server(base_config,{"desc":"KVM 1.7 Demisauce Server","host"  : "192.168.1.7", "ip":"192.168.1.7"})
@@ -70,7 +70,8 @@ ec2prod = _server(base_config,{"desc":"EC2 Prod 1","host"  : "aws.amazon.com",
 imac = _server(base_config,{"desc":"iMac Desktop Dev", "os": "osx", "host"  : "localhost","user":"aaron"})
 ubuntu1 = _server(base_config,{"desc":"HP Ubuntu Desktop", "host"  : "192.168.1.4","user":"aaron"})
 
-"""{'mailhostname': 'localhost', 
+"""list of dir(env)
+    {'mailhostname': 'localhost', 
     'show': None, 'key_filename': None, 'reject_unknown_hosts': False, 
     'project_name': 'demisauce', 'roledefs': {}, 'redis_version': 'redis-1.02', 
     'path_behavior': 'append', 'hide': None, 'sudo_prefix': "sudo -S -p '%s' ", 
@@ -428,11 +429,13 @@ def db_sqldump(pwd):
     """Takes a full sql dump"""
     sudo("mysqldump -uroot -p%s demisauce > backup-file.sql" % pwd)
 
-def build(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
+def build(rootmysqlpwd="demisauce",userdbpwd="demisauce",host=None):
     """base linux install, then manually run::
         apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C73E014
         as it will timeout
     """
+    if host:
+        env.host = host
     sudo("apt-get -y install rsync")
     
     sync_etc() # do this first to force rsynch/ssh pwd at beginning to it doesn't 255 error timeout

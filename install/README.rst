@@ -9,15 +9,15 @@ This uses `Fabric <http://docs.fabfile.org>`_  for installation download and ins
 
 If doing local VM install, Get `Ubuntu Server <http://www.ubuntu.com/getubuntu/download-server>`_ and start the install by doing updates and adding SSH and wget.  This also prints out the IP address (use bridging in vm if you want access via web from your desktop)::
 
-    apt-get update
-    apt-get install openssh-server 
+    sudo apt-get update
+    sudo apt-get install openssh-server 
     ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}
 
 Download `Demisauce Source <http://github.com/araddon/demisauce>`_  using `git <http://git-scm.com/>`_ ::
 
     git clone git://github.com/araddon/demisauce.git
     
-Edit the Fab files for your IP(hostname) addresses of VM and run the install:
+Edit the Fab files at /demisauce/instal/fabfile.py for your IP(hostname) addresses of VM and run the install::
 
     fab vm107 build:rootmysqlpwd="demisauce",userdbpwd="demisauce" -p demisauce
 
@@ -39,7 +39,7 @@ VM's for dev on local.
         fab vm107 release:userdbpwd="demisauce" -p demisauce
 
 **3. Backup DB on Prod Machine**
-    Backup/Copies of prod data for backup as well as usage on #4.  Combination of EC2 EBS as well as sql backups.::
+    Backup/Copies of prod data for backup as well as usage on #4.  Combination of EC2 EBS as well as sql backups::
     
     fab vm107 db_backup_apply -p demisauce
 
