@@ -1,17 +1,17 @@
-<%def name="head_more()"></%def>
-<%def name="title()"></%def>
+{% macro head_more() %}{%- endmacro %}
+{% macro title() %}{%- endmacro %}
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html lang="en">
 <head>
-    <script type="text/javascript" src="/js/jquery-1.2.6.min.js"></script>
-    <script type="text/javascript" src="/js/ds.base.js"></script>
+    <script type="text/javascript" src="/static/js/jquery-1.2.6.min.js"></script>
+    <script type="text/javascript" src="/static/js/ds.base.js"></script>
     <script type="text/javascript" >
         jQuery(document).ready(function($) {
             $.ds.defaults.site_slug = 'demisauce.org';
-            $.ds.defaults.base_url = '${c.base_url}';
+            $.ds.defaults.base_url = '{{c.base_url}';
         })
     </script>
-    <title>${self.title()} on Demisauce</title>
+    <title>{{self.title()} on Demisauce</title>
     <style type="text/css" media="screen">
     body {margin:0px;	padding:0px;}
     #hd {height:38px;padding:min-width: 200px;background:#000;}
@@ -28,16 +28,16 @@
     h1 {font-size:24px;letter-spacing:-0.0325em;line-height:0.75em;}
     #hd {border-top:8px solid #666666;background-color:#333333;padding: 9px 0px 0px 15px;}
 
-    % if c.isblue:
+   {% if c.isblue:
         body {background-color: #CFE1EF!important;}
-    % endif
+    {% endif %}
         form div label { font-size: .7em;}
         .error-message {color: #FF5353;	font-weight: bold;}
         #hd #topnav { padding-left:20px;}
         .hint {color: #ccc;font-weight: bold;}
         #bdsmall {text-align:left!important;margin:10px 0px 0px 10px;}
     </style>
-    ${self.head_more()}
+    {{self.head_more()}
 </head>
 <body class="yui-skin-sam">
 % if c.hasheader:
@@ -50,9 +50,9 @@
             </div>
         </div>
     </div>
-% endif
+{% endif %}
 <div id="bdsmall">
-    ${self.body()}
+    {{self.body()}
 </div>
 </body>
 </html>

@@ -2,7 +2,7 @@
 <%inherit file="../_base1col.html"/>
 
 
-<%def name="title()">Poll Preview </%def>
+{% macro title() %}Poll Preview {%- endmacro %}
 
 <div >
     <div class="bar1">
@@ -11,9 +11,9 @@
     <br />
     <div class="yui-g" >
         <div class="yui-u first">
-            ${c.item.html}
+            {{c.item.html}
             <div class="box2 box">
-               ${c.item.results}
+               {{c.item.results}
             </div>
             
             <script type="text/javascript">
@@ -24,7 +24,7 @@
         </div>
         <div class="yui-u">
             <div class="box2 box">
-               ${poll.response_list(c.item)}
+               {{poll.response_list(c.item)}
             </div>
             
         </div>

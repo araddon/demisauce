@@ -15,7 +15,7 @@ class PollpublicController(BaseController):
     def index(self):
         poll = {'poll_id':1,'name':"good"}
         qid = 2
-        return rendertf('/poll/poll_results.html',locals())
+        self.rendertf('/poll/poll_results.html',locals())
     
     def display(self,id=''):
         p = Poll.by_key(0,id)
@@ -45,8 +45,8 @@ class PollpublicController(BaseController):
                 options = request.params['options']
                 poll = Poll.saget(int(request.params['poll_id']))
                 q = poll.get_question(int(request.params['q_id']))
-                if c.user:
-                    pollresponse = PollResponse(person_id=c.user.id)
+                if self.user:
+                    pollresponse = PollResponse(person_id=self.user.id)
                 else:
                     pollresponse = PollResponse(person_id=0)
                 oid = int(request.params['options'])

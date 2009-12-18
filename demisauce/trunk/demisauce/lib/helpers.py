@@ -4,21 +4,16 @@ Consists of functions to typically be used within templates, but also
 available to Controllers. This module is available to both as 'h'.
 """
 import os, logging
-from webhelpers import *
-from pylons import c, config
-
-import pylons
-from pylons import cache, session, c, request
-#from demisaucepy.pylons_helper import remote_html
+import webhelpers
+from webhelpers.html import tags
+from webhelpers import text
+from tornado.options import options
 import urllib, hashlib
-
-from webhelpers.rails import *
 from webhelpers.html.tags import select
-from routes import url_for
-from pylons.controllers.util import redirect_to
 import webhelpers.paginate
 import math
 
+teststring = 'good'
 def wordpress_page():
     """Get a wordpress page"""
     pass
@@ -71,12 +66,6 @@ def help_url(includeaction=True):
     url = '/api/script/cms/root/help%s' % route_url(includeaction)
     return url
 
-def base_url():
-    """
-    Gets base/root url:  http://localhost:4950 or fqdn etc
-    """
-    return config['demisauce.url']
-
 def current_url(includeaction=True):
     """ Returns the url minus id, so controller/action typically"""
     url = ''
@@ -99,19 +88,19 @@ def is_current_filter(filter='',value=''):
             return toreturn
     return ''
 
-def is_current(matchlist,toreturn="current"):
+def is_current(url,matchlist,toreturn="current",requestargs={}):
     """
     Determines if current http request uri matches the passed in nav item
     """
     for match in matchlist:
         if match == None:
-            if request.environ['PATH_INFO'] == '/':
+            if url == '/':
                 return toreturn
-        elif request.environ['PATH_INFO'].find(match) >= 0:
+        elif url.find(match) >= 0:
             return toreturn
         elif match.find('=') > 0:
             ml = match.split('=')
-            if ml[0] in request.params and request.params[ml[0]] == ml[1]:
+            if ml[0] in requestargs and requestargs[ml[0]] == ml[1]:
                 return toreturn
     return ""
 
@@ -152,13 +141,13 @@ def isdemisauce_admin():
     Determines if current user is DemiSauce admin, and if so will show
     a link to Demisauce admin to add items that don't exist
     """
-    if not c.user:
+    if not self.user:
         return False
-    elif c.user.id == 1:
+    elif self.user.id == 1:
         return True
     return False
 
-def tag_links(site_id=0,tag_type=None,tags=tags,cachetime=180):
+def tag_links(site_id=0,tag_type=None,tags=None,cachetime=180):
     """
     Converts a list of tags to a list of links
     :tag_type: the type since tags can refer to many things
@@ -209,31 +198,6 @@ def tag_cloud(site_id=0,tag_type=None,link='',cachetime=180):
         createfunc=tag_make,expiretime=cachetime)
     return myvalue
 
-def add_alert(msg):
-    """
-    Use this from controllers to add a system message
-    """
-    c.msg_alerts = c.msg_alerts or []
-    c.msg_alerts.append(msg)
-
-def messages_tosession():
-    """
-    moves all local messages to session for a redirect
-    """
-    msgs = []#[c.form_errors[k]  for k in c.form_errors.keys()]
-    msgs += [x  for x in c.msg_errors]
-    session['errors'] = msgs
-    msgs = [x  for x in c.msg_alerts]
-    session['messages'] = msgs
-    session.save()
-
-def add_error(msg):
-    """
-    Use this from controllers to add an error message
-    """
-    c.msg_errors = c.msg_errors or []
-    c.msg_errors.append(msg)
-
 def round_box(html_content):
     return """<div class="corner_box statusmsgboxrc tempmessage">
                 <div class="corner_top"><div></div></div>
@@ -243,31 +207,16 @@ def round_box(html_content):
                 <div class="corner_bottom"><div></div></div>
              </div>""" % (html_content)
 
-def error_box():
-    if 'errors' in session:
-        c.msg_errors = c.msg_errors or []
-        c.msg_errors += session['errors'] 
-        del(session['errors'])
-        session.save()
-        
-    s = ''
-    if (c.form_errors and len(c.form_errors) > 0) or \
-        (c.msg_errors and len(c.msg_errors) > 0):
-        s += '<img src="/images/error.png" class="ib"/>'
-    if (c.form_errors and len(c.form_errors) > 0):
-        s += 'There were errors on the form highlighted below'
-    s += ''.join(["%s <br />" % (x)  for x in c.msg_errors])
-    return (len(s) > 0 or '') and ("$.ds.humanMsg.displayMsg('%s');" % s)
-    return (len(s) > 0 or '') and round_box(s)
 
-def msg_box():
-    if 'messages' in session:
-        c.msg_alerts = c.msg_alerts or []
-        c.msg_alerts += session['messages'] 
-        del(session['messages'])
-        session.save()
-        
-    s = '' + ''.join(["%s <br />" % (x)  for x in c.msg_alerts])
-    return (len(s) > 0 or '') and ("$.ds.humanMsg.displayMsg('%s');" % s)
-    return (len(s) > 0 or '') and round_box(s)
 
+truncate = text.truncate
+
+# Include the '_' function in the public names
+__all__ = [__name for __name in locals().keys() if not __name.startswith('_') \
+           or __name == '_']
+
+
+_filters = {"dspager":dspager,
+            "is_current":is_current,
+            "tag_cloud":tag_cloud,
+            "tag_links":tag_links}

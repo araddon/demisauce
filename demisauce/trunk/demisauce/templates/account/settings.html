@@ -1,11 +1,14 @@
-<%namespace name="mns_us" file="../usersite_bits.html"/>
-<%inherit file="../_base1col.html"/>
+{% extends "_base1col.html" %}
+{% import 'usersite_bits.html' as mns_us with context %}
 
-<%def name="title()">Profile page</%def>
-
-<%def name="head_more()">
+{% block title %}Demisauce Profile Page{% endblock %}
+{% block head_more %}
     <script type="text/javascript" gears="true" src="http://www.google.com/jsapi"></script>
-</%def>
+{% endblock %}
+{% block bodystart %}
+{% endblock %}
+
+{% block inner_body %}
 
 
 <div class="bar1">
@@ -14,68 +17,64 @@
 <div class="yui-g">
     <div class="yui-u first">
         <div class="box boxc">
-            % if c.person:
-                ${mns_us.personview(c.person)}
-            % endif
+           {% if person%}
+                {{mns_us.personview(person)}}
+            {% endif %}
         </div>
-        % if c.user is not None and c.user.site_id == c.person.site_id:
+       {% if current_user is defined and current_user.site_id == person.site_id %}
         <div class="box box2">
             <h3 style="">Groups</h3>
-            % if c.user is not None and c.person.id == c.user.id:
+           {% if current_user is defined and person.id == current_user.id %}
                 <div class="boxlinks right"  style="margin-top:-27px;margin-right:-13px;height:25px;">
                     <a id="group_popup_admin" href="javascript:void(0);">Add Group</a>
                 </div>
                 <script type="text/javascript">
                     $(document).ready(function(){
                         $("#group_popup_admin").click(function() {
-                            //jQuery.facebox({ ajax: '${c.base_url}/groupadmin/popup' });
+                            //jQuery.facebox({ ajax: '{{base_url}}/groupadmin/popup' });
                             $.ds.faceboxmanager.groupac();
                             //jQuery.facebox('pretend this is a group autocomplete tool');
                         });
                     });
                 </script>
-            % endif
-            % if c.person:
-                % for group in c.person.groups:
-                    <div>${h.link_to(group.name,h.url("/groupadmin/view/%s" % group.id))} </div>
-                % endfor
+            {% endif %}
+           {% if person is defined %}
+                {% for group in person.groups %}
+                    <div><a href="/groupadmin/view/{{group.id}}">group.name</a></div>
+                {% endfor %}
 
-            % endif
+            {% endif %}
         </div>
-        % endif
+        {% endif %}
     </div>
 
 
     <div class="yui-u">
-        <div class="box box2">
-            <h3 style="">Comments</h3>
-            ${mns_us.commentlist(c.comments,c.person)}
-        </div>
-        % if c.user is not None and (c.user.site_id == c.person.site_id):
+       {% if current_user is defined and (current_user.site_id == person.site_id) %}
         <div class="box box2">
             <h3 style="">Help/Feedback/Support Tickets</h3>
-            ${mns_us.helplist(c.helptickets)}
+            {{mns_us.helplist(helptickets)}}
         </div>
         <div  class="box box2">
-            <span class="h3"><a href="/activity/index/${c.person.id}">Activities</a></span>
+            <span class="h3"><a href="/activity/index/{{person.id}}">Activities</a></span>
         </div>
         <div class="box box2">
             <h3 style="">Recent Activities</h3>
-            % if c.person:
-                ${mns_us.activities(c.person)}
-            % else:
+           {% if person %}
+                {{mns_us.activities(person)}}
+            {% else %}
                 why not?
-            % endif
+            {% endif %}
         </div>
         <div class="box box2">
             <h3 style="">Activity by Day</h3>
-            % if c.person:
-                ${mns_us.activity_graph(c.person, c.activities_by_day,false)}
-            % else:
+           {% if person %}
+                {{mns_us.activity_graph(person, activities_by_day,false,activity_count)}}
+            {% else %}
                 no person?
-            %endif
+            {% endif %}
         </div>
-        % endif
+        {% endif %}
     </div>
 </div>
-
+{% endblock %}

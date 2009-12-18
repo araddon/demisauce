@@ -1,7 +1,5 @@
 site = '''
-{
-    "class": "demisauce.model.site.Site", 
-    "data": [
+[
         {
             "name": "demisauce", 
             "key": "a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202", 
@@ -42,12 +40,10 @@ site = '''
             "base_url": "http://sandbox.demisauce.com",
             "enabled":"True",
             "description":"This is a sandbox for testing your app without touching production data"
-        }]
-}'''
+        }
+]'''
 person = '''
-{
-    "class": "demisauce.model.person.Person", 
-    "data": [
+[
         {
             "site_id": "1", 
             "displayname": "Sys Admin @Demisauce", 
@@ -87,12 +83,10 @@ person = '''
             "verified": "True",
             "waitinglist": "False",
             "issysadmin": "False"
-        }]
-}'''
+        }
+]'''
 app = '''
-{
-    "class": "demisauce.model.service.App", 
-    "data": [
+[
         {
             "site_id": "1",
             "owner_id": "1",
@@ -143,13 +137,11 @@ app = '''
             "slug": "deliciousfeeds",
             "base_url": "http://feeds.delicious.com", 
             "authn": "none"
-        }]
-}'''
+        }
+]'''
 
 service = '''
-{
-    "class": "demisauce.model.service.Service", 
-    "data": [
+[
         {
             "site_id": "1",
             "app_id": "1",
@@ -228,13 +220,11 @@ service = '''
             "format": "xmlrpc",
             "views": "",
             "description": "Wordpress CMS extraction service"
-        }]
-}'''
+        }
+]'''
 
 email = '''
-{
-    "class": "demisauce.model.email.Email", 
-    "data": [
+[
         {
             "site_id": "1", 
             "subject":"Welcome To Demisauce",
@@ -290,71 +280,9 @@ and try it out yourself.\
             "template": "Hello;\
 \\n\\n$email has Commented on your $sitename on page $url\
 \\n\\nThank You\\n\\nDemisauce Team"
-        }]
-}'''
+        }
+]'''
 
-
-comment = '''
-{
-    "class": "demisauce.model.comment.Comment", 
-    "data": [
-        {
-            "site_id": "1", 
-            "person_id": "1", 
-            "comment": "test comment", 
-            "uri": "/url/where/person/commented",
-            "isuser":"True",
-            "hashedemail":"0c0342d8eb446cd7743c3f750ea3174f",
-            "email":"sysadmin@demisauce.org",
-            "authorname":"Sysadmin @ Demisauce"
-        },
-        {
-            "site_id": "1", 
-            "person_id": "1", 
-            "comment": "test comment", 
-            "uri": "testapp/person/145",
-            "isuser":"True",
-            "hashedemail":"0c0342d8eb446cd7743c3f750ea3174f",
-            "email":"sysadmin@demisauce.org",
-            "authorname":"Sysadmin @ Demisauce"
-        }]
-}'''
-
-poll = '''
-{
-    "class": "demisauce.model.poll.Poll", 
-    "data": [
-        {
-            "site_id": "1", 
-            "person_id": "1", 
-            "name": "What should the new features be?", 
-            "key":"what-should-the-new-features-be",
-            "response_count": "0"
-        }]
-}'''
-poll_question = '''
-{
-    "class": "demisauce.model.poll.Question", 
-    "data": [
-        {
-            "poll_id": "1", 
-            "question": "What should the new features be?", 
-            "type":"radiowother",
-            "response_count": "0"
-        }]
-}'''
-
-poll_question_option = '''
-{
-    "class": "demisauce.model.poll.QuestionOption", 
-    "data": [
-        {
-            "question_id": "1", 
-            "sort_order": "1", 
-            "option": "security", 
-            "type":"radio"
-        }]
-}'''
 
 
 

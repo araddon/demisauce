@@ -2,7 +2,7 @@
 <%inherit file="../_base1col.html"/>
 
 
-<%def name="title()">Poll Add/Edit </%def>
+{% macro title() %}Poll Add/Edit {%- endmacro %}
 
 
 
@@ -12,18 +12,18 @@
 
 % if c.item:
     <br />
-    ${poll.form(c.item)}
-% else:
+    {{poll.form(c.item)}
+{% else %}
     <div class="yui-ge" >
         <div class="yui-u first">
-            ${poll.table(c.items)}
+            {{poll.table(c.items)}
         </div>
         <div class="yui-u">
-            ${poll.actions(c.item)}
+            {{poll.actions(c.item)}
         </div>
     </div>
     
-% endif
+{% endif %}
 
 
 

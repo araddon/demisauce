@@ -2,29 +2,29 @@
 <demisauce>
 
 % for item in c.polls:
-    <poll id="${item.id}" key="${item.key}">
-        <name>${item.name}</name>
-        <created>${item.created}</created>
-        <allow_anonymous>${item.allow_anonymous}</allow_anonymous>
-        <description><![CDATA[${item.description}]]></description>
-        <html><![CDATA[${item.html}  ${item.results}]]></html>
-        <results><![CDATA[${item.results}]]></results>
-        % if item.questions != None and len(item.questions) > 0:
+    <poll id="{{item.id}" key="{{item.key}">
+        <name>{{item.name}</name>
+        <created>{{item.created}</created>
+        <allow_anonymous>{{item.allow_anonymous}</allow_anonymous>
+        <description><![CDATA[{{item.description}]]></description>
+        <html><![CDATA[{{item.html}  {{item.results}]]></html>
+        <results><![CDATA[{{item.results}]]></results>
+       {% if item.questions != None and len(item.questions) > 0:
         <questions>
-            % for question in item.questions:
-            <question id="${question.id}" type="${question.type}">
-                <question>${question.question}</question>
+           {% for question in item.questions:
+            <question id="{{question.id}" type="{{question.type}">
+                <question>{{question.question}</question>
                 <options>
-                    % for option in question.options:
-                    <option id="${option.id}" type="${option.type}" sort_order="${option.sort_order}">
-                        ${option.option}
+                   {% for option in question.options:
+                    <option id="{{option.id}" type="{{option.type}" sort_order="{{option.sort_order}">
+                        {{option.option}
                     </option>
-                    % endfor
+                    {% endfor %}
                 </options>
             </question>
-            % endfor
+            {% endfor %}
         </questions> 
-        % endif
+        {% endif %}
     </poll>
-% endfor
+{% endfor %}
 </demisauce>

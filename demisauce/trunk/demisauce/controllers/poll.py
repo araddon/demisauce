@@ -43,7 +43,7 @@ class PollpublicController(BaseController):
                 #p.description = request.params['description']
             #p.save()
             c.polls = [p]
-        return render('/poll/poll_results.html')
+        self.render('/poll/poll_results.html')
     
 
 class PollController(SecureController):
@@ -53,14 +53,14 @@ class PollController(SecureController):
         if id > 0:
             c.items = [meta.DBSession.query(Poll).get(id)]
         else:
-            c.items = meta.DBSession.query(Poll).filter_by(site_id=c.user.site_id).all()
-        return render('/poll/poll.html')
+            c.items = meta.DBSession.query(Poll).filter_by(site_id=self.user.site_id).all()
+        self.render('/poll/poll.html')
     
     @validate(schema=PollFormValidation(), form='edit')
     def addupdate(self,id=0):
         if self.form_result['poll_id'] == "0":
             item = Poll(site_id=c.site_id, name=self.form_result['name'])
-            item.author = model.person.Person.get(c.site_id,c.user.id)
+            item.author = model.person.Person.get(c.site_id,self.user.id)
         else:
             id = self.form_result['poll_id']
             item = Poll.get(c.site_id,id)
@@ -88,27 +88,27 @@ class PollController(SecureController):
     
     def _process_poll(self):
         item = None
-        if 'poll_id' in request.POST:
-            if request.POST['poll_id'] == "0":
-                item = Poll(site_id=c.site_id, name=sanitize(request.POST['name']))
-                item.person_id = c.user.id
-                item.key = request.POST['key']
-                if c.user:
-                    item.person_id = c.user.id
+        if 'poll_id' in self.request.arguments:
+            if self.request.arguments['poll_id'] == "0":
+                item = Poll(site_id=c.site_id, name=sanitize(self.request.arguments['name']))
+                item.person_id = self.user.id
+                item.key = self.request.arguments['key']
+                if self.user:
+                    item.person_id = self.user.id
             else:
-                id = request.POST['poll_id']
+                id = self.request.arguments['poll_id']
                 item = Poll.get(c.site_id,int(id))
-                item.name = sanitize(request.POST['name'])
+                item.name = sanitize(self.request.arguments['name'])
         return item
     
     def optionupdate(self):
-        if ('q_id' in request.POST and 'poll_id' in request.POST and 'o_id' 
-            in request.POST):
-            poll = Poll.get(c.user.site_id,int(request.POST['poll_id']))
+        if ('q_id' in self.request.arguments and 'poll_id' in self.request.arguments and 'o_id' 
+            in self.request.arguments):
+            poll = Poll.get(self.user.site_id,int(self.request.arguments['poll_id']))
             q = poll.questions[0]
-            #q = poll.get_question(int(request.POST['q_id']))
-            o = q.add_or_update_option(sanitize(request.POST['question_option']),
-                    int(request.POST['o_id']))
+            #q = poll.get_question(int(self.request.arguments['q_id']))
+            o = q.add_or_update_option(sanitize(self.request.arguments['question_option']),
+                    int(self.request.arguments['o_id']))
             poll.save()
         return '{poll:{id:%s,o_id:%s}}' % (poll.id,q.id)
     
@@ -116,25 +116,25 @@ class PollController(SecureController):
         item = self._process_poll()
         if item:
             item.save()
-            if request.POST['q_id'] == "0":
-                q = Question(question=sanitize(request.POST['question']))
+            if self.request.arguments['q_id'] == "0":
+                q = Question(question=sanitize(self.request.arguments['question']))
                 item.questions.append(q)
             else:
-                id = request.POST['q_id']
+                id = self.request.arguments['q_id']
                 q = item.get_question(int(id))
-                q.question = sanitize(request.POST['question'])
+                q.question = sanitize(self.request.arguments['question'])
             poll_html(item)
             item.save()
         return '{poll:{id:%s,q_id:%s}}' % (item.id,q.id)
     
     @rest.dispatch_on(POST="addupdate")
     def edit(self,id=0):
-        c.item = Poll.get(c.user.site_id,id)
-        return render('/poll/poll_edit.html')
+        c.item = Poll.get(self.user.site_id,id)
+        self.render('/poll/poll_edit.html')
     
     def sort(self):
-        if 'q_id' in request.POST and 'poll_id' in request.POST:
-            poll = Poll.get(c.user.site_id,int(request.POST['poll_id']))
+        if 'q_id' in self.request.arguments and 'poll_id' in self.request.arguments:
+            poll = Poll.get(self.user.site_id,int(self.request.arguments['poll_id']))
             q = poll.questions[0]
             if 'question_option' in request.params:
                 for o in request.params.getall('question_option'):
@@ -152,22 +152,22 @@ class PollController(SecureController):
     
     def view(self,id=0):
         """view a poll"""
-        c.item = Poll.by_key(c.user.site_id,id)
+        c.item = Poll.by_key(self.user.site_id,id)
         c.item_html = c.item.html
-        return render('/poll/poll_view.html')
+        self.render('/poll/poll_view.html')
     
     def polldelete(self,id=0):
         if id > 0:
-            p = Poll.get(c.user.site_id,id)
+            p = Poll.get(self.user.site_id,id)
             p.delete()
 
         return '{msg:"updated"}'
     
     def delete(self,id=0):
-        if 'oid' in request.POST:
-            oid = int(request.POST['oid'])
+        if 'oid' in self.request.arguments:
+            oid = int(self.request.arguments['oid'])
             o = QuestionOption.saget(oid)
-            if o and c.user.site_id == o.question.poll.site_id:
+            if o and self.user.site_id == o.question.poll.site_id:
                 o.delete()
         
         return '{msg:"updated"}'

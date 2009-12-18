@@ -1,19 +1,17 @@
-from pylons import config
 from sqlalchemy import Column, MetaData, ForeignKey, Table, \
     func, UniqueConstraint
-from sqlalchemy.types import Integer, String as DBString, DateTime, Boolean
+from sqlalchemy import Integer, String as DBString, DateTime, Boolean
 from sqlalchemy.sql import and_
 from datetime import datetime
 import formencode
 import random, hashlib, string
 from formencode import Invalid, validators
 from formencode.validators import *
-
 from demisauce import model
 from demisauce.model import meta
 from demisauce.model.site import Site
 from demisauce.model.activity import Activity
-from demisauce.model import ModelBase
+from demisauce.model import ModelBase, JsonMixin
 from datetime import datetime
 
 # Person 
@@ -88,7 +86,7 @@ class PersonEditValidation(formencode.Schema):
                            validators.String(not_empty=True))
     displayname = formencode.All(validators.String(not_empty=True))
 
-class Person(ModelBase):
+class Person(ModelBase,JsonMixin):
     """
     User/Person, base identity and user object
     
@@ -108,9 +106,16 @@ class Person(ModelBase):
     .. _Gravatar: http://www.gravatar.com/
     """
     __jsonkeys__ = ['email','displayname','url','site_id', 'raw_password','created']
+    schema = person_table
     def __init__(self, **kwargs):
         super(Person, self).__init__(**kwargs)
         self.after_load()
+    
+    def to_hash(self,getall=False):
+        return {"id":self.id,
+                    "displayname":self.displayname,
+                    "email":self.email,
+                    "user_uniqueid":self.user_uniqueid}
     
     def after_load(self):
         self.create_user_salt()

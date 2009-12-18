@@ -20,11 +20,11 @@ log = logging.getLogger(__name__)
 class ActivityController(SecureController):
     def index(self,id=''):
         if id > 0:
-            c.person = person.Person.get(c.user.site_id,id)
-            c.activities = Activity.activity_by_person(c.user.site_id,id)
-            c.activities_by_day = Activity.stats_by_person(c.user.site_id,id)
-            c.categories = Activity.categories(c.user.site_id,id)
-        return render('/activity.html')
+            c.person = person.Person.get(self.user.site_id,id)
+            c.activities = Activity.activity_by_person(self.user.site_id,id)
+            c.activities_by_day = Activity.stats_by_person(self.user.site_id,id)
+            c.categories = Activity.categories(self.user.site_id,id)
+        self.render('/activity.html')
     
 
 

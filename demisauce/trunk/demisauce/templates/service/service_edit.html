@@ -2,7 +2,7 @@
 <%inherit file="../_base1col.html"/>
 
 
-<%def name="title()">Services and Applications Add/Edit </%def>
+{% macro title() %}Services and Applications Add/Edit {%- endmacro %}
 
 
 <div class="bar1">
@@ -11,6 +11,6 @@
 
 
 % if c.item:
-    ${service.form(c.service,c.item)}
-% endif
+    {{service.form(c.service,c.item)}
+{% endif %}
 

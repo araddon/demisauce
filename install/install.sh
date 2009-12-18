@@ -72,8 +72,15 @@ cd /tmp
 # Upgrade/install packages
 apt-get -y update
 # some basics
-apt-get install --yes --force-yes -q openssh-server  wget unzip cron rsync python-setuptools
-apt-get install --yes --force-yes -q git-core python-dev build-essential
+echo "----  installing build-essentials-----"
+apt-get install --yes --force-yes -q build-essential
+echo "----  installing ssh server, wget, cron, rsync, unzip -----"
+apt-get install --yes --force-yes -q openssh-server  wget unzip cron rsync 
+echo "----  installing git-core ------------"
+apt-get install --yes --force-yes -q git-core
+echo "----  installing python tools -----"
+apt-get install --yes --force-yes -q python-dev python-setuptools
+easy_install simplejson
 cd $DEMISAUCE_HOME/lib
 git clone git://github.com/bitprophet/fabric.git
 pip install pycrypto
@@ -88,10 +95,12 @@ HOSTNAME=`ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk
 
 echo $HOSTNAME
 #perl -pi -e "s/\/var\/lib\/mysql/$escaped_mysql_home/g" /etc/mysql/my.cnf || die "could not change my.cnf"
-mkdir -p $DEMISAUCE_HOME/install
-cd $DEMISAUCE_HOME/install
-wget http://github.com/araddon/demisauce/raw/master/install/fabfile.py
-fab vmlocal build:rootmysqlpwd="$MYSQL_ROOT_PWD",userdbpwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME" -p $ROOTPWD
-
+mkdir -p $DEMISAUCE_HOME/src
+cd $DEMISAUCE_HOME/src
+git clone git://github.com/araddon/demisauce.git
+chown -R demisauce:demisauce /home/demisauce/src
+cd /home/demisauce/src/demisauce/install
+fab vmlocal build:rootmysqlpwd="$MYSQL_ROOT_PWD",userdbpwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME" -p $ROOT_PWD
+fab vmlocal release:userdbpwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME" -p $ROOT_PWD
 
 

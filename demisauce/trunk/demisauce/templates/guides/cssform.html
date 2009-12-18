@@ -1,13 +1,13 @@
 <%inherit file="../_base2col.html"/>
 
-<%def name="head_more()">
-<link rel="stylesheet" type="text/css" href="/css/form.css">
+{% macro head_more() %}
+<link rel="stylesheet" type="text/css" href="/static/css/form.css">
 
-</%def>
+{%- endmacro %}
 
-<%def name="title()">This is it</%def>
+{% macro title() %}This is it{%- endmacro %}
 
-<%def name="body()">
+{% macro body() %}
             <div id="statusmsgbox" class="statusmsgbox" >
                 <span>
                 Due date for "Finanical investments2 review" changed.
@@ -160,9 +160,9 @@
             <label for="availability_select">What is your current availability?</label>
             <select name="availability_select" id="availability_select" class="selectMultiple" size="3" multiple="multiple">
                 <option value="Part-time">Part-time</option>
-                <option style="" value="Full-time (Days)">Full-time (Days)</option>
-                <option value="Full-time (Swing)">Full-time (Swing)</option>
-                <option value="Full-time (Graveyard)">Full-time (Graveyard)</option>
+                <option style="" value="Full-time (Days) %}Full-time (Days)</option>
+                <option value="Full-time (Swing) %}Full-time (Swing)</option>
+                <option value="Full-time (Graveyard) %}Full-time (Graveyard)</option>
                 <option value="Weekends Only">Weekends Only</option>
             </select>
             <small>Use the<kbd>CTRL</kbd>key to select more than one.</small>
@@ -234,7 +234,7 @@
         </div>
         <div class="required">
             <label for="captcha">Picture:</label>
-            <img src="/images/captcha/B3125151-1372-507C-AE09B61B5605CB09.jpg" alt="" border="0">
+            <img src="/static/images/captcha/B3125151-1372-507C-AE09B61B5605CB09.jpg" alt="" border="0">
         </div>
         <div class="required">
             <label for="captcha">Characters:</label>
@@ -252,4 +252,4 @@
 
 </form>
 
-</%def>
+{%- endmacro %}

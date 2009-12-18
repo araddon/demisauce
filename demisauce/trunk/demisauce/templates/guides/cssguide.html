@@ -1,8 +1,8 @@
 <%inherit file="../_base1col.html"/>
 
-<%def name="title()">Css Guide</%def>
+{% macro title() %}Css Guide{%- endmacro %}
 
-<%def name="body()">
+{% macro body() %}
 
 <style type="text/css">
 
@@ -238,4 +238,4 @@ Background Colors:
     <div class="bigcolorblock" style="background-color:#DAECF3">&nbsp;#DAECF3</div>
     <div class="bigcolorblock" style="background-color:#feb">&nbsp;#feb</div>
 
-</%def>
+{%- endmacro %}

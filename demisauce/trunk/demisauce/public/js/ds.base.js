@@ -273,37 +273,44 @@
       });
     };
     
-    $.fn.comments = function(o) {
+    $.fn.dsasset = function(o) {
         return this.each(function() {
-            if (!$(this).is(".ds-comments")) new $.ds.comments(this, o);
+            if (!$(this).is(".ds-assets")) new $.ds.asset(this, o);
         });
     }
-    $.ds.comments = function(el, o) {
+    $.ds.asset = function(el, o) {
         var options = {commentiframe:true};
         $.ds.defaults.current_url = window.location.href;
         o = o || {}; $.extend(options, $.ds.defaults, o); //Extend and copy options
         this.element = el; var self = this; //Do bindings
-        $.data(this.element, "ds-comments", this);
+        $.data(this.element, "ds-assets", this);
         self.options = options;
-        $.ds.prepLogon(this.element);
-        if (o.commentiframe === false){
-            $($.ds.defaults.logon_form_link).click(function(){
-                $.ds.showLogon();
-                $('#ds-commentform-div',$(self.element)).hide();
-            });
-            $($.ds.defaults.logon_form_cancel).click(function(){
-                $('#ds-commentform-div',$(self.element)).show();
-            });
-            $('#commentform').submit(function() { 
-                var qs = $(this).formSerialize(); 
-                var url = $.ds.defaults.base_url + '/comment/commentsubmitjsonp/${c.site.slug}?jsoncallback=?&' + qs;
-                $.getJSON(url , {}, function(json){
-                    $('#ds-commentform-div').html(json.html);
-                });
-                return false;
-            });
-        }
+        $(el).append('<div id="ds-logonform-div" style="display:none;"></div> \
+            <a href="javascript:void(0);" id="ds-logon-link" >Show Logon</a> \
+            <a href="javascript:void(0);" id="ds-showinputform-link" style="display:none;">Cancel</a>');
+        var self = this; var o = this.defaults;
+        $(o.logon_form_link).click(function(){
+            self.showLogon();
+        });
+        $(o.logon_form_cancel).click(function(){
+            self.hideLogon();
+        });
         
+        $($.ds.defaults.logon_form_link).click(function(){
+            $.ds.showLogon();
+            $('#ds-commentform-div',$(self.element)).hide();
+        });
+        $($.ds.defaults.logon_form_cancel).click(function(){
+            $('#ds-commentform-div',$(self.element)).show();
+        });
+        $('#commentform').submit(function() { 
+            var qs = $(this).formSerialize(); 
+            var url = $.ds.defaults.base_url + '/comment/commentsubmitjsonp/${c.site.slug}?jsoncallback=?&' + qs;
+            $.getJSON(url , {}, function(json){
+                $('#ds-commentform-div').html(json.html);
+            });
+            return false;
+        });
     }
     
     $.fn.dsgroupac = function(options) {

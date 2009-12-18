@@ -45,8 +45,8 @@ class ErrorController(BaseController):
             
         else:
             log.error('Error:  %s' % request.environ['paste.recursive.old_path_info'])
-            return render('/error.html')
-            #return render('/environment.html')
+            self.render('/error.html')
+            #self.render('/environment.html')
             #return self.pylons_default()
     
     def documentxx(self):

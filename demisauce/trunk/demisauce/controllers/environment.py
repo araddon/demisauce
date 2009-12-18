@@ -29,6 +29,6 @@ class EnvironmentController(SecureController):
             for x in config:
                 c.testout += "<tr  valign=\"top\"><td>%s:</td><td>  %s </td></tr>" % (x,config[x])
 
-            return render('/environment.html')
+            self.render('/environment.html')
         else:
             return ''

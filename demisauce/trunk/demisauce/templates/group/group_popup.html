@@ -1,15 +1,15 @@
 <%namespace name="group" file="group_bits.html"/>
 <%inherit file="../_baseiframe.html"/>
-<%def name="head_more()">
+{% macro head_more() %}
 <script type='text/javascript' src='/js/jquery.bgiframe.min.js'></script>
 <script type='text/javascript' src='/js/jquery.autocomplete.js'></script>
-<link rel="stylesheet" type="text/css" href="/js/jquery.autocomplete.css" />
+<link rel="stylesheet" type="text/css" href="/static/js/jquery.autocomplete.css" />
 <script type='text/javascript' src='/js/jquery.dimensions.js'></script>
-<script type="text/javascript" src="/js/ui.mouse.js"></script>
-<link rel="stylesheet" href="/css/local.css" />
-</%def>
-<%def name="title()">Group Auto-Complete Admin</%def>
+<script type="text/javascript" src="/static/js/ui.mouse.js"></script>
+<link rel="stylesheet" href="/static/css/local.css" />
+{%- endmacro %}
+{% macro title() %}Group Auto-Complete Admin{%- endmacro %}
 
 
-${group.form(c.item,mode='popup')}
+{{group.form(c.item,mode='popup')}
 

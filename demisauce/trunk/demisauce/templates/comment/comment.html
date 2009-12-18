@@ -2,7 +2,7 @@
 <%inherit file="../_base1col.html"/>
 
 
-<%def name="title()">Comment Templates </%def>
+{% macro title() %}Comment Templates {%- endmacro %}
 
 
 <div class="bar1">
@@ -11,13 +11,13 @@
 
 % if c.item:
     <br />
-    ${mns_email.form(c.item)}
-% else:
+    {{mns_email.form(c.item)}
+{% else %}
     <div class="yui-gc" >
         <div class="yui-u first" id="EmailTable">
-            % if c.items:
-                ${mns_comment.table(c.items)}
-            % endif
+           {% if c.items:
+                {{mns_comment.table(c.items)}
+            {% endif %}
         </div>
         <div class="yui-u">
             
@@ -28,4 +28,4 @@
         </div>
     </div>
     
-% endif
+{% endif %}

@@ -1,36 +1,36 @@
-<%def name="item_actions(item)">
+{% macro item_actions(item) -%}
     <div class="actionbar" style="height:34px; ">
         <div class="right  boxlinks"  style="margin-top:-4px;">
             <ul>
-                <li><a href="/help/edit" id="addemail" objid="${(item and item.id) or '0'}">
-                    <img  src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                <li><a href="/help/edit" id="addemail" objid="{{(item and item.id) or '0'}}">
+                    <img  src="/static/images/icon_add.png" style="vertical-align: bottom;" border="0" />
                     Add New</a></li>
-                <li><a href="/help/edit" id="addemail" objid="${(item and item.id) or '0'}">
-                    <img  src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                <li><a href="/help/edit" id="addemail" objid="{{(item and item.id) or '0'}}">
+                    <img  src="/static/images/icon_add.png" style="vertical-align: bottom;" border="0" />
                     Add New</a></li>
             </ul>
         </div>
     </div>
-</%def>
+{%- endmacro %}
 
 
-<%def name="form(item)">
+{% macro form(item) -%}
     <div id="ds-helpfeedback-div">
-        ${h.form(h.url(action='feedback'), id="feedbackform", method='post')}
-            <input type="hidden" id="objectid" name="objectid" value="${(item and item.id) or '0'}" />
-            <input type="hidden" id="slug" name="slug" value="${c.site_slug}" />
-            <input type="hidden" id="category" name="category" value="${c.category}" />
-            % if c.user:
+        {{h.form('/help/feedback', id="feedbackform", method='post')}}
+            <input type="hidden" id="objectid" name="objectid" value="{{(item and item.id) or '0'}}" />
+            <input type="hidden" id="slug" name="slug" value="{{c.site_slug}}" />
+            <input type="hidden" id="category" name="category" value="{{c.category}}" />
+           {% if current_user %}
 
-                Post as:  ${c.user.displayname}
-                % if c.user.hashedemail:
-                <img alt="" src="http://www.gravatar.com/avatar/${c.user.hashedemail}?s=24" class="avatar avatar-48" height="24" width="24">
-                % endif
-                ${h.hidden_field('authorname', value=(c.user and c.user.displayname) or '')}
-                ${h.hidden_field('email', value=(c.user and c.user.email) or '')}
-            % else:
+                Post as:  {{current_user.displayname}}
+               {% if current_user.hashedemail %}
+                <img alt="" src="http://www.gravatar.com/avatar/{{current_user.hashedemail}}?s=24" class="avatar avatar-48" height="24" width="24">
+                {% endif %}
+                {{h.hidden_field('authorname', value=(current_user and current_user.displayname) or '')}}
+                {{h.hidden_field('email', value=(current_user and current_user.email) or '')}}
+            {% else %}
                 <div>
-                    ${h.text_field('authorname', value=(c.item and c.item.authorname) or 'your displayname', size=22, class_="hint", tabindex=1)}
+                    {{h.text('authorname', value=(c.item and item.authorname) or 'your displayname', size=22, class_="hint", tabindex=1)}}
                     <label for="authorname">(required)</label>
                 </div>
                 <div>
@@ -42,16 +42,16 @@
                     <label for="blog"></label>
                 </div>
         
-            % endif
-                <input type="hidden" id="goto" name="goto" value="${c.goto_url}" />
-                <input type="hidden" id="url" name="url" value="${c.current_url}" />
+            {% endif %}
+                <input type="hidden" id="goto" name="goto" value="{{goto_url}}" />
+                <input type="hidden" id="url" name="url" value="{{current_url}}" />
                 <div>
-                    ${h.text_area("content", content='type your question or feedback here', size="50x5", class_="hint", tabindex=4)}
+                    {{h.text_area("content", content='type your question or feedback here', size="50x5", class_="hint", tabindex=4)}}
                 </div>
                 <div>
                     <input name="submit" type="submit" id="submit" tabindex="5" value="Submit Feedback" />
                 </div>
-        ${h.end_form()}
+        {{h.end_form()}}
     </div>
     <script type="text/javascript">
     $(document).ready(function(){
@@ -64,10 +64,9 @@
         });
     });
     </script>
-</%def>
+{%- endmacro %}
 
-
-<%def name="helplist(tickets,truncatesize=40,urlextra='',filter='new')">
+{% macro helplist(tickets,truncatesize=40,urlextra='',filter='new') -%}
     <table class="dsadmin">
     <thead>
         <tr>
@@ -77,26 +76,21 @@
         </tr>
     </thead>
     <tbody>
-    <% 
-        ticketct = 1
-    %>
-    % for tkt in tickets:
+    {% set ticketct = 1 %}
+    {% for tkt in tickets %}
         <tr>
-            <td>${h.link_to(h.truncate(tkt.clean_content, truncatesize),h.url("/helpadmin/process/%s%s" % (str(tkt.id),urlextra)))}</td>
-            <td>${(tkt.created).strftime("%b %d, %Y %H:%m") or ''}</td>
+            <td><a href="/helpadmin/process/{{tkt.id}}{{urlextra}}">{{h.truncate(tkt.clean_content, truncatesize)}}</a></td>
+            <td>{{(tkt.created).strftime("%b %d, %Y %H:%m") or ''}}</td>
             
-            <td>${tkt.authorname}</td>
+            <td>{{tkt.authorname}}</td>
         </tr>
-        <% 
-            ticketct += 1
-        %>
-    % endfor
+        {% set ticketct = ticketct +1 %}
+    {% endfor %}
         </tbody>
     </table>
-    ${tickets.dspagerhtml}
-</%def>
-
-<%def name="feedbackbadge()">
+    {{tickets.dspagerhtml}}
+{%- endmacro %}
+{% macro feedbackbadge() -%}
     <style type="text/css" media="screen">
         li.help-feedback {height:150px;font-weight: bold;}
         li.help-feedback div {text-align:center;padding:9px 0px 9px 4px;}
@@ -134,7 +128,7 @@
             $('.help-feedback a[rel*=dspopup]').dshelp({style:'popup'});
         });
     </script>
-</%def>
+{%- endmacro %}
 
 
 

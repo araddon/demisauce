@@ -1,52 +1,86 @@
-## -*- coding: utf-8 -*-
-## base.html
-## This head_more is overrideable to put more into head
-<%namespace name="helpbits" file="/help/help_bits.html"/>
-<%page args="title='base',pagehelp='not'"/>
-<%
-    c.attributes = {}
-%>
+{% import 'common.bits.html' as common with context %}
+{% import 'help/help_bits.html' as helpbits with context %}
+{% set title = 'base' %}
+{% set pagehelp = 'not' %}
+{% set attributes= {} %}
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+    <title>{% block title %}Demisauce{% endblock %} On Demisauce</title>
+    <link rel="stylesheet" href="/static/css/local.css" />
+    {% if settings.debug == True %}
+        <!--
+        <script type="text/javascript" gears="truex" src="/static/js/jquery-1.2.6.pack.js"></script>
+        <script type='text/javascript' gears="truex" src='/js/jquery.dimensions.js'></script>
+        <script type="text/javascript" gears="truex" src="/static/js/ui.mouse.js"></script>
+        <script type="text/javascript" src="/static/js/jquery.cookie.js"></script>
+        <script type="text/javascript" src="/static/js/jquery.treeview.js"></script>
+        <script type="text/javascript" src="/static/js/ui.draggable.js"></script>
+        <script type="text/javascript" src="/static/js/ui.sortable.js"></script>
+        <script type="text/javascript" src="/static/js/jquery.form.js"></script>
+        <script type="text/javascript" src="/static/js/jquery.hotkeys.js"></script>
+        <script type="text/javascript" src="/static/js/jquery.tooltip.js"></script>
+        <script type="text/javascript" src="/static/js/facebox.js"></script>
+        <script type='text/javascript' src='/js/jquery.bgiframe.min.js'></script>
+        <script type='text/javascript' src='/js/jquery.autocomplete.js'></script>
+        -->
+        <script type="text/javascript" src="/static/js/lib-js.js"></script>
+        <script type="text/javascript" src="/static/js/ds.adminbase.js"></script>
+        <script type="text/javascript" src="/static/js/ds.base.js"></script>
+        <script type="text/javascript" src="/static/js/ds.slugeditor.js"></script>
+        <script type="text/javascript" src="/static/js/gears_init.js"></script>
+        <script type="text/javascript" src="/static/js/ds.gears.js"></script>
+    {% else %}
+        <script type="text/javascript" src="/static/js/lib-js.js"></script>
+        <script type="text/javascript" src="/static/js/ds-js.js"></script>
+    {% endif %}
+    <script type="text/javascript" >
+        jQuery(document).ready(function($) {
+            $.ds.defaults.site_slug = 'demisauce';
+            $.ds.defaults.base_url = '{{base_url}}';
+        })
+    </script>
+    <link rel="stylesheet" type="text/css" href="/static/js/jquery.autocomplete.css" />
+    <link rel="stylesheet" href="/static/css/ds.widgets.css" />
+    <link rel="stylesheet" href="/static/js/jquery.treeview.css" />
+    <!--<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.3.0/build/assets/skins/sam/skin.css" />-->
+    {% block head_more %}{% endblock %}
 
-<%def name="head_more()"></%def>
-<%def name="box2()">
-        <div class="box box2">
-            ${caller.body()}
-        </div>
-</%def>
-<%def name="messages()">
-
-                <script type="text/javascript">
-                $(document).ready(function(){
-                   
-                    ${h.error_box()}
-                    ${h.msg_box()}
-                });
-                </script>
-</%def>
-<%def name="header()">
+    <style type="text/css">
+    body,html {
+        background-colorx:#EEEEEE;
+        height:100%;
+        
+    }
+    body {
+        line-height:1.4em;
+    }
+    </style>
+</head>
+{% block bodystart %}
+{% endblock %}
+{% macro header() %}
 <div id="hd">
     <div class="header-wrapper">
         <div>
             <div id="topnav">
                 <h1><a href="/">DemiSauce</a></h1>
                 <ul style="margin: 25px 0px 0px 0px;padding:10px 0 0;" class="topnav">
-                % if c.user and c.user.isadmin:
+                {% if current_user and current_user.isadmin %}
                 
-                    <li><a href="/dashboard" class="${h.is_current(['/dashboard',None,'/helpadmin','/environment','/home/css','/home/formcss'])}" >Home</a></li>
-                    <li><a href="/cms" class="${h.is_current(['/cms'])}" >CMS</a></li>
-                    <li><a href="/email" class="${h.is_current(['/email'])}" >Email Templates</a></li>
-                    <li><a href="/comment" class="${h.is_current(['/comment'])}" >Comment's</a></li>
-                    <li><a href="/site/view" class="${h.is_current(['/site','/account','/groupadmin','/poll'])}" >Account</a></li>
-                    <li><a href="/service" class="${h.is_current(['/service'])}" >Service's</a></li>
-                    % if c.user.issysadmin:
-                    <li><a href="/admin" class="${h.is_current(['/admin'])}" >Admin</a></li>
-                    % endif
+                    <li><a href="/dashboard" class="{{h2.is_current(url,['/dashboard',None,'/helpadmin','/environment','/home/css','/home/formcss'])}}" >Home</a></li>
+                    <li><a href="/email" class="{{h2.is_current(url,['/email'])}}" >Email Templates</a></li>
+                    <li><a href="/site/view" class="{{h2.is_current(url,['/site','/account','/groupadmin','/poll'])}}" >Account</a></li>
+                    <li><a href="/service" class="{{h2.is_current(url,['/service'])}}" >Service's</a></li>
+                    {% if current_user and current_user.issysadmin %}
+                    <li><a href="/admin" class="{{h2.is_current(url,['/admin'])}}" >Admin</a></li>
+                    {% endif %}
                 
-                % else:
-                    <li><a href="/service" class="${h.is_current(['/service'])}" >Services</a></li>
+                {% else %}
+                    <li><a href="/service" class="{{ url | is_current(url, ['/service'],requestargs)}}" >Services</a></li>
                     <li><a href="http://aaronspotlatch.appspot.com" class="" >Blog</a></li>
                     <li><a href="http://groups.google.com/group/demisauce" class="" >Community</a></li>
-                % endif
+                {% endif %}
                 </ul>
             </div>
             <div id="topnav-aux">
@@ -56,15 +90,15 @@
                     </form>
                 </div>
                 <div id="topnav-aux-menu">
-                % if c.user:
+                {% if current_user %}
                     <a href="#" rel="facebox" id="facebox_show_href">Help</a> |
-                    <a href="/account/settings">Profile</a> |
+                    <a href="/account/usersettings">Profile</a> |
                     <a href="/account/logout">Logout</a>
-                % else:
+                {% else %}
                     <a href="#" rel="facebox" id="facebox_show_href">Help</a> |
                     <a href="/account/signup">Signup</a> |
                     <a href="/account/signin">Login</a>
-                % endif
+                {% endif %}
                 </div>
             </div>
         </div>
@@ -74,43 +108,31 @@
     <div class="header-wrapper">
         <ul class="topnav">
             
-            % if c.user and c.user.isadmin and ('current' == h.is_current(['/dashboard',None,'/helpadmin'])):
-                <li><a href="/dashboard" class="${h.is_current(['/dashboard'])}">Dashboard</a></li>
-                <li><a href="/helpadmin" class="${h.is_current(['/helpadmin'])}">Help/Feedback</a></li>
-            % elif c.user and c.user.isadmin and ('current' == h.is_current(['/account','/site','/groupadmin','/poll'])):
-                <li><a href="/account/settings" class="${h.is_current(['/account/settings'])}">profile</a></li>
-                <li><a href="/site/view" class="${h.is_current(['/site/view'])}">siteinfo</a></li>
-                <li><a href="/site/help" class="${h.is_current(['/site/help'])}">Help System</a></li>
-                <li><a href="/site/cmntconfig" class="${h.is_current(['/site/cmntconfig'])}">Comment System</a></li>
-                <li><a href="/groupadmin" class="${h.is_current(['/groupadmin'])}">Groups</a></li>
-                <li><a href="/poll" class="${h.is_current(['/poll'])}">Polls</a></li>
-            % elif c.user and c.user.isadmin and ('current' == h.is_current(['/service'])):
-                <li><a href="/service/apps" class="${h.is_current(['/service/apps'])}">Apps</a></li>
-            % elif c.user and c.user.issysadmin and ('current' == h.is_current(['/admin','/environment', '/home/css','/home/formcss'])):
-                <li><a href="/admin" class="${h.is_current(['/admin'])}">Site's</a></li>
-                <li><a href="/environment" class="${h.is_current(['/environment'])}">environment</a></li>
-                <li><a href="/home/csscolors"  class="${h.is_current(['/home/csscolors'])}">css colors</a></li>
-                <li><a href="/home/cssform" class="${h.is_current(['/home/cssform'])}">css form</a></li>
-            % endif
+            {% if current_user and current_user.isadmin and ('current' == h2.is_current(url,['/dashboard',None,'/helpadmin'])) %}
+                <li><a href="/dashboard" class="{{ h2.is_current(url,['/dashboard']) }}">Dashboard</a></li>
+                <li><a href="/helpadmin" class="{{h2.is_current(url,['/helpadmin'])}}">Help/Feedback</a></li>
+            {% elif current_user and current_user.isadmin and ('current' == h2.is_current(url,['/account','/site','/groupadmin','/poll'])) %}
+                <li><a href="/account/usersettings" class="{{h2.is_current(url,['/account/usersettings'])}}">profile</a></li>
+                <li><a href="/site/view" class="{{h2.is_current(url,['/site/view'])}}">siteinfo</a></li>
+                <li><a href="/site/help" class="{{h2.is_current(url,['/site/help'])}}">Help System</a></li>
+                <li><a href="/groupadmin" class="{{h2.is_current(url,['/groupadmin'])}}">Groups</a></li>
+            {% elif current_user and current_user.isadmin and ('current' == h2.is_current(url,['/service'])) %}
+                <li><a href="/service/apps" class="{{h2.is_current(url,['/service/apps'])}}">Apps</a></li>
+            {% elif current_user and current_user.issysadmin and ('current' == h2.is_current(url,['/admin','/environment', '/home/css','/home/formcss'])) %}
+                <li><a href="/admin" class="{{h2.is_current(url,['/admin'])}}">Site's</a></li>
+                <li><a href="/environment" class="{{h2.is_current(url,['/environment'])}}">environment</a></li>
+                <li><a href="/home/csscolors"  class="{{h2.is_current(url,['/home/csscolors'])}}">css colors</a></li>
+                <li><a href="/home/cssform" class="{{h2.is_current(url,['/home/cssform'])}}">css form</a></li>
+            {% endif %}
         </ul>
     </div>
 </div>
-</%def>
-<%def name="sidebar_top()">
-    <div id="sidebartop" >
-    </div>
-</%def>
-<%def name="sidebar(*args,**kwargs)">
-        <div class="yui-b sidebar" style="">
+{%- endmacro %}
 
-            ${self.sidebar_top()}
-
-        </div>
-</%def>
-<%def name="footer()">
+{% macro footer() %}
     <div id="ft">
         <div id="ft-content">
-            % if not c.debug:
+            {% if not settings.debug %}
                 <ul id="footer-nav">
                     <li><a href="#">Project</a>
                       <ul>
@@ -132,13 +154,12 @@
                     <li><a href="#">Links</a>
                       <ul>
                         <li><a href="http://www.makotemplates.org/docs/syntax.html">Mako</a></li>
-                        <li><a href="http://www.sqlalchemy.org/docs/04/">sqlalchemy</a></li>
-                        <li><a href="http://docs.pylonshq.com/index.html">Pylons</a></li>
+                        <li><a href="http://www.sqlalchemy.org/docs/05/">sqlalchemy</a></li>
                       </ul>
                     </li>
-                    ${helpbits.feedbackbadge()}
+                    {{helpbits.feedbackbadge()}}
                 </ul>
-            %else:
+            {% else %}
             <ul id="footer-nav">
                 <li><a href="#">Project</a>
                   <ul>
@@ -158,15 +179,14 @@
                 <li><a href="/c/features">Features</a>
                   <ul>
                     <li><a href="/">Home</a></li>
-                    % if c.user and c.user.isadmin:
+                    {% if current_user and current_user.isadmin %}
                     <li><a href="/cms">Cms Admin</a></li>
                     <li><a href="/email/">Email Admin</a></li>
                     <li><a href="/environment">environment</a></li>
                     <li><a href="/home/csscolors">css colors</a></li>
                     <li><a href="/home/cssform">css form</a></li>
                     <li><a href="/home/cssdialog">css Dialog form</a></li>
-                    % endif
-                    
+                    {% endif %}                    
                   </ul>
                 </li>
                 <li><a href="#">Blogs</a>
@@ -192,9 +212,9 @@
                     <li><a href="http://pythonpaste.org/tempita/">tempita</a></li>
                   </ul>
                 </li>
-                ${helpbits.feedbackbadge()}
+                {{helpbits.feedbackbadge()}}
             </ul>
-            % endif
+            {% endif %}
         </div>
     </div>
     <script>
@@ -219,70 +239,131 @@
             
         });
     </script>
-</%def>
+{%- endmacro %}
 
-<%def name="ds_help_overlay()">
+{% block sidebar_top %}
+<div id="sidebartop" >
+</div>
+{% endblock %}
+{% block sidebar %}
+{% endblock %}
 
+{% block body %}
+    {{ super() }}
+{% endblock %}
 
-
-</%def>
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
-<head>
-    <title>${self.title()} on Demisauce</title>
-    <link rel="stylesheet" href="/css/local.css" />
-    <!--
-    <script type="text/javascript" gears="truex" src="/js/jquery-1.2.6.pack.js"></script>
-    <script type='text/javascript' gears="truex" src='/js/jquery.dimensions.js'></script>
-    <script type="text/javascript" gears="truex" src="/js/ui.mouse.js"></script>
-    <script type="text/javascript" src="/js/jquery.cookie.js"></script>
-    <script type="text/javascript" src="/js/jquery.treeview.js"></script>
-    <script type="text/javascript" src="/js/ui.draggable.js"></script>
-    <script type="text/javascript" src="/js/ui.sortable.js"></script>
-    <script type="text/javascript" src="/js/jquery.form.js"></script>
-    <script type="text/javascript" src="/js/jquery.hotkeys.js"></script>
-    <script type="text/javascript" src="/js/jquery.tooltip.js"></script>
-    <script type="text/javascript" src="/js/facebox.js"></script>
-    <script type='text/javascript' src='/js/jquery.bgiframe.min.js'></script>
-    <script type='text/javascript' src='/js/jquery.autocomplete.js'></script>
-    -->
-    <script type="text/javascript" src="/js/lib-js.js"></script>
-    % if c.debug == True:
-    <script type="text/javascript" src="/js/ds.adminbase.js"></script>
-    <script type="text/javascript" src="/js/ds.base.js"></script>
-    <script type="text/javascript" src="/js/ds.slugeditor.js"></script>
-    <script type="text/javascript" src="/js/gears_init.js"></script>
-    <script type="text/javascript" src="/js/ds.gears.js"></script>
-    % else:
-    <script type="text/javascript" src="/js/ds-js.js"></script>
-    % endif
-    
-    <script type="text/javascript" >
-        jQuery(document).ready(function($) {
-            $.ds.defaults.site_slug = 'demisauce';
-            $.ds.defaults.base_url = '${c.base_url}';
-        })
-    </script>
-    
-    
-    <link rel="stylesheet" type="text/css" href="/js/jquery.autocomplete.css" />
-    <link rel="stylesheet" href="/css/ds.widgets.css" />
-    <link rel="stylesheet" href="/js/jquery.treeview.css" />
-    <!--<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.3.0/build/assets/skins/sam/skin.css" />-->
-    ${self.head_more()}
-
-    <style type="text/css">
-    body,html {
-        background-colorx:#EEEEEE;
-        height:100%;
+{% macro footer() %}
+    <div id="ft">
+        <div id="ft-content">
+            {% if not settings.debug %}
+                <ul id="footer-nav">
+                    <li><a href="#">Project</a>
+                      <ul>
+                        <li><a href="http://demisaucedoc.appspot.com">Documentation</a></li>
+                        <li><a href="http://groups.google.com/group/demisauce">Community</a></li>
+                        <li><a href="http://github.com/araddon/demisauce/tree/master">Code</a></li>
+                      </ul>
+                    </li>
+                    <li><a href="#">Features</a>
+                      <ul>
+                        <li><a href="/">Home</a></li>
+                      </ul>
+                    </li>
+                    <li><a href="#">Blogs</a>
+                      <ul>
+                        <li><a href="http://aaronspotlatch.appspot.com">Aaron</a></li>
+                      </ul>
+                    </li>
+                    <li><a href="#">Links</a>
+                      <ul>
+                        <li><a href="http://www.makotemplates.org/docs/syntax.html">Mako</a></li>
+                        <li><a href="http://www.sqlalchemy.org/docs/05/">sqlalchemy</a></li>
+                      </ul>
+                    </li>
+                    {{helpbits.feedbackbadge()}}
+                </ul>
+            {% else %}
+            <ul id="footer-nav">
+                <li><a href="#">Project</a>
+                  <ul>
+                    <li><a href="http://demisaucedoc.appspot.com">Documentation</a></li>
+                    <li><a href="http://demisauce.googlecode.com">Community</a></li>
+                    <li><a href="/account/signin">Admin Login</a></li>
+                    <li><a href="file:///Users/aaron/Dropbox/demisauce/demisauce/trunk/docs/.build/html/index.html">Documentation</a></li>
+                  </ul>
+                  <a href="#">testing</a>
+                    <ul>
+                      <li><a href="#" id="test_humanmsg">Msg</a></li>
+                      <li><a href="#" id="test_activity">post activity</a></li>
+                      <li><a href="#" class="ds_activity" activity="wow, it worked">activity2</a></li>
+                      <li><a href="http://www.google.com" class="ds_activity">google url activity</a></li>
+                    </ul>
+                </li>
+                <li><a href="/c/features">Features</a>
+                  <ul>
+                    <li><a href="/">Home</a></li>
+                    {% if current_user and current_user.isadmin %}
+                    <li><a href="/cms">Cms Admin</a></li>
+                    <li><a href="/email/">Email Admin</a></li>
+                    <li><a href="/environment">environment</a></li>
+                    <li><a href="/home/csscolors">css colors</a></li>
+                    <li><a href="/home/cssform">css form</a></li>
+                    <li><a href="/home/cssdialog">css Dialog form</a></li>
+                    {% endif %}                    
+                  </ul>
+                </li>
+                <li><a href="#">Blogs</a>
+                  <ul>
+                    <li><a href="http://apotlatch.wordpress.com/category/demisauce/">Aaron</a></li>
+                    <li><a href="/"></a></li>
+                  </ul>
+                    <a href="#">Links</a>
+                    <ul>
+                      <li><a href="http://developer.mozilla.org/en/docs/Core_JavaScript_1.5_Guide">Mozilla JS</a></li>
+                      <li><a href="http://www.jquery.com">JQuery</a></li>
+                      <li><a href="#" class="test_humanmsg">Show Test Message</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">Links</a>
+                  <ul>
+                    <li><a href="http://www.makotemplates.org/docs/syntax.html">Mako</a></li>
+                    <li><a href="http://www.formencode.org/htmlfill.html">formencode.org</a></li>
+                    <li><a href="http://www.sqlalchemy.org/docs/04/">sqlalchemy</a></li>
+                    <li><a href="http://jinja.pocoo.org/2/documentation/">jinja2</a></li>
+                    <li><a href="http://docs.pylonshq.com/index.html">Pylons</a></li>
+                    <li><a href="http://docutils.sourceforge.net/docs/user/rst/quickref.html">rSt</a></li>
+                    <li><a href="http://pythonpaste.org/tempita/">tempita</a></li>
+                  </ul>
+                </li>
+                {{helpbits.feedbackbadge()}}
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+        jQuery(document).ready(function() {
+            
+            //alert($.ds.gears)
+            //$.ds.gears.init({debug:false});
+            
+            jQuery('#test_humanmsg').click(function() {
+                $.ds.humanMsg.displayMsg('<strong>Success:</strong> <span class="indent">You clicked \''+jQuery(this).text()+'\'</span>');
+                return false;
+            })
+            jQuery('#test_activity').click(function() {
+                var action = prompt('What activity do you want to confirm?');
+                $.ds.dsactivity({activity:action,custom:{good:'great',tag1:'is a tag'},category:action})
+                $.ds.humanMsg.displayMsg('<strong>Activity:</strong> <span class="indent">\''+action+'\'</span>');
+                return false;
+            })
         
-    }
-    body {
-        line-height:1.4em;
-    }
-    </style>
-</head>
+            //$.ds.dsactivity({use_url:true})
+            $('a.ds_activity').dsactivity({category:'viewing'});
+            
+        });
+    </script>
+{%- endmacro %}
 
 
-${next.body()}
+
+

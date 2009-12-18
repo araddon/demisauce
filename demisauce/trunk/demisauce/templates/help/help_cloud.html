@@ -2,7 +2,7 @@
 <%inherit file="../_base1col.html"/>
 
 
-<%def name="title()">Help Cloud </%def>
+{% macro title() %}Help Cloud {%- endmacro %}
 
 <div >
     <div class="bar1">
@@ -10,7 +10,7 @@
     </div>
     <div>
         <div id="tag_cloud_div" class="tag_cloud" style="margin-left:0px;">
-            ${h.tag_cloud(site_id=c.site_id,tag_type='help',link='/helpadmin/tag/',cachetime=-5)}
+            {{h.tag_cloud(site_id=c.site_id,tag_type='help',link='/helpadmin/tag/',cachetime=-5)}
         </div>
     </div>
 </div>

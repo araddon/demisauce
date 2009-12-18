@@ -30,7 +30,7 @@ class ServiceFilter(Filter):
     
     def filterby_owner(self,filter='mine',offset=0):
         if filter == 'mine':
-            self.qry = self.qry.filter(Service.owner_id==c.user.id)
+            self.qry = self.qry.filter(Service.owner_id==self.user.id)
         elif filter == 'all':
             return
     
@@ -82,23 +82,23 @@ class ServiceController(BaseController):
         if c.services:
             c.services = dspager(c.services,20)
         
-        return render('/service/service.html')
+        self.render('/service/service.html')
     
     #@requires_role('admin')
     def index(self):
         c.services = Service.all().filter_by(list_public=1)
         c.recent = Service.recent_updates(5)
-        return render('/service/service.html')
+        self.render('/service/service.html')
     
     def view(self,id=0):
         c.item = Service.get(-1,id)
-        return render('/service/service.html')
+        self.render('/service/service.html')
     
     def appview(self,id=0):
         c.item = App.get(-1,id)
-        if not (c.item.list_public or (c.user and c.user.site_id == c.item.site_id)):
+        if not (c.item.list_public or (self.user and self.user.site_id == c.item.site_id)):
             c.item = None
-        return render('/service/app.html')
+        self.render('/service/app.html')
     
     @requires_role('admin')
     def raiseerror(self,id=0):
@@ -118,7 +118,7 @@ class ServiceController(BaseController):
     @requires_role('admin')
     def apps(self,id=0):
         c.apps = App.by_site(c.site_id)
-        return render('/service/app.html')
+        self.render('/service/app.html')
     
     @requires_role('admin')
     def appeditform(self,id=0):
@@ -126,28 +126,28 @@ class ServiceController(BaseController):
             c.item = App()
         else:
             c.item = App.get(-1,id)
-            if not (c.item.list_public or (c.user and c.user.site_id == c.item.site_id)):
+            if not (c.item.list_public or (self.user and self.user.site_id == c.item.site_id)):
                 c.item = None
-        return render('/service/app_edit.html')
+        self.render('/service/app_edit.html')
     
     @requires_role('admin')
     def appedit(self,id=0):
         #log.info('what the heck, in edit %s' % id)
-        id = request.POST['app_id']
+        id = self.request.arguments['app_id']
         site = Site.get(-1,c.site_id)
         if id == 0 or id == None or id == '0':
             app = App()
             app.site_id = site.id
-            app.owner_id = c.user.id
+            app.owner_id = self.user.id
             log.info('hm, id == 0')
         else:
             app = App.get(site.id,id)
         
-        app.slug = sanitize(request.POST['real_permalink2'])
-        app.name = sanitize(request.POST['app_name'])
-        app.authn = sanitize(request.POST['authn'])
-        app.description = sanitize(request.POST['description'])
-        app.base_url = sanitize(request.POST['base_url'])
+        app.slug = sanitize(self.request.arguments['real_permalink2'])
+        app.name = sanitize(self.request.arguments['app_name'])
+        app.authn = sanitize(self.request.arguments['authn'])
+        app.description = sanitize(self.request.arguments['description'])
+        app.base_url = sanitize(self.request.arguments['base_url'])
         app.save()
         return app.id
     
@@ -156,8 +156,8 @@ class ServiceController(BaseController):
         
         if self.form_result['service_id'] == "0":
             item = Service(site_id=c.site_id, name=sanitize(self.form_result['name']))
-            item.owner_id = c.user.id
-        elif c.user.issysadmin:
+            item.owner_id = self.user.id
+        elif self.user.issysadmin:
             item = Service.get(-1,int(self.form_result['service_id']))
         else:
             item = Service.get(c.site_id,int(self.form_result['service_id']))
@@ -189,12 +189,12 @@ class ServiceController(BaseController):
             c.service = Service()
             log.info('hm, id == 0')
         else:
-            c.service = Service.get(c.user.site_id,id)
-            if not c.service and not c.user.issysadmin:
+            c.service = Service.get(self.user.site_id,id)
+            if not c.service and not self.user.issysadmin:
                 h.add_alert('No permission to this service')
                 return self.index()
-            elif c.user.issysadmin:
+            elif self.user.issysadmin:
                 c.service = Service.get(-1,id)
             c.item = c.service.app
-        return render('/service/service_edit.html')
+        self.render('/service/service_edit.html')
     

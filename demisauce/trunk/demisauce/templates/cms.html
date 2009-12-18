@@ -5,12 +5,12 @@
     c.attributes['pagehelp'] = 'cmshelp'
     c.attributes['title'] = 'Content Administration page'
 %>
-<%def name="title()">Content General </%def>
+{% macro title() %}Content General {%- endmacro %}
 
-<%def name="head_more()">
-<link rel="stylesheet" type="text/css" href="/css/form.css">
+{% macro head_more() %}
+<link rel="stylesheet" type="text/css" href="/static/css/form.css">
 
-</%def>
+{%- endmacro %}
 
 <script type="text/javascript">
 $(document).ready(function(){
@@ -46,7 +46,7 @@ $(document).ready(function(){
 </script>
 
 
-<%def name="sidebar_top()">
+{% macro sidebar_top() %}
 
 
 
@@ -57,16 +57,16 @@ $(document).ready(function(){
         <a href="#">Toggle All</a>
     </div>
     <ul id="ContentContextTree" class="filetree">
-    ${mns_cms.treeview(c.root,edit=True,isroot=(c.isroot or False))}
+    {{mns_cms.treeview(c.root,edit=True,isroot=(c.isroot or False))}
     </ul>
-% endif
+{% endif %}
 
-</%def>
+{%- endmacro %}
 
 
 
 <div id="CmsItemFormWrapper" class="" >
-${mns_cms.item_actions(c.item)}
-${mns_cms.form(c.item)}
+{{mns_cms.item_actions(c.item)}
+{{mns_cms.form(c.item)}
 </div>
 

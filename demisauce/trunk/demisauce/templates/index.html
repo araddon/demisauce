@@ -1,8 +1,11 @@
-<%inherit file="_base1col.html"/>
+{% extends "_base1col.html" %}
 
-<%def name="title()">Demisauce, open source Services and service aggregation framework.</%def>
-<%def name="head_more()"></%def>
+{% block title %}Demisauce Integration and Services Appliance{% endblock %}
+{% block head_more %}{% endblock %}
+{% block bodystart %}
+{% endblock %}
 
+{% block inner_body %}
 
 <div><h1>Demisauce is a stack of Open Source services:  <i>Its a feature not a Site</i></h1> 
     <h3 style="line-height:1.5em;">Services that are easily embeddable into your application providing a service oriented 
@@ -98,4 +101,4 @@ list-style-type:disc;
     </div>
 </div>
 <div style="height:40px;">&nbsp;</div>
-
+{% endblock %}

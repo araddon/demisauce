@@ -20,7 +20,7 @@ class ViewerController(BaseController):
         else:
             c.cmsitems = [meta.DBSession.query(Cmsitem).filter_by(site_id=c.site_id)]
         
-        return render('/viewer.html')
+        self.render('/viewer.html')
     
     def view(self,key=''):
-        return render('/simple_viewer.html')
+        self.render('/simple_viewer.html')

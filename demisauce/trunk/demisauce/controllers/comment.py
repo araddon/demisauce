@@ -16,23 +16,6 @@ import simplejson
 
 log = logging.getLogger(__name__)
 
-def google_auth_url(return_url):
-    import urllib
-    from gdata import auth
-    url = urllib.urlencode({'url':return_url})
-    next = '%s/comment/googleauth?%s' % (config['demisauce.url'],url)
-    scope = 'http://www.google.com/m8/feeds'
-    auth_sub_url = auth.GenerateAuthSubUrl(next, scope, secure=False, session=True)
-    return auth_sub_url
-
-def compute_userhash():
-    if 'HTTP_USER_AGENT' in request.environ and 'REMOTE_ADDR' in request.environ:
-        hash = request.environ['HTTP_USER_AGENT'] + request.environ['REMOTE_ADDR'] 
-        import hashlib
-        return hashlib.md5(hash + config['demisauce.apikey']).hexdigest()
-    else:
-        return None
-
 class LogonFormValidation(formencode.Schema):
     """Form validation for the comment web admin"""
     allow_extra_fields = True
@@ -60,49 +43,14 @@ class CommentController(BaseController):
     def index(self,id=0):
         if id > 0:
             c.items = [meta.DBSession.query(Comment).get(id)]
-        elif c.user:
-            c.items = dspager(Comment.by_site(c.user.site_id))
-        return render('/comment/comment.html')
-    
-    def googleauth(self):
-        """
-        User is coming in from google, should have an auth token
-        """
-        # NEED SITE????  Or does that not make sense?
-        import gdata
-        import gdata.contacts
-        import gdata.contacts.service
-        authsub_token = request.GET['token']
-        log.info('calling gdata_authsubtoke = %s' % (authsub_token))
-        #TODO:  upgrade to gdata 1.2+ which breaks this
-        gd_client = gdata.contacts.service.ContactsService()
-        gd_client.auth_token = authsub_token
-        gd_client.UpgradeToSessionToken()
-        query = gdata.contacts.service.ContactsQuery()
-        query.max_results = 2
-        feed = gd_client.GetContactsFeed(query.ToUri())
-        email = feed.author[0].email.text
-        name = feed.author[0].name.text
-        user = meta.DBSession.query(Person).filter_by(
-                    email=email.lower()).first()
-        if not user:
-            user = Person(site_id=1,email=email,displayname=name)
-            user.authn = 'google'
-            user.save()
-            log.info('creating a google user')
-            
-        expires_seconds = 60*60*24*31
-        response.set_cookie('userkey', user.user_uniqueid,
-                            expires=expires_seconds)
-        if 'url' in request.GET:
-            url = request.GET['url']
-            redirect_to(str(url))
-        return render('/comment/comment_login.html')
+        elif self.user:
+            c.items = dspager(Comment.by_site(self.user.site_id))
+        self.render('/comment/comment.html')
     
     @requires_role('admin')
     def delete(self,id=0):
-        if c.user and c.user.isadmin and id > 0:
-            item = Comment.get(c.user.site_id,id)
+        if self.user and self.user.isadmin and id > 0:
+            item = Comment.get(self.user.site_id,id)
             if item:
                 item.delete()
     
@@ -121,15 +69,15 @@ class CommentController(BaseController):
             if request.GET.has_key('url'):
                 c.goto_url =  request.GET['url']
             else:
-                if c.user:
-                    c.goto_url = c.user.url
+                if self.user:
+                    c.goto_url = self.user.url
                 else:
                     c.goto_url = 'http://www.google.com'
         else:
             raise Exception('that site was not found')
         #c.hasheader = False
         #c.isblue = True
-        return render('/comment/comment_commentform.html')
+        self.render('/comment/comment_commentform.html')
     
     @validate(schema=CommentFormValidation(), form='commentform')
     def commentsubmit(self,id=''):
@@ -137,9 +85,9 @@ class CommentController(BaseController):
         if site:
             c.site = site
             item = Comment(site_id=site.id)
-            if c.user:
-                item.set_user_info(c.user)
-                a = activity.Activity(site_id=c.user.site_id,person_id=c.user.id,activity='Commenting')
+            if self.user:
+                item.set_user_info(self.user)
+                a = activity.Activity(site_id=self.user.site_id,person_id=self.user.id,activity='Commenting')
                 #a.ref_url = 'comment url'
                 a.category = 'comment'
                 a.save()
@@ -163,8 +111,8 @@ class CommentController(BaseController):
             if self.form_result.has_key('goto'):
                 dest = self.form_result['goto']
                 item.uri = dest
-            elif c.user:
-                dest = c.user.url
+            elif self.user:
+                dest = self.user.url
             else:
                 #TODO panic?
                 return
@@ -193,11 +141,11 @@ class CommentController(BaseController):
                 response.headers['Content-Type'] = 'text/json'
                 return '%s(%s)' % (request.params['jsoncallback'],json)
             #if source == 'js':
-            #    return render('/refresh.html')
+            #    self.render('/refresh.html')
             #else:
             c.items = [item]
             #c.show_form = False
-            return render('/comment/comment_nobody.html')
+            self.render('/comment/comment_nobody.html')
         else:
             #TODO panic?
             raise 'eh'
@@ -209,9 +157,9 @@ class CommentController(BaseController):
         if site:
             c.site = site
             item = Comment(site_id=site.id)
-            if c.user:
-                item.set_user_info(c.user)
-                a = activity.Activity(site_id=c.user.site_id,person_id=c.user.id,activity='Commenting')
+            if self.user:
+                item.set_user_info(self.user)
+                a = activity.Activity(site_id=self.user.site_id,person_id=self.user.id,activity='Commenting')
                 #a.ref_url = 'comment url'
                 a.category = 'comment'
                 a.save()
@@ -266,7 +214,7 @@ class CommentController(BaseController):
                         expires=datetime.today() + timedelta(hours=1))
         c.hash = hash
         #response.headers['Content-Type'] = 'text/html'
-        return render('/comment/comment_js.js')
+        self.render('/comment/comment_js.js')
     
     def logout(self):
         response.delete_cookie('userkey')
@@ -279,35 +227,35 @@ class CommentController(BaseController):
         else:
             c.return_url = 'http://www.demisauce.com'
         c.google_auth_url = google_auth_url(c.return_url)
-        return render('/comment/comment_login.html')
+        self.render('/comment/comment_login.html')
     
     @validate(schema=LogonFormValidation(), form='login')
     def loginpost(self,id=0):
-        if 'email' in request.POST:
+        if 'email' in self.request.arguments:
             user = meta.DBSession.query(Person).filter_by(
-                        email=request.POST['email'].lower()).first()
+                        email=self.request.arguments['email'].lower()).first()
             
             if user is None:
                 c.message = "We were not able to verify that email\
                      or password, please try again"
-                return render('/comment/comment_login.html')
-            elif 'password' in request.POST:
-                if user.is_authenticated(request.POST['password']):
+                self.render('/comment/comment_login.html')
+            elif 'password' in self.request.arguments:
+                if user.is_authenticated(self.request.arguments['password']):
                     response.set_cookie('userkey', user.user_uniqueid,
                                     expires=datetime.today() + timedelta(days=31))
                 else:
                     c.message = "We were not able to verify that email\
                          or password, please try again"
-                    return render('/comment/comment_login.html')
+                    self.render('/comment/comment_login.html')
             else:
                 c.message = "You did not submit a password, please try again."
-                return render('/comment/comment_login.html')
+                self.render('/comment/comment_login.html')
         else:
             c.message = "You need to enter an email and password to signin."
-            return render('/comment/comment_login.html')
+            self.render('/comment/comment_login.html')
         
-        c.goto_url = request.POST['goto']
-        return render('/refresh.html')
+        c.goto_url = self.request.arguments['goto']
+        self.render('/refresh.html')
     
     def js2(self,id=''):
         slug = id
@@ -322,7 +270,7 @@ class CommentController(BaseController):
                 c.site = site
                 c.url = str(request.params['url'])
                 c.items = Comment.for_url(site,request.params['url'])
-                return render('/comment/comment_js2.js')
+                self.render('/comment/comment_js2.js')
             else:
                 log.error('%s not in site_url' % (url))
         else:

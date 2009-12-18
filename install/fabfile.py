@@ -60,7 +60,7 @@ base_config = {
     "mysql_root_pwd": "demisauce",
 }
 vmlocal = _server(base_config,{"desc":"LocalHost","host"  : "127.0.0.1", "ip":"127.0.0.1"})
-d6 = _server(base_config,{"desc":"VMware 115 Demisauce Server","host"  : "192.168.0.115", "ip":"192.168.0.115"})
+d8 = _server(base_config,{"desc":"VM 1.43 D8 Demisauce Server","host"  : "192.168.1.43", "ip":"192.168.1.43"})
 d5 = _server(base_config,{"desc":"KVM 1.9 Demisauce Server","host"  : "192.168.1.9", "ip":"192.168.1.9"})
 d4 = _server(base_config,{"desc":"KVM 1.7 Demisauce Server","host"  : "192.168.1.7", "ip":"192.168.1.7"})
 s1 = _server(base_config,{"desc":"KVM 1.5 Demisauce Solr Server","host"  : "192.168.1.5", "ip":"192.168.1.5"})
@@ -69,6 +69,10 @@ ec2prod = _server(base_config,{"desc":"EC2 Prod 1","host"  : "aws.amazon.com",
     "mailhostname" : 'smtp.demisauce.org', "ip":"192.168.0.112"})
 imac = _server(base_config,{"desc":"iMac Desktop Dev", "os": "osx", "host"  : "localhost","user":"aaron"})
 ubuntu1 = _server(base_config,{"desc":"HP Ubuntu Desktop", "host"  : "192.168.1.4","user":"aaron"})
+
+#from subprocess import PIPE, Popen
+#o = Popen("ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}'",shell=True,stdout=PIPE).communicate()[0].strip()
+
 
 """list of dir(env)
     {'mailhostname': 'localhost', 
@@ -106,8 +110,9 @@ def _memcached():
     sudo("apt-get install --yes --force-yes -q memcached")
     print("SECURITY NOTICE:  Enabling memcached from remote")
     #comment out line for -l 127.0.0.1 which restricts to only local machine
-    sudo("rm /etc/default/memcached") # new file synced over in build rsync
-    sudo('perl -pi -e s/-l\ 127.0.0.1/\#-l\ 127.0.0.1/g /etc/memcached.conf')
+    with settings(hide('warnings', 'stderr'),warn_only=True):
+        sudo("rm /etc/default/memcached") # new file synced over in build rsync
+        sudo('perl -pi -e s/-l\ 127.0.0.1/\#-l\ 127.0.0.1/g /etc/memcached.conf')
 
 def _mysql(rootmysqlpwd,mysqlpwd):
     put('%(local_path)s/install/install_mysql.sh' % env, '/tmp/install_mysql.sh' % env)
@@ -326,12 +331,15 @@ def _install_solr():
 EOL
 """)
     sudo("rsync  -pthrvz  /vol/solr/conf /usr/local/tomcat6/dssolr/")
-    sudo("rsync  -pthrvz  /home/demisauce/etc /") 
+    sudo("rsync  -pthrvz /home/demisauce/src/demisauce/install/recipes/etc /") 
     sudo("chmod 755 /etc/init.d/tomcat6")
     sudo("sudo update-rc.d tomcat6 start 91 2 3 4 5 . stop 20 0 1 6 .")
     sudo("/etc/init.d/tomcat6 start")
 
 
+def _install_ds():
+    "Installs Demisauce From Source"
+    pass
 #   Tasks   =======================
 def _x_supervisor_update():
     """Refresh conf file for supervisord, restart"""
@@ -372,7 +380,7 @@ def add_sources():
     # do update before getting keys
     sudo("apt-get -y --force-yes update")
 
-def release(userdbpwd="demisauce"):
+def release(userdbpwd="demisauce",host=None,local=False):
     'Deploy a new/updated demisauce web release to the target server'
     _nginx_release()
     with settings(hide('warnings', 'running', 'stdout', 'stderr'),warn_only=True):
@@ -383,24 +391,38 @@ def release(userdbpwd="demisauce"):
     rsync_project('/home/demisauce/ds/%s/' % release,local_dir='%(local_path)s/' % env)
     sudo('ln -s /home/demisauce/ds/%s/demisauce/trunk /home/demisauce/ds/current_web' % (release))
     sudo('ln -s /home/demisauce/ds/%s/ /home/demisauce/ds/current' % (release))
+    with cd("/home/demisauce/ds/current"):
+        with cd("demisaucepy/trunk"):
+            sudo("python setup.py develop")
+    with cd("/home/demisauce/ds/current_web"):
+        sudo("python setup.py develop")
     
+    """
     put('%(local_path)s/install/install_demisauce.sh' % env, '/tmp/install_demisauce.sh' % env)
     sudo('chmod +x /tmp/install_demisauce.sh; /tmp/install_demisauce.sh install -d %s -p %s -r %s -e %s -s local' % \
             ("/home/demisauce/ds",userdbpwd,env.environment,env.type))
     sudo('rm /tmp/install_demisauce.sh')
     
     sudo("/etc/init.d/nginx restart")
+    """
 
 def simple_push():
     """Simple release, just web sync, no new folders"""
     rsync_project('/home/demisauce/ds/current_web/',local_dir='%(local_path)s/demisauce/trunk/' % env)
     restart_web()
 
-def sync_etc():
+def push_recipes(local=False):
     """Configuration Sync"""
     sudo("mkdir -p /vol; chown -R demisauce:demisauce /vol")
-    rsync_project('/home/demisauce/',local_dir='%(local_path)s/install/recipes/etc' % env)
-    rsync_project('/vol/',local_dir='%(local_path)s/install/recipes/vol/' % env)
+    if local:
+        pass # already retrieved from install.sh git clone
+        rsync_project('/vol/',local_dir='%(local_path)s/install/recipes/vol/' % env)
+    else:
+        # in dev, get from dev machine
+        sudo("mkdir -p /home/demisauce/src/demisauce/install/recipes/etc")
+        sudo("chown -R demisauce:demisauce /home/demisauce")
+        rsync_project('/home/demisauce/src/demisauce/install/recipes/etc/',local_dir='%(local_path)s/install/recipes/etc/' % env)
+        rsync_project('/vol/',local_dir='%(local_path)s/install/recipes/vol/' % env)
 
 def db_backup_apply():
     """Apply a backup """
@@ -429,16 +451,18 @@ def db_sqldump(pwd):
     """Takes a full sql dump"""
     sudo("mysqldump -uroot -p%s demisauce > backup-file.sql" % pwd)
 
-def build(rootmysqlpwd="demisauce",userdbpwd="demisauce",host=None):
+def build(rootmysqlpwd="demisauce",userdbpwd="demisauce",host=None,local=False):
     """base linux install, then manually run::
         apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C73E014
         as it will timeout
     """
+    
     if host:
         env.host = host
+    print("====== starting build:  env=%s" % env)
     sudo("apt-get -y install rsync")
     
-    sync_etc() # do this first to force rsynch/ssh pwd at beginning to it doesn't 255 error timeout
+    push_recipes() # do this first to force rsynch/ssh pwd at beginning to it doesn't 255 error timeout
     
     add_sources()
     _linux_base()
@@ -458,7 +482,7 @@ def build(rootmysqlpwd="demisauce",userdbpwd="demisauce",host=None):
     _supervisord_install()
     _install_solr()
     # move from temp home to /etc
-    sudo("rsync  -pthrvz  /home/demisauce/etc /") 
+    sudo("rsync  -pthrvz  /home/demisauce/src/demisauce/install/recipes/etc /") 
     #supervisor_update() # also starts supervisord
     sudo('/etc/init.d/supervisord restart')
     sudo('sudo update-rc.d supervisord defaults')

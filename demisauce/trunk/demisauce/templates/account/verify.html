@@ -1,13 +1,13 @@
 <%inherit file="../_base2col.html"/>
 
-<%def name="title()">Demisauce Verify Guest Links</%def>
+{% macro title() %}Demisauce Verify Guest Links{%- endmacro %}
 
 <div id="dialog" style="margin-top: 50px;" class="dialog base_form">
     <div id="dialogHead"><h2>Welcome to Demisauce</h2></div>
         <form class="small" action="verifycontinue" method='post'>
             <fieldset style="height: 50px;" class="small">
                 You were invited to Demisauce, enter your verification key.
-                ${h.hidden_field('unique', value=('unique' in request.params and request.params['unique']))}
+                {{h.hidden_field('unique', value=('unique' in request.params and request.params['unique']))}
             </fieldset>
             <div class="actions">
                 <input type="submit" class="primaryAction" id="submit" value="Continue &#187;">    &nbsp;&nbsp;
@@ -19,16 +19,16 @@
             <fieldset style="height: 150px; margin-top:0px;" class="small">
                 <div class="required">
                     <label for="email">Email</label>
-                    ${h.text_field('email', value=(c.user and c.user.email) or '', size=40)}
+                    {{h.text('email', value=(current_user and current_user.email) or '', size=40)}
                 </div>
                 <div class="optional">
                     <label for="displayname">Name</label>
-                    ${h.text_field('displayname', size=40)}
+                    {{h.text('displayname', size=40)}
                 </div>
                 <div class="required">
                     <label for="password">Password</label>
-                    ${h.text_field('password', type="password", size=40)}
-                    ${h.hidden_field('unique', value=('unique' in request.params and request.params['unique']))}
+                    {{h.text('password', type="password", size=40)}
+                    {{h.hidden_field('unique', value=('unique' in request.params and request.params['unique']))}
                 </div>
             </fieldset>
             <div class="actions">

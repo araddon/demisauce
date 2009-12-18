@@ -92,7 +92,7 @@ if (typeof DEMISAUCE == "undefined") {
             var ds_link = window.location.href;
             
             var qs = 'site_slug=' + opts.site_slug;
-            qs += '&userhash=${c.hash}';
+            qs += '&userhash={{c.hash}';
             qs += '&url=' + encodeURIComponent(ds_link);
             qs += '&urlbypass=' + encodeURIComponent(opts.url);
             

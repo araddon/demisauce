@@ -18,10 +18,10 @@ log = logging.getLogger(__name__)
 
 class ApipublicController(BaseController):
     def activity(self,id=''):
-        if not c.user and 'hashedemail' in request.params: 
+        if not self.user and 'hashedemail' in request.params: 
             user = person.Person.by_hashedemail(str(request.params['hashedemail']))
-        elif c.user:
-            user = c.user
+        elif self.user:
+            user = self.user
         else:
             return ''
         if 'site_slug' in request.params:

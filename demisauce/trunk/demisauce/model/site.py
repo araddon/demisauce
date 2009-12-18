@@ -1,4 +1,3 @@
-from pylons import config
 from sqlalchemy import Column, MetaData, Table
 from sqlalchemy.types import Integer, String as DBString, DateTime, \
     Text as DBText, Boolean
@@ -6,6 +5,7 @@ from sqlalchemy.sql import func
 from demisauce import model
 from demisauce import lib 
 #from demisauce.model import mapping
+from demisauce.model import JsonMixin
 from demisauce.model import meta, ModelBase
 from datetime import datetime
 import re, hashlib, random
@@ -27,7 +27,7 @@ site_table = Table("site", meta.metadata,
         Column("public", Boolean, default=False),
     )
 
-class Site(ModelBase):
+class Site(ModelBase,JsonMixin):
     """
     Container for different user's and distinct sets of data.  Each Site 
     does not share anything with other site's.  Users in a site can be in 
@@ -41,6 +41,7 @@ class Site(ModelBase):
     :site_url:  base url of site you use demisauce on
     :enabled:  has this site been configured to allow usage?
     """
+    schema = site_table
     def __init__(self, **kwargs):
         self.slug = None
         super(Site, self).__init__(**kwargs)

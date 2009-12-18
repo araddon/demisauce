@@ -1,4 +1,6 @@
 import logging
+from tornado.options import options
+import tornado.escape
 from demisauce.lib.base import *
 from datetime import datetime, timedelta
 import demisauce.model
@@ -13,9 +15,26 @@ from formencode.validators import *
 import formencode, urllib
 import demisaucepy.cache_setup
 from demisaucepy.cache import cache
-
+from demisauce.controllers import BaseHandler, RestMixin, SecureController
 
 log = logging.getLogger(__name__)
+
+def google_auth_url(return_url):
+    import urllib
+    from gdata import auth
+    url = urllib.urlencode({'url':return_url})
+    next = '%s/account/googleauth?%s' % (options.base_url,url)
+    scope = 'http://www.google.com/m8/feeds'
+    auth_sub_url = auth.GenerateAuthSubUrl(next,scope,secure=False,session=True)
+    return auth_sub_url
+
+def compute_userhash():
+    if 'HTTP_USER_AGENT' in request.environ and 'REMOTE_ADDR' in request.environ:
+        hash = request.environ['HTTP_USER_AGENT'] + request.environ['REMOTE_ADDR'] 
+        import hashlib
+        return hashlib.md5(hash + config['demisauce.apikey']).hexdigest()
+    else:
+        return None
 
 class PasswordChangeValidation(formencode.Schema):
     allow_extra_fields = True
@@ -26,42 +45,65 @@ class PasswordChangeValidation(formencode.Schema):
     chained_validators = [validators.FieldsMatch('password1', 'password2')]
     
 
-class AccountController(BaseController):
+class AccountController(RestMixin,BaseHandler):
     requires_auth = False
-    
-    def returnurl_orgoto(self,*args, **kwargs):
+
+    def googleauth(self):
         """
-        Redirects to url they came in on, else to page specified
+        User is coming in from google, should have an auth token
         """
-        if 'return_url' in session:
-            url = session['return_url']
-            del(session['return_url'])
-            session.save()
-            return redirect_wsave(str(url) + '?return_url')
-        else:
-            return redirect_wsave(*args,**kwargs)
+        # NEED SITE????  Or does that not make sense?
+        import gdata
+        import gdata.contacts
+        import gdata.contacts.service
+        authsub_token = self.get_argument("token")
+        log.info('calling gdata_authsubtoke = %s' % (authsub_token))
+        #TODO:  upgrade to gdata 1.2+ which breaks this
+        gd_client = gdata.contacts.service.ContactsService()
+        gd_client.auth_token = authsub_token
+        gd_client.UpgradeToSessionToken()
+        query = gdata.contacts.service.ContactsQuery()
+        query.max_results = 2
+        feed = gd_client.GetContactsFeed(query.ToUri())
+        email = feed.author[0].email.text
+        name = feed.author[0].name.text
+        user = meta.DBSession.query(Person).filter_by(
+                    email=email.lower()).first()
+        if not user:
+            user = Person(site_id=1,email=email,displayname=name)
+            user.authn = 'google'
+            user.save()
+            log.info('creating a google user')
+        self.set_current_user(user,is_authenticated = True,islogon=True)
+        expires_seconds = 60*60*24*31
+        self.set_cookie('userkey', user.user_uniqueid,expires_days=31)
+        if 'url' in self.request.arguments:
+            url = request.GET['url']
+            self.redirect(str(url))
+        self.render('/comment/comment_login.html')
     
-    @rest.dispatch_on(POST="update_account")
+    
+    #@rest.dispatch_on(POST="update_account")
     def index(self):
-        if not c.user:
-            redirect_wsave(action='signin')
-        return render('/account/settings.html')
+        if not self.user:
+            return self.redirect('/account/signin')
+        self.render('/account/settings.html')
     
-    @rest.dispatch_on(POST="inviteusers_POST")
+    #@rest.dispatch_on(POST="inviteusers_POST")
     def inviteusers(self,id=0):
-        return render('/account/inviteusers.html')
+        self.render('/account/inviteusers.html')
     
     def inviteusers_POST(self):
         """
         admin is sending out a number of invites to users
         """
-        if 'emails' in request.POST:
-            emails = request.POST['emails']
+        if 'emails' in self.request.arguments:
+            emails = self.request.arguments['emails']
             delay = 4
             from demisauce.lib import scheduler
             for email in emails.split(','):
                 email = email.strip().lower()
-                user = Person.by_email(c.user.site_id,email)
+                user = Person.by_email(self.user.site_id,email)
                 
                 if user is None:
                     user = Person(site_id=c.site_id,email=email, displayname=email)
@@ -71,7 +113,7 @@ class AccountController(BaseController):
                     dnew = {}
                     dnew['link'] = '%s/account/verify?unique=%s&node=%s&return_url=%s' %\
                         (base_url(),user.user_uniqueid,user.id,url2)
-                    dnew['from'] = c.user.displayname
+                    dnew['from'] = self.user.displayname
                     a = Activity(site_id=user.site_id,person_id=user.id,activity='sending email invite')
                     a.ref_url = 'account admin invite'
                     a.category = 'account'
@@ -82,29 +124,28 @@ class AccountController(BaseController):
             return 'from form %s' % emails
         return 'error'
     
-    @rest.dispatch_on(POST="signup_POST")
+    #@rest.dispatch_on(POST="signup_POST")
     def signup(self):
-        if c.user:
-            h.add_alert('Already signed in.')
+        user = self.get_current_user()
+        if user:
+            self.add_alert('Already signed in.')
             #redirect_wsave(action='index')
-        else:
-            session.clear()
         
-        return render('/account/signup.html')
+        self.render('/account/signup.html')
     
-    @rest.dispatch_on(POST="site_signup_POST")
+    #@rest.dispatch_on(POST="site_signup_POST")
     def site_signup(self,id=''):
-        if c.user:
+        if self.user:
             h.add_alert('Already signed in.')
             #redirect_wsave(action='index')
         elif 'invitecode' in request.params:
             session.clear()
-            c.user = meta.DBSession.query(Person).filter_by(
+            self.user = meta.DBSession.query(Person).filter_by(
                         user_uniqueid=request.params['invitecode']).first()
             c.invitecode = request.params['invitecode']
-        return render('/account/sitesignup.html')
+        self.render('/account/sitesignup.html')
     
-    @validate(schema=InviteValidation(), form='site_signup')
+    #@validate(schema=InviteValidation(), form='site_signup')
     def site_signup_POST(self):
         """
         User is signing up
@@ -127,11 +168,11 @@ class AccountController(BaseController):
             
             return self.returnurl_orgoto(controller='home',action='index')
             
-        return render('/account/signup.html')
+        self.render('/account/signup.html')
     
-    @rest.dispatch_on(POST="verify_POST")
+    #@rest.dispatch_on(POST="verify_POST")
     def verify(self):
-        if c.user:
+        if self.user:
             #h.add_alert('Already signed in.')
             redirect_wsave(controller='home',action='index')
         
@@ -158,10 +199,10 @@ class AccountController(BaseController):
                 h.add_alert('Already verified account')
                 return redirect_wsave("/account/signin" )
             else:
-                c.user = user
-        return render('/account/verify.html')
+                self.user = user
+        self.render('/account/verify.html')
     
-    @validate(schema=PersonValidation(), form='verify')
+    #@validate(schema=PersonValidation(), form='verify')
     def verify_POST(self):
         """
         User has selected to enter a username pwd
@@ -193,7 +234,7 @@ class AccountController(BaseController):
         else:
             h.add_error("You need to enter an email and password to signin.")
         
-        return render('/account/signin.html')
+        self.render('/account/signin.html')
     
     def verifycontinue(self):
         if 'unique' in request.params:
@@ -211,14 +252,14 @@ class AccountController(BaseController):
         
         return self.returnurl_orgoto(controller='home',action='index')
     
-    @validate(schema=GuestValidation(), form='signup')
+    #@validate(schema=GuestValidation(), form='signup')
     def interest(self):
         """
         User has selected to enter an email to be on waitinglist
         """
-        if 'email' in request.POST:
+        if 'email' in self.request.arguments:
             user = meta.DBSession.query(Person).filter_by(
-                    email=request.POST['email'].lower()).first()
+                    email=self.request.arguments['email'].lower()).first()
             
             if user is None:
                 site = Site(name=self.form_result['email'],email=self.form_result['email'])
@@ -254,53 +295,52 @@ class AccountController(BaseController):
         else:
             h.add_error("You need to enter an email.")
         
-        return render('/account/signup.html')
+        self.render('/account/signup.html')
     
-    @rest.dispatch_on(POST="signin_POST")
+    #@rest.dispatch_on(POST="signin_POST")
     def signin(self):
         log.info('made it to account signin?' )
-        if c.user:
-            redirect_to(controller="home", action='index')
-        elif 'userkey' in request.cookies:
+        email = None
+        if self.get_current_user():
+            return self.redirect("/home/index")
+        elif 'userkey' in self.cookies:
             user = meta.DBSession.query(Person).filter_by(
-                    user_uniqueid=request.cookies['userkey'].lower()).first()
+                    user_uniqueid=self.get_cookie('userkey').lower()).first()
             
-            if not user is None:
+            if user:
                 a = Activity(site_id=user.site_id,person_id=user.id,activity='Logging In')
                 #a.ref_url = 'comment url'
                 a.category = 'account'
-                self.start_session(user)
-                return self.returnurl_orgoto(controller='home',action='index')
+                self.set_current_user(user)
+                return self.redirect('/home/default')
         
-        if 'email' in request.cookies:
-            c.email = request.cookies['email'].lower()
+        if 'email' in self.cookies:
+            email = self.get_cookie('email').lower()
                             
-        session.clear()
-        from demisauce.controllers.comment import google_auth_url
-        c.google_auth_url = google_auth_url('%s/account/settings' % config['demisauce.url'])
-        return render('/account/signin.html')
+        googleurl = google_auth_url('%s/account/usersettings' % options.base_url)
+        self.render('/account/signin.html',google_auth_url=googleurl,email=email)
     
     def signin_POST(self):
-        
-        if 'email' in request.POST:
+        log.info('made it to account signin_POST?' )
+        if 'email' in self.request.arguments:
             user = meta.DBSession.query(Person).filter_by(
-                        email=request.POST['email'].lower()).first()
+                        email=self.get_argument('email').lower()).first()
             
             if user is None:
                 h.add_error("We were not able to verify that email\
                      or password, please try again")
             
-            elif 'password' in request.POST:
-                if user.is_authenticated(request.POST['password']):
+            elif 'password' in self.request.arguments:
+                if user.is_authenticated(self.get_argument('password')):
                     a = Activity(site_id=user.site_id,person_id=user.id,activity='Logging In')
                     #a.ref_url = 'comment url'
                     a.category = 'account'
                     a.save()
                     remember_me = False
-                    if 'remember_me' in request.POST:
+                    if 'remember_me' in self.request.arguments:
                         remember_me = True
-                    self.start_session(user,remember_me=remember_me)
-                    return self.returnurl_orgoto(controller='dashboard')
+                    self.set_current_user(user,is_authenticated = True,remember_me=remember_me,islogon=True)
+                    return self.redirect("/dashboard")
                 else:
                     h.add_error("We were not able to verify that \
                         email or password, please try again")
@@ -309,15 +349,14 @@ class AccountController(BaseController):
         else:
             h.add_error("You need to enter an email and password to signin.")
             
-        return render('/account/signin.html')
+        self.render('/account/signin.html')
     
     def logout(self):
-        if not c.user:
-             redirect_to(controller='home', action='index', id=None)
-        response.delete_cookie('userkey')
-        session.clear()
-        h.add_alert("You have been signed out.")
-        redirect_wsave(controller='home', action='index', id=None)
+        if not self.user:
+             self.redirect("/")
+        self.clear_cookie('userkey')
+        self.clear_cookie('user')
+        self.redirect("/")
     
     def handshake(self):
         if 'token' in request.params and 'site_slug' in request.params:
@@ -345,37 +384,37 @@ class AccountController(BaseController):
             return redirect_to(url)
         """
     
-    @rest.dispatch_on(POST="account_edit")
+    #@rest.dispatch_on(POST="account_edit")
     def edit(self):
-        if not c.user:
+        if not self.user:
              redirect_to(controller='home', action='index', id=None)
         else:
             c.person = meta.DBSession.query(Person).filter_by(
-                    site_id=c.user.site_id, id=c.user.id).first()
-        return render('/account/edit.html')
+                    site_id=self.user.site_id, id=self.user.id).first()
+        self.render('/account/edit.html')
     
-    @validate(schema=PersonEditValidation(), form='edit')
+    #@validate(schema=PersonEditValidation(), form='edit')
     def account_edit(self):
         """
         User has selected to update profile
         """
-        if c.user and 'email' in request.POST:
-            user = Person.get(c.user.site_id,c.user.id)
-            user.displayname = request.POST['displayname']
-            user.set_email(request.POST['email'])
-            user.url = request.POST['url']
+        if self.user and 'email' in self.request.arguments:
+            user = Person.get(self.user.site_id,self.user.id)
+            user.displayname = self.request.arguments['displayname']
+            user.set_email(self.request.arguments['email'])
+            user.url = self.request.arguments['url']
             self.start_session(user)
             user.save()
             c.person = user
-            c.user = user
+            self.user = user
             self.start_session(user)
-        return render('/account/settings.html')
+        self.render('/account/settings.html')
     
-    @validate(schema=PasswordChangeValidation(), form='edit')
+    #@validate(schema=PasswordChangeValidation(), form='edit')
     def change_pwd(self):
-        if c.user:
+        if self.user:
             user = meta.DBSession.query(Person).filter_by(
-                            email=c.user.email.lower()).first()
+                            email=self.user.email.lower()).first()
             c.person = user
             if user.is_authenticated(self.form_result['password']):
                 #a = Activity(site_id=user.site_id,person_id=user.id,activity='Changing Password',category='account')
@@ -387,41 +426,36 @@ class AccountController(BaseController):
             else:
                 h.add_error("We were not able to verify the \
                     existing password, please try again")
-        return render('/account/settings.html')
+        self.render('/account/settings.html')
     
-    def settings(self):
-        if not c.user:
+    def usersettings(self):
+        if not self.user:
              redirect_to(controller='home', action='index', id=None)
         else:
-            c.person = meta.DBSession.query(Person).filter_by(
-                site_id=c.user.site_id, id=c.user.id).first()
-            return self._view(c.person,getcomments=True)
+            person = meta.DBSession.query(Person).filter_by(
+                site_id=self.user.site_id, id=self.user.id).first()
+            return self._view(person,getcomments=True)
     
     def _view(self,person,getcomments=False):
-        c.person = None
         if person:
-            c.person = person
-            #TODO, somehow filter by site???? this gets ALL
-            if getcomments:
-                c.comments = person.recent_comments(5)
-            c.helptickets = c.person.help_tickets()
-            c.activities_by_day = Activity.stats_by_person(person.site_id,person.id)
-            if c.user is None:
+            helptickets = person.help_tickets()
+            activities_by_day = Activity.stats_by_person(person.site_id,person.id)
+            activity_count = len(activities_by_day)
+            if self.user is None:
                 pass
-            elif c.user is not None and c.user.issysadmin:
+            elif self.user is not None and self.user.issysadmin:
                 pass
-            elif c.user is not None and c.user.isadmin:
+            elif self.user is not None and self.user.isadmin:
                 pass
             else:
-                if c.user.site_id == c.person.site_id:
+                if self.user.site_id == person.site_id:
                     pass
                 else:
-                    c.person = None
-                    c.comments = None
+                    person = None
         else:
             pass #TODO:  raise error, or bad page
-        c.base_url = config['demisauce.url']
-        return render('/account/settings.html')
+        self.render('/account/settings.html',person=person,helptickets=helptickets,
+            activities_by_day=activities_by_day,activity_count=activity_count)
     
     def viewh(self,id='blah'):
         person = meta.DBSession.query(Person).filter_by(
@@ -429,22 +463,22 @@ class AccountController(BaseController):
         return self._view(person,True)
     
     def view(self,id=0):
-        if not c.user:
+        if not self.user:
             redirect_to(controller='home', action='index', id=None)
         
-        if c.user.issysadmin and id > 0:
+        if self.user.issysadmin and id > 0:
             person = Person.get(-1,id)
         elif id > 0: 
-            person = Person.get(c.user.site_id,id)
+            person = Person.get(self.user.site_id,id)
         
         return self._view(person,True)
     
     def view_mini(self,id=0):
         c.person = None
         if id > 0: # authenticated user
-            person = Person.get(c.user.site_id,id)
+            person = Person.get(self.user.site_id,id)
             c.person = person
-        return render('/account/profile_mini.html')
+        self.render('/account/profile_mini.html')
     
     def pre_init_user(self):
         'a push from app to say we are about to get this user and its good'
@@ -462,4 +496,11 @@ class AccountController(BaseController):
                 site_id=site.id, hashedemail=user_key).first()
             self.start_session(user)
             return "success"
+    
 
+#map.connect('user/{action}/{id}', controller='account')
+#map.connect('{controller}/{action}/{id}')
+_controllers = [
+    (r"/user/(.*?)/(.*?)/", AccountController),
+    (r"/account/(.*?)", AccountController),
+]

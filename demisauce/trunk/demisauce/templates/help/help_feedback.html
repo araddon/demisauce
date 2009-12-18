@@ -1,15 +1,15 @@
 <%namespace name="helpbits" file="help_bits.html"/>
 <%inherit file="../_baseiframe.html"/>
 
-<%def name="head_more()">
-    <script type="text/javascript" src="/js/jquery.form.js"></script>
-</%def>
+{% macro head_more() %}
+    <script type="text/javascript" src="/static/js/jquery.form.js"></script>
+{%- endmacro %}
 
-<%def name="title()">Help and Feedback </%def>
+{% macro title() %}Help and Feedback {%- endmacro %}
 
 % if c.result:
     <h3>Thank You</h3>
-% else:
-    ${helpbits.form(c.user)}
-% endif
+{% else %}
+    {{helpbits.form(current_user)}
+{% endif %}
 

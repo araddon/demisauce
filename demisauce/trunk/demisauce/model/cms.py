@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from pylons import config
 from sqlalchemy import Column, MetaData, ForeignKey, Table
 from sqlalchemy.types import Integer, String as DBString, DateTime
 from sqlalchemy.types import Text as DBText

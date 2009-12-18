@@ -1,6 +1,6 @@
 import os, logging
 from paste.deploy.converters import asbool
-from pylons import config
+
 
 def after_app_load():
     # trying to force import to get declarative to load

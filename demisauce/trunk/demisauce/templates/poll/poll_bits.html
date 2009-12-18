@@ -1,45 +1,45 @@
-<%def name="actions(item)">
+{% macro actions(item) %}
     <div class="actionbar" style="height:34px; ">
         <div class="right boxlinks_action boxlinks"  style="margin-top:-4px;">
             <ul>
                 <li><a href="/poll/edit" id="addemail" objid="0">
-                    <img  alt="Add New Poll" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                    <img  alt="Add New Poll" src="/static/images/icon_add.png" style="vertical-align: bottom;" border="0" />
                     Add New Poll</a></li>
             </ul>
         </div>
     </div>
-</%def>
-<%def name="response_list(items)">
-    % if items:
-    % for item in items.responses:
+{%- endmacro %}
+{% macro response_list(items) %}
+   {% if items:
+   {% for item in items.responses:
 
-        <div id="item_${item.id}" class="nodedisplay clearfix">
-            % if item and item.person_id:
-                ${h.link_to('view user info', h.url(controller="account",action="view", id=item.person_id), class_="title")}
-            % endif
-            ${item.created}
+        <div id="item_{{item.id}" class="nodedisplay clearfix">
+           {% if item and item.person_id:
+                {{h.link_to('view user info', h.url(controller="account",action="view", id=item.person_id), class_="title")}
+            {% endif %}
+            {{item.created}
         </div>
 
-    % endfor
-    % endif
-</%def>
-<%def name="list(items)">
-    % if items:
-    % for item in items:
+    {% endfor %}
+    {% endif %}
+{%- endmacro %}
+{% macro list(items) %}
+   {% if items:
+   {% for item in items:
 
-        <div id="item_${item.id}" class="nodedisplay clearfix">
-            ${h.link_to(item.name, h.url(controller="poll",action="view", id=item.key), class_="title")}
-            ${h.link_to('Edit', h.url(controller="poll",action="edit", id=item.id), class_="title")}, 
-            ${h.link_to('View Xml', "/api/xml/poll/%s" % item.key)}
+        <div id="item_{{item.id}" class="nodedisplay clearfix">
+            {{h.link_to(item.name, h.url(controller="poll",action="view", id=item.key), class_="title")}
+            {{h.link_to('Edit', h.url(controller="poll",action="edit", id=item.id), class_="title")}, 
+            {{h.link_to('View Xml', "/api/xml/poll/%s" % item.key)}
             <p class="description">
-                ${h.simple_format(item.description)}
+                {{h.simple_format(item.description)}
             </p>
         </div>
 
-    % endfor
-    % endif
-</%def>
-<%def name="table(items)">
+    {% endfor %}
+    {% endif %}
+{%- endmacro %}
+{% macro table(items) %}
 <table class="dsadmin">
     <thead>
         <tr>
@@ -51,75 +51,75 @@
         </tr>
     </thead>
     <tbody>
-    % for item in items:
-        <tr class="${h.cycle("", "alternate") }">
-            <td>${h.link_to(item.name, h.url(controller="poll",action="view", id=item.key), class_="xtitle")}</td>
-            <td>${h.link_to('View Xml', "/api/xml/poll/%s" % item.key)}</td>
-            <td>${h.link_to('Edit', h.url(controller="poll",action="edit", id=item.id), class_="title")}</td>
-            <td>${(item.created).strftime("%b %d, %Y") or ''}</td>
-            <td>${h.link_to(item.author.displayname, h.url(controller="account",action="viewh", id=item.author.hashedemail))}</td>
+   {% for item in items:
+        <tr class="{{h.cycle("", "alternate") }">
+            <td>{{h.link_to(item.name, h.url(controller="poll",action="view", id=item.key), class_="xtitle")}</td>
+            <td>{{h.link_to('View Xml', "/api/xml/poll/%s" % item.key)}</td>
+            <td>{{h.link_to('Edit', h.url(controller="poll",action="edit", id=item.id), class_="title")}</td>
+            <td>{{(item.created).strftime("%b %d, %Y") or ''}</td>
+            <td>{{h.link_to(item.author.displayname, h.url(controller="account",action="viewh", id=item.author.hashedemail))}</td>
         </tr>
         
-    % endfor
+    {% endfor %}
     </tbody>
 </table>
-</%def>
-<%def name="view(item)">
-    % if item:
-        <div id="poll_${item.id}" class="ds-poll">
+{%- endmacro %}
+{% macro view(item) %}
+   {% if item:
+        <div id="poll_{{item.id}" class="ds-poll">
             
-            % for q in item.questions:
-                <div id="question_${q.id}">
-                    <div>${q.question}</div>
-                    % for o in q.options:
-                         <div type="${o.type}">
-                            <input id="ds_option_${o.id}" class="ds-poll-radiobutton" type="radio" name="ds_option_${o.id}" value=""/>
-                            <label for="ds_option_${o.id}">${o.option}</label>
+           {% for q in item.questions:
+                <div id="question_{{q.id}">
+                    <div>{{q.question}</div>
+                   {% for o in q.options:
+                         <div type="{{o.type}">
+                            <input id="ds_option_{{o.id}" class="ds-poll-radiobutton" type="radio" name="ds_option_{{o.id}" value=""/>
+                            <label for="ds_option_{{o.id}">{{o.option}</label>
                         </div>
-                    % endfor
+                    {% endfor %}
                 </div>
-            % endfor
+            {% endfor %}
             <div class="ds-poll-vote">
                 <input class="" type="button"  src="" style="border: medium none ; cursor: pointer;"/>
                 <a href="javascript:void(0);">> View Results ssss</a>
             </div>
         </div>
-    % endif
-</%def>
+    {% endif %}
+{%- endmacro %}
 
-<%def name="qoform(q,o)">
-            <div type="${(o and o.type) or 'radio'}">
+{% macro qoform(q,o) %}
+            <div type="{{(o and o.type) or 'radio'}">
                 <label for="option"></label>
-                <img src="/images/move.png" border="0" style="border:0" class="move"/> 
-                <input type="text" name="question_option" o_id="${(o and o.id) or '0'}" value="${(o and o.option) or ''}" id="question_option" style="width:350px"/>
-                <img src="/images/cross.png" border="0" style="border:0" class="delete"/> <a href="javascript:void(0);"></a>
+                <img src="/static/images/move.png" border="0" style="border:0" class="move"/> 
+                <input type="text" name="question_option" o_id="{{(o and o.id) or '0'}" value="{{(o and o.option) or ''}" id="question_option" style="width:350px"/>
+                <img src="/static/images/cross.png" border="0" style="border:0" class="delete"/> <a href="javascript:void(0);"></a>
             </div>
-</%def>
-<%def name="qform(q)">
+{%- endmacro %}
+{% macro qform(q) %}
     <div class="required">
         <label for="question">Question:</label>
-        ${h.text_area("question", content=(q and q.question) or '', q_id=(q and q.id) or '0', size="40x3")}
+        {{h.text_area("question", content=(q and q.question) or '', q_id=(q and q.id) or '0', size="40x3")}
     </div>
     <div id="question_options">
         <label for="questionoptions">Question Options:</label><br />
-        <div id="question_${(q and q.id) or '0'}"  q_id="${(q and q.id) or '0'}">
-                % if q and q.options:
-                    % for o in q.options:
-                        ${qoform(q,o)}
-                    % endfor
-                % endif
-                ${qoform(q,None)}
-                ${qoform(q,None)}
+        <div id="question_{{(q and q.id) or '0'}"  q_id="{{(q and q.id) or '0'}">
+               {% if q and q.options:
+                   {% for o in q.options:
+                        {{qoform(q,o)}
+                    {% endfor %}
+                {% endif %}
+                {{qoform(q,None)}
+                {{qoform(q,None)}
         </div>
     </div>
     <div class="optional">
             <label for="question_type">Question Type:</label>
-            ${h.radio_button('question_type', 'multiplechoice',checked=(q and q.type == 'multiplechoice'))} Multiple Choice 
-            ${h.radio_button('question_type', 'radio',checked=(q and q.type == 'radio'))} Single Choice 
-            ${h.radio_button('question_type', 'radiowother',checked=(q and q.type == 'radiowother'))} Single Choice plus text Other 
+            {{h.radio_button('question_type', 'multiplechoice',checked=(q and q.type == 'multiplechoice'))} Multiple Choice 
+            {{h.radio_button('question_type', 'radio',checked=(q and q.type == 'radio'))} Single Choice 
+            {{h.radio_button('question_type', 'radiowother',checked=(q and q.type == 'radiowother'))} Single Choice plus text Other 
     </div>
-</%def>
-<%def name="form(item,mode='admin')">
+{%- endmacro %}
+{% macro form(item,mode='admin') %}
     <script type="text/javascript">
         $(document).ready(function() {
             $('body').ds_poll_admin();
@@ -127,9 +127,9 @@
     </script>
     
     <br />
-    ${h.form(h.url(action='edit'),  class_="", method='post', id="poll_form")}
-        <input type="hidden" id="poll_id" name="poll_id" value="${(item and item.id) or '0'}">
-        <input type="hidden" name="q_ids" id="q_ids" value="${(item and item.question_ids) or ''}" />
+    {{h.form(h.url(action='edit'),  class_="", method='post', id="poll_form")}
+        <input type="hidden" id="poll_id" name="poll_id" value="{{(item and item.id) or '0'}">
+        <input type="hidden" name="q_ids" id="q_ids" value="{{(item and item.question_ids) or ''}" />
         
         <div class="base_form main_form" id="FormWrapper">
             <div class="yui-gc" >
@@ -140,33 +140,33 @@
                         <strong>Bold</strong> fields are required.
                         <div class="required">
                             <label for="name">Poll Name</label>
-                            ${h.text_field('name', value=(item and item.name) or '', size=40)}
+                            {{h.text('name', value=(item and item.name) or '', size=40)}
                         </div>
                         <div class="required" id="permalink_div" style="display:block;">
                             <label for="slug">Permalink:</label>
                             <span id="permalink" class="secondary">
-                                <span id="editable-slug-span" title="Click to edit this part of the permalink">${(item and item.key) or ''}</span>
+                                <span id="editable-slug-span" title="Click to edit this part of the permalink">{{(item and item.key) or ''}</span>
                                 <a href="javascript:void(0)" id="editable-slug-href">Edit</a>
                             </span>
-                            <input type="hidden"  size="100" id="permalink"  value="${(item and item.key) or ''}" />
+                            <input type="hidden"  size="100" id="permalink"  value="{{(item and item.key) or ''}" />
                             <br />
                             <input type="text" id="real_permalink" name="real_permalink" 
-                                value="${(item and item.key) or ''}" style="display:none;"/>
+                                value="{{(item and item.key) or ''}" style="display:none;"/>
                         </div>
-                        % if item and item.questions:
-                            % for q in item.questions:
-                                ${qform(q)}
-                            % endfor
-                        % else:
-                             ${qform(None)}
-                        % endif
+                       {% if item and item.questions:
+                           {% for q in item.questions:
+                                {{qform(q)}
+                            {% endfor %}
+                        {% else %}
+                             {{qform(None)}
+                        {% endif %}
                         <!--
                         <div id="placeholder_for_newq"></div>
                         <div class="actionbar" >
                             <div class="right boxlinks_action boxlinks"  style="margin-top:-4px;">
                                 <ul>
                                     <li><a href="javascript:void(0);" id="jq_add_question">
-                                        <img  alt="Add New question" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                                        <img  alt="Add New question" src="/static/images/icon_add.png" style="vertical-align: bottom;" border="0" />
                                         Add New Question</a>
                                     </li>
                                 </ul>
@@ -177,36 +177,36 @@
                 </div>
                 <div class="yui-u">
                     <div class="tiny_form">
-                        % if item:
-                            ${h.link_to('view xml', '/api/xml/poll/%s' % (item and item.key) or '')}
+                       {% if item:
+                            {{h.link_to('view xml', '/api/xml/poll/%s' % (item and item.key) or '')}
                             <br />
-                            ${h.link_to('view html', h.url(controller="poll",action="view", id=item.key))}
-                        % endif
+                            {{h.link_to('view html', h.url(controller="poll",action="view", id=item.key))}
+                        {% endif %}
                         
                         <div class="optional">
                             <label for="description">Description:</label>
-                            ${h.text_area("description", content=(item and item.description) or '', size="30x3", _style="width=190px;")}
+                            {{h.text_area("description", content=(item and item.description) or '', size="30x3", _style="width=190px;")}
                         </div>
                         <div class="optional">
                             <fieldset> 
                                 <legend>Allow Anoymous?</legend>
-                                ${h.radio_button('allow_anonymous', '0',checked=(item and item.allow_anonymous == 0))} False <br />
-                                ${h.radio_button('allow_anonymous', '1',checked=(item and item.allow_anonymous == 1))} True <br />
+                                {{h.radio_button('allow_anonymous', '0',checked=(item and item.allow_anonymous == 0))} False <br />
+                                {{h.radio_button('allow_anonymous', '1',checked=(item and item.allow_anonymous == 1))} True <br />
                             </fieldset> 
                         </div>
                         <div class="optional">
                             <fieldset> 
                                 <legend>Is Public?</legend>
-                                ${h.radio_button('public', '0',checked=(item and item.allow_anonymous == 0))} False <br />
-                                ${h.radio_button('public', '1',checked=(item and item.allow_anonymous == 1))} True <br />
+                                {{h.radio_button('public', '0',checked=(item and item.allow_anonymous == 0))} False <br />
+                                {{h.radio_button('public', '1',checked=(item and item.allow_anonymous == 1))} True <br />
                             </fieldset> 
                         </div>
                         <div class="optional">
                             <label for="css">Custom CSS:</label>
-                            ${h.text_area("css", content=(item and item.css) or '', size="30x3", _style="width=190px;")}
+                            {{h.text_area("css", content=(item and item.css) or '', size="30x3", _style="width=190px;")}
                         </div>
                         <div class="box2" style="margin:10px 0px;">
-                            ${h.remote_html('root/help/poll/edit')}
+                            {{h.remote_html('root/help/poll/edit')}
                         </div>
                     </div>
                 </div>
@@ -217,7 +217,7 @@
             </div>
         </div>
     
-    ${h.end_form()}
+    {{h.end_form()}
     <script type="text/javascript">
         $(document).ready(function(){
             $('#poll_form').slugeditor({slugfrom: '#name'});
@@ -226,4 +226,4 @@
     
 </div>
 
-</%def>
+{%- endmacro %}

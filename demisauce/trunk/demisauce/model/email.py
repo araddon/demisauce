@@ -2,12 +2,11 @@
 This is the DataModel to persist to the DB through Sql Alchemy
 """
 #!/usr/bin/env python
-from pylons import config
 from sqlalchemy import Column, MetaData, ForeignKey, Table
 from sqlalchemy.types import Integer, String as DBString
 from sqlalchemy.types import Text as DBText, DateTime
 from demisauce import model
-from demisauce.model import meta, ModelBase, site
+from demisauce.model import meta, ModelBase, site, JsonMixin
 #from demisaucepy.declarative import Aggregator
 from datetime import datetime
 
@@ -25,7 +24,8 @@ email_table = Table("email", meta.metadata,
         Column("created", DateTime,default=datetime.now),
     )
 
-class Email(ModelBase):
+class Email(ModelBase,JsonMixin):
+    schema = email_table
     def __init__(self, **kwargs):
         super(Email, self).__init__(**kwargs)
     
@@ -47,7 +47,7 @@ class Email(ModelBase):
             Email.all(site_id=c.site_id)
         """
         return meta.DBSession.query(Email).filter_by(site_id=site_id)
-        
+    
     @classmethod
     def by_key(cls,site_id=0,key=''):
         """

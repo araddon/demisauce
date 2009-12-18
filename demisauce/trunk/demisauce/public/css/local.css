@@ -83,7 +83,7 @@ a.edit, a.edit:visited,a.edit:hover {color: #FF0000;}
 .header-wrapper {max-width: 950px;min-width: 720px;margin: 0 auto;_width: 945px;position:relative;}
 #header-seperator {height:10px;background-color:#88D808;margin:0px;	padding:0px;}
 #hd h1{text-align: center;float:left;margin: 0px 0px 0px 0px;}
-#hd #logo #logoLink {height:50px;float:left;width:220px;background-image: url(/images/logo.png);}
+#hd #logo #logoLink {height:50px;float:left;width:220px;background-image: url(/static/images/logo.png);}
 #hd #mainnav {border: red 0px solid;padding: 9px 0px 0px 0px;margin: 5px 0px 0px 0px;background-color:#E4F2FD;}
 #hd #topnav {text-align:right;position:relative;}
 
@@ -116,7 +116,7 @@ ul.topnav a {text-decoration:none;-x-system-font:none;display:block;font-family:
 #topnav-aux {background:#666666 none repeat scroll 0% 0%;padding:0px 8px 8px 8px;
     position:absolute;right:1em;top:0pt;width:25%;color:#FFFFFF;}
 #topnav-aux a {}
-#topnav-aux form#search input {background:#FFFFFF url(/images/search-small.gif) no-repeat scroll 3px center;
+#topnav-aux form#search input {background:#FFFFFF url(/static/images/search-small.gif) no-repeat scroll 3px center;
     border:1px solid #999999;display:inline;font-size:10px;padding-left:16px;width:40%;float:right;}
 #topnav-aux-menu {padding:8px 0px 0px 0px;float:right;}
 #bd ul.topnav a:hover {text-decoration:none;color:#FFFFFF;}
@@ -144,7 +144,7 @@ div.boxlinks_tabs a.current {border-bottom: 1px solid #DDDDDD;background:#DDDDDD
 /* Tag selections */
 .tag_selections a {border: 1px solid #235C9D;text-decoration: none;padding: 3px 5px;}
 a.tagged {background-color:#ccc; }
-a.tagged_wdelete {padding-right:25px; background: #ccc url(/images/icon_close.png) no-repeat top right;}
+a.tagged_wdelete {padding-right:25px; background: #ccc url(/static/images/icon_close.png) no-repeat top right;}
 /* filters */
 ul.filter li {padding:2px;}
 ul.filter a.current{-moz-border-radius:3px;-webkit-border-radius:3px;background-color:#116092;}
@@ -182,10 +182,10 @@ div.barg {padding: 4px;background: #F5F5F5;}
 
 /* Orange Rounded Corner Content Box:  http://www.roundedcornr.com/rc1.php   */
 .corner_box {background: #fec529;}
-.corner_top div {background: url(/images/corner_fec529_tl.png) no-repeat top left;}
-.corner_top{background: url(/images/corner_fec529_tr.png) no-repeat top right;}
-.corner_bottom div {background: url(/images/corner_fec529_bl.png) no-repeat bottom left;}
-.corner_bottom {background: url(/images/corner_fec529_br.png) no-repeat bottom right;}
+.corner_top div {background: url(/static/images/corner_fec529_tl.png) no-repeat top left;}
+.corner_top{background: url(/static/images/corner_fec529_tr.png) no-repeat top right;}
+.corner_bottom div {background: url(/static/images/corner_fec529_bl.png) no-repeat bottom left;}
+.corner_bottom {background: url(/static/images/corner_fec529_br.png) no-repeat bottom right;}
 .corner_top div, .corner_top, .corner_bottom div, .corner_bottom{width: 100%;height: 15px;font-size: 1px;}
 .corner_content{ margin:0px 10px 0px 10px; }
 
@@ -209,11 +209,11 @@ input.error {font-weight:bold;background-color:#ccc;}
 
 .info, .success, .warning, .error-message-box, .validation {border: 1px solid;margin: 10px 0px;
     padding:15px 10px 15px 50px;background-repeat: no-repeat; background-position: 10px center;}
-.info {color: #00529B;background-color: #BDE5F8;background-image: url('/images/info.png');}
-.success {color: #4F8A10;background-color: #DFF2BF;background-image:url('/images/success.png');}
-.warning {color: #9F6000;background-color: #FEEFB3;background-image: url('/images/warning.png');}
-.error-message-box {color: #D8000C;background-color: #FFBABA;background-image: url('/images/error.png');}
-.validation {color: #D63301;background-color: #FFCCBA;background-image: url('/images/validation.png');}
+.info {color: #00529B;background-color: #BDE5F8;background-image: url('/static/images/info.png');}
+.success {color: #4F8A10;background-color: #DFF2BF;background-image:url('/static/images/success.png');}
+.warning {color: #9F6000;background-color: #FEEFB3;background-image: url('/static/images/warning.png');}
+.error-message-box {color: #D8000C;background-color: #FFBABA;background-image: url('/static/images/error.png');}
+.validation {color: #D63301;background-color: #FFCCBA;background-image: url('/static/images/validation.png');}
 
 
 /* Admin tables */
@@ -237,7 +237,7 @@ div.checkable  {margin:0px 0px 0px 25px;}
 span.checkable input {display:none;}
 span.checkable  {border:2px solid #18181B;padding:1px 9px 1px 9px;margin:3px 3px 3px -25px;line-height:22px;}
 span.checkableselected {
-    background-image:url(/images/icon_check.png) !important;border:0px solid #fff;
+    background-image:url(/static/images/icon_check.png) !important;border:0px solid #fff;
     background-position: center;background-repeat:no-repeat;padding:3px 11px 3px 11px;}
     
 
@@ -275,7 +275,7 @@ span.checkableselected {
 form div.actions input {width:8em;}
 form .actions {padding: 10px;margin: 10px 0px 0px 0px;background-color: #ddd;border-top: 2px solid #235C9D;text-align: right;}
 form img.delete {}
-form img.delete { background:url(/images/cross.png);}
+form img.delete { background:url(/static/images/cross.png);}
 .hint {color: #ccc;}
 /* new form */
 .base_formxx {margin: 0em auto 0 auto;background-color: #EBF4FA;padding: 1em 1em 1em 1em;border: 10px solid #ddd;}

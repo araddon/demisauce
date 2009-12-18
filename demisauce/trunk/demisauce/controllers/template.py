@@ -8,7 +8,7 @@ class TemplateController(BaseController):
         when all else fails, e.g.::
 
             def view(self, url):
-                return render('/%s' % url)
+                self.render('/%s' % url)
 
         Or if you're using Mako and want to explicitly send a 404 (Not
         Found) response code when the requested template doesn't exist::
@@ -17,7 +17,7 @@ class TemplateController(BaseController):
 
             def view(self, url):
                 try:
-                    return render('/%s' % url)
+                    self.render('/%s' % url)
                 except mako.exceptions.TopLevelLookupException:
                     abort(404)
 

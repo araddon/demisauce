@@ -1,35 +1,35 @@
-<%def name="actions()">
+{% macro actions() %}
     <div class="actionbar" style="height:34px; ">
         <div class="right boxlinks_action boxlinks"  style="margin-top:-4px;">
             <ul>
                 <li><a href="/groupadmin/edit" id="addgroup" objid="0">
-                    <img  alt="Add New Group" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                    <img  alt="Add New Group" src="/static/images/icon_add.png" style="vertical-align: bottom;" border="0" />
                     Add New Group</a></li>
             </ul>
         </div>
     </div>
-</%def>
-<%def name="group_view(item)">
-    <div id="group_view_${item.id}" class="group">
+{%- endmacro %}
+{% macro group_view(item) %}
+    <div id="group_view_{{item.id}" class="group">
         <div class="actionbar">
             <span class="h3">Edit</span>
-            % if item.site_id == c.user.site_id:
+           {% if item.site_id == current_user.site_id:
             <div class="boxlinks right"  style="margin-top:-27px;margin-right:-13px;height:25px;">
-                <a id="group_${item.id}" href="/groupadmin/edit/${item.id}">Edit</a>
+                <a id="group_{{item.id}" href="/groupadmin/edit/{{item.id}">Edit</a>
             </div>
-             % endif
+             {% endif %}
         </div>
         <div class="clear"></div>
         <dl>
-            <dt>Name:</dt>                  <dd>${item.name}</dd>
-            <dt>Created:</dt>               <dd>${(item.created).strftime("%b %d, %Y") or ''}</dd>
-            <dt>Description:</dt>           <dd>${item.description}</dd>
-            <dt>Is Public:</dt>             <dd>${(item and item.public) or 'False'}</dd>
+            <dt>Name:</dt>                  <dd>{{item.name}</dd>
+            <dt>Created:</dt>               <dd>{{(item.created).strftime("%b %d, %Y") or ''}</dd>
+            <dt>Description:</dt>           <dd>{{item.description}</dd>
+            <dt>Is Public:</dt>             <dd>{{(item and item.public) or 'False'}</dd>
         </dl>
         <div class="clear"></div>
     </div>
-</%def>
-<%def name="table(items)">
+{%- endmacro %}
+{% macro table(items) %}
 <table class="dsadmin">
     <thead>
         <tr >
@@ -40,47 +40,47 @@
         </tr>
     </thead>
     <tbody>
-    % for item in items:
-        <tr class="${h.cycle("", "alternate") }">
-            <td>${h.link_to(item.name, h.url(controller="groupadmin",action="edit", id=item.id))}</td>
-            <td>${h.link_to('View Xml', "/api/xml/group/%s" % item.id)}</td>
-            <td>${(item.created).strftime("%b %d, %Y %H:%m") or ''}</td>
-            <td>${h.simple_format(h.truncate(item.description, 50))}</td>
+   {% for item in items:
+        <tr class="{{h.cycle("", "alternate") }">
+            <td>{{h.link_to(item.name, h.url(controller="groupadmin",action="edit", id=item.id))}</td>
+            <td>{{h.link_to('View Xml', "/api/xml/group/%s" % item.id)}</td>
+            <td>{{(item.created).strftime("%b %d, %Y %H:%m") or ''}</td>
+            <td>{{h.simple_format(h.truncate(item.description, 50))}</td>
         </tr>
         
-    % endfor
+    {% endfor %}
     </tbody>
 </table>
-${h.dspager2(c.groups)}
+{{h.dspager2(c.groups)}
 
-</%def>
-<%def name="list(items)">
-    % if items:
-    % for item in items:
+{%- endmacro %}
+{% macro list(items) %}
+   {% if items:
+   {% for item in items:
 
-        <div id="item_${item.id}" class="nodedisplay clearfix">
-            ${h.link_to(item.name, h.url(controller="groupadmin",action="edit", id=item.id), class_="title")}
-            ${h.link_to('Edit', h.url(controller="groupadmin",action="edit", id=item.id), class_="title")}, 
-            ${h.link_to('View Xml', "/api/xml/group/%s" % item.id)}
+        <div id="item_{{item.id}" class="nodedisplay clearfix">
+            {{h.link_to(item.name, h.url(controller="groupadmin",action="edit", id=item.id), class_="title")}
+            {{h.link_to('Edit', h.url(controller="groupadmin",action="edit", id=item.id), class_="title")}, 
+            {{h.link_to('View Xml', "/api/xml/group/%s" % item.id)}
             <p class="description">
-                ${h.simple_format(item.description)}
+                {{h.simple_format(item.description)}
             </p>
         </div>
 
-    % endfor
-    % endif
-</%def>
-<%def name="view(item)">
-    % if item:
-        <div id="item_${item.id}" class="nodedisplay clearfix">
+    {% endfor %}
+    {% endif %}
+{%- endmacro %}
+{% macro view(item) %}
+   {% if item:
+        <div id="item_{{item.id}" class="nodedisplay clearfix">
             <p class="description">
-                ${item.name}, members: ${item.email_list}
+                {{item.name}, members: {{item.email_list}
             </p>
         </div>
-    % endif
-</%def>
+    {% endif %}
+{%- endmacro %}
 
-<%def name="form(item,mode='admin')">
+{% macro form(item,mode='admin') %}
 
     <script type="text/javascript">
     $(document).ready(function() {
@@ -115,7 +115,7 @@ ${h.dspager2(c.groups)}
             $(":input").unautocomplete();
         });
         $("#ds_popup_group").click(function() {
-            jQuery.facebox({ ajax: '${c.base_url}/groupadmin/popup' });
+            jQuery.facebox({ ajax: '{{c.base_url}/groupadmin/popup' });
         });
         
     });
@@ -123,27 +123,27 @@ ${h.dspager2(c.groups)}
     
 % if mode == 'popup':
     <div id="group_popup_content" style="display:;">
-        ${h.form(h.url(action='popup'),  class_="cccsmall", method='post',id="demisauce_groupadin_popupform")}
+        {{h.form(h.url(action='popup'),  class_="cccsmall", method='post',id="demisauce_groupadin_popupform")}
     
         <div class="base_form small_form" id="FormWrapper">
             <div>
                 <div style="margin:12px 12px">
-                    <input type="hidden" id="group_id" name="group_id" value="${(item and item.id) or '0'}">
+                    <input type="hidden" id="group_id" name="group_id" value="{{(item and item.id) or '0'}">
                     <h3>Group Add Edit</h3>
                    <div class="required">
                         <label for="name">Group Name</label>
-                        ${h.text_field('name', value=(item and item.name) or '', size=40)}
+                        {{h.text('name', value=(item and item.name) or '', size=40)}
                     </div>
                     <div class="optional">
                         <label for="members">Members:</label>
-                        ${h.text_area("members", content=(item and item.email_list) or '', size="40x6")}
-                        <input type="hidden" id="member_list" name="member_list" value="${(item and item.email_list) or ''}" />
+                        {{h.text_area("members", content=(item and item.email_list) or '', size="40x6")}
+                        <input type="hidden" id="member_list" name="member_list" value="{{(item and item.email_list) or ''}" />
                     </div>
                     <div class="optional">
                         <fieldset> 
                             <legend>Public Group?</legend>
-                                ${h.radio_button('public', '0',checked=(item and item.public == 0))} False <br />
-                                ${h.radio_button('public', '1',checked=(item and item.public == 1))} True <br />
+                                {{h.radio_button('public', '0',checked=(item and item.public == 0))} False <br />
+                                {{h.radio_button('public', '1',checked=(item and item.public == 1))} True <br />
                         </fieldset> 
                     </div>
                 </div>
@@ -152,7 +152,7 @@ ${h.dspager2(c.groups)}
                 <input type="submit" class="primary" id="submit" value="Save &#187;">
             </div>
         </div>
-        ${h.end_form()}
+        {{h.end_form()}
         <script type="text/javascript">
         $(document).ready(function() {
             $('#demisauce_groupadin_popupform').ajaxForm({ 
@@ -167,9 +167,9 @@ ${h.dspager2(c.groups)}
         });
         </script>
     </div>
-% else:
-    ${h.form(h.url(action='addedit'),  class_="cccsmall", method='post')}
-    <input type="hidden" id="group_id" name="group_id" value="${(item and item.id) or '0'}">
+{% else %}
+    {{h.form(h.url(action='addedit'),  class_="cccsmall", method='post')}
+    <input type="hidden" id="group_id" name="group_id" value="{{(item and item.id) or '0'}">
 
     <div class="base_form main_form" id="FormWrapper">
         <div class="yui-gc" >
@@ -180,29 +180,29 @@ ${h.dspager2(c.groups)}
                     <strong>Bold</strong> fields are required.
                     <div class="required">
                         <label for="name">Group Name</label>
-                        ${h.text_field('name', value=(item and item.name) or '', size=40)}
+                        {{h.text('name', value=(item and item.name) or '', size=40)}
                     </div>
                     <div class="required">
                         <label for="members">Members:</label>
-                        ${h.text_area("members", content=(item and item.email_list) or '', size="40x6")}
-                        <input type="hidden" id="member_list" name="member_list" value="${(item and item.email_list) or ''}" />
+                        {{h.text_area("members", content=(item and item.email_list) or '', size="40x6")}
+                        <input type="hidden" id="member_list" name="member_list" value="{{(item and item.email_list) or ''}" />
                     </div>
                     <div class="optional">
                         <fieldset> 
                             <legend>Public Group?</legend>
-                            ${h.radio_button('public', '0',checked=(item and item.public == 0))} False <br />
-                            ${h.radio_button('public', '1',checked=(item and item.public == 1))} True <br />
+                            {{h.radio_button('public', '0',checked=(item and item.public == 0))} False <br />
+                            {{h.radio_button('public', '1',checked=(item and item.public == 1))} True <br />
                         </fieldset> 
                     </div>
                 </div>
             </div>
             <div class="yui-u">
                 <div>
-                    % if item:
-                        ${h.link_to('view xml', '/api/xml/group/%s' % (item and item.id) or '')}
-                    % endif
+                   {% if item:
+                        {{h.link_to('view xml', '/api/xml/group/%s' % (item and item.id) or '')}
+                    {% endif %}
                     <div class="box2" style="margin:10px 0px;">
-                        ${h.remote_html('root/help/group/edit')}
+                        {{h.remote_html('root/help/group/edit')}
                     </div>
                 </div>
             </div>
@@ -214,7 +214,7 @@ ${h.dspager2(c.groups)}
     </div>
 
 
-    ${h.end_form()}
+    {{h.end_form()}
 
-% endif
-</%def>
+{% endif %}
+{%- endmacro %}

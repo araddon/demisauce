@@ -1,32 +1,29 @@
-<%def name="item_actions(item)">
+{% macro item_actions(item) %}
     <div class="actionbar" style="height:34px; ">
         <div class="right boxlinks_action boxlinks"  style="margin-top:-4px;">
             <ul>
-                <li><a href="/email/edit" id="addemail" objid="${(item and item.id) or '0'}">
-                    <img  alt="Add New Email Template" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                <li><a href="/email/edit" id="addemail" objid="{{(item and item.id) or '0'}}">
+                    <img  alt="Add New Email Template" src="/static/images/icon_add.png" style="vertical-align: bottom;" border="0" />
                     Add New Template</a></li>
             </ul>
         </div>
     </div>
-</%def>
+{%- endmacro %}
 
 
-<%def name="view(item)">
-    <div id="cmsitem_${item.id}" class="nodedisplay clearfix">
+{% macro view(item) %}
+    <div id="cmsitem_{{item.id}}" class="nodedisplay clearfix">
         <div class="content_block">
-
-            ${h.link_to(item.subject, h.url(action="edit", id=item.id), class_="xtitle")},
-            
-            ${h.link_to('view xml', '/api/xml/email/%s' % item.key)}
-
+            <a href="/email/edit" class="xtitle">{{item.subject}}</a>
+            <a href="/api/xml/email/{{item.key}}">view xml</a>
             <p class="description">
-                ${h.simple_format(h.truncate(item.template, 30))}
+                {{h.simple_format(h.truncate(item.template, 30))}}
             </p>
         </div>
     </div>
-</%def>
+{%- endmacro %}
 
-<%def name="table(items)">
+{% macro table(items) %}
 <table class="dsadmin">
     <thead>
         <tr >
@@ -37,68 +34,68 @@
         </tr>
     </thead>
     <tbody>
-    % for item in items:
-        <tr class="${h.cycle("", "alternate") }">
+   {% for item in items %}
+        <tr class="{{loop.cycle("", "alternate") }}">
             <td><input type="checkbox"/></td>
-            <td>${h.link_to(h.truncate(item.subject, 30), h.url(action="edit", id=item.id), class_="xtitle")}</td>
-            <td>${h.link_to('view xml', '/api/xml/email/%s' % item.key)}</td>
-            <td>${h.simple_format(h.truncate(item.template, 30))}</td>
+            <td><a href="/email/edit" class="xtitle">{{h2.truncate(item.subject, 30)}}</a></td>
+            <td><a href="/api/xml/email/{{item.key}}">view xml</a></td>
+            <td>{{h2.truncate(item.template, 30)}}</td>
         </tr>
         
-    % endfor
+    {% endfor %}
     </tbody>
 </table>
-</%def>
+{%- endmacro %}
 
-<%def name="form(item)">
-    ${h.form(h.url(action='addupdate'), method='post', id="emailform")}
+{% macro form(item) %}
+    {{h.form("/email/addupdate", method='post', id="emailform")}}
     <div class="base_form main_form" id="EmailItemFormWrapper">
         <div class="yui-gc" >
             <div class="yui-u first">
                 <div>
-                    <input type="hidden" id="objectid" name="objectid" value="${(item and item.id) or '0'}">
+                    <input type="hidden" id="objectid" name="objectid" value="{{(item and item.id) or '0'}}">
                     <h1>Email Template Authoring</h1>
                     <br /><strong>Bold</strong> fields are required.
                     <div class="required">
                         <label for="subject">Subject:</label>
-                        ${h.text_field('subject', value=(item and item.subject) or '')}
+                        {{h.text('subject', value=(item and item.subject) or '')}}
                     </div>
                     <div class="required" id="permalink_div" style="display:block;">
                         <label for="slug">Permalink:</label>
                         <span id="permalink" class="secondary">
                 
-                            <span id="editable-slug-span" title="Click to edit this part of the permalink">${(item and item.key) or ''}</span>
+                            <span id="editable-slug-span" title="Click to edit this part of the permalink">{{(item and item.key) or ''}}</span>
                             <a href="javascript:void(0)" id="editable-slug-href">Edit</a>
                         </span>
-                        <input type="hidden"  size="100" id="permalink"  value="${(item and item.key) or ''}" />
+                        <input type="hidden"  size="100" id="permalink"  value="{{(item and item.key) or ''}}" />
                         <br />
                         <input type="text" id="real_permalink" name="real_permalink" 
-                            value="${(item and item.key) or ''}" style="display:none;"/>
+                            value="{{(item and item.key) or ''}}" style="display:none;"/>
 
                     </div>
                     <div class="optional">
                         <label for="template">Email template:</label>
-                        ${h.text_area("template", content=(item and item.template) or '', size="40x6")}
+                        {{h.text_area("template", content=(item and item.template) or '', size="40x6")}}
                     </div>
                     <div class="optional">
                         <label for="from">From Name:</label>
-                        ${h.text_field('from_name', value=(item and item.from_name) or '')}
+                        {{h.text('from_name', value=(item and item.from_name) or '')}}
                     </div>
                     <div class="optional">
                         <label for="from_email">From Email:</label>
-                        ${h.text_field('from_email', value=(item and item.from_email) or '')}
+                        {{h.text('from_email', value=(item and item.from_email) or '')}}
                     </div>
                     <div class="optional">
                         <label for="to">To:</label>
-                        ${h.text_field('to', value=(item and item.to) or '')}
+                        {{h.text('to', value=(item and item.to) or '')}}
                     </div>
                 </div>
             </div>
             <div class="yui-u">
                 <div>
-                    % if item:
-                        ${h.link_to('view xml', '/api/xml/email/%s' % item.key)}
-                    % endif
+                   {% if item %}
+                        {{h.link_to('view xml', '/api/xml/email/%s' % item.key)}}
+                    {% endif %}
                     
                     <div class="box2" style="margin:10px 0px;">
                         <h3 style="">This is my stuff</h3>
@@ -106,7 +103,7 @@
                     </div>
                     
                     <div class="box2" style="margin:10px 0px;">
-                        ${h.remote_html('root/help/email/edit')}
+                        {{h.remote_html('root/help/email/edit')}}
                     </div>
                 </div>
             </div>
@@ -116,7 +113,7 @@
             &nbsp;&nbsp;<a href="/email" id="cancelnode">cancel</a>
         </div>
     </div>
-    ${h.end_form()}
+    {{h.end_form()}}
     <script type="text/javascript">
         $(document).ready(function(){
             $('#emailform').slugeditor({slugfrom: '#subject'});
@@ -124,4 +121,4 @@
         });
     </script>
 
-</%def>
+{%- endmacro %}

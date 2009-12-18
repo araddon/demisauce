@@ -1,33 +1,34 @@
 #!/usr/bin/env python
 import logging
 import urllib
-from pylons import config
 from formencode import Invalid, validators
-from formencode.validators import *
 import formencode
 
-from demisauce.lib.base import *
 from demisauce import model
 from demisauce.model import meta, mapping, activity
 from demisauce.model.person import Person
 from demisauce.model.site import Site
 from demisauce.model.comment import Comment
+from demisauce.controllers import BaseHandler, RestMixin, SecureController
 
 log = logging.getLogger(__name__)
 
 
-class DashboardController(SecureController):
-    
-    def index(self):
-        if c.user and c.user.issysadmin:
-            c.items = meta.DBSession.query(Site).all()
-        if c.user:
-            qry = model.help.Help.by_site(c.user.site_id)
-            c.new_ticket_ct = qry.count()
-            c.helptickets = qry.limit(5)
-            c.comments = Comment.by_site(c.user.site_id).limit(5)
+class DashboardController(RestMixin, SecureController):
+    def index(self,id=0):
+        items = None
+        if self.user and self.user.issysadmin:
+            items = meta.DBSession.query(Site).all()
+        if self.user:
+            qry = model.help.Help.by_site(self.user.site_id)
+            new_ticket_ct = qry.count()
+            helptickets = qry.limit(5)
+            comments = Comment.by_site(self.user.site_id).limit(5)
             
-        return render('/dashboard.html')
+        self.render('/dashboard.html',items=items,helptickets=helptickets,
+            comments=comments,new_ticket_ct=new_ticket_ct)
         
     
-
+_controllers = [
+    (r"/dashboard(?:\.)?(.*?)", DashboardController),
+]

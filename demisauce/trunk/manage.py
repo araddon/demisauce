@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Setup the demisauce application
 
@@ -17,70 +18,54 @@ Example usage::
 
 """
 import logging
-import ConfigParser
 import sys, os
+import tornado
+from tornado.options import options, define
+import app
+try:
+    # For Python < 2.6 or people using a newer version of simplejson
+    import simplejson as json
+except ImportError:
+    # For Python >= 2.6
+    import json
 from demisauce import fixture
 from demisauce import model
 from demisauce.model import mapping
 from demisauce.model import cms, email, site, person, \
     comment, meta, poll, service, tag, help
 
-from paste.deploy import appconfig
-from paste.script import command
-from pylons import config
-
-from demisauce.config.environment import load_environment
-
 log = logging.getLogger(__name__)
+define("action", default=None, help="Action to perform, [updatesite,create_data]")
+define("adminpwd", default="admin",
+        help="Enter a password for Admin user [default email = sysadmin@demisauce.org, pwd = admin]")
+define('adminemail', 
+        default='sysadmin@demisauce.org',
+        help="Enter the email of admin user [default = sysadmin@demisauce.org]")
+define('site', 
+        default='http://localhost:4950',
+        help="Enter the host address of new site [default = http://localhost:4950]")
 
-class ChangeBaseSite(command.Command):
+def updatesite(app):
     """
     This is run from the command line like this::
     
-        paster updatesite -p admin_password -e admin_email -h http://yoursite.com -i production.ini
+        app.py -updatesite -p admin_password -e email@email.com
     
     It updates the base admin site
     """
-    max_args = 4
-    min_args = 0
-    usage = "updatesite"
-    summary = "Updates data for base admin site"
-    group_name = "demisauce"
-    parser = command.Command.standard_parser(verbose=True)
-    parser.add_option('--ini','-i',
-                      dest='cfgfile',
-                      default='library_test.ini',
-                      help="Enter the ini file to load")
-    parser.add_option('--password','-p',
-                      dest='adminpwd',
-                      default='admin',
-                      help="Enter a password for Admin user [default user = sysadmin@demisauce.org, pwd = admin]")
-    parser.add_option('--adminemail','-e',
-                    dest='adminemail',
-                    default='sysadmin@demisauce.org',
-                    help="Enter the email of admin user [default = sysadmin@demisauce.org]")
-    parser.add_option('--site','-s',
-                    dest='site',
-                    default='http://localhost:4950',
-                    help="Enter the host address of new site [default = http://localhost:4950]")
-    
-    def command(self):
-        print('new email = %s, new pwd = %s, new host = %s' % (self.options.adminpwd, 
-            self.options.adminemail,self.options.site))
-        conf_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        ini_file = os.path.join(conf_dir, self.options.cfgfile)
-        conf = appconfig('config:' + ini_file)
-        load_environment(conf.global_conf, conf.local_conf)
-        s = meta.DBSession.query(site.Site).filter_by(id=1).first()
-        s.email = self.options.adminemail
-        s.base_url = self.options.site
-        s.save()
-        p = meta.DBSession.query(person.Person).filter_by(id=1).first()
-        p.set_password(self.options.adminpwd)
-        p.email = self.options.adminemail
-        p.save()
+    log.debug('new email = %s, new pwd = %s, new host = %s' % (options.adminpwd, 
+        options.adminemail,options.site))
+    s = app.db.session.query(site.Site).filter_by(id=1).first()
+    s.email = options.adminemail
+    s.base_url = options.site
+    s.save()
+    log.debug("Updates site, %s" % s)
+    p = app.db.session.query(person.Person).filter_by(id=1).first()
+    p.set_password(options.adminpwd)
+    p.email = options.adminemail
+    p.save()
 
-class SetupTestData(command.Command):
+def dataload(app):
     """
     This is run from the command line like this::
     
@@ -175,88 +160,72 @@ def create_data_new(classtype,drop=False):
 
 def create_fixture_data(classtype):
     models = None
-    if classtype in dir(fixture):
-        json_list = getattr(fixture, classtype)
-        #print json_list
-        models = model.ModelBase.from_json(json_list)
-    if classtype == 'person':
-        [m.after_load() for m in models]
+    if hasattr(fixture,classtype):
+        json_string = getattr(fixture, classtype)
+        #log.debug("about to load site json_string: %s" % json_string)
+        jsondata = json.loads(json_string)
+    items = []
+    if classtype == 'site':
+        for sitedata in jsondata:
+            logging.debug('create')
+            site = model.site.Site().from_dict(sitedata)
+            items.append(site)
+    elif classtype == 'person':
+        for persondata in jsondata:
+            person = model.person.Person().from_dict(persondata)
+            items.append(person)
+        [m.after_load() for m in items]
     elif classtype == 'email':
-        [m.after_load() for m in models]
-    elif classtype == 'poll':
-        for m in models:
-            questions = model.ModelBase.from_json(fixture.poll_question)
-            options = model.ModelBase.from_json(fixture.poll_question_option)
-            for q in questions:
-                m.questions.append(q)
-                for o in options:
-                    q.options.append(o)
-    elif (classtype == 'app'):
-        json_list = getattr(fixture, 'service')
-        models.extend(model.ModelBase.from_json(json_list))
-    
-    if models:
-        for m in models:
+        for emaildata in jsondata:
+            email = model.email.Email().from_dict(emaildata)
+            items.append(email)
+        [m.after_load() for m in items]
+    elif classtype == 'app':
+        for appdata in jsondata:
+            appitem = model.service.App().from_dict(appdata)
+            items.append(appitem)
+    elif classtype == 'service':
+        for servicedata in jsondata:
+            service = model.service.Service().from_dict(servicedata)
+            items.append(service)
+    if items:
+        for m in items:
             #print m.to_json()
             m.save()
     else:
         print 'no class'
 
 
-def create_data(ini_file):
+def create_data(app,ini_file = {}):
     """
     Creates initial data
     """
-    conf = appconfig('config:' + ini_file)
-    load_environment(conf.global_conf, conf.local_conf)
     if 'test.ini' in ini_file:
         print 'dropping tables for testing:  %s' % ini_file
-        meta.metadata.drop_all(bind=config['pylons.g'].sa_engine)
+        app.db.metadata.drop_all(bind=app.db.engine)
     print "Creating DB Tables if they dont exist"
-    meta.metadata.create_all(bind=config['pylons.g'].sa_engine)
-    s = meta.DBSession.query(site.Site).get(1)
-    key = conf['demisauce.apikey']
+    app.db.metadata.create_all(bind=app.db.engine)
+    s = app.db.session.query(site.Site).get(1)
     if not s:
+        print("no site, create one")
         create_fixture_data('site')
-        s = meta.DBSession.query(site.Site).get(1)
+        s = app.db.session.query(site.Site).get(1)
     
-    if s.key != key:
+    if s.key != options.demisauce_api_key:
         print 'Update %s demisauce.apikey to %s \n'  % (ini_file,s.key)  
     
-    user = meta.DBSession.query(person.Person).filter_by(site_id=s.id,id=1).first()
+    user = app.db.session.query(person.Person).filter_by(site_id=s.id,email="sysadmin@demisauce.org").first()
     if not user:
         # pwd = raw_input('Enter the Password for admin: ')
+        log.debug("Creating persons?")
         create_fixture_data('person')
         user = person.Person.get(1,1)
     
-    cmsitem = cms.Cmsitem.get_root(site_id=s.id)
-    if not cmsitem:
-        cmsitem = cms.Cmsitem(s.id, 'root','root, do not edit')
-        cmsitem.item_type='root'
-        from demisauce.fixturedata import cmsitems
-        for item in cmsitems:
-            cmstemp = cms.Cmsitem(s.id, item['title'],item['content'])
-            if 'url' in item: cmstemp.url = item['url']
-            cmsitem.addChild(cmstemp)
-            if 'children' in item:
-                cmstemp.item_type = 'folder'
-                for citem in item['children']:
-                    cmstemp2 = cms.Cmsitem(s.id, citem['title'],citem['content'])
-                    if 'url' in citem: cmstemp2.url = citem['url']
-                    rid = cmstemp.rid and (cmstemp.rid + '/') or ''
-                    cmstemp2.rid = ('%s%s' % (rid,cmstemp2.key)).lower()
-                    cmstemp.addChild(cmstemp2)
-        
-        cmsitem.save()
-        print 'created items   '
-        
-    create_fixture_data('comment')
-    create_fixture_data('poll')
     create_fixture_data('email')
     create_fixture_data('app')
-    create_fixture_data('tag')
+    create_fixture_data('service')
 
-    
+
 def setup_config(command, filename, section, vars):
     """
     This is run from the command line like this:
@@ -266,4 +235,16 @@ def setup_config(command, filename, section, vars):
     """
     print 'running setup_config %s, file=%s' % (command,filename)
     create_data(filename)
+
+
+
+if __name__ == "__main__":
+    tornado.options.parse_command_line()
+    application = app.Application()
+    if options.action == 'updatesite':
+        logging.debug("In data setup")
+        updatesite(application)
+    elif options.action == 'create_data':
+        log.debug("in create_data call")
+        create_data(application)
 

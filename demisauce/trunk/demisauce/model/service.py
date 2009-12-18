@@ -1,7 +1,6 @@
 """
 A service registry application base.  
 """
-from pylons import config
 from sqlalchemy import Column, MetaData, ForeignKey, Table
 from sqlalchemy.types import Integer, String as DBString, DateTime, \
     Text as DBText, Boolean
@@ -9,7 +8,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import eagerload
 
 from demisauce import model
-from demisauce.model import meta, ModelBase
+from demisauce.model import meta, ModelBase, JsonMixin
 from demisauce.model.site import Site
 from datetime import datetime
 
@@ -27,7 +26,7 @@ app_table = Table("app", meta.metadata,
         Column("description", DBText),
     )
 
-class App(ModelBase):
+class App(ModelBase,JsonMixin):
     """
     Application is collection of services, or pre-done integration
     usually apps share authentication, base_url etc.
@@ -42,6 +41,7 @@ class App(ModelBase):
     :authn:  which authN method?
     :list_public:  True/False to show publicly for other users and accounts
     """
+    schema = app_table
     def __init__(self, **kwargs):
         super(App, self).__init__(**kwargs)
     
@@ -71,7 +71,7 @@ service_table = Table("service", meta.metadata,
         Column("description", DBText),
     )
 
-class Service(ModelBase):
+class Service(ModelBase,JsonMixin):
     """
     Service is either a Demisauce, or "plug_in" service
     many->many:  a "plugin" like wordpress could have many 
@@ -90,6 +90,7 @@ class Service(ModelBase):
     :events: [list]{format: xmpp, callback, email, plugin?}
     :dependency: ??  list of dependencies  (js? css? kinda like "requires?")
     """
+    schema = service_table
     @classmethod
     def all(cls):
         """Class method to get recent help tickets

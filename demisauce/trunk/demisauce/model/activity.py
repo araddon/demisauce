@@ -1,4 +1,3 @@
-from pylons import config
 from sqlalchemy import Column, MetaData, ForeignKey, Table
 from sqlalchemy.types import Integer, String as DBString, DateTime, \
     Text as DBText, Boolean, SmallInteger

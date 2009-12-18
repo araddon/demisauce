@@ -42,9 +42,9 @@ Demisauce can be installed following these `instructions
         "Topic :: Software Development :: Libraries :: Python Modules",
     ], 
     url='http://demisauce.googlecode.com',
-    install_requires=["Routes==1.7.3","Pylons==0.9.6.2", 'sqlalchemy==0.5.6',
+    install_requires=["Routes","Pylons", 'sqlalchemy==0.5.6',
         'demisaucepy>=0.0.2','tempita','simplejson',
-        'webhelpers==0.6.4'],
+        'webhelpers'],
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,
     test_suite='nose.collector',
@@ -52,7 +52,7 @@ Demisauce can be installed following these `instructions
     #message_extractors = {'demisauce': [
     #        ('**.py', 'python', None),
     #        ('templates/**.mako', 'mako', None),
-    #        ('public/**', 'ignore', None)]},
+    #        ('public/**', 'ignore', None)]},ma
     entry_points="""
     [paste.app_factory]
     main = demisauce.config.middleware:make_app

@@ -2,7 +2,7 @@
 <%inherit file="../_base2col.html"/>
 
 
-<%def name="title()">Services and Applications Add/Edit </%def>
+{% macro title() %}Services and Applications Add/Edit {%- endmacro %}
 
 
 <div class="bar1">
@@ -12,19 +12,19 @@
 
 % if c.item:
     <br />
-    ${service.app_view(c.item)}
-% else:
+    {{service.app_view(c.item)}
+{% else %}
     <div >
-        ${service.appminilist(c.apps)}
+        {{service.appminilist(c.apps)}
     </div>
     
-% endif
+{% endif %}
 
 
-<%def name="sidebar_top()">
-    % if c.user is not None:
+{% macro sidebar_top() %}
+   {% if current_user is not None:
     <div >
-        ${service.actions()}
+        {{service.actions()}
     </div>
     <br />
     
@@ -33,38 +33,38 @@
     </div>
     <div style="margin:8px;padding:0px;"><h4></h4></div>
     <ul class="filter" style="margin:8px;">
-        <li><a href="/service/owner/mine" class="${h.is_current_filter(filter='owner',value='mine')}">Owned By Me</a></li>
-        <li><a href="/service/owner/all" class="${h.is_current_filter(filter='owner',value='all')}">All</a></li>
+        <li><a href="/service/owner/mine" class="{{h2.is_current_filter(filter='owner',value='mine')}">Owned By Me</a></li>
+        <li><a href="/service/owner/all" class="{{h2.is_current_filter(filter='owner',value='all')}">All</a></li>
         <li><a href="#" class=""></a></li>
     </ul>
-    % endif
+    {% endif %}
     
     
-    % if c.item:
+   {% if c.item:
         <div class="box box2">
-             <h3 style="">Other Services for ${c.item.name}</h3>
-             % if c.item is not None and c.item.services:
-                 ${service.minilist(c.item.services)}
-             % endif
+             <h3 style="">Other Services for {{c.item.name}</h3>
+            {% if c.item is not None and c.item.services:
+                 {{service.minilist(c.item.services)}
+             {% endif %}
          </div>
          
          <div class="box box2">
-              <h3 style="">Other Apps for ${c.item.site.name}</h3>
-              % if c.item is not None and c.item.site.apps:
-                  ${service.appminilist(c.item.site.apps)}
-              % endif
+              <h3 style="">Other Apps for {{c.item.site.name}</h3>
+             {% if c.item is not None and c.item.site.apps:
+                  {{service.appminilist(c.item.site.apps)}
+              {% endif %}
           </div>
-    % else:
+    {% else %}
         <div class="box box2">
             <h3 style="">Recent Updated Services</h3>
-            % if c.recent:
-                ${service.minilist(c.recent)}
-            % endif
+           {% if c.recent:
+                {{service.minilist(c.recent)}
+            {% endif %}
         </div>
 
-    % endif
+    {% endif %}
 
 
-</%def>
+{%- endmacro %}
 
 

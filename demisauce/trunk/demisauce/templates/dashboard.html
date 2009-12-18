@@ -1,8 +1,12 @@
-<%namespace name="mns_us" file="usersite_bits.html"/>
-<%inherit file="_base1col.html"/>
+{% extends "_base1col.html" %}
+{% import 'usersite_bits.html' as mns_us with context %}
 
+{% block title %}Demisauce Integration and Services Appliance{% endblock %}
+{% block head_more %}{% endblock %}
+{% block bodystart %}
+{% endblock %}
 
-<%def name="title()">Dashboard </%def>
+{% block inner_body %}
 
 
 <div id="dashboard" >
@@ -13,15 +17,15 @@
         <div class="yui-u first">
             
             <div class="box box2">
-                <h3 style=""><a href="/helpadmin/status/new">Feedback/Support from Users (${c.new_ticket_ct} new)</a></h3>
-                ${mns_us.helplist(c.helptickets,urlextra="?filterstatus=refresh&filter=new")}
+                <h3 style=""><a href="/helpadmin/status/new">Feedback/Support from Users ({{new_ticket_ct}} new)</a></h3>
+                {{mns_us.helplist(helptickets,urlextra="?filterstatus=refresh&filter=new")}}
             </div>
         </div>
         
         <div class="yui-u">
             <div class="box box2">
                 <h3 style=""><a href="/comment">Recent Comments</a></h3>
-                ${mns_us.commentlist(c.comments)}
+                {{mns_us.commentlist(comments)}}
             </div>
             <div class="box box2">
                 <h3 style="">Approvals (error's, new site's etc)</h3>
@@ -45,6 +49,6 @@ $(document).ready(function(){
 });
 </script>
 
-<%def name="sidebar_top()">
-    ${mns_us.item_actions(c.item)}
-</%def>
+
+
+{% endblock %}

@@ -1,13 +1,16 @@
-<%inherit file="../_base1col.html"/>
+{% extends "_base1col.html" %}
 
-<%def name="title()">Demisuace Account signup</%def>
+{% block title %}Demisauce Integration and Services Appliance Signup Page{% endblock %}
+{% block head_more %}{% endblock %}
+{% block bodystart %}
+{% endblock %}
 
-
+{% block inner_body %}
 
 <div id="dialog" style="margin-top: 50px;" class="dialog">
     <div id="dialogHead"><h2>Request an Invitation</h2></div>
 
-    ${h.form(h.url(action='interest'),  class_="small", id="interestform")}
+    {{h.form("/account/interest",  class_="small", id="interestform")}}
         
         <fieldset class="small" style="padding:10px 20px 10px 20px;">
             <div class="instructions"><b></b> We are still in private beta enter your email and we
@@ -16,7 +19,7 @@
             <br /><br />
             <div class="required">
                 <label for="email">Email</label>
-                ${h.text_field('email', value=(item and item.email) or '', size=40)}
+                {{h.text('email', value=item.email if (item and item.email) else '', size=40)}}
             </div>
         </fieldset>
         <div class="actions">
@@ -34,3 +37,5 @@
 
     </div>
 </div>
+
+{% endblock %}

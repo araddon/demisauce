@@ -2,16 +2,16 @@
 <%inherit file="../_base1col.html"/>
 
 
-<%def name="title()">Help Configuration </%def>
+{% macro title() %}Help Configuration {%- endmacro %}
 
 <div >
     <div class="bar1">
         <h3>Help Configuration Page</h3>
     </div>
     <div>
-    % if c.item:
-    ${site.help_config(c.item)}
-    % endif
+   {% if c.item:
+    {{site.help_config(c.item)}
+    {% endif %}
     </div>
 </div>
 

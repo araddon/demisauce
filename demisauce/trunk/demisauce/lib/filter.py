@@ -1,5 +1,4 @@
 import logging
-from pylons import c, cache, config, g, request, response, session
 import simplejson
 
 from demisauce.lib import JsonSerializeable
@@ -125,8 +124,8 @@ class FilterList(object):
             stateless info"""
         if 'filters' in session:
             self.filters = session['filters']
-        #elif 'filters' in request.cookies:
-        #    self.filters = request.cookies['filters'].lower().split(',')
+        #elif 'filters' in self.cookies:
+        #    self.filters = self.get_cookie('filters'].lower().split(',')
         
         if self.filters == None:
             self.filters = {}

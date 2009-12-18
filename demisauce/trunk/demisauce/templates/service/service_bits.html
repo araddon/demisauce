@@ -1,81 +1,81 @@
-<%def name="actions()">
-    % if c.user and c.user.isadmin:
+{% macro actions() %}
+   {% if current_user and current_user.isadmin %}
     <div class="actionbar" style="height:35px; ">
         <div class="boxlinks_action boxlinks"  style="margin-top:-4px;">
             <ul>
                 <li><a href="/service/edit/" id="addapp" objid="0">
-                    <img  alt="Add New Service" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                    <img  alt="Add New Service" src="/static/images/icon_add.png" style="vertical-align: bottom;" border="0" />
                     Add New Service</a></li>
                 <!--<li><a href="/service/appedit" id="addapp" objid="0">
-                        <img  alt="Add New App" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                        <img  alt="Add New App" src="/static/images/icon_add.png" style="vertical-align: bottom;" border="0" />
                         Add New App</a></li>-->
             </ul>
         </div>
     </div>
-    % endif
-</%def>
-<%def name="form(item,app,mode='admin')">
+    {% endif %}
+{%- endmacro %}
+{% macro form(item,app,mode='admin') %}
 
     <br />
-    ${h.form(h.url(action='edit'),  class_="", method='post', id="service_form")}
+    {{h.form("/service/edit",  class_="", method='post', id="service_form")}}
         
         <div class="base_form main_form" id="FormWrapper">
             <div class="yui-gc" >
                 <div class="yui-u first">
                     <div>
-                        <input type="hidden" id="service_id" name="service_id" value="${(item and item.id) or '0'}">
+                        <input type="hidden" id="service_id" name="service_id" value="{{(item and item.id) or '0'}}">
                         <h1>Service Add/Edit</h1>
                         <strong>Bold</strong> fields are required.
                         <div class="required">
                             <label for="name">Service Name</label>
-                            ${h.text_field('name', value=(item and item.name) or '', size=40)}
+                            {{h.text('name', value=(item and item.name) or '', size=40)}}
                         </div>
                         <div class="required" id="permalink_div" style="display:block;">
                             <label for="slug">Permalink:</label>
                             <span id="permalink" class="secondary">
-                                <span id="editable-slug-span" title="Click to edit this part of the permalink">${(item and item.key) or ''}</span>
+                                <span id="editable-slug-span" title="Click to edit this part of the permalink">{{(item and item.key) or ''}}</span>
                                 <a href="javascript:void(0)" id="editable-slug-href">Edit</a>
                             </span>
-                            <input type="hidden"  size="100" id="permalink"  value="${(item and item.key) or ''}" />
+                            <input type="hidden"  size="100" id="permalink"  value="{{(item and item.key) or ''}}" />
                             <br />
                             <input type="text" id="real_permalink" name="real_permalink" 
-                                value="${(item and item.key) or ''}" style="display:none;"/>
+                                value="{{(item and item.key) or ''}}" style="display:none;"/>
                         </div>
                         <div class="optional">
                             <label for="description">Description:</label>
-                            ${h.text_area("description", content=(item and item.description) or '', size="30x3", _style="width=190px;")}
+                            {{h.text_area("description", content=(item and item.description) or '', size="30x3", _style="width=190px;")}}
                         </div>
                         <div class="optional">
                             <label for="app">app:</label>
-                            ${h.select("app", [(item and item.app_id) or c.app_list[0][0]],c.app_list, id='app')} <a href="javascript:void(0);" id="add_new_app" objid="0">Add New App</a>
+                            {{h.select("app", [(item and item.app_id) or c.app_list[0][0]],c.app_list, id='app')}} <a href="javascript:void(0);" id="add_new_app" objid="0">Add New App</a>
                         </div>
                         <div class="required">
                             <label for="format">Format</label>
-                            ${h.text_field('format', value=(item and item.format) or '', size=40)}
+                            {{h.text('format', value=(item and item.format) or '', size=40)}}
                         </div>
                         <div class="optional">
                             <label for="method_url">Method URL</label>
-                            ${h.text_field('method_url', value=(item and item.method_url) or '', size=160)}
+                            {{h.text('method_url', value=(item and item.method_url) or '', size=160)}}
                         </div>
                     </div>
                 </div>
                 <div class="yui-u">
                     <div class="tiny_form">
-                        % if item and item.id > 0:
-                            ${h.link_to('view xml', '/api/xml/service/%s/%s' % (((item and item.app) and item.app.slug) or 'demisauce',(item and item.key) or ''))}
+                       {% if item and item.id > 0 %}
+                            <a href="/api/xml/service/{{((item and item.app) and item.app.slug) or 'demisauce'}}/{{(item and item.key) or ''}}">view xml</a>}}
                             <br />
-                            ${h.link_to('view html', h.url(controller="services",action="view", id=item.id))}
-                        % endif
+                            <a href="/services/view/{item.id}}">view html</a>
+                        {% endif %}
                         
                         <div class="optional">
                             <fieldset> 
                                 <legend>List In Public List?</legend>
-                                ${h.radio_button('list_public', '1',checked=(item and item.list_public == True))} Yes <br />
-                                ${h.radio_button('list_public', '0',checked=(item and item.list_public == False))} No <br />
+                                {{h.radio_button('list_public', '1',checked=(item and item.list_public == True))}} Yes <br />
+                                {{h.radio_button('list_public', '0',checked=(item and item.list_public == False))}} No <br />
                             </fieldset> 
                         </div>
                         <div class="box2" style="margin:10px 0px;">
-                            ${h.remote_html('root/help/services/edit')}
+                            
                         </div>
 
                     </div>
@@ -87,7 +87,7 @@
             </div>
         </div>
     
-    ${h.end_form()}
+    {{h.end_form()}}
     <script type="text/javascript">
         $(document).ready(function(){
             $('#service_form').slugeditor({slugfrom: '#name'});
@@ -116,48 +116,48 @@
         });
     </script>
     <div id="hidden_app_div" style="display:none">
-        ${app_form(None)}
+        {{app_form(None)}}
     </div>
     <div class="clear"></div>
 
-</%def>
-<%def name="app_form(item)">
-    ${h.form(h.url(action='appedit'),  class_="", method='post', id="app_form")}
+{%- endmacro %}
+{% macro app_form(item) %}
+    {{h.form('/service/appedit',  method='post', id="app_form")}}
     <div class="base_form small_form" id="FormWrapper">
         <div>
             <div style="margin:12px 12px">
-                <input type="hidden" id="app_id" name="app_id" value="${(item and item.id) or '0'}">
+                <input type="hidden" id="app_id" name="app_id" value="{{(item and item.id) or '0'}}">
                 <h3>App Add/Edit</h3>
                <div class="required">
                     <label for="app_name">App Name</label>
-                    ${h.text_field('app_name', value=(item and item.name) or '', size=40)}
+                    {{h.text('app_name', value=(item and item.name) or '', size=40)}}
                 </div>
                 <div class="required" id="permalink_div2" style="display:block;">
                     <label for="slug">Permalink:</label>
                     <span id="permalink2" class="secondary">
-                        <span id="editable-slug-span2" title="Click to edit this part of the permalink">${(item and item.slug) or ''}</span>
+                        <span id="editable-slug-span2" title="Click to edit this part of the permalink">{{(item and item.slug) or ''}}</span>
                         <a href="javascript:void(0)" id="editable-slug-href2">Edit</a>
                     </span>
-                    <input type="hidden"  size="100" id="permalink2"  value="${(item and item.slug) or ''}" />
+                    <input type="hidden"  size="100" id="permalink2"  value="{{(item and item.slug) or ''}}" />
                     <br />
                     <input type="text" id="real_permalink2" name="real_permalink2" 
-                        value="${(item and item.slug) or ''}" style="display:none;"/>
+                        value="{{(item and item.slug) or ''}}" style="display:none;"/>
                 </div>
                 <div class="required">
                      <label for="base_url">Base Url</label>
-                     ${h.text_field('base_url', value=(item and item.base_url) or '', size=40)}
+                     {{h.text('base_url', value=(item and item.base_url) or '', size=40)}}
                  </div>
                 <div class="optional">
                     <label for="description">description:</label>
-                    ${h.text_area("description", content=(item and item.description) or '', size="45x3")}
+                    {{h.text_area("description", content=(item and item.description) or '', size="45x3")}}
                 </div>
                 <div class="optional">
                     <fieldset> 
                         <legend>Auth Method?</legend>
-                        ${h.radio_button('authn', 'demisauce',checked=(item and str(item.authn)  == 'demisauce'))} demisauce <br />
-                        ${h.radio_button('authn', 'oauth',checked=(item and str(item.authn)  == 'oauth'))} oauth <br />
-                        ${h.radio_button('authn', 'xmlrpc',checked=(item and str(item.authn)  == 'xmlrpc'))} xmlrpc <br />
-                        ${h.radio_button('authn', 'None',checked=(item and str(item.authn) == 'None'))} None <br />
+                        {{h.radio_button('authn', 'demisauce',checked=(item and str(item.authn)  == 'demisauce'))}} demisauce <br />
+                        {{h.radio_button('authn', 'oauth',checked=(item and str(item.authn)  == 'oauth'))}} oauth <br />
+                        {{h.radio_button('authn', 'xmlrpc',checked=(item and str(item.authn)  == 'xmlrpc'))}} xmlrpc <br />
+                        {{h.radio_button('authn', 'None',checked=(item and str(item.authn) == 'None'))}} None <br />
                     </fieldset> 
                 </div>
             </div>
@@ -166,7 +166,7 @@
             <input type="submit" class="primary" id="submit" value="Save &#187;">
         </div>
     </div>
-    ${h.end_form()}
+    {{h.end_form()}}
     <script type="text/javascript">
     $(document).ready(function(){
         $('#app_form').slugeditor({permalink_sel: '#real_permalink2',
@@ -176,10 +176,10 @@
                 slugfrom: '#app_name'});
     });
     </script>
-</%def>
+{%- endmacro %}
 
 
-<%def name="table(items)">
+{% macro table(items) %}
 <table class="dsadmin">
     <thead>
         <tr>
@@ -191,105 +191,103 @@
         </tr>
     </thead>
     <tbody>
-    % for item in items:
-        <tr class="${h.cycle("", "alternate") }">
-            <td>${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}</td>
-            <td>${h.link_to('View Xml', "/api/xml/service/%s/%s" % (item.app.slug,item.key))}</td>
-            <td>${h.link_to('Edit', h.url(controller="service",action="edit", id=item.id), class_="title")}</td>
-            <td>${(item.created).strftime("%b %d, %Y") or ''}</td>
-            <td>${h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}</td>
+   {% for item in items %}
+        <tr class="{{loop.cycle("", "alternate") }}">
+            <td><a href="/service/view/{{item.id}}">{{item.name}}</a></td>
+            <td><a href="/api/xml/service/{{item.app.slug}}{{item.key}}"></a></td>
+            <td><a href="/service/edit/{{item.id}}">Edit</a></td>
+            <td>{{(item.created).strftime("%b %d, %Y") or ''}}</td>
+            <td><a href="/account/viewh/{{item.owner.hashedemail}}">{{item.owner.displayname}}</a></td>
         </tr>
-        
-    % endfor
+    {% endfor %}
     </tbody>
 </table>
-</%def>
-<%def name="detail_view(item)">
+{%- endmacro %}
+{% macro detail_view(item) %}
 <dl>
-    <dt>Name:</dt>          <dd><h3>${item.name}
-        % if item.site_id == c.site_id or (c.user is not None and c.user.issysadmin):
-            ${h.link_to('Edit', h.url(controller="service",action="edit", id=item.id), class_="title")}
-        % else:
+    <dt>Name:</dt>          <dd><h3>{{item.name}}
+       {% if item.site_id == c.site_id or (current_user is defined and current_user.issysadmin) %}
+            {{h.link_to('Edit', h.url(controller="service",action="edit", id=item.id), class_="title")}}
+        {% else %}
         
-        % endif
+        {% endif %}
     </h3></dd>
-    <dt>key:</dt>          <dd>${item.key}</dd>
+    <dt>key:</dt>          <dd>{{item.key}}</dd>
     <dt>Author:</dt>        <dd>
-                                % if c.user and c.user.isadmin and c.user.site_id == item.site_id:
-                                    ${h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}
-                                % else:
-                                    ${item.owner.displayname}
-                                % endif
+                               {% if current_user and current_user.isadmin and current_user.site_id == item.site_id %}
+                                    <a href="/account/viewh/{{item.owner.hashedemail}}">{{item.owner.displayname}}</a>
+                                {% else %}
+                                    {{item.owner.displayname}}
+                                {% endif %}
                             </dd>
-    <dt>Created:</dt>       <dd>${(item.created).strftime("%b %d, %Y") or ''}</dd>
-    <dt>Site:</dt>          <dd>${h.link_to(item.site.name, h.url(controller="site",action="view", id=item.site_id))}</dd>   
-    <dt>Site URL:</dt>      <dd>${item.app.base_url}</dd>
-    <dt>App:</dt>           <dd>${item.app.name}</dd>
-    <dt>AuthN:</dt>         <dd>${item.app.authn}</dd>
-    <dt>Service URL:</dt>   <dd>${item.method_url or 'na'}</dd>
-    <dt>View XML:</dt>      <dd>${h.link_to('View Xml', "/api/xml/service/%s/%s" % (item.app.slug,item.key))}</dd>
-    <dt>Cache Time:</dt>    <dd>${item.cache_time}</dd>
-    <dt>Description:</dt>   <dd>${item.description}</dd>
+    <dt>Created:</dt>       <dd>{{(item.created).strftime("%b %d, %Y") or ''}}</dd>
+    <dt>Site:</dt>          <dd><a href="/site/view/{{item.site_id}}">{{item.site.name}}</a></dd>   
+    <dt>Site URL:</dt>      <dd>{{item.app.base_url}}</dd>
+    <dt>App:</dt>           <dd>{{item.app.name}}</dd>
+    <dt>AuthN:</dt>         <dd>{{item.app.authn}}</dd>
+    <dt>Service URL:</dt>   <dd>{{item.method_url or 'na'}}</dd>
+    <dt>View XML:</dt>      <dd><a href="/api/xml/service/{{item.app.slug}}{{item.key}}">View Xml</a></dd>
+    <dt>Cache Time:</dt>    <dd>{{item.cache_time}}</dd>
+    <dt>Description:</dt>   <dd>{{item.description}}</dd>
     
 </dl>
     
 
     
-</%def>
-<%def name="app_view(item)">
+{%- endmacro %}
+{% macro app_view(item) %}
 <dl>
-    <dt>Name:</dt>          <dd><h3>${item.name}
-                    % if c.user and c.user.isadmin and c.user.site_id == item.site_id:
-                            ${h.link_to('Edit', h.url(controller="service",action="appeditform", id=item.id))}
-                    % endif
+    <dt>Name:</dt>          <dd><h3>{{item.name}}
+                   {% if current_user and current_user.isadmin and current_user.site_id == item.site_id %}
+                            {{h.link_to('Edit', h.url(controller="service",action="appeditform", id=item.id))}}
+                    {% endif %}
     </h3></dd>
-    <dt>Slug:</dt>          <dd>${item.slug}</dd>
+    <dt>Slug:</dt>          <dd>{{item.slug}}</dd>
 
     <dt>Author:</dt>        <dd>
-                                % if c.user and c.user.isadmin and c.user.site_id == item.site_id:
-                                    ${h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}
-                                % else:
-                                    ${item.owner.displayname}
-                                % endif
+                               {% if current_user and current_user.isadmin and current_user.site_id == item.site_id %}
+                                    {{h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}}
+                                {% else %}
+                                    {{item.owner.displayname}}
+                                {% endif %}
                             </dd>
-    <dt>Created:</dt>       <dd>${(item.created).strftime("%b %d, %Y") or ''}</dd>
-    <dt>Site:</dt>          <dd>${h.link_to(item.site.name, h.url(controller="site",action="view", id=item.site_id))}</dd>  
-    <dt>base_url:</dt>      <dd>${item.base_url}</dd> 
-    <dt>Description:</dt>   <dd>${item.description}</dd>
-    <dt>Public:</dt>        <dd>${item.list_public}</dd>
+    <dt>Created:</dt>       <dd>{{(item.created).strftime("%b %d, %Y") or ''}}</dd>
+    <dt>Site:</dt>          <dd>{{h.link_to(item.site.name, h.url(controller="site",action="view", id=item.site_id))}}</dd>  
+    <dt>base_url:</dt>      <dd>{{item.base_url}}</dd> 
+    <dt>Description:</dt>   <dd>{{item.description}}</dd>
+    <dt>Public:</dt>        <dd>{{item.list_public}}</dd>
     
 </dl>
     
 
     
-</%def>
-<%def name="publicview(items)">
-    % for item in items:
-        % if item.site_id == c.site_id or item.list_public or (c.user is not None and c.user.issysadmin):
-            <div class="${h.cycle("", "alternate") }">
-                ${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}
-                
-                ${h.simple_format(h.truncate(item.description, 120))}
+{%- endmacro %}
+{% macro publicview(items) %}
+   {% for item in items %}
+       {% if item.site_id == c.site_id or item.list_public or (current_user is defined and current_user.issysadmin) %}
+            <div class="{{h.cycle("", "alternate") }}">
+                <a href="/service/view{{item.id}}">{{item.name}}</a>
+                {{h.truncate(item.description, 120)}}
                 <br />
             </div>
-        % endif
-    % endfor
-</%def>
+        {% endif %}
+    {% endfor %}
+{%- endmacro %}
 
-<%def name="minilist(items)">
-% for item in items:
-    % if item.site_id == c.site_id or item.list_public or (c.user is not None and c.user.issysadmin):
+{% macro minilist(items) %}
+{% for item in items %}
+   {% if item.site_id == current_user.site_id or item.list_public or (current_user is defined and current_user.issysadmin) %}
         <div>
-            ${h.link_to(item.name, h.url(controller="service",action="view", id=item.id), class_="xtitle")}
+            <a href="/service/view/{{item.id}}">{{item.name}}</a>
         </div>
-    % endif
-% endfor
-</%def>
+    {% endif %}
+{% endfor %}
+{%- endmacro %}
 
-<%def name="appminilist(items)">
-% for item in items:
+{% macro appminilist(items) %}
+{% for item in items %}
     <div>
-        ${h.link_to(item.name, h.url(controller="service",action="appview", id=item.id), class_="xtitle")}
+        <a href="/service/appview/{{item.id}}">{{item.name}}</a>
     </div>
-% endfor
-</%def>
+{% endfor %}
+{%- endmacro %}

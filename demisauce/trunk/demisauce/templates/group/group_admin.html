@@ -2,22 +2,22 @@
 <%inherit file="../_base1col.html"/>
 
 
-<%def name="title()">Group Add/Edit </%def>
+{% macro title() %}Group Add/Edit {%- endmacro %}
 
 <div class="bar1">
     <h3>Group Admin Page</h3>
 </div>
 % if c.item:
     <br />
-    ${group.form(c.item)}
-% else:
+    {{group.form(c.item)}
+{% else %}
     <div class="yui-gc" >
         <div class="yui-u first">
-            ${group.table(c.groups)}
+            {{group.table(c.groups)}
         </div>
         <div class="yui-u">
-            ${group.actions()}
+            {{group.actions()}
         </div>
     </div>
     
-% endif
+{% endif %}

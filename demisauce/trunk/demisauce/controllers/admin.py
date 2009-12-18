@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 import logging
 import urllib
-from pylons import config
 from formencode import Invalid, validators
 from formencode.validators import *
 import formencode
 
-from demisauce.lib.base import *
+from demisauce.controllers import NeedsadminController, RestMixin
 from demisauce import model
 from demisauce.model import meta
 from demisauce.model import mapping
@@ -17,21 +16,21 @@ from demisauce.model.email import Email
 log = logging.getLogger(__name__)
 
 
-class AdminController(NeedsadminController):
+class AdminController(RestMixin, NeedsadminController):
     
-    def index(self):
-        if c.user and c.user.issysadmin:
-            c.items = meta.DBSession.query(Site).all()
-            return render('/site/site.html')
+    def index(self,id=0):
+        if self.user and self.user.issysadmin:
+            items = meta.DBSession.query(Site).all()
+            self.render('site/site.html',items=items)
         else:
-            return self.view(c.user.site_id)
+            return self.view(self.user.site_id)
     
     def enablesite(self,id=0):
-        if not c.user.issysadmin:
+        if not self.user.issysadmin:
             # Get Out Of Here
-            return redirect_to(h.url_for(controller='home',action='index'))
+            return self.redirect("/")
             
-        if 'siteid' in request.params and c.user and c.user.issysadmin:
+        if 'siteid' in request.params and self.user and self.user.issysadmin:
             site = meta.DBSession.query(Site).get(request.params['siteid'])
             if site:
                 site.enabled = True
@@ -50,10 +49,13 @@ class AdminController(NeedsadminController):
                     dnew['displayname'] = user.displayname
                     dnew['email'] = user.email
                     dnew['title'] = 'welcome'
-                    scheduler.add_interval_task(send_emails,0,('welcome_to_demisauce',[user.email],dnew) , initialdelay=delay)
+                    self.scheduler.add_interval_task(send_emails,0,('welcome_to_demisauce',[user.email],dnew) , initialdelay=delay)
                 
                 return 'Enabled Site'
             
         return 'whoops, that didn\'t work'
     
 
+_controllers = [
+    (r"/admin(?:\.)?(.*?)", AdminController),
+]

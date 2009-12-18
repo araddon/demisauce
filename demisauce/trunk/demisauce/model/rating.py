@@ -1,4 +1,3 @@
-from pylons import config
 from sqlalchemy import Column, MetaData, ForeignKey, Table
 from sqlalchemy.sql import and_
 from sqlalchemy.types import Integer, String as DBString, DateTime, \
@@ -36,7 +35,7 @@ class Rating(ModelBase):
         Init create a rating object to add a rating::
             
             helpitem.rating_ct += 1
-            r = Rating(c.user.id,'/ds/help/article',1,helpitem.id,c.user.displayname)
+            r = Rating(self.user.id,'/ds/help/article',1,helpitem.id,self.user.displayname)
         """
         self.person_id = person_id
         self.entry = entry

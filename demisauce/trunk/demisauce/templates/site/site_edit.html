@@ -1,68 +1,68 @@
-<%namespace name="mns_us" file="../usersite_bits.html"/>
-<%inherit file="../_base1col.html"/>
+{% extends "_base1col.html" %}
+{% import 'usersite_bits.html' as mns_us with context %}
 
 
-<%def name="title()">Site Edit </%def>
+{% block title %}Demisauce Site Admin{% endblock %}
+{% block head_more %}{% endblock %}
+{% block bodystart %}
+{% endblock %}
+
+{% block inner_body %}
 
 
 
-<%def name="sidebar_top()">
-    ${mns_us.item_actions(c.item)}
-</%def>
+{% macro sidebar_top() %}
+    {{mns_us.item_actions(item)}}
+{%- endmacro %}
 
-<%def name="form(item)">
 
-${h.form(h.url(action='edit'), method='post', id="site_form")}
+{{h.form("/site/edit", method='post', id="site_form")}}
 
 <div class="base_form main_form" id="FormWrapper">
     <div class="yui-gc" >
         <div class="yui-u first">
-            <!--<div id="form_tabs_div" class="boxlinks_tabs boxlinks actionbar">
-               <a class="current" href="#tab1">Main</a>
-               <a href="#tab2">Respond</a>
-            </div>-->
             <div id="tab1">
-                <input type="hidden" id="objectid" name="objectid" value="${(item and item.id) or '0'}">
+                <input type="hidden" id="objectid" name="objectid" value="{{(item and item.id) or '0'}}">
                 <h1>Site Settings Edit</h1>
                 <strong>Bold</strong> fields are required.
                 <div class="required">
                     <label for="name">Name:</label>
-                    ${h.text_field('name', value=(item and item.name) or '')}
+                    {{h.text('name', value=(item and item.name) or '')}}
                 </div>
                 <div class="required" id="permalink_div" style="display:block;">
                     <label for="slug">slug:</label>
                     <span id="permalink" class="secondary">
 
-                        <span id="editable-slug-span" title="Click to edit this part of the slug">${(item and item.slug) or ''}</span>
+                        <span id="editable-slug-span" title="Click to edit this part of the slug">{{(item and item.slug) or ''}}</span>
                         <a href="javascript:void(0)" id="editable-slug-href">Edit</a>
                     </span>
-                    <input type="hidden"  size="100" id="permalink"  value="${(item and item.slug) or ''}" />
+                    <input type="hidden"  size="100" id="permalink"  value="{{(item and item.slug) or ''}}" />
                     <br /><input type="text" size="100" id="real_permalink" name="real_permalink" 
-                        value="${(item and item.slug) or ''}" style="display:none;"/>
+                        value="{{(item and item.slug) or ''}}" style="display:none;"/>
 
                 </div>
                 <div class="optional">
                     <label for="description">Description:</label>
-                    ${h.text_area("description", content=(item and item.description) or '', size="40x6")}
+                    {{h.textarea("description", content=(item and item.description) or '', size="40x6")}}
                 </div>
                 <div class="optional">
                     <label for="base_url">Base Url:</label>
-                    ${h.text_field('base_url', value=(item and item.base_url) or '')}
+                    {{h.text('base_url', value=(item and item.base_url) or '')}}
                 </div>
                 <div class="optional">
                     <label for="site_url">Site Url:</label>
-                    ${h.text_field('site_url', value=(item and item.site_url) or '')}
+                    {{h.text('site_url', value=(item and item.site_url) or '')}}
                 </div>
                 <div class="optional">
                     <label for="email">Contact Email:</label>
-                    ${h.text_field('email', value=(item and item.email) or '')}
+                    {{h.text('email', value=(item and item.email) or '')}}
                 </div>
                 <div class="optional">
                     <fieldset> 
                         <legend>List this site in the Public site listing?</legend>
-                            <input id="public_yes" class="inputRadio" type="radio"  value="true" ${(((item and item.public) and 'checked') or '')} name="public"/> 
+                            <input id="public_yes" class="inputRadio" type="radio"  value="true" {{(((item and item.public) and 'checked') or '')}} name="public"/> 
                             Yes 
-                            <input id="public_no" class="inputRadio" type="radio"  value="false" ${(((item and not item.public) and 'checked') or '')} name="public"/> 
+                            <input id="public_no" class="inputRadio" type="radio"  value="false" {{(((item and not item.public) and 'checked') or '')}} name="public"/> 
                             No 
                     </fieldset> 
                 </div>
@@ -71,11 +71,8 @@ ${h.form(h.url(action='edit'), method='post', id="site_form")}
         </div>
         <div class="yui-u">
             <div>
-                ${h.link_to('view users', '/site/view/%s' % (item and item.id) or '0')}
+                {{h.link_to('view users', '/site/view/%s' % (item and item.id) or '0')}}
 
-                <div class="box2" style="margin:10px 0px;">
-                    ${h.remote_html('root/help/site/edit')}
-                </div>
             </div>
         </div>
     </div>
@@ -95,7 +92,7 @@ ${h.form(h.url(action='edit'), method='post', id="site_form")}
     });
     </script>
 
-${h.end_form()}
-</%def>
+{{h.end_form()}}
 
-${form(c.item)}
+
+{% endblock %}

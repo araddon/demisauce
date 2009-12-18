@@ -456,25 +456,10 @@ if hasattr(os,"fork"):
         """Monthday Task that executes in its own process."""
         pass
 
-def _get_scheduler():
-    from pylons import g
-    try:
-        si = g.scheduler
-    except AttributeError:
-        si = ThreadedScheduler()
-        g.scheduler = si
-    return si
-
 def start():
-    si = _get_scheduler()
+    si = ThreadedScheduler()
     si.start()
-
-def stop():
-    from pylons import g
-    if not hasattr(g, 'scheduler'):
-        return
-    si = _get_scheduler()
-    si.stop()
+    return si
 
 def add_interval_task(action, interval, args=None, kw=None,
         initialdelay=0, processmethod=method.threaded, taskname=None):

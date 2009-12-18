@@ -2,14 +2,14 @@
 <%inherit file="../_base1col.html"/>
 
 
-<%def name="title()">Poll Add/Edit </%def>
+{% macro title() %}Poll Add/Edit {%- endmacro %}
 
 <div >
     <div class="bar1">
         <h3>Poll Admin Page</h3>
     </div>
     <div>
-    ${poll.form(c.item)}
+    {{poll.form(c.item)}
     </div>
 </div>
 

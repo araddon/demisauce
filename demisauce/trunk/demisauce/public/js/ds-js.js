@@ -100,9 +100,9 @@
             id:0,
             permalink_sel: '#real_permalink',
             qoption_html:'<div><label for="option"></label> \
-                            <img src="/images/move.png" border="0" style="border:0"/> \
+                            <img src="/static/images/move.png" border="0" style="border:0"/> \
                             <input id="question_option" class="tempforjq" o_id="0" name="question_option" style="width:350px" type="text" value="" /> \
-                            <img src="/images/cross.png" border="0" style="border:0" class="delete"/></div> ',
+                            <img src="/static/images/cross.png" border="0" style="border:0" class="delete"/></div> ',
                     }, options);
         this.element = el; 
 

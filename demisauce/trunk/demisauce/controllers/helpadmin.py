@@ -72,7 +72,7 @@ class HelpadminController(SecureController):
         return self.viewlist()
     
     def cloud(self,id=0):
-        return render('/help/help_cloud.html')
+        self.render('/help/help_cloud.html')
     
     @requires_role('admin')
     def viewlist(self,id=0):
@@ -85,7 +85,7 @@ class HelpadminController(SecureController):
         data = {'success':False}
         if self.site and 'help_id' in request.params:
             h = Help.get(c.site_id,int(request.params['help_id']))
-            h.tags.append(Tag(tag=str(request.params['tag']),person=c.user))
+            h.tags.append(Tag(tag=str(request.params['tag']),person=self.user))
             h.save()
             data = {'success':True,'html':h.id}
         json = simplejson.dumps(data)
@@ -121,11 +121,11 @@ class HelpadminController(SecureController):
         return self._view()
     def _view(self):
         if c.item:
-            c.item.comments.add_cookies(request.cookies)
+            c.item.comments.add_cookies(self.cookies)
         if c.helptickets:
             c.helptickets = dspager(c.helptickets,20)
         
-        return render('/help/help_process.html')
+        self.render('/help/help_process.html')
     
     def tag(self,id=''):
         #log.debug('other=%s,tag filter=%s' % (self.other,id))
@@ -150,12 +150,12 @@ class HelpadminController(SecureController):
     @requires_role('admin')
     @validate(schema=HelpProcessFormValidation(), form='process')
     def help_process_submit(self,id=''):
-        h = Help.get(c.user.site_id,int(self.form_result['help_id']))
+        h = Help.get(self.user.site_id,int(self.form_result['help_id']))
         if h:
             h.status = int(self.form_result['status'])
             if 'response' in self.form_result and 'publish' in self.form_result:
                 item = HelpResponse(help_id=h.id,site_id=c.site_id,
-                    person_id=c.user.id)
+                    person_id=self.user.id)
                 if not item.id > 0:
                     h.helpresponses.append(item)
                 item.url = h.url
@@ -165,7 +165,7 @@ class HelpadminController(SecureController):
                 item.publish = int(self.form_result['publish'])
             
             if 'tags' in self.form_result:
-                h.set_tags(self.form_result['tags'],c.user)
+                h.set_tags(self.form_result['tags'],self.user)
             h.save()
             return self._filter(offset=1,limit=1)
         else:
@@ -175,6 +175,6 @@ class HelpadminController(SecureController):
     
     @requires_role('admin')
     def view(self,id=0):
-        c.item = Help.get(c.user.site_id,id)
-        return render('/help/help_process.html')
+        c.item = Help.get(self.user.site_id,id)
+        self.render('/help/help_process.html')
     

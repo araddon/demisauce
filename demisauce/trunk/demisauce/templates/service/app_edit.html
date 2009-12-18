@@ -2,7 +2,7 @@
 <%inherit file="../_base2col.html"/>
 
 
-<%def name="title()">Services and Applications Add/Edit </%def>
+{% macro title() %}Services and Applications Add/Edit {%- endmacro %}
 
 
 <div class="bar1">
@@ -11,7 +11,7 @@
 
 
 % if c.item:
-    ${service.app_form(c.item)}
+    {{service.app_form(c.item)}
     <script type="text/javascript">
         $(document).ready(function(){
             $('#app_form').dshints();
@@ -27,10 +27,10 @@
             });
         });
     </script>
-% else:
+{% else %}
 No app
     
-% endif
+{% endif %}
 
 
 

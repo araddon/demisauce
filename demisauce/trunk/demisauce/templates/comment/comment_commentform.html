@@ -2,9 +2,9 @@
 <%inherit file="../_baseiframe.html"/>
 
 
-<%def name="title()">Comment Submittal Form </%def>
+{% macro title() %}Comment Submittal Form {%- endmacro %}
     
 
-${comment.form(c.user)}
+{{comment.form(current_user)}
 
 

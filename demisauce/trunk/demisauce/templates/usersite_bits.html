@@ -1,34 +1,34 @@
-<%def name="item_actions(item)">
+{% macro item_actions(item) -%}
     <div class="actionbar" style="height:34px; ">
         <div class="boxlinks right"  style="margin-top:-4px;">
             <ul>
                 <li><a href="javascript:void(0)" id="sorttab" class="current">Sort</a></li>
-                <li><a href="/email/edit" id="addemail" objid="${(item and item.id) or '0'}">
-                    <img  alt="Add New Site" src="/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                <li><a href="/email/edit" id="addemail" objid="{{(item and item.id) or '0'}}">
+                    <img  alt="Add New Site" src="/static/images/icon_add.png" style="vertical-align: bottom;" border="0" />
                     Add New Site</a>
                 </li>
             </ul>
         </div>
     </div>
-</%def>
+{%- endmacro %}
+{% macro helplist(tickets,showcheck=False,truncatesize=40,urlextra='',filter='new') -%}
 
-<%def name="helplist(tickets,showcheck=False,truncatesize=40,urlextra='',filter='new')">
-    % if tickets:
-        % for tkt in tickets:
+    {% if tickets %}
+        {% for tkt in tickets %}
             <div class="checkable">
-            % if showcheck:
-                <span class="checkable"><input type="checkbox" name="chk_${tkt.id}" /></span>
-            % endif
+            {% if showcheck %}
+                <span class="checkable"><input type="checkbox" name="chk_{{tkt.id}}" /></span>
+            {% endif %}
             
-            % if tkt.isuser:
-                ${h.link_to(tkt.authorname,h.url("/helpadmin/process/%s%s" % (str(tkt.id),urlextra)))}, 
-            % else:
-                ${h.link_to(tkt.authorname,h.url("/helpadmin/process/%s%s" % (str(tkt.id),urlextra)))}, 
-            % endif
+            {% if tkt.isuser %}
+                <a href="/helpadmin/process/{{tkt.id}}{{urlextra}}">{{tkt.authorname}}</a>
+            {% else %}
+                <a href="/helpadmin/process/{{tkt.id}}{{urlextra}}">{{tkt.authorname}}</a>
+            {% endif %}
             
-            ${h.truncate(tkt.clean_content, truncatesize)}
+            {{h2.truncate(tkt.clean_content, truncatesize)}}
             </div>
-        % endfor
+        {% endfor %}
         <script type="text/javascript">
 
             $(document).ready(function(){
@@ -47,141 +47,132 @@
             });
 
         </script>
-    % endif
-</%def>
-<%def name="activities(person)">
+    {% endif %}
+{%- endmacro %}
+{% macro activities(person) -%}
     <style type="text/css" media="screen"> 
         .ds-comment-event {background-color: #E4F2FD;margin:8px;} 
         .ds-comment-odd {background-color: #ccc;margin:8px;} 
     </style>
-    % for item in person.recent_activities:
-        <div class="${h.cycle("ds-comment-event", "ds-comment-odd") }">
-        ${item.activity}: on ${item.created.strftime("%b %d, %Y %I:%M %p")}
+    {% for item in person.recent_activities %}
+        <div class="{{ loop.cycle('ds-comment-event', 'ds-comment-odd') }}">
+        {{item.activity}}: on {{item.created.strftime("%b %d, %Y %I:%M %p")}}
         </div>
-    % endfor
-</%def>
-
-<%def name="commentlist(comments,person=None)">
+    {% endfor %}
+{%- endmacro %}
+{% macro commentlist(comments,person=None) -%}
     <style type="text/css" media="screen"> 
         .ds-comment-event {background-color: #E4F2FD;margin:8px;} 
         .ds-comment-odd {background-color: #ccc;margin:8px;} 
     </style>
-    % for item in comments:
-        <div class="${h.cycle("ds-comment-event", "ds-comment-odd") }">
-        % if item.hashedemail:
-            <img alt="" src="http://www.gravatar.com/avatar/${item.hashedemail}?s=24" class="avatar avatar-48" height="24" width="24">
-        % endif
-        % if item.isuser:
-            <a href="/account/viewh/${item.hashedemail}" >${item.authorname}</a>
-        % else:
-            ${item.authorname}
-        %endif
-        on ${item.created.strftime("%b %d, %Y")}
-        <br /> ${item.comment}
+    {% for item in comments %}
+        <div class="{{loop.cycle("ds-comment-event", "ds-comment-odd") }}">
+        {% if item.hashedemail %}
+            <img alt="" src="http://www.gravatar.com/avatar/{{item.hashedemail}}?s=24" class="avatar avatar-48" height="24" width="24">
+        {% endif %}
+        {% if item.isuser %}
+            <a href="/account/viewh/{{item.hashedemail}}" >{{item.authorname}}</a>
+        {% else %}
+            {{item.authorname}}
+        {% endif %}
+        on {{item.created.strftime("%b %d, %Y")}}
+        <br /> {{item.comment}}
         </div>
-    % endfor
+    {% endfor %}
     
-    % if comments and person and comments.count() == 5:
-        <div style="height:25px;"><div class="right" ><a href="/comments/showfor/${person.id}">More...</a></div></div>
-    % endif
-</%def>
-
-
-<%def name="personview(person,showedit=True)">
+    {% if comments and person and comments.count() == 5 %}
+        <div style="height:25px;"><div class="right" ><a href="/comments/showfor/{{person.id}}">More...</a></div></div>
+    {% endif %}
+{%- endmacro %}
+{% macro personview(person,showedit=True) -%}
     <div id="profilesettingsform"></div>
     <div id="profilesettings">
         <div class="actionbar">
             <span class="h3">Profile Settings</span>
-            % if c.user is not None and person.id == c.user.id and showedit:
+            {% if user is defined and person.id == user.id and showedit %}
                 <div class="boxlinks right"  style="margin-top:-27px;margin-right:-13px;height:25px;">
-                    <a id="profile${person.id}" href="/account/edit">Edit</a>
+                    <a id="profile{{person.id}}" href="/account/edit">Edit</a>
                 </div>
                 <script type="text/javascript">
                     $(document).ready(function(){
-                        $("#NOTprofile${person.id}").click(function() {
-                            $.get("/account/settings/" ,function(data){
+                        $("#NOTprofile{{person.id}}").click(function() {
+                            $.get("/account/usersettings/" ,function(data){
                                 $("#profilesettingsform").html(data);
                                 $("#profilesettings").hide();
                             });
                         });
                     });
                 </script>
-            % endif
+            {% endif %}
 
         </div>
         <div class="clear"></div>
         <dl>
-            <dt>Name:</dt>             <dd>${(person and person.displayname) or ''}</dd>
+            <dt>Name:</dt>             <dd>{{(person and person.displayname) or ''}}</dd>
 
-            <dt>Site:</dt>                  <dd>${h.link_to((person.site and person.site.name) or '','/site/view/%s' % person.site.id)}</dd>
-            <dt>My Website:</dt>            <dd>${h.link_to_unless(person.url == None, person.url ,h.url('%s' % str(person.url)))}</dd>
-            <dt>Member Since:</dt>          <dd>${(person and person.created).strftime("%b %d, %Y") or ''}</dd>
-            <dt>Is Admin:</dt>             <dd>${(person and person.isadmin) or 'False'}</dd>
-            % if c.user is not None and c.user.issysadmin:
-            <dt>Is SysAdmin:</dt>          <dd>${(person and person.issysadmin) or 'False'}</dd>
-            % endif
-            % if c.user is not None and ((c.user.site_id == person.site_id) or (c.user.issysadmin)):
-            <dt>AuthN:</dt>          <dd>${(person and person.authn) or ''}</dd>
-            <dt>Xml WS:</dt>          <dd><a href="/api/xml/person/${(c.person and c.person.hashedemail) or ''}">View XML</a></dd>
-            % endif
-            % if c.user is not None and c.user.site_id == person.site_id:
-            <dt>Email:</dt>                 <dd>${(person and person.email) or '' }</dd>
+            <dt>Site:</dt>                  <dd><a href="/site/view/{{person.site.id}}">{{person.site.name if person.site and person.site.name or ''}}</a></dd>
+            <dt>My Website:</dt>            <dd>{% if person.url %}<a href="{{person.url}}">{{person.url}}{% endif %}</a></dd>
+            <dt>Member Since:</dt>          <dd>{{(person and person.created).strftime("%b %d, %Y") or ''}}</dd>
+            <dt>Is Admin:</dt>             <dd>{{(person and person.isadmin) or 'False'}}</dd>
+            {% if current_user is defined and current_user.issysadmin %}
+            <dt>Is SysAdmin:</dt>          <dd>{{(person and person.issysadmin) or 'False'}}</dd>
+            {% endif %}
+            {% if current_user is defined and ((current_user.site_id == person.site_id) or (current_user.issysadmin)) %}
+            <dt>AuthN:</dt>          <dd>{{(person and person.authn) or ''}}</dd>
+            <dt>Xml WS:</dt>          <dd><a href="/api/xml/person/{{(person and person.hashedemail) or ''}}">View XML</a></dd>
+            {% endif %}
+            {% if current_user is defined and current_user.site_id == person.site_id %}
+            <dt>Email:</dt>                 <dd>{{(person and person.email) or '' }}</dd>
             <dt><a href="http://www.gravatar.com/emails">Gravatar</a>:</dt>             
                                             <dd>
-                                            % if person and person.hashedemail:
-                                            <img alt="" src="http://www.gravatar.com/avatar/${person.hashedemail}?s=48" class="avatar avatar-48" height="48" width="48">
-                                            % endif
+                                            {% if person and person.hashedemail %}
+                                            <img alt="" src="http://www.gravatar.com/avatar/{{person.hashedemail}}?s=48" class="avatar avatar-48" height="48" width="48">
+                                            {% endif %}
                                             </dd>
                                             
-            % endif
+            {% endif %}
 
         </dl>
         <div class="clear"></div>
 
     </div>
-</%def>
+{%- endmacro %}
 
-
-
-
-<%def name="activity_graph(person,activities,showsort=True)">
-
-    % if showsort:
+{% macro activity_graph(person,activities,showsort=True,activity_count) -%}
+    {% if showsort %}
     <div class="bar1">
         <ul class="topnav right" style="position:relative;margin-top:-1px;font-size:83%;">
-            <li><a href="?filter=new" class="${h.is_current(['filter=new'])}">recent</a></li>
-            <li><a href="?filter=completed" class="${h.is_current(['filter=completed'])}">All</a></li>
-            <li><a href="?filter=recent" class="${h.is_current(['filter=recent'])}"></a></li>
+            <li><a href="?filter=new" class="{{h2.is_current(url,['filter=new'])}}">recent</a></li>
+            <li><a href="?filter=completed" class="{{h2.is_current(url,['filter=completed'])}}">All</a></li>
+            <li><a href="?filter=recent" class="{{h2.is_current(url,['filter=recent'])}}"></a></li>
         </ul>
-        <span class="h4"><a href="/activity/index/${person.id}">Activities</a></span>
+        <span class="h4"><a href="/activity/index/{{person.id}}">Activities</a></span>
     </div>
-    % endif
+    {% endif %}
     <script type="text/javascript">
       google.load("visualization", "1", {packages:["areachart"]});
       google.setOnLoadCallback(function () {
         var data = new google.visualization.DataTable();
         data.addColumn('string', 'Date');
         data.addColumn('number', 'Activities');
-        % if len(activities) > 0:
-            data.addRows(${len(activities)});
-            <%
-                activityct = 0
-            %>
-            % for a in activities:
-                data.setValue(${activityct}, 0, '${'%s-%s %s' % (a[2],a[1], a[3])}');
-                data.setValue(${activityct}, 1, ${a[0]});
-                <%
-                    activityct += 1
-                %>
-            % endfor
+        {% if activities is defined %}
+        
+            data.addRows({{activity_count}});
+            {% set activityct = 0 %}
+            {% for a in activities %}
+                data.setValue({{activityct}}, 0, '{{'%s-%s %s' % (a[2],a[1], a[3])}}');
+                data.setValue({{activityct}}, 1, {{a[0]}});
+                {% set activityct = activityct + 1 %}
+            {% endfor %}
 
             var chart = new google.visualization.AreaChart(document.getElementById('activity_by_day_div'));
             chart.draw(data, {width: 400, height: 240, lineSize: 3, pointSize: 4, 
                 borderColor: {stroke:'white', fill:'#fff', strokeSize: 1}, 
-                focusBorderColor: '#ffffff', legend: 'bottom', title: 'Activities for ${person.displayname}'});
-        % endif
+                focusBorderColor: '#ffffff', legend: 'bottom', title: 'Activities for {{person.displayname}}'});
+        {% endif %}
       });
     </script>
     <div id="activity_by_day_div" style="width: 400px; height: 240px;"></div>
 
-</%def>
+{%- endmacro %}
+

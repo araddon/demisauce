@@ -40,7 +40,7 @@ class HelpController(BaseController):
         return '[%s]' % (json)
     
     def feedback_service(self,id=None):
-        return render('/help/help_badge.html')
+        self.render('/help/help_badge.html')
     
     def ratearticle(self,id=''):
         site = Site.by_slug(str(id))
@@ -49,9 +49,9 @@ class HelpController(BaseController):
             userid = 0
             #TODO:  add rating_ct to ??? (context?  help?  cms?)
             displayname = 'anonymous'
-            if c.user:
-                userid = c.user.id
-                displayname = c.user.displayname
+            if self.user:
+                userid = self.user.id
+                displayname = self.user.displayname
             rating_val = int(request.params['rating'])
             r = Rating(userid,'/ds/help/article',rating_val,sanitize(request.params['resource_id']),displayname)
             r.save()
@@ -71,7 +71,7 @@ class HelpController(BaseController):
         if 'category' in request.params:
             c.category = sanitize(request.params['category'])
         c.isblue = True
-        return render('/help/help_feedback.html')
+        self.render('/help/help_feedback.html')
     
     @rest.dispatch_on(POST="feedbackform")
     def submitfeedback(self,id):
@@ -82,7 +82,7 @@ class HelpController(BaseController):
             c.current_url = request.params['url']
         c.hasheader = True
         c.isblue = False
-        return render('/help/help_feedback.html')
+        self.render('/help/help_feedback.html')
     
     @validate(schema=HelpFormValidation(), form='feedback')
     def feedbackform(self,id=''):
@@ -90,8 +90,8 @@ class HelpController(BaseController):
         if site:
             c.site = site
             help = Help(site_id=site.id,email=sanitize(self.form_result['email']))
-            if c.user:
-                help.set_user_info(c.user)
+            if self.user:
+                help.set_user_info(self.user)
             else:
                 if 'authorname' in self.form_result:
                     help.authorname = sanitize(self.form_result['authorname'])
@@ -108,15 +108,15 @@ class HelpController(BaseController):
             elif 'REMOTE_ADDR' in request.environ:
                 help.ip = request.environ['REMOTE_ADDR']
             help.save()
-            if 'goto' in request.POST and len(request.POST['goto']) > 5:
-                c.goto_url = request.POST['goto']
-                return render('/refresh.html')
+            if 'goto' in self.request.arguments and len(self.request.arguments['goto']) > 5:
+                c.goto_url = self.request.arguments['goto']
+                self.render('/refresh.html')
             else:
                 c.result = True
-                return render('/help/help_feedback.html')
+                self.render('/help/help_feedback.html')
             
         else:
             log.error('feedback from came in with no site id=%s, params= %s' % (id,request.params))
-        return render('/help/help_feedback.html')
+        self.render('/help/help_feedback.html')
     
 

@@ -92,7 +92,7 @@ class CmsController(SecureController):
         c.root = meta.DBSession.query(Cmsitem).options(eagerload('children')
                     ).filter_by(site_id=c.site_id,item_type='root').first()
         
-        return render('/cms.html')
+        self.render('/cms.html')
     
     @rest.dispatch_on(POST="addupdate")
     def add(self,key=''):
@@ -103,7 +103,7 @@ class CmsController(SecureController):
         c.item.rid = '/'.join([s for s in keys if s != c.item.key])
         c.root = meta.DBSession.query(Cmsitem).options(eagerload('children')
                     ).filter_by(site_id=c.site_id,item_type='root').first()
-        return render('/cms.html')
+        self.render('/cms.html')
     
     @rest.dispatch_on(POST="addupdate")
     def additem(self,key=''):
@@ -111,17 +111,17 @@ class CmsController(SecureController):
         key = key.replace(' ','')
         c.item = Cmsitem(c.site_id, key,'')
         c.item.key = key
-        return render('/cms_edit.html')
+        self.render('/cms_edit.html')
     
     @rest.dispatch_on(POST="addupdate")
     def addfolder(self,id=0):
         c.item = Cmsitem(c.site_id, '','')
         c.item.key = ''
         c.item.item_type = 'folder'
-        return render('/cms_edit.html')
+        self.render('/cms_edit.html')
     
     def keygen(self):
-        title = request.POST['title']
+        title = self.request.arguments['title']
         key = model.make_key(title.lower())
         return key
     
@@ -132,7 +132,7 @@ class CmsController(SecureController):
             c.cmsitems = meta.DBSession.query(Cmsitem).filter_by(key=key).all()
         else:
             c.cmsitems = meta.DBSession.query(Cmsitem).all()
-        return render('/cms.html')
+        self.render('/cms.html')
     
     @validate(schema=CmsForm(), form='index')
     def addupdate(self):
@@ -171,7 +171,7 @@ class CmsController(SecureController):
         c.item = meta.DBSession.query(Cmsitem).filter_by(
             id=id,site_id=c.site_id).first()
 
-        ids = [int(i) for i in request.POST['ids'].split(',') if i != '']
+        ids = [int(i) for i in self.request.arguments['ids'].split(',') if i != '']
         if c.item and c.item.children and len(c.item.children) > 0:
             for cassoc in c.item.children:
                 pos = 0
@@ -190,7 +190,7 @@ class CmsController(SecureController):
         c.item = meta.DBSession.query(Cmsitem).filter_by(
             id=id,site_id=c.site_id).first()
         
-        return render('/cms_edit.html')
+        self.render('/cms_edit.html')
     
     def delete(self,id=0):
         cmsitem = meta.DBSession.query(Cmsitem).filter_by(
@@ -211,6 +211,6 @@ class CmsController(SecureController):
         c.item = meta.DBSession.query(Cmsitem).filter_by(
             id=id,site_id=c.site_id).first()
         
-        return render('/cms_view.html')
+        self.render('/cms_view.html')
     
 

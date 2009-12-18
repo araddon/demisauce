@@ -73,7 +73,7 @@ class ApiController(BaseController):
             request.environ['api.isauthenticated'] = 'true'
             request.environ['site'] = self.site
         else:
-            log.debug('no apikey or c.user')
+            log.debug('no apikey or self.user')
     
     def nokey(self):
         """
@@ -118,13 +118,13 @@ class ApiController(BaseController):
             abort(404, 'No items found')
         
         if format == 'html':
-            return render('/api/cms.html')
+            self.render('/api/cms.html')
         elif format == 'xml':
             response.headers['Content-Type'] = 'application/xhtml+xml'
             c.len = len(c.cmsitems)
-            return render('/api/cms.xml')
+            self.render('/api/cms.xml')
         elif format == 'script':
-            return render('/api/cmsjs.js')
+            self.render('/api/cmsjs.js')
         else:
             raise 'not implemented'
     
@@ -153,7 +153,7 @@ class ApiController(BaseController):
             return '%s(%s)' % (request.params['jsoncallback'],json)
         else:
             return results
-        #return render('/api/cmsjs.js')
+        #self.render('/api/cmsjs.js')
     
     @requires_site
     def comment(self,format='json',id=''):
@@ -174,7 +174,7 @@ class ApiController(BaseController):
         c.resource_id = urllib.quote_plus(id)
         
         if format == 'html':
-            return render('/api/comment.html')
+            self.render('/api/comment.html')
         elif format == 'xml':
             response.headers['Content-Type'] = 'application/xhtml+xml'
             if c.comments == []:
@@ -183,7 +183,7 @@ class ApiController(BaseController):
                 c.len = 0 # no comments is ok, right?
             else:
                 c.len = len(c.comments)
-            return render('/api/comment.xml')
+            self.render('/api/comment.xml')
         elif format == 'view':
             c.show_form = True
             c.source = 'remote_html'
@@ -191,9 +191,9 @@ class ApiController(BaseController):
             c.hasheader = True
             c.site_slug = site.slug
             #raise 'eh'
-            return render('/comment/comment_nobody.html')
+            self.render('/comment/comment_nobody.html')
         elif format == 'json':
-            return render('/api/comment.js')
+            self.render('/api/comment.js')
         else:
             raise NotImplementedError('format of type %s not supported' % format)
     
@@ -202,7 +202,7 @@ class ApiController(BaseController):
         site = request.environ['site']
         class email(RestApiMethod):
             def get(self, **kw):
-                return render('/api/email.xml')
+                self.render('/api/email.xml')
             def post(self, **kw):
                 return 'not implemented'
             def put(self, **kw):
@@ -246,7 +246,7 @@ class ApiController(BaseController):
         #site = request.environ['site']
         class servicerest(RestApiMethod):
             def get(self, **kw):
-                return render('/api/service.xml')
+                self.render('/api/service.xml')
             def post(self, **kw):
                 return 'not implemented'
             def put(self, **kw):
@@ -298,7 +298,7 @@ class ApiController(BaseController):
                 return 'what?'
             response.headers['Content-Type'] = 'application/xhtml+xml'
             
-            return render('/api/person.xml')
+            self.render('/api/person.xml')
         else:
             log.info('person: no site key %s' % (c.site))
             return 'no site key'
@@ -330,7 +330,7 @@ class ApiController(BaseController):
                 return 'what?'
             response.headers['Content-Type'] = 'application/xhtml+xml'
             c.groups = [g]
-            return render('/api/group.xml')
+            self.render('/api/group.xml')
         else:
             return 'no site key'
     
@@ -353,7 +353,7 @@ class ApiController(BaseController):
                     c.polls = [p]
             class pollrest(RestApiMethod):
                 def get(self, **kw):
-                    return render('/api/poll.xml')
+                    self.render('/api/poll.xml')
                 def post(self, **kw):
                     raise NotImplementedError('not implemented')
                 def put(self, **kw):

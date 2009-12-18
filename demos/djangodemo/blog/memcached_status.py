@@ -49,7 +49,7 @@ def view(request):
         hit_rate = 'na'
     else:
         hit_rate = 100 * stats.get_hits / stats.cmd_get
-    return render_to_response(
+    self.render_to_response(
         'memcached_status.html', dict(
             stats=stats,
             hit_rate=hit_rate,

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import logging
 import urllib
-from pylons import config
 from formencode import Invalid, validators
 from formencode.validators import *
 import formencode
@@ -11,30 +10,35 @@ from demisauce.lib.base import *
 from demisauce import model
 from demisauce.model import meta
 from demisauce.model.cms import *
-
+from demisauce.controllers import BaseHandler, RestMixin
 
 log = logging.getLogger(__name__)
 
 
-class HomeController(BaseController):
+class HomeController(RestMixin,BaseHandler):
 
-    def index(self,key=''):
-        return render('/index.html')
+    def default(self,id=''):
+        self.render('index.html')
     
-    def gears(self):
+    def gears(self,id=0):
         import datetime
         c.now = datetime.datetime.now()
-        return render('/gears.html')
+        self.render('gears.html')
     
-    def home(self,key=''):
-        return render('/home.html')
+    def home(self,id=''):
+        self.render('home.html')
     
     def formnew(self):
-        return render('/guides/formnew.html')
+        self.render('guides/formnew.html')
 
     def csscolors(self):
-        return render('/guides/cssguide.html')
+        self.render('guides/cssguide.html')
     
     def cssform(self):
-        return render('/guides/cssform.html')
+        self.render('guides/cssform.html')
     
+
+_controllers = [
+    (r"/", HomeController),
+    (r"/home/(.*?)", HomeController),
+]

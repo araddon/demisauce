@@ -2,24 +2,24 @@
 <%inherit file="_base1col.html"/>
 
 
-<%def name="title()"></%def>
+{% macro title() %}{%- endmacro %}
 
-<%def name="sidebar_top()">
+{% macro sidebar_top() %}
 
-% for item in c.cmsitems:
-    % if item and item.id:
-    <div id="cmsitem_${item.id}">
-        <b>${item.title}</b>
+{% for item in c.cmsitems %}
+   {% if item and item.id %}
+    <div id="cmsitem_{{item.id}">
+        <b>{{item.title}</b>
     </div>
-    % endif
-% endfor
+    {% endif %}
+{% endfor %}
 
-</%def>
+{%- endmacro %}
 
 
 
 <div class="cmsitems">
-${h.remote_html(routes_dict='key',append_path=True)}
+{{h.remote_html(routes_dict='key',append_path=True)}
 </div>
 
 

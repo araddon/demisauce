@@ -1,24 +1,32 @@
-<%inherit file="_base.html"/>
+{% extends "_base.html" %}
+
+{% block head_more %}{% endblock %}
+{% block bodystart %}
+{% endblock %}
+{% block body %}
 
 <body class="yui-skin-sam">
 <style type="text/css">
 
 </style>
 <div id="page-wrapper">
-    ${self.header()}
+    {% block header %}
+        {{ super() }}
+    {% endblock %}
     <div id="doc2" class="yui-t6">
         <div id="bd">
             
             <div id="yui-main">
                 <div class="yui-b">
-                    ${self.messages()}
+                    {{common.messages()}}
                     <!-- Body -->
-                    ${next.body()}
+                    {% block inner_body %}
+                    {% endblock %}
                     <!-- /Body -->
                 </div>
             </div>
             
-            ${self.sidebar()}
+            {{self.sidebar()}
             
         </div>
         
@@ -26,9 +34,12 @@
     <div class="push" ></div>
 </div>
 <div id="footer-wrapper">
-    ${self.footer()}
+    {% block footer %}
+        {{ super() }}
+    {% endblock %}
 </div>
-${self.ds_help_overlay()}
-
+{% block ds_help_overlay %}
+{% endblock %}
 </body>
 </html>
+{% endblock %}

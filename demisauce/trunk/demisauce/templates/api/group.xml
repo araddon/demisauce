@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <demisauce>
 % for item in c.groups:
-    <group id="${item.id}">
-        <displayname>${item.name}</displayname>
-        <created>${item.created}</created>
-        <group_type>${item.group_type}</group_type>
-        % if item.members != None and len(item.members) > 0:
+    <group id="{{item.id}">
+        <displayname>{{item.name}</displayname>
+        <created>{{item.created}</created>
+        <group_type>{{item.group_type}</group_type>
+       {% if item.members != None and len(item.members) > 0:
         <members>
-            % for person in item.members:
-            <person id="${person.id}" hashedemail="${person.hashedemail}">
-                <email>${person.email}</email>
-                <displayname>${person.displayname}</displayname>
+           {% for person in item.members:
+            <person id="{{person.id}" hashedemail="{{person.hashedemail}">
+                <email>{{person.email}</email>
+                <displayname>{{person.displayname}</displayname>
             </person>
-            % endfor
+            {% endfor %}
         </members> 
-        % endif
+        {% endif %}
     </group>
-% endfor
+{% endfor %}
 </demisauce>
