@@ -339,7 +339,21 @@ EOL
 
 def _install_ds():
     "Installs Demisauce From Source"
-    pass
+    with cd("/home/demisauce/ds/current"):
+        with cd("demisaucepy/trunk"):
+            sudo("python setup.py develop")
+    with cd("/home/demisauce/ds/current_web"):
+        sudo("python setup.py develop")
+        run("python manage.py --action=updatesite --config=./demisauce.conf")
+        # ??
+    """
+    put('%(local_path)s/install/install_demisauce.sh' % env, '/tmp/install_demisauce.sh' % env)
+    sudo('chmod +x /tmp/install_demisauce.sh; /tmp/install_demisauce.sh install -d %s -p %s -r %s -e %s -s local' % \
+            ("/home/demisauce/ds",userdbpwd,env.environment,env.type))
+    sudo('rm /tmp/install_demisauce.sh')
+    
+    sudo("/etc/init.d/nginx restart")
+    """
 #   Tasks   =======================
 def _x_supervisor_update():
     """Refresh conf file for supervisord, restart"""
@@ -391,20 +405,7 @@ def release(userdbpwd="demisauce",host=None,local=False):
     rsync_project('/home/demisauce/ds/%s/' % release,local_dir='%(local_path)s/' % env)
     sudo('ln -s /home/demisauce/ds/%s/demisauce/trunk /home/demisauce/ds/current_web' % (release))
     sudo('ln -s /home/demisauce/ds/%s/ /home/demisauce/ds/current' % (release))
-    with cd("/home/demisauce/ds/current"):
-        with cd("demisaucepy/trunk"):
-            sudo("python setup.py develop")
-    with cd("/home/demisauce/ds/current_web"):
-        sudo("python setup.py develop")
     
-    """
-    put('%(local_path)s/install/install_demisauce.sh' % env, '/tmp/install_demisauce.sh' % env)
-    sudo('chmod +x /tmp/install_demisauce.sh; /tmp/install_demisauce.sh install -d %s -p %s -r %s -e %s -s local' % \
-            ("/home/demisauce/ds",userdbpwd,env.environment,env.type))
-    sudo('rm /tmp/install_demisauce.sh')
-    
-    sudo("/etc/init.d/nginx restart")
-    """
 
 def simple_push():
     """Simple release, just web sync, no new folders"""
@@ -491,6 +492,7 @@ def all(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
     """Build AND Release"""
     build(rootmysqlpwd=rootmysqlpwd,userdbpwd=userdbpwd)
     release(userdbpwd=userdbpwd)
+    _install_ds()
 
 def build_solr(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
     """Build a solr server"""
