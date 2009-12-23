@@ -80,7 +80,7 @@ echo "----  installing git-core ------------"
 apt-get install --yes --force-yes -q git-core
 echo "----  installing python tools -----"
 apt-get install --yes --force-yes -q python-dev python-setuptools
-easy_install simplejson
+
 cd $DEMISAUCE_HOME/lib
 git clone git://github.com/bitprophet/fabric.git
 pip install pycrypto

@@ -4,11 +4,10 @@
 from __future__ import with_statement # needed for python 2.5
 from fabric.api import *
 from fabric.contrib.project import rsync_project
-import os, simplejson, datetime
+import os, json, datetime
 
-# TODO:  build a bootstrap.sh that installs fab, uses local ip, runs this inside vm
-# TODO:  convert paster/ds over to supervisord
-# TODO /etc/init.d/demisauce_web is owned by demisauce instead of root
+# TODO convert to chef
+# mysql isn't reachable from remote because of permissions in db
 # TODO persistent state?   between runs?  couchdb?  json file on server?
 
 # =============    globals
@@ -113,6 +112,8 @@ def _memcached():
     with settings(hide('warnings', 'stderr'),warn_only=True):
         sudo("rm /etc/default/memcached") # new file synced over in build rsync
         sudo('perl -pi -e s/-l\ 127.0.0.1/\#-l\ 127.0.0.1/g /etc/memcached.conf')
+    sudo("sudo update-rc.d memcached start 91 2 3 4 5 . stop 20 0 1 6 .")
+    sudo('/etc/init.d/memcached start')
 
 def _mysql(rootmysqlpwd,mysqlpwd):
     put('%(local_path)s/install/install_mysql.sh' % env, '/tmp/install_mysql.sh' % env)
@@ -238,21 +239,27 @@ def _linux_base():
 def _demisauce_pre_reqs():
     """install python-mysqldb, gdata, boto(amazon api's), solr, oauth"""
     sudo("mkdir -p /home/demisauce/lib")
-    
+    sudo("chown -R demisauce:demisauce /home/demisauce/lib")
     with cd("/home/demisauce/lib"):
+        #rsync_project('/home/demisauce/lib/tornado/',local_dir='/Users/aaron/dev/tornado/')
         
-        sudo("git clone git://github.com/leah/python-oauth.git oauth")
+        run("git clone git://github.com/araddon/tornado.git")
+        with cd("tornado"):
+            sudo("python setup.py build; python setup.py install")
+        
+        run("git clone git://github.com/leah/python-oauth.git oauth")
         with cd("oauth"):
             sudo("python setup.py install")
         
-        sudo("git clone git://github.com/araddon/redis-py.git")
+        run("git clone git://github.com/araddon/redis-py.git")
         with cd("redis-py"):
             sudo("python setup.py install")
         
-        sudo("hg clone http://bitbucket.org/araddon/python-solr/")
+        run("hg clone http://bitbucket.org/araddon/python-solr/")
         with cd("python-solr"):
             sudo("python setup.py install")
         
+        sudo("apt-get -y install python-dev python-pycurl") # ?  should be part of python  python-json
         sudo('apt-get -y install python-mysqldb python-memcache')
         sudo('apt-get -y install python-imaging')  # imaging library for image resize
         sudo('easy_install http://gdata-python-client.googlecode.com/files/gdata.py-1.1.1.tar.gz')
@@ -261,6 +268,7 @@ def _demisauce_pre_reqs():
         sudo("apt-get install -y libgearman2")
         sudo('pip install http://github.com/samuel/python-gearman/tarball/master')
         sudo("pip install http://github.com/samuel/python-scrubber/tarball/master")
+        sudo("pip install Jinja2")
 
 def _exists(path):
     with settings(
@@ -340,22 +348,41 @@ EOL
 def _install_ds():
     "Installs Demisauce From Source"
     with cd("/home/demisauce/ds/current"):
-        with cd("demisaucepy/trunk"):
+        with cd("demisaucepy"):
             sudo("python setup.py develop")
-    with cd("/home/demisauce/ds/current_web"):
+    with cd("/home/demisauce/ds/web"):
         sudo("python setup.py develop")
         run("python manage.py --action=updatesite --config=./demisauce.conf")
-        # ??
-    """
-    put('%(local_path)s/install/install_demisauce.sh' % env, '/tmp/install_demisauce.sh' % env)
-    sudo('chmod +x /tmp/install_demisauce.sh; /tmp/install_demisauce.sh install -d %s -p %s -r %s -e %s -s local' % \
-            ("/home/demisauce/ds",userdbpwd,env.environment,env.type))
-    sudo('rm /tmp/install_demisauce.sh')
-    
-    sudo("/etc/init.d/nginx restart")
-    """
+
+def _wordpress_install(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
+    #http://nielsvz.com/2009/02/nginx-and-wordpress/
+    #http://elasticdog.com/2008/02/howto-install-wordpress-on-nginx/
+    sudo("apt-get install --yes --force-yes -q php5 php5-dev php5-mysql php5-memcache php5-cgi")
+    # get fast-cgi module from lighttpd
+    sudo("apt-get install -y -q lighttpd")
+    # but don't start it, we just need the fast cgi module
+    sudo("update-rc.d -f lighttpd remove")
+    put('%(local_path)s/install/install_wordpress.sh' % env, '/tmp/install_wordpress.sh' % env)
+    sudo('chmod +x /tmp/install_wordpress.sh; /tmp/install_wordpress.sh %s %s %s' % (rootmysqlpwd,userdbpwd,env.type))
+    sudo('rm /tmp/install_wordpress.sh')
+
+def _wordpress_updateconf():
+    "update wordpress configuration on nginx, ini, supervisord etc"
+    with settings(hide('warnings', 'stderr'),warn_only=True):
+        with cd("/etc/nginx"):
+            sudo("rm sites-enabled/wordpress.conf;")
+            put('%s/recipes/etc/nginx/sites-enabled/wordpress.conf' % INSTALL_ROOT, '/tmp/wordpress.conf')
+            sudo('mv /tmp/wordpress.conf /etc/nginx/sites-enabled/wordpress.conf')
+
+
 #   Tasks   =======================
-def _x_supervisor_update():
+def wordpress():
+    "Install wordpress"
+    #_wordpress_install()
+    _wordpress_updateconf()
+    print("don't forget to call release_nginx supervisor_update")
+
+def supervisor_update():
     """Refresh conf file for supervisord, restart"""
     put('%(local_path)s/install/recipes/etc/supervisord.conf' % env, '/tmp/supervisord.conf' % env)
     sudo('mv /tmp/supervisord.conf /etc/supervisord.conf')
@@ -398,18 +425,17 @@ def release(userdbpwd="demisauce",host=None,local=False):
     'Deploy a new/updated demisauce web release to the target server'
     _nginx_release()
     with settings(hide('warnings', 'running', 'stdout', 'stderr'),warn_only=True):
-        sudo("rm /home/demisauce/ds/current; rm /home/demisauce/ds/current_web")
+        sudo("rm /home/demisauce/ds/current; rm /home/demisauce/ds/web")
     release = datetime.datetime.now().strftime("%Y%m%d%H")
     sudo("mkdir -p /home/demisauce/ds/%s" % release)
     sudo("chown -R demisauce:demisauce /home/demisauce/ds")
     rsync_project('/home/demisauce/ds/%s/' % release,local_dir='%(local_path)s/' % env)
-    sudo('ln -s /home/demisauce/ds/%s/demisauce/trunk /home/demisauce/ds/current_web' % (release))
+    sudo('ln -s /home/demisauce/ds/%s/demisauce /home/demisauce/ds/web' % (release))
     sudo('ln -s /home/demisauce/ds/%s/ /home/demisauce/ds/current' % (release))
-    
 
 def simple_push():
     """Simple release, just web sync, no new folders"""
-    rsync_project('/home/demisauce/ds/current_web/',local_dir='%(local_path)s/demisauce/trunk/' % env)
+    rsync_project('/home/demisauce/ds/web/',local_dir='%(local_path)s/demisauce/' % env)
     restart_web()
 
 def push_recipes(local=False):
@@ -441,7 +467,7 @@ def release_nginx():
 
 def restart_web():
     """restarts nginx, and demisauce python app"""
-    sudo("/etc/init.d/demisauce_web restart")
+    sudo("supervisorctl restart demisauce")
     sudo("/etc/init.d/nginx restart")
 
 def ec2_save_image():
@@ -490,9 +516,10 @@ def build(rootmysqlpwd="demisauce",userdbpwd="demisauce",host=None,local=False):
 
 def all(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
     """Build AND Release"""
-    build(rootmysqlpwd=rootmysqlpwd,userdbpwd=userdbpwd)
+    #build(rootmysqlpwd=rootmysqlpwd,userdbpwd=userdbpwd)
     release(userdbpwd=userdbpwd)
     _install_ds()
+    restart_web()
 
 def build_solr(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
     """Build a solr server"""
@@ -503,8 +530,8 @@ def build_solr(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
     _linux_base()
     _install_solr()
 
-def install_dev():
-    "install on dev linux machine"
+def build_dev():
+    "build dev linux machine with dependencies"
     sudo("apt-get -y install rsync")
     add_sources()
     _linux_base()
