@@ -1,0 +1,178 @@
+{% macro item_actions(item) -%}
+    <div class="actionbar" style="height:34px; ">
+        <div class="boxlinks right"  style="margin-top:-4px;">
+            <ul>
+                <li><a href="javascript:void(0)" id="sorttab" class="current">Sort</a></li>
+                <li><a href="/email/edit" id="addemail" objid="{{(item and item.id) or '0'}}">
+                    <img  alt="Add New Site" src="/static/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                    Add New Site</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+{%- endmacro %}
+{% macro helplist(tickets,showcheck=False,truncatesize=40,urlextra='',filter='new') -%}
+
+    {% if tickets %}
+        {% for tkt in tickets %}
+            <div class="checkable">
+            {% if showcheck %}
+                <span class="checkable"><input type="checkbox" name="chk_{{tkt.id}}" /></span>
+            {% endif %}
+            
+            {% if tkt.isuser %}
+                <a href="/helpadmin/process/{{tkt.id}}{{urlextra}}">{{tkt.authorname}}</a>
+            {% else %}
+                <a href="/helpadmin/process/{{tkt.id}}{{urlextra}}">{{tkt.authorname}}</a>
+            {% endif %}
+            
+            {{h2.truncate(tkt.clean_content, truncatesize)}}
+            </div>
+        {% endfor %}
+        <script type="text/javascript">
+
+            $(document).ready(function(){
+                $("div span.checkable").parent().hover(function() {
+                    $(this).addClass('checkablehover');
+                },function(){
+                    $(this).removeClass('checkablehover');
+                });
+                $("span.checkable").parent().click(function() {
+                    if (!$(this).children('span:first').hasClass('checkableselected')){
+                        $(this).children('span:first').addClass('checkableselected');
+                    } else {
+                        $(this).children('span:first').removeClass('checkableselected');
+                    }
+                });
+            });
+
+        </script>
+    {% endif %}
+{%- endmacro %}
+{% macro activities(person) -%}
+    <style type="text/css" media="screen"> 
+        .ds-comment-event {background-color: #E4F2FD;margin:8px;} 
+        .ds-comment-odd {background-color: #ccc;margin:8px;} 
+    </style>
+    {% for item in person.recent_activities %}
+        <div class="{{ loop.cycle('ds-comment-event', 'ds-comment-odd') }}">
+        {{item.activity}}: on {{item.created.strftime("%b %d, %Y %I:%M %p")}}
+        </div>
+    {% endfor %}
+{%- endmacro %}
+{% macro commentlist(comments,person=None) -%}
+    <style type="text/css" media="screen"> 
+        .ds-comment-event {background-color: #E4F2FD;margin:8px;} 
+        .ds-comment-odd {background-color: #ccc;margin:8px;} 
+    </style>
+    {% for item in comments %}
+        <div class="{{loop.cycle("ds-comment-event", "ds-comment-odd") }}">
+        {% if item.hashedemail %}
+            <img alt="" src="http://www.gravatar.com/avatar/{{item.hashedemail}}?s=24" class="avatar avatar-48" height="24" width="24">
+        {% endif %}
+        {% if item.isuser %}
+            <a href="/account/viewh/{{item.hashedemail}}" >{{item.authorname}}</a>
+        {% else %}
+            {{item.authorname}}
+        {% endif %}
+        on {{item.created.strftime("%b %d, %Y")}}
+        <br /> {{item.comment}}
+        </div>
+    {% endfor %}
+    
+    {% if comments and person and comments.count() == 5 %}
+        <div style="height:25px;"><div class="right" ><a href="/comments/showfor/{{person.id}}">More...</a></div></div>
+    {% endif %}
+{%- endmacro %}
+{% macro personview(person,showedit=True) -%}
+    <div id="profilesettingsform"></div>
+    <div id="profilesettings">
+        <div class="actionbar">
+            <span class="h3">Profile Settings</span>
+            {% if user is defined and person.id == user.id and showedit %}
+                <div class="boxlinks right"  style="margin-top:-27px;margin-right:-13px;height:25px;">
+                    <a id="profile{{person.id}}" href="/account/edit">Edit</a>
+                </div>
+                <script type="text/javascript">
+                    $(document).ready(function(){
+                        $("#NOTprofile{{person.id}}").click(function() {
+                            $.get("/account/usersettings/" ,function(data){
+                                $("#profilesettingsform").html(data);
+                                $("#profilesettings").hide();
+                            });
+                        });
+                    });
+                </script>
+            {% endif %}
+
+        </div>
+        <div class="clear"></div>
+        <dl>
+            <dt>Name:</dt>             <dd>{{(person and person.displayname) or ''}}</dd>
+
+            <dt>Site:</dt>                  <dd><a href="/site/view/{{person.site.id}}">{{person.site.name if person.site and person.site.name or ''}}</a></dd>
+            <dt>My Website:</dt>            <dd>{% if person.url %}<a href="{{person.url}}">{{person.url}}{% endif %}</a></dd>
+            <dt>Member Since:</dt>          <dd>{{(person and person.created).strftime("%b %d, %Y") or ''}}</dd>
+            <dt>Is Admin:</dt>             <dd>{{(person and person.isadmin) or 'False'}}</dd>
+            {% if current_user is defined and current_user.issysadmin %}
+            <dt>Is SysAdmin:</dt>          <dd>{{(person and person.issysadmin) or 'False'}}</dd>
+            {% endif %}
+            {% if current_user is defined and ((current_user.site_id == person.site_id) or (current_user.issysadmin)) %}
+            <dt>AuthN:</dt>          <dd>{{(person and person.authn) or ''}}</dd>
+            <dt>Xml WS:</dt>          <dd><a href="/api/xml/person/{{(person and person.hashedemail) or ''}}">View XML</a></dd>
+            {% endif %}
+            {% if current_user is defined and current_user.site_id == person.site_id %}
+            <dt>Email:</dt>                 <dd>{{(person and person.email) or '' }}</dd>
+            <dt><a href="http://www.gravatar.com/emails">Gravatar</a>:</dt>             
+                                            <dd>
+                                            {% if person and person.hashedemail %}
+                                            <img alt="" src="http://www.gravatar.com/avatar/{{person.hashedemail}}?s=48" class="avatar avatar-48" height="48" width="48">
+                                            {% endif %}
+                                            </dd>
+                                            
+            {% endif %}
+
+        </dl>
+        <div class="clear"></div>
+
+    </div>
+{%- endmacro %}
+
+{% macro activity_graph(person,activities,showsort=True,activity_count) -%}
+    {% if showsort %}
+    <div class="bar1">
+        <ul class="topnav right" style="position:relative;margin-top:-1px;font-size:83%;">
+            <li><a href="?filter=new" class="{{h2.is_current(url,['filter=new'])}}">recent</a></li>
+            <li><a href="?filter=completed" class="{{h2.is_current(url,['filter=completed'])}}">All</a></li>
+            <li><a href="?filter=recent" class="{{h2.is_current(url,['filter=recent'])}}"></a></li>
+        </ul>
+        <span class="h4"><a href="/activity/index/{{person.id}}">Activities</a></span>
+    </div>
+    {% endif %}
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["areachart"]});
+      google.setOnLoadCallback(function () {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Date');
+        data.addColumn('number', 'Activities');
+        {% if activities is defined %}
+        
+            data.addRows({{activity_count}});
+            {% set activityct = 0 %}
+            {% for a in activities %}
+                data.setValue({{activityct}}, 0, '{{'%s-%s %s' % (a[2],a[1], a[3])}}');
+                data.setValue({{activityct}}, 1, {{a[0]}});
+                {% set activityct = activityct + 1 %}
+            {% endfor %}
+
+            var chart = new google.visualization.AreaChart(document.getElementById('activity_by_day_div'));
+            chart.draw(data, {width: 400, height: 240, lineSize: 3, pointSize: 4, 
+                borderColor: {stroke:'white', fill:'#fff', strokeSize: 1}, 
+                focusBorderColor: '#ffffff', legend: 'bottom', title: 'Activities for {{person.displayname}}'});
+        {% endif %}
+      });
+    </script>
+    <div id="activity_by_day_div" style="width: 400px; height: 240px;"></div>
+
+{%- endmacro %}
+

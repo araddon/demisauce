@@ -1,0 +1,54 @@
+{% extends "_base1col.html" %}
+{% import 'usersite_bits.html' as mns_us with context %}
+
+{% block title %}Demisauce Integration and Services Appliance{% endblock %}
+{% block head_more %}{% endblock %}
+{% block bodystart %}
+{% endblock %}
+
+{% block inner_body %}
+
+
+<div id="dashboard" >
+    <div class="bar1">
+        <h3>Dashboard </h3>
+    </div>
+    <div class="yui-g">
+        <div class="yui-u first">
+            
+            <div class="box box2">
+                <h3 style=""><a href="/helpadmin/status/new">Feedback/Support from Users ({{new_ticket_ct}} new)</a></h3>
+                {{mns_us.helplist(helptickets,urlextra="?filterstatus=refresh&filter=new")}}
+            </div>
+        </div>
+        
+        <div class="yui-u">
+            <div class="box box2">
+                <h3 style=""><a href="/comment">Recent Comments</a></h3>
+                {{mns_us.commentlist(comments)}}
+            </div>
+            <div class="box box2">
+                <h3 style="">Approvals (error's, new site's etc)</h3>
+            </div>
+            
+        </div>
+    </div>
+    <!--
+    <div>
+        <div class="box box2">
+            <h3>Wide Column</h3>
+        </div>
+        
+    </div>
+    -->
+</div>
+
+<script type="text/javascript">
+$(document).ready(function(){
+    //$.ds.dsactivity({activity:'dashboard'})
+});
+</script>
+
+
+
+{% endblock %}

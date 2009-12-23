@@ -1,0 +1,99 @@
+{% extends "_base1col.html" %}
+{% import 'usersite_bits.html' as mns_us with context %}
+
+
+{% block title %}Demisauce Site Admin{% endblock %}
+{% block head_more %}{% endblock %}
+{% block bodystart %}
+{% endblock %}
+
+{% block inner_body %}
+
+
+
+{% macro sidebar_top() %}
+    {{mns_us.item_actions(item)}}
+{%- endmacro %}
+
+
+{{h.form("/site/edit", method='post', id="site_form")}}
+
+<div class="base_form main_form" id="FormWrapper">
+    <div class="yui-gc" >
+        <div class="yui-u first">
+            <div id="tab1">
+                <input type="hidden" id="id" name="id" value="{{(item and item.id) or '0'}}">
+                <input type="hidden" name="_xsrf" id="_xsrf" value="{{ xsrf_token }}"/>
+                <h1>Site Settings Edit</h1>
+                <strong>Bold</strong> fields are required.
+                <div class="required">
+                    {{ common.input(form.name) }}
+                </div>
+                <div class="required" id="permalink_div" style="display:block;">
+                    <label for="slug">slug:</label>
+                    <span id="permalink" class="secondary">
+
+                        <span id="editable-slug-span" title="Click to edit this part of the slug">{{(item and item.slug) or ''}}</span>
+                        <a href="javascript:void(0)" id="editable-slug-href">Edit</a>
+                    </span>
+                    <input type="hidden"  size="100" id="permalink"  value="{{(item and item.slug) or ''}}" />
+                    <br /><input type="text" size="100" id="real_permalink" name="real_permalink" 
+                        value="{{(item and item.slug) or ''}}" style="display:none;"/>
+
+                </div>
+                <div class="optional">
+                    <label for="description">Description:</label>
+                    {{h.textarea("description", content=(item and item.description) or '', size="40x6")}}
+                    {{ common.field_errors(form.description) }}
+                    
+                </div>
+                <div class="optional">
+                    <label for="base_url">Base Url:</label>
+                    {{h.text('base_url', value=(item and item.base_url) or '')}}
+                </div>
+                <div class="optional">
+                    <label for="site_url">Site Url:</label>
+                    {{h.text('site_url', value=(item and item.site_url) or '')}}
+                </div>
+                <div class="optional">
+                    {{ common.input(form.email) }}
+                </div>
+                <div class="optional">
+                    <fieldset> 
+                        <legend>List this site in the Public site listing?</legend>
+                            <input id="public_yes" class="inputRadio" type="radio"  value="true" {{(((item and item.public) and 'checked') or '')}} name="public"/> 
+                            Yes 
+                            <input id="public_no" class="inputRadio" type="radio"  value="false" {{(((item and not item.public) and 'checked') or '')}} name="public"/> 
+                            No 
+                    </fieldset> 
+                </div>
+            </div><!--End tab1-->
+            <div id="tab2" style="display:none;">tab2</div>
+        </div>
+        <div class="yui-u">
+            <div>
+                {{h.link_to('view users', '/site/view/%s' % (item and item.id) or '0')}}
+
+            </div>
+        </div>
+    </div>
+    <div class="actions">
+        <input type="submit" class="primary" id="submit" value="Save &#187;">
+        &nbsp;&nbsp;<a href="/site/view" id="cancelnode">cancel</a>
+    </div>
+</div>
+
+
+
+
+    <script type="text/javascript">
+    $(document).ready(function(){
+        $('#form_tabs_div').ds_tabs();
+        $('#site_form').slugeditor({slugfrom: '#name',strip:true});
+    });
+    </script>
+
+{{h.end_form()}}
+
+
+{% endblock %}

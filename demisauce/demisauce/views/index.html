@@ -1,0 +1,104 @@
+{% extends "_base1col.html" %}
+
+{% block title %}Demisauce Integration and Services Appliance{% endblock %}
+{% block head_more %}{% endblock %}
+{% block bodystart %}
+{% endblock %}
+
+{% block inner_body %}
+
+<div><h1>Demisauce is a stack of Open Source services:  <i>Its a feature not a Site</i></h1> 
+    <h3 style="line-height:1.5em;">Services that are easily embeddable into your application providing a service oriented 
+        plugin framework.  Common capability via services such as help/feedback tools, 
+        email templates, comments, content management (via wordpress), thumbnails, etc.  
+        Use <a href="http://www.demisauce.com">Demisauce hosted services</a>, or 
+        host a demisauce server for your own environment.  
+    </h3> 
+
+</div>
+<br />
+<style type="text/css">
+
+#mainpage h3 {margin-top:0px;}
+#mainpage div div {margin:0;padding:4px 4px 5px 4px;}
+#mainpage div.yui-u {border-top: 1px solid #666666;}
+ul.summary li {
+list-style-position:outside;
+list-style-type:disc;
+}
+</style>
+<div id="mainpage">
+    <div class="yui-gb" >
+        <div class="yui-u first" style="border-right: 1px solid #666666;height:165px">
+            <h3 style="">Comment System</h3>
+            <p style="">
+                A comment system that can be embedded inside your application or content to provide 
+                javascript enabled commenting.  Embedding demisauce comments on 10 applications would mean
+                that a profile page could show a users comments from all 10.  <a href="http://aaronspotlatch.appspot.com/tag/commentsystem">More...</a> 
+            </p>
+        </div>
+        <div class="yui-u" style="background-color:#ddd;border-right: 1px solid #666666;height:165px">
+            <h3 style="">Help, Ideas, Feedback</h3>
+                <p style="">
+                <img src="http://demisaucepub.s3.amazonaws.com/s3/help_t.jpg" width="100" height="79" border="0" style="float:right;"/>
+                A tool to help collect Idea's, Problem's and feedback from your site, and also an administrative tool to process that 
+                feedback.   Collecting users input, ideas can really help drive improvements in a site.
+                <a class="more" href="http://aaronspotlatch.appspot.com/" style="">More ...</a>
+            </p>
+        </div>
+        <div class="yui-u">
+            <h3 style="">Polls</h3>
+                <p style="">
+                        <img src="http://demisaucepub.s3.amazonaws.com/s3/poll_t.jpg" width="77" height="100" border="0" style="float:right;" />
+                Although consumer oriented poll tools make it easy to embed polls with javascript into your
+                    site, this may not suit needs that do not want the polls public.  Also, there is the page load time, and page flicker with 
+                        javascript loading.
+
+                </p>
+        </div>
+    </div>
+    <div class="yui-g" >
+        <div class="yui-u first" style="background-color:#ddd;border-right: 1px solid #666666;height:142px;margin-right:-1px;">
+            <h3 style="">Activity Tracking</h3>
+                <img src="http://demisaucepub.s3.amazonaws.com/s3/activity_t.jpg" style="float:right;" width="100" height="59" border="0" />
+                <p style="">Easily embed single javascript file, and track your users behavior and provide embeddable 
+                visualizations for your applications.  <a class="more" href="http://aaronspotlatch.appspot.com/" style="">More ...</a><br />
+
+        
+            </p>
+        </div>
+        <div class="yui-u">
+            <h3 style="">How it Works</h3>
+                <p style="">A demisauce server (either in your data center, or hosted on Demisauce.com) would host
+                a set of services, that you embed in your application with javascript, or using the PHP, or Python client
+                API's.  Additionally, the Demisauce server allows you to register additional service's, it is a plugin framework
+                for services.  There are examples in the demo of an externa PHP, or django app hosting services and being 
+                easily consumable from other applications.
+
+                </p>
+        </div>
+    </div>
+    <div class="yui-gc" >
+        <div class="yui-u first" style="border-right: 1px solid #666666;height:142px">
+            <h3 style="">Why?</h3>
+            <p style="">
+                <ul class="summary">
+                    <li>The need for application capability across a suite of applications.  ie:  same help system on all apps at a company.</li>
+                    <li>Many Apps fragment User data:  A users comments across many apps are not visible.   Building just one app isnt realistic.</li>
+                    <li>Easy functionality:  As consumer javascript embedded services, or wordpress 
+                        style plugins have shown, there is a need for easy additional fucntionality.</li>
+                    <li>Need for a service oriented plugin framework to provide coherency to ad-hoc integration.</li>
+                </ul>
+            </p>
+        </div>
+        <div class="yui-u" style="border-right: 0px solid #666666;height:142px;background-color:#ddd;margin-left:-1px;">
+            <h3 style="">Documentation & Code</h3>
+            <p style="">
+                <a href="http://demisaucedoc.appspot.com">Documentation</a><br />
+                <a href="http://github.com/araddon/demisauce/tree/master">Source Code</a>
+            </p>
+        </div>
+    </div>
+</div>
+<div style="height:40px;">&nbsp;</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "_base.html" %}
+
+{% block head_more %}{% endblock %}
+{% block bodystart %}
+{% endblock %}
+{% macro sidebar_topxx() %}
+<div id="sidebartop" >
+</div>
+{%- endmacro %}
+
+{% block body %}
+
+<body class="yui-skin-sam">
+<style type="text/css">
+
+</style>
+<div id="page-wrapper">
+    {{ header() }}
+    <div id="doc2" class="yui-t6">
+        <div id="bd">
+            
+            <div id="yui-main">
+                <div class="yui-b">
+                    {{common.messages()}}
+                    <!-- Body -->
+                    {% block inner_body %}
+                    {% endblock %}
+                    <!-- /Body -->
+                </div>
+            </div>
+            
+            {% block sidebar %}
+            <div class="yui-b sidebar" style="">
+                {% block sidebar_top %}
+                {% endblock %}
+            </div>
+            {% endblock %}
+            
+        </div>
+        
+    </div>
+    <div class="push" ></div>
+</div>
+<div id="footer-wrapper">
+    {{ footer() }}
+</div>
+{% block ds_help_overlay %}
+{% endblock %}
+</body>
+</html>
+{% endblock %}

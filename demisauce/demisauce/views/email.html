@@ -1,0 +1,39 @@
+{% extends "_base1col.html" %}
+{% import 'usersite_bits.html' as mns_us with context %}
+{% import 'email_bits.html' as mns_email with context %}
+
+{% block title %}Demisauce Email template Admin{% endblock %}
+{% block head_more %}{% endblock %}
+{% block bodystart %}
+{% endblock %}
+
+{% block inner_body %}
+
+    <div class="bar1">
+        <h3>Email Admin Page</h3>
+    </div>
+
+    {% if item %}
+        <br />
+        {{mns_email.form(item)}}
+    {% else %}
+        <div class="yui-gc" >
+            <div class="yui-u first" id="EmailTable">
+               {% if items %}
+                    {{mns_email.table(items)}}
+                {% endif %}
+            </div>
+            <div class="yui-u">
+                {{mns_email.item_actions(item)}}
+            
+                <div class="box box2">
+                    <h3>Recent Updates</h3>
+                </div>
+            </div>
+        </div>
+    
+    {% endif %}
+
+{% endblock %}
+
+
