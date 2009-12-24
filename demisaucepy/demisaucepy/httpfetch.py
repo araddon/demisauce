@@ -61,7 +61,7 @@ class GAEResponse(object):
         pass
     
 
-def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT,extra_headers={}):
+def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT,extra_headers={},http_method="GET"):
     """    
     This function lets you define parsers that take any input source
     (URL, pathname to local or network file, or actual data as a string)
@@ -105,6 +105,9 @@ def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT
                 request = urllib2.Request(source,urllib.urlencode(data))
             else:
                 request = urllib2.Request(source,data)
+                http_method = "POST"
+            if http_method in ['PUT','DELETE',"POST"]:
+                request.get_method = lambda: http_method
             request.add_header('User-Agent', agent)
             # HACK to allow webhooks into tornado without _xsrf
             request.add_header('X-Requested-With', 'XMLHttpRequest')
@@ -121,7 +124,7 @@ def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT
     
 
 
-def fetch(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT,extra_headers={}):
+def fetch(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT,extra_headers={},http_method="GET"):
     '''Fetch data and metadata from a URL, file, stream, or string
     
     example::
@@ -131,7 +134,7 @@ def fetch(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT,extra_
         result = ds.httpfetch.fetch('http://www.google.com')
     '''
     result = {}
-    f = openAnything(source, data, etag, lastmodified, agent,extra_headers=extra_headers)
+    f = openAnything(source, data, etag, lastmodified, agent,extra_headers=extra_headers,http_method=http_method)
     result['data'] = f.read()
     if hasattr(f, 'headers'):
         # save ETag, if the server sent one
@@ -144,8 +147,8 @@ def fetch(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT,extra_
     if hasattr(f, 'url'):
         result['url'] = f.url
         result['status'] = 200
-    if hasattr(f, 'status'):
-        result['status'] = f.status
+    if hasattr(f, 'code'):
+        result['status'] = f.code
     f.close()
     return result
     

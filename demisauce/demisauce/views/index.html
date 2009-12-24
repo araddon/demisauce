@@ -7,12 +7,11 @@
 
 {% block inner_body %}
 
-<div><h1>Demisauce is a stack of Open Source services:  <i>Its a feature not a Site</i></h1> 
-    <h3 style="line-height:1.5em;">Services that are easily embeddable into your application providing a service oriented 
-        plugin framework.  Common capability via services such as help/feedback tools, 
-        email templates, comments, content management (via wordpress), thumbnails, etc.  
-        Use <a href="http://www.demisauce.com">Demisauce hosted services</a>, or 
-        host a demisauce server for your own environment.  
+<div><h1>Demisauce is an Open Source Integration Appliance</h1> 
+    <h3 style="line-height:1.5em;">
+        It is made to support common integration needs of applications such adding
+        a user to foreign system (Wordpress, Google Apps, etc) upon adding new user.
+        It provides a Network oriented plugin architecture to accomplish this.
     </h3> 
 
 </div>
@@ -30,31 +29,32 @@ list-style-type:disc;
 <div id="mainpage">
     <div class="yui-gb" >
         <div class="yui-u first" style="border-right: 1px solid #666666;height:165px">
-            <h3 style="">Comment System</h3>
+            <h3 style="">User Provising Plugins</h3>
             <p style="">
-                A comment system that can be embedded inside your application or content to provide 
-                javascript enabled commenting.  Embedding demisauce comments on 10 applications would mean
-                that a profile page could show a users comments from all 10.  <a href="http://aaronspotlatch.appspot.com/tag/commentsystem">More...</a> 
+                Provides plugin's to provision Users to other systems upon 
+                your call to <i>AddUser API</i>.  
+                
+                Altough LDAP or AD integration is a common way to integrate user
+                with cloud SaaS apps (Google Apps, Salesforce, etc) you need
+                to push, this aids the integration.  <a href="http://aaronspotlatch.appspot.com/tag/commentsystem">More...</a> 
             </p>
         </div>
         <div class="yui-u" style="background-color:#ddd;border-right: 1px solid #666666;height:165px">
-            <h3 style="">Help, Ideas, Feedback</h3>
-                <p style="">
-                <img src="http://demisaucepub.s3.amazonaws.com/s3/help_t.jpg" width="100" height="79" border="0" style="float:right;"/>
-                A tool to help collect Idea's, Problem's and feedback from your site, and also an administrative tool to process that 
-                feedback.   Collecting users input, ideas can really help drive improvements in a site.
+            <h3 style="">Network Plugin Architecture</h3>
+            <p style="">
+                Inspired by the Wordpress <i>add_action(), do_action()</i> Plugin architecture, 
+                a pub-sub type plugin system on top of <a href="http://www.gearman.org">Gearman</a>. 
                 <a class="more" href="http://aaronspotlatch.appspot.com/" style="">More ...</a>
             </p>
         </div>
         <div class="yui-u">
             <h3 style="">Polls</h3>
-                <p style="">
-                        <img src="http://demisaucepub.s3.amazonaws.com/s3/poll_t.jpg" width="77" height="100" border="0" style="float:right;" />
+            <p style="">
                 Although consumer oriented poll tools make it easy to embed polls with javascript into your
-                    site, this may not suit needs that do not want the polls public.  Also, there is the page load time, and page flicker with 
-                        javascript loading.
+                site, this may not suit needs that do not want the polls public.  Also, there is the page load time, and page flicker with 
+                    javascript loading.
 
-                </p>
+            </p>
         </div>
     </div>
     <div class="yui-g" >

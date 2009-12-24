@@ -40,14 +40,6 @@ class Application(tornado.web.Application):
         template_path = os.path.join(os.path.dirname(__file__), "demisauce/views")
         logging.debug("template_path = %s" % template_path)
         
-        # setup demisauce server config
-        demisaucepy.cfg.CFG = {
-            'demisauce_appname':'demisauce',
-            'demisauce_url':options.demisauce_url,
-            'demisauce_api_key':options.demisauce_api_key,
-            'memcached_servers':options.memcached_servers
-        }
-        
         # create scheduler
         from demisauce.lib import scheduler
         self.scheduler = scheduler.start()
@@ -60,8 +52,8 @@ class Application(tornado.web.Application):
         settings = {
             "title": u"Local 151",
             "template_path": template_path,
-            "static_path":os.path.join(os.path.dirname(__file__), "demisauce/public"),
-            "xsrf_cookies": True,
+            "static_path":os.path.join(os.path.dirname(__file__), "demisauce/static"),
+            "xsrf_cookies": False,
             "cookie_secret":"32oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
             "login_url":"/account/signin",
             "redis_host":options.redis_host,

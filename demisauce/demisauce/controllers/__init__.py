@@ -9,7 +9,7 @@ import re, datetime, random, string
 from demisauce import model
 from demisauce.lib import helpers, sanitize as libsanitize
 from demisauce.model.person import Person
-from demisauce.gearman import assets
+from demisauce.lib import assetmgr
 import demisauce
 import webhelpers
 import json
@@ -188,7 +188,8 @@ class BaseHandler(tornado.web.RequestHandler):
     #@print_timing
     def __init__(self, application, request, transforms=None):
         tornado.web.RequestHandler.__init__(self, application, request, transforms=transforms)
-        logging.debug("class=%s__init__  path %s" % (self.__class__,self.request.path))
+        logging.debug("%s path %s class=%s__init__" % (self.request.method.upper(), 
+            self.request.path,self.__class__))
         #logging.debug('headers = %s' % self.request.headers)
         self.session = {}
         self._messages = []
@@ -217,24 +218,6 @@ class BaseHandler(tornado.web.RequestHandler):
         
         self.jinja2_env = self.settings.get("jinja2_env") 
         self.user = self.get_current_user()
-        """
-        
-        #self.filters = FilterList(site_id=c.site_id)
-        #request.environ['filters'] = self.filters
-        #c.help_url = h.help_url()
-        #c.adminsite_slug = config['demisauce.appname']
-        #c.demisauce_url = config['demisauce.url']
-        
-        #translate different web/app server ip addresss
-        if 'HTTP_X_FORWARDED_FOR' in request.environ:
-            request.environ['HTTP_X_REAL_IP'] = request.environ['HTTP_X_FORWARDED_FOR']
-        elif 'REMOTE_ADDR' in request.environ:
-            request.environ['HTTP_X_REAL_IP'] = request.environ['REMOTE_ADDR']
-        elif 'HTTP_X_REAL_IP' in request.environ:
-            # allready set correctly
-            pass
-        """
-        logging.debug("init end:  %s" % (self.current_user))
         self.__before__()
     
     @property
@@ -245,7 +228,7 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         """get current user"""
         if not hasattr(self,"_current_user") or self.get_argument("reload",None):
-            logging.debug("get_current_user:  no _current_user attr, finding")
+            #logging.debug("get_current_user:  no _current_user attr, finding")
             user_cookie = self.get_secure_cookie("dsuser")
             if not user_cookie: return None
             self._user_json = tornado.escape.json_decode(user_cookie)
@@ -253,14 +236,12 @@ class BaseHandler(tornado.web.RequestHandler):
                 return None
             
             if self.get_argument("reload",None):
-                logging.debug('forcing reload of user')
                 redis_user_json = None
             else:
                 logging.debug("get_current_user: found cookie, getting user from redis")
                 redis_user_json = self.db.redis.get("person-%s" % self._user_json['id'])
             
             if not redis_user_json:
-                logging.debug("no redis json")
                 if self.get_cookie("dsu"):
                     p = Person.by_unique(self.get_cookie("dsu").lower())
                 elif self.get_cookie("dsuserkey"):
@@ -476,15 +457,16 @@ class SecureController(BaseHandler):
     def __before__(self):
         BaseHandler.__before__(self)
     
+class CrossDomain(BaseHandler):
+    def get(self):
+        self.render("crossdomain.xml")
+    
 
 class UploadHandler(BaseHandler):
     def get(self):
         self.write('hello')
     
     def post(self):
-        #logging.debug(self.request.files.keys())
-        #TODO:  refactor to a DS Service "Store" type=image w resize
-        #logging.debug(self.request.arguments)
         if 'photo' in self.request.arguments:
             filewpath = assets.stash_file(self.get_argument('photo'))
             logging.debug("Uploaded from mobile app: %s" % filewpath)
@@ -493,7 +475,7 @@ class UploadHandler(BaseHandler):
             f = self.request.files['userfile'][0]
             logging.debug("upladed file:  %s  type=%s" % (f['filename'],f['content_type']))
             #TODO:  Check that it is image type first eh
-            filewpath = assets.stash_file(base64.encodestring(f['body']),f['filename'],
+            filewpath = assetmgr.stash_file(base64.encodestring(f['body']),f['filename'],
                     gearman_client=self.db.gearman_client)
             #self.write("{filename:'%s', status: 'success'}" % (filewpath))
             self.write(filewpath)
@@ -520,6 +502,7 @@ class CustomErrorHandler(BaseHandler):
 _controllers = [
     (r"/hello", HelloHandler),
     (r"/upload(?:\/)?", UploadHandler),
+    (r"/crossdomain\.xml", CrossDomain),
 ] 
 
 

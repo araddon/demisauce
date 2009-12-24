@@ -575,6 +575,19 @@ class ApiSimpleHandler(ApiHandler):
 
 
 class ApiBaseHandler(BaseHandler):
+    def args_todict(self):
+        d = {}
+        for k in self.request.arguments.keys():
+            d[k] = self.get_argument(k)
+        return d
+    
+    def is_json_post(self):
+        'Determines if json post?'
+        if self.request.body and self.request.body.find("{") > 0 and self.request.body.find("{") < 4:
+            return True
+        else:
+            return False
+    
     def normalize_args(self,noun=None,requestid=None,action=None,format="json"):
         "Normalizes and formats arguments"
         self.format = format if format is not None else "json"
@@ -619,8 +632,11 @@ class ApiBaseHandler(BaseHandler):
             self.start = int(self.start)
     
     def json(self):
-        json_data = [self.json_formatter(row) for row in self.qry]
-        return json.dumps(json_data)
+        if self.qry and self.qry != []:
+            json_data = [self.json_formatter(row) for row in self.qry]
+            return json.dumps(json_data)
+        else:
+            return None
     
     def json_formatter(self,o):
         """default json formatter, uses JsonMixin """
@@ -628,20 +644,21 @@ class ApiBaseHandler(BaseHandler):
             return o.to_dict()
         return ''
     
-    def handle_post(self,postargs,get_func):
+    def handle_post(self):
         if not hasattr(self,'object') or not self.object:
             return []
         
-        for key in self.__class__.object_cls._json_api_keys:
-            if key in postargs:
-                if get_func(key) == 'true':
-                    setattr(self.object,key,True)
-                elif get_func(key) == 'false':
-                    setattr(self.object,key,False)
-                else:
-                    setattr(self.object,key,get_func(key)) 
-                logging.debug("setting key,val = %s, %s" % (key,get_func(key)))
-        self.object.save()
+        if hasattr(self.__class__.object_cls,'_allowed_api_keys'):
+            for key in self.__class__.object_cls._allowed_api_keys:
+                if key in self.request.arguments:
+                    if self.get_argument(key) == 'true':
+                        setattr(self.object,key,True)
+                    elif self.get_argument(key) == 'false':
+                        setattr(self.object,key,False)
+                    else:
+                        setattr(self.object,key,self.get_argument(key)) 
+                    logging.debug("setting key,val = %s, %s" % (key,self.get_argument(key)))
+            self.object.save()
     
     def action_get_object(self,id):
         self.object = self.__class__.object_cls.get(id)
@@ -660,31 +677,45 @@ class ApiBaseHandler(BaseHandler):
         self.qry = qry
     
     def do_delete(self):
+        if self.id and self.id not in ['list','all']:
+            self.action_get_object(self.id)
         if self.object and hasattr(self.object,'delete'):
+            logging.info("about to delete, id=%s" % self.id)
             self.object.delete()
+            self.object = None
+            self.qry = None
+            self.set_status(204)
+        else:
+            logging.error("not found?   %s, %s" % (self.noun, self.id))
     
     def nonresponse(self,status_code):
         self.set_status(status_code)
         self.write("{'status':'failure'}")
         return
     
-    def do_action(self):
-        jsonstring = '{}'
-        
+    def do_get(self):
         if self.id and self.id == 'list':
             self.action_get_list(q=self.q)
             logging.debug("found list request")
         elif self.id and self.action == 'get':
-            logging.debug("do_action, id=%s,action=%s" % (self.id,self.action))
+            logging.debug("do_get, id=%s,action=%s" % (self.id,self.action))
             self.action_get_object(self.id)
-        elif self.request.method == "POST" and hasattr(self,"%s_POST" % self.action):
-            getattr(self,"%s_POST" % self.action)()
         elif hasattr(self,self.action):
             logging.debug("custom action = %s" % self.action)
             getattr(self,self.action)()
         else:
             logging.debug("get_object %s" % self.id)
             self.action_get_object(self.id)
+    
+    def do_post(self):
+        if hasattr(self,"%s_POST" % self.action):
+            getattr(self,"%s_POST" % self.action)()
+        elif self.action not in ['list','get','post','all','json','delete'] and \
+                hasattr(self,self.action):
+            logging.debug("POST %s" % self.action)
+            getattr(self,self.action)()
+        else:
+            self.handle_post()
     
     def render_json(self,jsonstring):
         self.set_header("Content-Type", "application/json")
@@ -701,37 +732,34 @@ class ApiBaseHandler(BaseHandler):
             if self.action in ['addupdate','delete']:
                 jsonstring = '{"msg":"success"}'
             elif self.action == 'list' or self.action == 'get':
-                logging.debug("list/get json()")
                 jsonstring = self.json()
             elif hasattr(self,self.action):
-                logging.debug("rendering self.json() for custom action = %s" % self.action)
                 jsonstring = self.json()
             else: 
                 jsonstring = self.json()
         
         # ==== Serialization Format
         if self.format == 'json':
-            self.render_json(jsonstring)
+            if jsonstring:
+                self.render_json(jsonstring)
         elif self.format == 'xml':
             self.set_header("Content-Type", 'application/xhtml+xml')
     
     def get(self,noun=None,requestid='all',action=None,format="json"):
         self.normalize_args(noun, requestid,action,format)
         logging.debug("API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit))
-        self.do_action()
+        self.do_get()
         self.render_to_format()
     
     def post(self,noun=None,requestid='all',action=None,format="json"):
         self.normalize_args(noun, requestid,action,format)
         logging.debug("API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit))
-        self.do_action()
-        self.handle_post(self.request.arguments,self.get_argument)
+        self.do_post()
         self.render_to_format()
     
     def delete(self,noun=None,requestid='all',action=None,format="json"):
         logging.info("in DELETE")
         self.normalize_args(noun, requestid,action,format)
-        self.do_action()
         self.do_delete()
         self.render_to_format()
     
@@ -854,10 +882,43 @@ class PersonAnonApi(ApiBaseHandler):
 
 class PersonApiHandler(ApiSecureHandler):
     object_cls = Person
+    def change_email(self):
+        self.handler_post()
+    
+    def action_get_object(self,id):
+        self.object = Person.by_hashedemail(self.site.id,self.id)
+        self.qry = [self.object]
+    
+    def _add_user(self,user_dict):
+        if self.id not in ['',None,'list','get','all']:
+            p = Person.by_hashedemail(self.site.id,self.id)
+            if not p:
+                p = Person()
+                p.site_id = self.site.id
+            
+            p.from_dict(user_dict,allowed_keys=Person._allowed_api_keys)
+            p.after_load()
+        
+        if p.isvalid():
+            self.object = p
+            self.qry.append(p)
+            p.save()
+            self.set_status(201)
+    
+    def handle_post(self):
+        #logging.debug("in handle post, args= %s, body=%s" % (self.request.arguments,self.request.body))
+        if self.is_json_post():
+            json_dict = json.loads(self.request.body)
+            if json_dict:
+                for json_user in json_dict:
+                    self._add_user(json_user)
+        else:
+            self._add_user(self.args_todict())
+    
     def json_formatter(self,o):
         if o:
             output = o.to_dict(keys=['name','displayname','id','email','url',
-                'hashedemail','user_uniqueid','foreign_id'])
+                'hashedemail','user_uniqueid','foreign_id','authn','extra_json'])
             #if o.region and o.region.id > 0:
             #    output['region'] = o.region.to_dict(keys=['name','metro_code']) # keys=['name','metro_code']
             return output
@@ -877,8 +938,11 @@ class PersonApiHandler(ApiSecureHandler):
         user_key = self.id
         self.db.cache.set(str(user_key),self.site.slug)
         user = None
-        if self.request.method == 'POST' and self.request.body:
-            user_dict = json.loads(self.request.body)
+        if self.request.method == 'POST':
+            if self.is_json_post():
+                user_dict = json.loads(self.request.body)
+            else:
+                user_dict = self.args_todict()
             logging.debug("Loaded data user_dict=%s" % user_dict)
             user = meta.DBSession.query(Person).filter_by(
                 site_id=self.site.id, email=user_dict['email'].lower()).first()
@@ -892,8 +956,9 @@ class PersonApiHandler(ApiSecureHandler):
                 pass
                 #TODO:  update user
         else:
-             user = meta.DBSession.query(Person).filter_by(
-                    site_id=self.site.id, hashedemail=user_key).first()
+            user = meta.DBSession.query(Person).filter_by(
+                   site_id=self.site.id, hashedemail=user_key).first()
+        
         if user:
             self.object = user
             self.qry = [user]
@@ -947,8 +1012,8 @@ class ServiceApiHandler(ApiSecureHandler):
 _controllers = [
     (r"/api/(activity)/(.*?)", ActivityApiHandler),
     (r"/api/(user|person)/(.*?)/(init_user|tbdmorestuff)", PersonAnonApi),
-    (r"/api/(user|person)/([0-9]*?|.*?)/(.*?)(?:\.)?(json|xml|custom)?", PersonApiHandler),
-    (r"/api/(user|person)/(.*?)(.json|.xml|.custom)", PersonApiHandler),
+    (r"/api/(user|person)/([0-9]*?|.*?)/(.*?).(json|xml|custom)?", PersonApiHandler),
+    (r"/api/(user|person)/(.*?).(?:json|xml|custom)", PersonApiHandler),
     (r"/api/(user|person)/(.*?)", PersonApiHandler),
     (r"/api/(email)/([0-9]*?|.*?|all|list)/(.*?)(?:\.)?(json|xml|custom)?", EmailApiHandler),
     (r"/api/(email)/(.*?)(.json|.xml|.custom)", EmailApiHandler),

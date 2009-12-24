@@ -3,6 +3,7 @@ This code [especially CacheBase] is from Django, so that license is
 intact
 """
 import os, logging
+from tornado.options import options
 try:
     from google.appengine.api import memcache as gaememcache
 except ImportError:

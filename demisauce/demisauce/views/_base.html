@@ -179,8 +179,7 @@
                 <li><a href="/c/features">Features</a>
                   <ul>
                     <li><a href="/">Home</a></li>
-                    {% if current_user and current_user.isadmin %}
-                    <li><a href="/cms">Cms Admin</a></li>
+                    {% if current_user and current_user.issysadmin %}
                     <li><a href="/email/">Email Admin</a></li>
                     <li><a href="/environment">environment</a></li>
                     <li><a href="/home/csscolors">css colors</a></li>
@@ -203,13 +202,11 @@
                 </li>
                 <li><a href="#">Links</a>
                   <ul>
-                    <li><a href="http://www.makotemplates.org/docs/syntax.html">Mako</a></li>
-                    <li><a href="http://www.formencode.org/htmlfill.html">formencode.org</a></li>
                     <li><a href="http://www.sqlalchemy.org/docs/04/">sqlalchemy</a></li>
                     <li><a href="http://jinja.pocoo.org/2/documentation/">jinja2</a></li>
-                    <li><a href="http://docs.pylonshq.com/index.html">Pylons</a></li>
+                    <li><a href="http://www.tornadoweb.org">Tornado</a></li>
                     <li><a href="http://docutils.sourceforge.net/docs/user/rst/quickref.html">rSt</a></li>
-                    <li><a href="http://pythonpaste.org/tempita/">tempita</a></li>
+                    <li><a href="http://www.gearman.org">Gearman</a></li>
                   </ul>
                 </li>
                 {{helpbits.feedbackbadge()}}

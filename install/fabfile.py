@@ -357,7 +357,7 @@ def _install_ds():
 def _wordpress_install(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
     #http://nielsvz.com/2009/02/nginx-and-wordpress/
     #http://elasticdog.com/2008/02/howto-install-wordpress-on-nginx/
-    sudo("apt-get install --yes --force-yes -q php5 php5-dev php5-mysql php5-memcache php5-cgi")
+    sudo("apt-get install --yes --force-yes -q php5 php5-dev php5-mysql php5-memcache php5-cgi php5-gd")
     # get fast-cgi module from lighttpd
     sudo("apt-get install -y -q lighttpd")
     # but don't start it, we just need the fast cgi module
@@ -385,7 +385,9 @@ def wordpress():
 def supervisor_update():
     """Refresh conf file for supervisord, restart"""
     put('%(local_path)s/install/recipes/etc/supervisord.conf' % env, '/tmp/supervisord.conf' % env)
+    put('%(local_path)s/install/recipes/etc/supervisord/demisauce.conf' % env, '/tmp/demisauce_sd.conf' % env)
     sudo('mv /tmp/supervisord.conf /etc/supervisord.conf')
+    sudo('mv /tmp/demisauce_sd.conf /etc/supervisord/demisauce.conf')
     #sudo('/usr/local/bin/supervisord')
     sudo('/etc/init.d/supervisord restart')
 
@@ -432,9 +434,18 @@ def release(userdbpwd="demisauce",host=None,local=False):
     rsync_project('/home/demisauce/ds/%s/' % release,local_dir='%(local_path)s/' % env)
     sudo('ln -s /home/demisauce/ds/%s/demisauce /home/demisauce/ds/web' % (release))
     sudo('ln -s /home/demisauce/ds/%s/ /home/demisauce/ds/current' % (release))
+    sudo('ln -s /home/demisauce/upload/ /home/demisauce/ds/web/demisauce/static/upload' % (release))
+    with cd("/home/demisauce/ds/current/demisaucepy"):
+        sudo("python setup.py develop")
+    with cd("/home/demisauce/ds/web"):
+        sudo("python setup.py develop")
+    with cd("/home/demisauce/ds/current/plugins/py"):
+        sudo("python setup.py develop")
 
-def simple_push():
-    """Simple release, just web sync, no new folders"""
+def release_simple():
+    """Simple release, just web and dspy sync, no new folders"""
+    rsync_project('/home/demisauce/ds/current/demisaucepy/',local_dir='%(local_path)s/demisaucepy/' % env)
+    rsync_project('/home/demisauce/ds/current/plugins/',local_dir='%(local_path)s/plugins/' % env)
     rsync_project('/home/demisauce/ds/web/',local_dir='%(local_path)s/demisauce/' % env)
     restart_web()
 

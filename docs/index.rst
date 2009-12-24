@@ -8,6 +8,8 @@ Contents:
 .. toctree::
    :maxdepth: 5
    
+   api
+   
    getstarted
    
 

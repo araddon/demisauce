@@ -161,6 +161,18 @@ service = '''
             "key": "poll",
             "views": "",
             "description": "Simple Polls, embeddable within your application"
+        },
+        {
+            "description": "Person Get/Add service",
+            "views": '',
+            "site_id": "1",
+            "app_id": "1",
+            "owner_id": "1",
+            "method_url": "/api/person/{key}.json?apikey={api_key}",
+            "key": "person",
+            "name": "Person Get/Add service",
+            "format": "json",
+            "cache_time": 900,
         },{
             "site_id": "1",
             "app_id": "1",

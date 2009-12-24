@@ -14,23 +14,15 @@ server {
     
     access_log  /vol/log/nginx/demisauce.access.log;
     
-    location /js {
-        root   /home/demisauce/ds/current_web/demisauce/public;
-    }
-    location /css {
-        root   /home/demisauce/ds/current_web/demisauce/public;
-    }
-    location /s3 {
-        root   /home/demisauce/ds/current_web/demisauce/public;
-    }
-    location /images {
-        root   /home/demisauce/ds/current_web/demisauce/public;
+    location /static {
+        root   /home/demisauce/ds/web/demisauce;
+        #rewrite ^/static/(.*)$ /public/$1 last;
     }
     location = /favicon.ico {
-        root   /home/demisauce/ds/current_web/demisauce/public;
+        root   /home/demisauce/ds/web/demisauce/static;
     }
     location = /robots.txt {
-        root   /home/demisauce/ds/current_web/demisauce/public;
+        root   /home/demisauce/ds/web/demisauce/static;
     }
     
     location /blog {

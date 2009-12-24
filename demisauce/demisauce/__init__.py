@@ -10,11 +10,9 @@ from demisauce import model
 
 __version__ = '0.1.1'
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
-SITE_ROOT = os.path.realpath(SITE_ROOT + '/../' )
+#SITE_ROOT = os.path.realpath(SITE_ROOT + '' )
 #print("SITE_ROOT = %s" % SITE_ROOT)
 
-define("site_root", default=SITE_ROOT, help="Root Path of site")
-define("port", default=4950, help="run on the given port", type=int)
 define("facebook_api_key", help="your Facebook application API key",
         default="1c9724431c6a5ebb2167b87862373776")
 define("facebook_secret", help="your Facebook application secret",
@@ -23,36 +21,31 @@ define("twitter_consumer_key", help="your Twitter application API key",
         default="7xjPzAjqtH5QqitEicaFqQ")
 define("twitter_consumer_secret", help="your Twitter application secret",
         default="g9Wg0fDCcFN4IGtJ8PB9TYq5RiRMEPSfqZ3MkcPPl9Y")
-define("base_url", default="http://localhost:4950")
-define("redis_host", default="192.168.1.7")
-define("gearman_servers",default="192.168.1.7",multiple=True)
-define("memcached_servers", default="192.168.1.7:11211",multiple=True)
-#define("solr_server",default="http://192.168.1.5:8080/lf")
-define("solr_server",default="http://192.168.1.9:8080/dssolr")
-define("demisauce_url",default="http://localhost:4950")
-define("asset_url",default="http://assets.selwayfoods.com")
-define("demisauce_api_key",default="5c427992131479acb17bcd3e1069e679")
-define("demisauce_admin",default="demisauce@demisauce.org")
-define("email_from",default="demisauce@demisauce.org")
-define("smtp_username",default="demisauce@demisauce.org")
-define("smtp_password",default="NOTREAL")
-define("smtp_server",default="smtp.gmail.com")
+define("base_url", default="http://localhost:4950", help="base fq url, no trailing slash to site")
+define("port", default=4950, help="run on the given port", type=int)
 
+"""
+define("site_root", default=SITE_ROOT, help="Root Path of site, set at runtime")
+define("redis_host", default="192.168.1.7",help="List of redis hosts:  192.168.1.1:5555,etc",multiple=False)
+define("gearman_servers",default="192.168.1.7",multiple=True,help="gearman hosts format host:port,host:port")
+define("memcached_servers", default="192.168.1.7:11211",multiple=True, help="list of memcached servers")
+#define("solr_server",default="http://192.168.1.5:8080/lf")
+define("solr_server",default="http://192.168.1.9:8080/dssolr",help="http url and path of solr server")
+define("asset_url",default="http://assets.selwayfoods.com", help="fq url to asset address")
+define("demisauce_url",default="http://localhost:4950", help="path to demisauce server")
+define("demisauce_api_key",default="5c427992131479acb17bcd3e1069e679",help="api key")
+define("demisauce_admin",default="demisauce@demisauce.org",help='email address of demisauce admin')
+define("email_from",default="demisauce@demisauce.org",help="default email from address")
+define("smtp_username",default="demisauce@demisauce.org",help="smtp username")
+define("smtp_password",default="NOTREAL",help="pwd")
+define("smtp_server",default="smtp.gmail.com",help="smtp address")
+
+"""
 
 class AppBase():
-    def __init__(self,apptype="web"):
+    def __init__(self):
         # setup demisauce server config
-        demisaucepy.cfg.CFG = {
-            'demisauce_appname':'demisauce',
-            'demisauce_url':options.demisauce_url,
-            'demisauce_api_key':options.demisauce_api_key,
-            'memcached_servers':options.memcached_servers,
-            'email_from': options.email_from,
-            'email_from_name': "Demisauce Web",
-            'smtp_username':options.smtp_username,
-            'smtp_password':options.smtp_password,
-            'smtp_server':options.smtp_server,
-        }
+        options.site_root = SITE_ROOT
         
         # create scheduler
         from demisauce.lib import scheduler

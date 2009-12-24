@@ -1,14 +1,13 @@
-Demisauce is the main web application that hosts web services for use by
+Demisauce Web is the web application that hosts web services for use by
     other applications.   The library applications for consuming these web 
     services are in other projects, depending on which technology you need.
     
 Installation and Setup
 ======================
-Requires Pylons, and either MySQL or SqlLite
+Install `Demisauce <http://github.com/araddon/demisauce/tree/master/install>`_ as an appliance, need VMware, KVM, etc.  
 
 
-Install _Demisauce: http://github.com/araddon/demisauce/tree/master using git
-
+Powered By `Tornado <http://www.tornadoweb.org>`_, MySql, `Gearman <http://www.gearman.org>`_, `Redis <http://www.tornadoweb.org>`_
 
 Make a config file as follows::
 
@@ -66,7 +65,3 @@ includes test folder for doctests::
     OR
     
     python setup.py test
-    
-to load a fresh set of data for testing::
-    
-    $paster setup-app library_test.ini

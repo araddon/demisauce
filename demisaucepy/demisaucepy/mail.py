@@ -2,18 +2,21 @@
 from email.MIMEText import MIMEText
 from email.Header import Header
 import smtplib, rfc822, logging
-from demisaucepy import cfg
+import tornado
+from tornado.options import options,define
 
 # TODO:  extract send_email futher to allow mockserver to be passed in
 # TODO:  allow connection to be kept open, external to manage open/close (ie: 
 #            not all in one function)
+
+define("email_from",default="demisauce@demisauce.org",help="default email from address")
+define("smtp_username",default="demisauce@demisauce.org",help="smtp username")
+define("smtp_password",default="NOTREAL",help="pwd")
+define("smtp_server",default="mockserver.com",help="smtp address, such as smtp.gmail.com")
+define("smtp_port",default=25,help="smtp port",type=int)
+define("default_from_name",default=None,help="from name that email is sent from, default")
+
 DEFAULT_CHARSET = 'utf-8'
-DEFAULT_FROM_EMAIL = cfg.CFG['email_from']
-DEFAULT_FROM_NAME = cfg.CFG['email_from_name']
-SMTP_USERNAME = cfg.CFG['smtp_username']
-SMTP_PASSWORD = cfg.CFG['smtp_password']
-SMTP_SERVER = cfg.CFG['smtp_server']
-SMTP_PORT = 587 if 'gmail.com' in SMTP_SERVER else 25
 
 class BadHeaderError(ValueError):
     pass
@@ -35,8 +38,7 @@ def send_mail(subject, message, recipient_list, from_email=None,
     Easy wrapper for sending a single message to a recipient list. All members
     of the recipient list will see the other recipients in the 'To' field.
     """
-    if not from_email and 'from_email' in cfg.CFG:
-        from_email = cfg.CFG['from_email']
+    from_email = options.from_email if not from_email else from_email
     return send_mass_mail([[subject, message, from_email, recipient_list]], 
                           fail_silently, auth_user, auth_password)
 
@@ -92,18 +94,20 @@ class gmailsmtphelper(smtphelper):
         self.server.close()
     
 
-def get_smtp_server(smtp_server=SMTP_SERVER, smtp_port=SMTP_PORT):
+def get_smtp_server(smtp_server=None, smtp_port=None):
+    smtp_server = options.smtp_server if not smtp_server else smtp_server
+    smtp_port = options.smtp_port if not smtp_port else smtp_port
     "factory to create servers"
     if 'gmail.com' in smtp_server:
-        return gmailsmtphelper(smtp_server, smtp_port)
+        return gmailsmtphelper(smtp_server, 587)
     elif 'mockserver' in smtp_server:
         return mocksmtp(smtp_server, smtp_port)
     else:
         return smtphelper(smtp_server, smtp_port)
     
 
-def send_email(datatuple, fail_silently=False, auth_user=SMTP_USERNAME,
-                   auth_password=SMTP_PASSWORD, to_each=False,
+def send_email(datatuple, fail_silently=False, auth_user=None,
+                   auth_password=None, to_each=False,
                    server=None):
     """
     Given a datatuple of (subject, message, from_email, recipient_list), sends
@@ -117,7 +121,7 @@ def send_email(datatuple, fail_silently=False, auth_user=SMTP_USERNAME,
     close = False if server else True
     try:
         if not server:
-            server = get_smtp_server(SMTP_SERVER, SMTP_PORT)
+            server = get_smtp_server(options.smtp_server, options.smtp_port)
         
         if auth_user and auth_password:
             server.login(auth_user, auth_password)
@@ -127,7 +131,7 @@ def send_email(datatuple, fail_silently=False, auth_user=SMTP_USERNAME,
         raise
     num_sent = 0
     def process_send_email(subject, message, from_email, recipient_list):
-        from_email = from_email or DEFAULT_FROM_EMAIL
+        from_email = from_email or options.email_from
         msg = SafeMIMEText(message, 'plain', DEFAULT_CHARSET)
         msg['Subject'] = subject
         msg['From'] = from_email
@@ -164,8 +168,8 @@ def send_email(datatuple, fail_silently=False, auth_user=SMTP_USERNAME,
     return num_sent
 
 def send_mail_toeach(datatuple, fail_silently=False, 
-                   auth_user=SMTP_USERNAME, 
-                   auth_password=SMTP_PASSWORD):
+                   auth_user=None, 
+                   auth_password=None):
     """
     Given a datatuple of (subject, message, from_email, recipient_list), sends
     each message to each recipient list. Returns the number of e-mails sent.
@@ -173,11 +177,13 @@ def send_mail_toeach(datatuple, fail_silently=False,
     If from_email is None, the DEFAULT_FROM_EMAIL setting is used.
     If auth_user and auth_password are set, they're used to log in.
     """
+    auth_user = options.smtp_username if not auth_user else auth_user
+    auth_password = options.smtp_password if not auth_password else auth_password
     return send_email(datatuple, fail_silently, auth_user, auth_password, True)
 
 def send_mass_mail(datatuple, fail_silently=False, 
-                   auth_user=SMTP_USERNAME, 
-                   auth_password=SMTP_PASSWORD):
+                   auth_user=None, 
+                   auth_password=None):
     """
     Given a datatuple of (subject, message, from_email, recipient_list), sends
     each message to each recipient list. Returns the number of e-mails sent.
@@ -185,6 +191,8 @@ def send_mass_mail(datatuple, fail_silently=False,
     If from_email is None, the DEFAULT_FROM_EMAIL setting is used.
     If auth_user and auth_password are set, they're used to log in.
     """
+    auth_user = options.smtp_username if not auth_user else auth_user
+    auth_password = options.smtp_password if not auth_password else auth_password
     return send_email(datatuple, fail_silently, auth_user, auth_password, False)
 
 def main():

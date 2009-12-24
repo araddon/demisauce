@@ -29,7 +29,7 @@ extensions = ['sphinx.ext.autodoc']
 
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+#templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -113,9 +113,7 @@ html_last_updated_fmt = '%b %d, %Y'
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
 #html_additional_pages = {}
-html_additional_pages = {
-    'lefttoc': 'lefttoc.html',
-}
+#html_additional_pages = {'lefttoc': 'lefttoc.html',}
 
 # If false, no module index is generated.
 #html_use_modindex = True

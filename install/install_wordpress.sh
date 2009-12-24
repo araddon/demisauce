@@ -11,7 +11,7 @@ DEMISAUCE_MYSQL_PWD='demisauce'
 MYSQL_ROOT_PWD='demisauce'
 
 echo "----  installing php ------------"
-apt-get install --yes --force-yes -q php5 php5-dev libapache2-mod-php5 php5-mysql php5-memcache php5-cgi
+apt-get install --yes --force-yes -q php5 php5-dev libapache2-mod-php5 php5-mysql php5-memcache php5-cgi php5-gd
 echo "----  adding memcached extension to php  /etc/php5/apache2/php.ini "
 #  Adds this:    extension=memcache.so    
 perl -pi -e s/\;\ extension_dir\ directive\ above./\;\ extension_dir\ directive\ above.\\nextension=memcache.so/g /etc/php5/apache2/php.ini || die "Could not update php.ini"

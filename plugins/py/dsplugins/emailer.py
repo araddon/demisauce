@@ -50,4 +50,3 @@ def email_send(job_object):
         traceback.print_exc()
         return -1
 
-        

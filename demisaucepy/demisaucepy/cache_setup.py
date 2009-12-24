@@ -2,8 +2,7 @@
 from demisaucepy.cache import PylonsCache, GaeCache, \
     MemcacheCache, DummyCache
 import os, logging
-from demisaucepy import cfg
-
+from tornado.options import options
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ def load_django_cache():
 def load_memcache():
     try:
         from demisaucepy import cache as cachemodule
-        cachemodule.cache = MemcacheCache(cfg.CFG['memcached_servers'].split(','))
+        cachemodule.cache = MemcacheCache(options.memcached_servers)
         log.debug('In cache setup, setting MemcacheCache')
         return True
     except ImportError:

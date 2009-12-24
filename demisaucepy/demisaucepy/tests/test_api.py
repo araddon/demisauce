@@ -8,7 +8,6 @@ from tornado.options import options
 from demisaucepy.tests import *
 from demisaucepy import demisauce_ws_get, httpfetch
 from demisaucepy.models import RemoteService
-from demisaucepy import cfg
 from demisaucepy.cache import cache
 from demisaucepy import demisauce_ws, hash_email, ServiceClient, \
     ServiceDefinition, RetrievalError, args_substitute
@@ -40,7 +39,7 @@ class TestApi(TestDSBase):
         "test if we can send an email"
         from gearman import GearmanClient
         from gearman.task import Task
-        gearman_client = GearmanClient(cfg.CFG['gearman_servers'].split(','))
+        gearman_client = GearmanClient(options.gearman_servers)
         #send emails
         jsondict = {
             'template_name':'thank_you_for_registering_with_demisauce',
@@ -56,9 +55,8 @@ class TestApi(TestDSBase):
         logging.debug("test emailsend num_sent = %s" % (num_sent))
         assert num_sent == '1'
     
-    def test_emailwebpost(self):
-        """Post an http web service call to ds with request to send email
-        """
+    def test_email_via_webhook(self):
+        """Post an http web hook call to ds with request to send email"""
         jsondict = {
             'template_name':'thank_you_for_registering_with_demisauce',
             'emails':['araddon@yahoo.com'],
@@ -81,7 +79,6 @@ def xmlproc(self):
     """
     Test via xmlrpc
     """
-    from demisaucepy import cfg
     from demisaucepy.cache import cache
     from demisaucepy import demisauce_ws, hash_email, ServiceClient, \
         ServiceDefinition, RetrievalError, args_substitute

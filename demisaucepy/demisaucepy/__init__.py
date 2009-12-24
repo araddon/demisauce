@@ -1,21 +1,37 @@
 import urllib, urllib2, os, sys, logging
-import ConfigParser
 import string
 import httpfetch
 import json
 import datetime
-#from xmlnode import XMLNode
-#from demisaucepy import logger
-from demisaucepy import cfg, xmlrpcreflector
+from demisaucepy import xmlrpcreflector
 from tornado.options import options,define
 import demisaucepy.cache_setup
 import hashlib
 import warnings
 import xmlrpclib
+import re
+import tornado
+from tornado.options import options, define
 
 log = logging.getLogger(__name__)
 
 __version__ = '0.1.1'
+
+DATETIME_REGEX = re.compile('^(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})T(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})(\.\d+)?Z$')
+
+define("site_root", default="/home/demisauce", help="Root Path of site, set at runtime")
+define("redis_host", default="192.168.1.7",help="List of redis hosts:  192.168.1.1:5555,etc",multiple=False)
+define("gearman_servers",default=["192.168.1.7"],multiple=True,help="gearman hosts format host:port,host:port")
+define("solr_server",default="http://192.168.1.9:8080/dssolr",help="http url and path of solr server")
+define("asset_url",default="http://assets.yourdomain.com", help="fq url to asset address")
+define("demisauce_url",default="http://localhost:4950", help="path to demisauce server")
+define("demisauce_api_key",default="5c427992131479acb17bcd3e1069e679",help="api key")
+define("demisauce_admin",default="demisauce@demisauce.org",help='email address of demisauce admin')
+
+define("memcached_servers", default=["192.168.1.7:11211"],multiple=True, help="list of memcached servers")
+define("demisauce_cache", default="memcache", 
+        help="type of cache (memcache|pylons|gae|django|redis|dummy)")
+
 
 class RetrievalError(Exception):
     def __init__(self,message="There was an error retrieving this message"):
@@ -44,6 +60,149 @@ def args_substitute(url_format,sub_dict):
         if sub_dict[k] is not None:
             url_format = url_format.replace('{%s}'%k,sub_dict[k])
     return url_format 
+
+class jsonwrapper(dict):
+    def __init__(self,jsonval):
+        self.index = 0
+        self._json_list = None
+        self._json_dict = None
+        
+        if isinstance(jsonval,str):
+            jsonval = json.loads(jsonval)
+        if isinstance(jsonval,dict):
+            self._json_dict = jsonval
+        elif isinstance(jsonval,list):
+            self._json_list = jsonval
+        else:
+            raise Exception("how can it be none list, dict?")
+        if self._json_list:
+            self.index = len(self._json_list)
+    
+    def __iter__(self):
+        return self
+    
+    def next(self):
+        if self.index == 0:
+            raise StopIteration
+        self.index = self.index - 1
+        val = self._json_list[self.index]
+        return self._to_python(val)
+    
+    def __len__(self):
+        if self._json_list:
+            return len(self._json_list)
+        elif self._json_dict:
+            return len(self._json_dict)
+        return 0
+    
+    def __getattr__(self, name):
+        if self._json_dict:
+            return self._to_python(self._json_dict[name])
+        else:
+            raise KeyError
+    
+    def __getitem__(self, name):
+        if self._json_dict:
+            val = self._json_dict[name]
+        elif self._json_list and type(name) == int:
+            val = self._json_list[name]
+        else:
+            raise KeyError
+        
+        return self._to_python(val)
+    
+    def _to_python(self,val):
+        if val is None:
+            return val
+        
+        if isinstance(val, (int, float, long, complex)):
+            return val
+        
+        if isinstance(val,dict):
+            return jsonwrapper(val)
+        elif isinstance(val, (list)):
+            return jsonwrapper(val)
+        elif isinstance(val,(tuple)):
+            return val
+        
+        if val == 'true':
+            return True
+        elif val == 'false':
+            return False
+        
+        if isinstance(val, basestring):
+            possible_datetime = DATETIME_REGEX.search(val)
+            
+            if possible_datetime:
+                date_values = possible_datetime.groupdict()
+                
+                for dk, dv in date_values.items():
+                    date_values[dk] = int(dv)
+                
+                return datetime(date_values['year'], date_values['month'], date_values['day'], date_values['hour'], date_values['minute'], date_values['second'])
+        
+        # else, probably string?
+        return val
+    
+    def _from_python(self, value):
+        """
+        Converts python values to a form suitable for insertion into the xml
+        we send to solr.
+        """
+        if isinstance(value, datetime):
+            value = value.strftime('%Y-%m-%dT%H:%M:%SZ')
+        elif isinstance(value, date):
+            value = value.strftime('%Y-%m-%dT00:00:00Z')
+        elif isinstance(value, bool):
+            if value:
+                value = 'true'
+            else:
+                value = 'false'
+        else:
+            value = unicode(value)
+        return value
+    
+    def _to_pythonOLD(self, value):
+        """
+        Converts values from Solr to native Python values.
+        """
+        if isinstance(value, (int, float, long, complex)):
+            return value
+        
+        if isinstance(value, (list, tuple)):
+            value = value[0]
+        
+        if value == 'true':
+            return True
+        elif value == 'false':
+            return False
+        
+        if isinstance(value, basestring):
+            possible_datetime = DATETIME_REGEX.search(value)
+        
+            if possible_datetime:
+                date_values = possible_datetime.groupdict()
+            
+                for dk, dv in date_values.items():
+                    date_values[dk] = int(dv)
+            
+                return datetime(date_values['year'], date_values['month'], date_values['day'], date_values['hour'], date_values['minute'], date_values['second'])
+        
+        try:
+            # This is slightly gross but it's hard to tell otherwise what the
+            # string's original type might have been. Be careful who you trust.
+            converted_value = eval(value)
+            
+            # Try to handle most built-in types.
+            if isinstance(converted_value, (list, tuple, set, dict, int, float, long, complex)):
+                return converted_value
+        except:
+            # If it fails (SyntaxError or its ilk) or we don't trust it,
+            # continue on.
+            pass
+        
+        return value
+    
 
 class ServiceDefinition(object):
     """
@@ -84,9 +243,9 @@ class ServiceDefinition(object):
         self.api_key = api_key
         self.base_url = base_url
         if api_key == None:
-            self.api_key = cfg.CFG['demisauce_api_key']
+            self.api_key = options.demisauce_api_key
         if base_url == None:
-            self.base_url = cfg.CFG['demisauce_url']
+            self.base_url = options.demisauce_url
     
     def substitute_args(self,pattern,data={},request=''):
         """Create a dictionary of all name/value pairs
@@ -135,12 +294,6 @@ class ServiceDefinition(object):
         ns.base_url = self.base_url
         return ns
     
-    def reload_cfg(self):
-        if cfg and 'demisauce_url' in cfg.CFG:
-            self.base_url = cfg.CFG['demisauce_url']
-        if 'demisauce_api_key' in cfg.CFG:
-            self.api_key = cfg.CFG['demisauce_api_key']
-    
     def load_definition(self,request_key='demisauce/comment'):
         """
         The service is partially defined through demisauce
@@ -148,9 +301,7 @@ class ServiceDefinition(object):
         is loaded once at startup with this and cached as part of the 
         python in memory class definition
         """
-        log.debug('ServiceDefinition.load_definitin() %s:%s ' % (self.app_slug, request_key))
-        
-        self.reload_cfg()
+        #log.debug('ServiceDefinition.load_definitin() %s:%s ' % (self.app_slug, request_key))
         self.service_registry = self.clone()
         self.service_registry.format = 'json'
         self.service_registry.url_format = "{base_url}/api/{service}/{key}.{format}?apikey={api_key}"
@@ -174,7 +325,7 @@ class ServiceDefinition(object):
             #print dir(model)
             if 'site' in jsondata and 'base_url' in jsondata['site']:
                 self.base_url = jsondata['site']['base_url']
-            log.debug('setting base_url to%s for%s %s ' % (self.base_url, self.app_slug, self.name))
+            #log.debug('setting base_url to%s for%s %s ' % (self.base_url, self.app_slug, self.name))
             if 'method_url' in jsondata and jsondata['method_url'] != 'None':
                 self.method_url = jsondata['method_url']
             if 'url_format' in jsondata and jsondata['url_format'] != 'None':
@@ -205,6 +356,7 @@ class ServiceResponse(object):
         self.__xmlnode__ = None
         self.url = ''
         self.json = None
+        self.status = 0
     
     def handle_response(self):
         pass
@@ -339,13 +491,13 @@ class HttpServiceTransport(ServiceTransportBase):
     def connect(self):
         pass
     
-    def fetch(self,url,data={},extra_headers={},response=None):
+    def fetch(self,url,data={},extra_headers={},response=None,http_method='GET'):
         response = response or ServiceResponse()
         useragent = 'DemisaucePY/1.0'
         try: 
-            log.debug('httptransport getting url: %s' % (url))
-            response.params = httpfetch.fetch(url, data=data,agent=useragent,extra_headers=extra_headers)
-            #print item.params['status']
+            #log.debug('httptransport getting url: %s' % (url))
+            response.params = httpfetch.fetch(url, data=data,agent=useragent,extra_headers=extra_headers,http_method=http_method)
+            response.status = response.params['status']
             if response.params['status'] == 500:
                 response.message = 'there was an error on the demisauce server, \
                         no content was returned'
@@ -408,7 +560,6 @@ class ServiceClient(ServiceClientBase):
         self.request = 'service'
         self.response = ServiceResponse(format=service.format)
         self._cache_key = None
-        log.debug('ServiceClient init %s' % (service.name))
     
     def connect(self,request='service',headers={}):
         self.transport.connect(request=request)
@@ -453,14 +604,14 @@ class ServiceClient(ServiceClientBase):
             log.debug('cache NOT found for = %s' % (cache_key))
             return False
     
-    def fetch_service(self,request=None,data={}):
+    def fetch_service(self,request=None,data={},http_method='GET'):
         #self.connect(request=request)
         #self.authorize()
         import demisaucepy.cache_setup
         from demisaucepy.cache import cache
         
         if not self.service.isdefined and self.service.needs_service_def == True:
-            log.debug('ServiceClient:  calling service definition load %s/%s' % (self.service.app_slug,self.service.name))
+            #log.debug('ServiceClient:  calling service definition load %s/%s' % (self.service.app_slug,self.service.name))
             self.service.load_definition(request_key=request)
         
         if request is None:
@@ -473,37 +624,41 @@ class ServiceClient(ServiceClientBase):
         self.response.url = url
         #print('About to call fetch_service url= %s' % (url))
         cache_key = self.cache_key(url=url)
-        log.debug('about to check cache for url=%s' % url)
-        if not self.check_cache(cache_key):
+        #log.debug('about to check cache for url=%s' % url)
+        if http_method != "GET" or not self.check_cache(cache_key):
             #print('no cache found')
-            self.response = self.transport.fetch(url,data=data,extra_headers=self.extra_headers)
+            self.response = self.transport.fetch(url,data=data,extra_headers=self.extra_headers,http_method=http_method)
             
             if self.response.success:
-                if self.service.format=='json':
-                    self.response.json = json.loads(self.response.data)
-                    log.debug("creating json = %s" % self.response.json)
-                log.debug('success for service %s, %s' % (self.service.name,cache))
+                if self.service.format=='json' and self.response.data and len(self.response.data) > 3:
+                    try:
+                        self.response.json = json.loads(self.response.data)
+                    except:
+                        self.response.json = None
+                    
+                    #log.debug("creating json = %s" % self.response.json)
+                #log.debug('success for service %s, %s' % (self.service.name,cache))
                 #print self.response.data
                 if cache is not None and self.use_cache:
-                    log.debug('setting cache key= %s, %s' % (cache_key,self.service.cache_time))
+                    #log.debug('setting cache key= %s, %s' % (cache_key,self.service.cache_time))
                     cache.set(cache_key,self.response,int(self.service.cache_time)) # TODO:  cachetime
             else:
                 log.error('service error on fetch')
                 #print('self.response.data = %s' % (self.response.data))
-        log.debug('returning from fetch %s' % (self.response))
+        #log.debug('returning from fetch %s' % (self.response))
         return self.response
     
 
-def demisauce_ws_get(method,resource_id,data={},cfgl={},format='html',extra_headers={},cache=True):
-    return demisauce_ws(method,resource_id,verb='get',data=data,
+def demisauce_ws_get(noun,resource_id,data={},cfgl={},format='html',extra_headers={},cache=True):
+    return demisauce_ws(noun,resource_id,action='get',data=data,
                 cfgl=cfgl,format=format,extra_headers=extra_headers,cache=cache)
 
 
-def demisauce_ws(method,resource_id,verb='get',data={},cfgl={},
-        format='html',extra_headers={},app='demisauce',cache=True,cache_time=900):
+def demisauce_ws(noun,resource_id,action=None,data={},cfgl={},
+        format='json',extra_headers={},app='demisauce',http_method='GET',cache=True,cache_time=900):
     """
     Core web service get
-    api/noun/selector.format?apikey={yourkey}&q=query-or-search-parameters
+    api/noun/id/action.format?apikey={yourkey}&q=query-or-search-parameters
     api/noun/id/selector.format
     api/noun/id.format?apikey=yourapikey
     
@@ -511,13 +666,14 @@ def demisauce_ws(method,resource_id,verb='get',data={},cfgl={},
         - api/service/email.json?apikey=myapikey
         - api/service/list.json?apikey=myapikey
         - api/email/welcomemessage?apikey=myapikey
+        - api/person/1234.json?apikey
     
     Restful operations (create/read/update/delete)
         - (post=add/update, get=read, delete=delete)
     returns
     """
     client = ServiceClient(service=ServiceDefinition(
-        name=method,
+        name=noun,
         format=format,
         app_slug=app,
         cache=cache,
@@ -525,6 +681,8 @@ def demisauce_ws(method,resource_id,verb='get',data={},cfgl={},
     ))
     client.use_cache = cache
     client.extra_headers = extra_headers
-    response = client.fetch_service(request=resource_id,data=data)
+    if action:
+        resource_id = '%s/%s' % (resource_id,action)
+    response = client.fetch_service(request=resource_id,data=data,http_method=http_method)
     return response
 

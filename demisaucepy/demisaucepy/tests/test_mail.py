@@ -4,10 +4,8 @@ This is the base content item
 import logging
 import json
 from tornado.options import options
-#import demisauce # force load of options?
 from demisaucepy.tests import *
 from demisaucepy import demisauce_ws_get, httpfetch
-from demisaucepy import cfg
 from demisaucepy import mail
 from demisaucepy.cache import cache
 
@@ -17,7 +15,7 @@ log = logging.getLogger(__name__)
 class TestEmail(TestDSBase):
     def test_email(self):
         "test if we can send an email"
-        #cfg.CFG['smtp_server'] == 'mockserver.com' # force mock smtp connect
+        #options.'smtp_server'] == 'mockserver.com' # force mock smtp connect
         num_sent = mail.send_mail_toeach(('test email',
             'test body', 
             'Test Sender<test@fake.com>', 

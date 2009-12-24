@@ -1,4 +1,5 @@
 import tornado
+import sys, traceback
 from tornado.options import options
 import os, logging, functools, urllib, urllib2
 from functools import wraps
@@ -13,7 +14,7 @@ from gearman.task import Task
 try:
     from PIL import Image
 except ImportError, err:
-    logging.error("NO PIL image processor")
+    print("NO PIL image processor")
 
 def job_in(fn):
     """ Decorates worker functions by calling them with a job's arguments """
@@ -38,7 +39,7 @@ def json_in(fn):
 def image_resize(job_object):
     """Resize Images Gearman Job"""
     try:
-        job = simplejson.loads(job_object.arg)
+        job = json.loads(job_object.arg)
         base64_file = job['image']
         del job['image']
         logging.info(job)
@@ -61,7 +62,7 @@ def image_resize(job_object):
             local_file.write(f.read())
             local_file.close()
         
-        local_path = '%s/static/upload/%s' % (options.site_root,job['path'])
+        local_path = '%s/upload/%s' % (options.site_root,job['path'])
         local_path_wfile = '%s/%s%s' % (local_path,job['file'],job['extension'])
         filename = '%s%s' % (job['file'],job['extension'])
         #download_file(job['url'],local_path,filename)
@@ -106,29 +107,5 @@ def image_resize(job_object):
         logging.debug("About to delete original  %s" % local_path_wfile)
         os.remove(local_path_wfile)
     
-    except Exception, err:
-        logging.error("WOW, err:  %s" % err)
-
-def stash_file(base64file,filename=None,gearman_client=None):
-    """Accepts file handle from http upload, stashes, creates gearman worker"""
-    new_file = ''.join([random.choice(string.letters + string.digits) for i in range(15)])
-    if filename == None:
-        extension = ".jpg"
-    else:
-        extension = re.search('\.\w+',filename).group()
-    new_path = '%s/%s' % (random.choice(string.ascii_lowercase),random.choice(string.ascii_lowercase)) # two folders
-    relative_path_wfile = '%s/%s' % (new_path,new_file)
-    #local_path_wfile = '%s/%s%s' % (path,new_file,extension)
-    
-    if not gearman_client:
-        gearman_client = GearmanClient(options.gearman_servers)
-    json = {
-        'file':new_file,
-        'extension':extension,
-        'path':new_path,
-        'path_w_file':relative_path_wfile,
-        'url':'%sstatic/upload/%s%s' % (options.base_url,relative_path_wfile,extension),
-        'image':base64file
-    }
-    gearman_client.do_task(Task("image_resize",simplejson.dumps(json), background=True))
-    return relative_path_wfile
+    except:
+        traceback.print_exc()

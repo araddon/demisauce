@@ -1,7 +1,8 @@
 from django.conf import settings
-from demisaucepy import cfg
+import demisaucepy
+from tornado.options import options
 
 
-cfg.CFG['demisauce_api_key'] = settings.DEMISAUCE_APIKEY
-cfg.CFG['demisauce_url'] = settings.DEMISAUCE_URL
-cfg.CFG['demisauce_appname'] = settings.DEMISAUCE_APPNAME
+options.demisauce_api_key = settings.DEMISAUCE_APIKEY
+options.demisauce_url = settings.DEMISAUCE_URL
+options.demisauce_appname = settings.DEMISAUCE_APPNAME
