@@ -90,6 +90,8 @@ class Service(ModelBase,JsonMixin):
     :events: [list]{format: xmpp, callback, email, plugin?}
     :dependency: ??  list of dependencies  (js? css? kinda like "requires?")
     """
+    schema = service_table
+    _allowed_api_keys = ['app_id','owner_id','name','method_url','cache_time','list_public','format','key','description']
     @property
     def url(self):
         if self.app and self.app.base_url:
@@ -97,7 +99,6 @@ class Service(ModelBase,JsonMixin):
         if self.site:
             return "%s%s" % (self.site.base_url,self.method_url)
     
-    schema = service_table
     @classmethod
     def all(cls):
         """Class method to get recent help tickets

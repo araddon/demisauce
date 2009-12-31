@@ -1,0 +1,45 @@
+{% extends "_base1col.html" %}
+{% import 'user/group_bits.html' as group with context %}
+
+{% block title %}Demisauce Group Page{% endblock %}
+{% block head_more %}
+{% endblock %}
+{% block bodystart %}
+{% endblock %}
+
+{% block inner_body %}
+
+    {% if action == 'list' %}
+
+        <div class="yui-gc" >
+            <div class="yui-u first">
+                {{group.table(groups)}}
+            </div>
+            <div class="yui-u">
+                {{group.actions()}}
+            </div>
+        </div>
+    {% elif action == 'edit' %}
+    
+        <div >
+            <div class="bar1">
+                <h3>Group Admin Page</h3>
+            </div>
+            <div>
+                <br />
+                {{group.form(item)}}
+            </div>
+        </div>
+        
+    {% elif action == 'view' %}
+        <div >
+            <div class="bar1">
+                <h3>Group View Page</h3>
+            </div>
+            <div>
+                <br />
+                {{group.group_view(item)}}
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

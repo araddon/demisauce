@@ -1,0 +1,81 @@
+{% extends "_base1col.html" %}
+{% import 'usersite_bits.html' as mns_us with context %}
+
+{% block title %}Demisauce Profile Edit Page{% endblock %}
+{% block head_more %}
+    <script type="text/javascript" gears="true" src="http://www.google.com/jsapi"></script>
+{% endblock %}
+{% block bodystart %}
+{% endblock %}
+
+{% block inner_body %}
+
+    {% if current_user and person %}
+
+        <div class="yui-gc" >
+            <div class="yui-u first" >
+                <form action="/user/account_edit" method="POST">
+                <div style="padding: 12px;" class="base_form main_form">
+                    <input type="hidden" id="id" name="id" value="{{person.id}}">
+                    <input type="hidden" name="_xsrf" id="_xsrf" value="{{ xsrf_token }}"/>
+                    <h1>User Settings</h1>
+                    <strong>Bold</strong> fields are required.
+                    <div class="required">
+                        <label for="email">Email</label>
+                        {{h.text('email', value=(person and person.email) or '', size=40)}}
+                    </div>
+                    <div class="required">
+                        <label for="displayname">Name</label>
+                        {{h.text('displayname', value=(person and person.displayname) or '', size=40)}}
+                    </div>
+                    <div class="optional">
+                        <label for="url">Url:</label>
+                        {{h.text("url", value=(person and person.url) or '', size=40)}}
+                    </div>
+                    <div class="actions">
+                        <input type="submit" class="primary" id="submit" value="Save &#187;">
+                        &nbsp;&nbsp;<a href="/user/usersettings" id="cancelnode">cancel</a>
+                    </div>
+                </div>
+                </form>
+                <form action="/user/change_pwd" method="POST">
+                <div style="padding: 12px;" class="base_form main_form">
+                    <input type="hidden" id="id" name="id" value="{{person.id}}">
+                    <input type="hidden" name="_xsrf" id="_xsrf" value="{{ xsrf_token }}"/>
+                    <h1>Change Password</h1>
+                    <div class="required">
+                        <label for="password">Current Password</label>
+                        {{h.text('password', type="password", size=40)}}
+                    </div>
+                    <div class="required">
+                        <label for="newpassword1">New Password</label>
+                        {{h.text('password1', type="password", size=40)}}
+                    </div>
+                    <div class="required">
+                        <label for="newpassword1">New Password Repeat:</label>
+                        {{h.text('password2', type="password", size=40)}}
+                    </div>
+                    <div class="actions">
+                        <input type="submit" class="primary" id="submit" value="Update &#187;">
+                        &nbsp;&nbsp;<a href="/user/usersettings" id="cancelnode">cancel</a>
+                    </div>
+                </div>
+                </form>
+            </div>
+            <div class="yui-u">
+                <div>
+                    <a href="/api/person/{{person.hashedemail}}.json">View Json API</a>
+        
+                    <div class="box2" style="margin:10px 0px;">
+                        <!-- help -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+    whoops
+
+    {% endif %}
+
+{% endblock %}

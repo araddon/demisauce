@@ -1,7 +1,8 @@
 import logging
 from sqlalchemy import Column, MetaData, ForeignKey, Table, \
     func, UniqueConstraint
-from sqlalchemy import Integer, String as DBString, DateTime, Boolean
+from sqlalchemy import Integer, String as DBString, DateTime, Boolean, \
+    Text as DBText
 from sqlalchemy import engine, orm
 from sqlalchemy.sql import and_
 from datetime import datetime
@@ -12,6 +13,7 @@ from wtforms import Form, BooleanField, TextField, TextAreaField, \
     IntegerField, validators
 from wtforms.validators import ValidationError
 from tornado import escape
+from tornado.options import options
 from demisauce import model
 from demisauce.model import meta
 from demisauce.model.site import Site
@@ -42,6 +44,24 @@ person_table = Table("person", meta.metadata,
         UniqueConstraint('email','site_id'),
     )
 
+# DB Table:  group ---------------------------
+group_table = Table("group", meta.metadata,
+        Column("id", Integer, primary_key=True),
+        Column("site_id", Integer, ForeignKey('site.id')),
+        Column("author_id", Integer, nullable=True,default=0),
+        Column("created", DateTime,default=datetime.now),
+        Column("group_type", DBString(30), default='groups'),
+        Column("name", DBString(255), nullable=False),
+        Column("slug", DBString(150), nullable=False),
+        Column("description", DBString(500)),
+        Column("contacts", DBText),
+        Column("public", Boolean, default=False),
+    )
+groupperson_table = Table('person_group', meta.metadata,
+    Column('group_id', Integer, ForeignKey('group.id')),
+    Column('person_id', Integer, ForeignKey('person.id')),
+)
+
 class SignupForm(Form):
     def validate_email(form, field):
         f = meta.DBSession().query(Person).filter(Person.email == field.data).first()
@@ -50,14 +70,18 @@ class SignupForm(Form):
             raise ValidationError(u'That Email is already in use, choose another')
     email           = TextField('Email', [validators.Email()])
 
-
 class InviteForm(Form):
     password        = PasswordField('New Password')
     password2       = PasswordField('Confirm Password', [validators.Required(), validators.EqualTo('password', message='Passwords must match')])
     displayname     = TextField('Display Name')
     sitename        = TextField('Name of your site')
-"""
+    
+class GroupForm(Form):
+    "Form validation for the comment web admin"
+    name        = TextField('Name of your Group')
+    members        = TextField('list of members')
 
+"""
 class ProducerForm(Form):
     def validate_slug(form, field):
         f = model.gsession().query(model.Producer).filter(model.Producer.slug == field.data).first()
@@ -134,9 +158,7 @@ class PersonEditValidation(formencode.Schema):
     displayname = formencode.All(validators.String(not_empty=True))
 
 class Person(ModelBase,JsonMixin):
-    """
-    User/Person, base identity and user object
-    
+    """User/Person, base identity and user object
     :email: email of user
     :site_id: id of the site the current user belongs to
     :displayname: Full Name (first + last) of user (or whatever they enter)
@@ -144,12 +166,12 @@ class Person(ModelBase,JsonMixin):
     :last_login: date they last logged on
     :hashedemail: md5 hashed email that is Gravatar_ format
     :url:  url to blog or site of user
+    :profile_url:  url to json api
     :authn:  local, google, openid, etc (which authN method to use)
     :user_uniqueid: uniqueid of user (random) for use in querystring's instead of id
     :foreign_id:  id (number) of user within your system
     :issysadmin:  is user a sysadmin (admin for all sites)
     :isadmin:   is user an admin for current site
-    
     .. _Gravatar: http://www.gravatar.com/
     """
     __jsonkeys__ = ['email','displayname','url','site_id', 'raw_password','created']
@@ -164,6 +186,12 @@ class Person(ModelBase,JsonMixin):
     def init_on_load(self):
         "called by sq after load as init type"
         self.session = {'testcrap':'crap'}
+    
+    @property
+    def profile_url(self):
+        if self.hashedemail:
+            return "%s/api/person/%s.json" % (options.base_url,self.hashedemail)
+        return "%s/api/person/%s.json" % (options.base_url,self.id)
     
     def isvalid(self):
         'after user data has been loaded in, ensures is valid'
@@ -213,7 +241,7 @@ class Person(ModelBase,JsonMixin):
         """
         Classmethod to accept an email and hash it into md5 hash
         that is a Gravatar_  email
-
+        
         returns hashed email
         
         .. _Gravatar: http://www.gravatar.com/
@@ -339,4 +367,93 @@ class Person(ModelBase,JsonMixin):
         return meta.DBSession.query(Person).filter_by(site_id=site_id,email=email).first()
     
 
+class Group(ModelBase,JsonMixin):
+    """Groups of users
+    :name: name of this group
+    :email_list: comma delimited list of email address's of this group
+    :members: List of person objects
+    :created:  date created
+    :description: description
+    """
+    def __init__(self,site_id=0, name='', description=""):
+        super(Group, self).__init__(**kwargs)
+        self.init_on_load()
+    
+    @orm.reconstructor
+    def init_on_load(self):
+        "called by sq after load as init type"
+        pass
+    
+    def save(self):
+        if ((not hasattr(self,'slug')) or self.slug == None) and self.name != None:
+            self.slug = self.makekey(self.name)
+        super(Group, self).save()
+    
+    def get_email_list(self):
+         return ', '.join(['%s' % m.email.strip(string.whitespace).lower() for m in self.members])
+    email_list = property(get_email_list)
+    
+    def add_memberlist(self,member_list):
+        """
+        Accepts a comma delimited list of contacts
+        returns a tuple of lists, first of new users not already in this group
+        2nd of users newly added to system
+        """
+        #ml = [m.strip(string.whitespace) for m in member_list.replace(';',',').split(',') if len(m) > 4]
+        ml_temp = member_list.replace(';',',').lower()
+        cl = [ e.strip(string.whitespace) for e in ml_temp.split(',') if len(e) > 5]
         
+        ml = ['%s' % m.email.strip(string.whitespace).lower() for m in self.members]
+        
+        newlist = [e for e in cl if not ml.__contains__(e.strip(string.whitespace))]
+        
+        removelist = [e for e in ml if not cl.__contains__(e.strip())]
+        [self.remove_member(e) for e in removelist]
+        addedusers = [self.add_member(e) for e in newlist]
+        newtosite = [e for e in addedusers if e != None]
+        newtogroup = [e for e in newlist if not addedusers.__contains__(e)]
+        #self.contacts = ','.join(self.__members)
+        return newtogroup, newtosite  
+    
+    def remove_member(self, newemail):
+        """
+        removes a user
+        """
+        [self.members.remove(p) for p in self.members if p.email.lower() == newemail]
+    
+    def member_byemail(self, email):
+        """
+        returns a user from members list that has given email?
+        """
+        for p in self.members:
+            if p.email.lower() == email:
+                return p
+        
+        return None
+    
+    def add_member(self, newemail):
+        # don't trust this user is new
+        p = Person.by_email(self.site_id,newemail)
+        if p and p.id > 0:
+            self.members.append(p)
+        else:
+            self.members.append(Person(site_id=self.site_id,email=newemail))
+            return newemail
+    
+    @classmethod
+    def by_site(cls,site_id=0,ct=15,filter='new'):
+        """Class method to get groups"""
+        return meta.DBSession.query(Group).filter_by(
+            site_id=site_id).order_by(group_table.c.created.desc()) #.limit(ct)
+        
+    
+    @classmethod
+    def by_slug(cls,site_id=0,slug=''):
+        """
+        Gets the group by slug for a site::
+            
+            Group.by_slug(c.site_id,'all-users')
+        """
+        return meta.DBSession.query(Group).filter_by(site_id=site_id,slug=slug).first()
+    
+   

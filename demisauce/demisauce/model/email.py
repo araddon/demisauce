@@ -14,7 +14,7 @@ from datetime import datetime
 email_table = Table("email", meta.metadata,
         Column("id", Integer, primary_key=True),
         Column("site_id", Integer, ForeignKey('site.id')),
-        Column("key", DBString(150), nullable=False),
+        Column("slug", DBString(150), nullable=False),
         Column("subject", DBString(120), nullable=False),
         Column("from_email", DBString(150), nullable=False),
         Column("reply_to", DBString(150), nullable=True),
@@ -30,14 +30,14 @@ class Email(ModelBase,JsonMixin):
         super(Email, self).__init__(**kwargs)
     
     def after_load(self):
-        if ((not hasattr(self,'key')) or self.key == None) and self.subject != None:
-            self.key = self.makekey(self.subject)
+        if ((not hasattr(self,'slug')) or self.slug == None) and self.subject != None:
+            self.slug = self.makekey(self.subject)
         if hasattr(self,'site_id') and not hasattr(self,'from_email'):
             self.site = meta.DBSession.query(model.site.Site).get(self.site_id)
             self.from_email = self.site.email
     
     def __str__(self):
-        return 'site_id=%s, email subject=%s key = %s' % (self.site_id, self.subject,self.key)
+        return 'site_id=%s, email subject=%s key = %s' % (self.site_id, self.subject,self.slug)
     
     @classmethod
     def all(cls,site_id=0):
@@ -49,11 +49,11 @@ class Email(ModelBase,JsonMixin):
         return meta.DBSession.query(Email).filter_by(site_id=site_id)
     
     @classmethod
-    def by_key(cls,site_id=0,key=''):
+    def by_slug(cls,site_id=0,slug=''):
         """
-        Gets the template by key for a site::
+        Gets the template by slug for a site::
             
-            Email.by_key(c.site_id,'welcome_to_demisauce')
+            Email.by_slug(c.site_id,'welcome_to_demisauce')
         """
-        return meta.DBSession.query(Email).filter_by(site_id=site_id,key=key).first()
+        return meta.DBSession.query(Email).filter_by(site_id=site_id,slug=slug).first()
     

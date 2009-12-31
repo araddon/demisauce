@@ -4,7 +4,7 @@ import urllib
 from tornado.options import options
 from demisauce import model
 from demisauce.model import meta, mapping, activity
-from demisauce.model.person import Person
+from demisauce.model.user import Person
 from demisauce.model.activity import Activity
 from demisauce.model.site import Site
 from demisauce.model.comment import Comment

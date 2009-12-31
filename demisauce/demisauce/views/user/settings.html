@@ -1,0 +1,80 @@
+{% extends "_base1col.html" %}
+{% import 'usersite_bits.html' as mns_us with context %}
+
+{% block title %}Demisauce Profile Page{% endblock %}
+{% block head_more %}
+    <script type="text/javascript" gears="true" src="http://www.google.com/jsapi"></script>
+{% endblock %}
+{% block bodystart %}
+{% endblock %}
+
+{% block inner_body %}
+
+
+<div class="bar1">
+    <h3>Profile Page</h3>
+</div>
+<div class="yui-g">
+    <div class="yui-u first">
+        <div class="box boxc">
+           {% if person %}
+                {{mns_us.personview(person)}}
+            {% endif %}
+        </div>
+       {% if current_user is defined and current_user.site_id == person.site_id %}
+        <div class="box box2">
+            <h3 style="">Groups</h3>
+           {% if current_user is defined and person.id == current_user.id %}
+                <div class="boxlinks right"  style="margin-top:-27px;margin-right:-13px;height:25px;">
+                    <a id="group_popup_admin" href="javascript:void(0);">Add Group</a>
+                </div>
+                <script type="text/javascript">
+                    $(document).ready(function(){
+                        $("#group_popup_admin").click(function() {
+                            //jQuery.facebox({ ajax: '{{base_url}}/groupadmin/popup' });
+                            $.ds.faceboxmanager.groupac();
+                            //jQuery.facebox('pretend this is a group autocomplete tool');
+                        });
+                    });
+                </script>
+            {% endif %}
+           {% if person is defined %}
+                {% for group in person.groups %}
+                    <div><a href="/user/group/view/{{group.id}}">{{group.name}}</a></div>
+                {% endfor %}
+
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+
+    <div class="yui-u">
+       {% if current_user is defined and (current_user.site_id == person.site_id) %}
+        <div class="box box2">
+            <h3 style="">Help/Feedback/Support Tickets</h3>
+            {{mns_us.helplist(helptickets)}}
+        </div>
+        <div  class="box box2">
+            <span class="h3"><a href="/activity/index/{{person.id}}">Activities</a></span>
+        </div>
+        <div class="box box2">
+            <h3 style="">Recent Activities</h3>
+           {% if person %}
+                {{mns_us.activities(person)}}
+            {% else %}
+                why not?
+            {% endif %}
+        </div>
+        <div class="box box2">
+            <h3 style="">Activity by Day</h3>
+           {% if person %}
+                {{mns_us.activity_graph(person, activities_by_day,false,activity_count)}}
+            {% else %}
+                no person?
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

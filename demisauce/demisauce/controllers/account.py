@@ -4,12 +4,13 @@ import json
 from tornado.options import options
 import tornado.escape
 from datetime import datetime, timedelta
+from sqlalchemy.sql import and_, or_, not_, func, select
 import demisauce.model
 from demisauce.model import meta
 from demisauce.model.site import Site
 from demisauce.model.activity import Activity
-from demisauce.model.person import Person, PersonValidation, \
-    SignupForm, PersonEditValidation, InviteForm
+from demisauce.model.user import Person, Group, PersonValidation, \
+    SignupForm, PersonEditValidation, InviteForm, GroupForm
 from demisauce.lib import QueryDict, scheduler
 from demisauce.model.comment import Comment
 from demisauce.model.activity import Activity, add_activity
@@ -28,7 +29,7 @@ def google_auth_url(return_url):
     import urllib
     from gdata import auth
     url = urllib.urlencode({'url':return_url})
-    next = '%s/account/googleauth?%s' % (options.base_url,url)
+    next = '%s/user/googleauth?%s' % (options.base_url,url)
     scope = 'http://www.google.com/m8/feeds'
     auth_sub_url = auth.GenerateAuthSubUrl(next,scope,secure=False,session=True)
     return auth_sub_url
@@ -52,14 +53,12 @@ class PasswordChangeValidation(formencode.Schema):
 
 class AccountController(RestMixin,BaseHandler):
     requires_auth = False
-    
     def options(self,action="",id=""):
         logging.debug("in Account api OPTIONS action=%s" % action)
         if action in ['pre_init_user','init_user']:
             return
         else:
             raise tornado.web.HTTPError(405)
-            
     
     def googleauth(self,id=0):
         """
@@ -95,14 +94,13 @@ class AccountController(RestMixin,BaseHandler):
             self.redirect(str(url))
         self.render('/comment/comment_login.html')
     
-    
     def index(self,id=0):
         if not self.user:
-            return self.redirect('/account/signin')
-        self.render('/account/settings.html')
+            return self.redirect('/user/signin')
+        self.render('/user/settings.html')
     
     def inviteusers(self,id=0):
-        self.render('/account/inviteusers.html')
+        self.render('/user/inviteusers.html')
     
     def inviteusers_POST(self,id=0):
         """
@@ -120,12 +118,13 @@ class AccountController(RestMixin,BaseHandler):
                     user = Person(site_id=c.site_id,email=email, displayname=email)
                     user.save()
                     #send emails
-                    url2 = urllib.quote_plus('/account/viewh/%s' % (user.hashedemail))
+                    url2 = urllib.quote_plus('/user/viewh/%s' % (user.hashedemail))
                     dnew = {}
-                    dnew['link'] = '%s/account/verify?unique=%s&node=%s&return_url=%s' %\
+                    dnew['link'] = '%s/user/verify?unique=%s&node=%s&return_url=%s' %\
                         (base_url(),user.user_uniqueid,user.id,url2)
                     dnew['from'] = self.user.displayname
                     a = Activity(site_id=user.site_id,person_id=user.id,activity='sending email invite')
+                    a.ip = self.request.remote_ip 
                     a.ref_url = 'account admin invite'
                     a.category = 'account'
                     a.save()
@@ -142,9 +141,10 @@ class AccountController(RestMixin,BaseHandler):
         elif 'invitecode' in self.request.arguments:
             self.user = meta.DBSession.query(Person).filter_by(
                         user_uniqueid=self.get_argument('invitecode')).first()
+            
             invitecode = self.get_argument('invitecode')
         form = InviteForm(QueryDict(self.request.arguments))
-        self.render('/account/sitesignup.html',invitecode=invitecode,form=form)
+        self.render('/user/sitesignup.html',invitecode=invitecode,form=form)
     
     def site_signup_POST(self,id=0):
         """
@@ -152,6 +152,7 @@ class AccountController(RestMixin,BaseHandler):
         """
         user = meta.DBSession.query(Person).filter_by(
                     user_uniqueid=self.get_argument('invitecode').lower()).first()
+        
         if user is None:
             self.add_error("We were not able to verify this invite, please \
                 try again or enter your email in the top form for the waiting list.")
@@ -170,9 +171,8 @@ class AccountController(RestMixin,BaseHandler):
             return self.redirect('/home/index?msg=Account+was+created')
         else:
             self.add_error("errors in form")
-        self.render('/account/sitesignup.html',form=form)
+        self.render('/user/sitesignup.html',form=form)
     
-    #@rest.dispatch_on(POST="verify_POST")
     def verify(self,id=0):
         if self.user:
             #h.add_alert('Already signed in.')
@@ -188,23 +188,21 @@ class AccountController(RestMixin,BaseHandler):
         if 'unique' in request.params:
             user = meta.DBSession.query(Person).filter_by(
                     user_uniqueid=request.params['unique'].lower()).first()
-            # TODO should we validate a time stamp?
             
             if user is None:
                 h.add_error("That link does not appear to be valid,\
                     please contact the person that invited you or sign up.")
                 
-                return redirect_wsave("/account/signup" )
+                return redirect_wsave("/user/signup" )
                 return self.signup()
             elif user.verified == True:
                 # this user already registered
                 h.add_alert('Already verified account')
-                return redirect_wsave("/account/signin" )
+                return redirect_wsave("/user/signin" )
             else:
                 self.user = user
-        self.render('/account/verify.html')
+        self.render('/user/verify.html')
     
-    #@validate(schema=PersonValidation(), form='verify')
     def verify_POST(self,id=0):
         """
         User has selected to enter a username pwd
@@ -236,7 +234,7 @@ class AccountController(RestMixin,BaseHandler):
         else:
             h.add_error("You need to enter an email and password to signin.")
         
-        self.render('/account/signin.html')
+        self.render('/user/signin.html')
     
     def verifycontinue(self,id=0):
         if 'unique' in request.params:
@@ -260,8 +258,7 @@ class AccountController(RestMixin,BaseHandler):
         if user:
             self.add_alert('Already signed in.')
             #redirect_wsave(action='index')
-
-        self.render('/account/signup.html',form=form)
+        self.render('/user/signup.html',form=form)
     
     def interest(self,id=0):
         """
@@ -285,14 +282,15 @@ class AccountController(RestMixin,BaseHandler):
                 user.save()
                 a = Activity(site_id=user.site_id,person_id=user.id,activity='Signup Interest Form')
                 #a.ref_url = 'comment url'
+                a.ip = self.request.remote_ip 
                 a.category = 'account'
                 a.save()
                 
-                link = '%s/account/verify?unique=%s&node=%s&return_url=%s' %\
+                link = '%s/user/verify?unique=%s&node=%s&return_url=%s' %\
                     (options.base_url,
                         user.user_uniqueid,
                         user.id,
-                        urllib.quote_plus('/account/viewh/%s' % (user.hashedemail)))
+                        urllib.quote_plus('/user/viewh/%s' % (user.hashedemail)))
                 json_dict = {
                     'emails':[user.email],
                     'template_name':'thank_you_for_registering_with_demisauce',
@@ -308,9 +306,8 @@ class AccountController(RestMixin,BaseHandler):
             self.add_alert("Thank You!")
             self.redirect("/")
         
-        return self.render('/account/signup.html',form=form)
+        return self.render('/user/signup.html',form=form)
     
-    #@rest.dispatch_on(POST="signin_POST")
     def signin(self,id=0):
         log.info('made it to account signin?' )
         email = None
@@ -324,14 +321,15 @@ class AccountController(RestMixin,BaseHandler):
                 a = Activity(site_id=user.site_id,person_id=user.id,activity='Logging In')
                 #a.ref_url = 'comment url'
                 a.category = 'account'
+                a.ip = self.request.remote_ip 
                 self.set_current_user(user)
                 return self.redirect('/home/default')
         
         if 'email' in self.cookies:
             email = self.get_cookie('email').lower()
                             
-        googleurl = google_auth_url('%s/account/usersettings' % options.base_url)
-        self.render('/account/signin.html',google_auth_url=googleurl,email=email)
+        googleurl = google_auth_url('%s/user/usersettings' % options.base_url)
+        self.render('/user/signin.html',google_auth_url=googleurl,email=email)
     
     def signin_POST(self,id=0):
         log.info('made it to account signin_POST?' )
@@ -348,6 +346,7 @@ class AccountController(RestMixin,BaseHandler):
                     a = Activity(site_id=user.site_id,person_id=user.id,activity='Logging In')
                     #a.ref_url = 'comment url'
                     a.category = 'account'
+                    a.ip = self.request.remote_ip 
                     a.save()
                     remember_me = False
                     if 'remember_me' in self.request.arguments:
@@ -362,7 +361,7 @@ class AccountController(RestMixin,BaseHandler):
         else:
             h.add_error("You need to enter an email and password to signin.")
             
-        self.render('/account/signin.html')
+        self.render('/user/signin.html')
     
     def logout(self,id=0):
         if not self.user:
@@ -390,23 +389,22 @@ class AccountController(RestMixin,BaseHandler):
             url = 'http://%s/%s?' % (request.environ['HTTP_HOST'],request.environ['PATH_INFO'])
             return_url = urllib.urlencode({'return_url':url})
             url = '%s?token_response=%s&%s' % ('http://demisauce.test:8001/handshake/initial',request.params['token'],return_url)
-            #urllib.urlencode({'return_url':'http://localhost:4951/account/handshake'})
+            #urllib.urlencode({'return_url':'http://localhost:4951/user/handshake'})
             print 'redirecting for handshake url=%s' % url
             # http://demisauce.test:8001/handshake/initial?return_url=http%3A%2F%2Flocalhost%3A4951%2Faccount%2Fhandshake&token=yourtoken
             #redirect_to('http://demisauce.test:8001/handshake/initial?return_url=http%3A%2F%2Flocalhost%3A4951%2Faccount%2Fhandshake&token=%s' % apiuser.hashed_email)
             return redirect_to(url)
         """
     
-    #@rest.dispatch_on(POST="account_edit")
     def edit(self,id=0):
         if not self.user:
              redirect_to(controller='home', action='index', id=None)
         else:
-            c.person = meta.DBSession.query(Person).filter_by(
+            person = meta.DBSession.query(Person).filter_by(
                     site_id=self.user.site_id, id=self.user.id).first()
-        self.render('/account/edit.html')
+            
+        self.render('/user/edit.html',person=person)
     
-    #@validate(schema=PersonEditValidation(), form='edit')
     def account_edit(self,id=0):
         """
         User has selected to update profile
@@ -421,13 +419,13 @@ class AccountController(RestMixin,BaseHandler):
             c.person = user
             self.user = user
             self.start_session(user)
-        self.render('/account/settings.html')
+        self.render('/user/settings.html')
     
-    #@validate(schema=PasswordChangeValidation(), form='edit')
     def change_pwd(self,id=0):
         if self.user:
             user = meta.DBSession.query(Person).filter_by(
                             email=self.user.email.lower()).first()
+            
             c.person = user
             if user.is_authenticated(self.form_result['password']):
                 #a = Activity(site_id=user.site_id,person_id=user.id,activity='Changing Password',category='account')
@@ -439,7 +437,7 @@ class AccountController(RestMixin,BaseHandler):
             else:
                 h.add_error("We were not able to verify the \
                     existing password, please try again")
-        self.render('/account/settings.html')
+        self.render('/user/settings.html')
     
     def usersettings(self,id=0):
         if not self.user:
@@ -447,6 +445,7 @@ class AccountController(RestMixin,BaseHandler):
         else:
             person = meta.DBSession.query(Person).filter_by(
                 site_id=self.user.site_id, id=self.user.id).first()
+            
             return self._view(person,getcomments=True)
     
     def _view(self,person,getcomments=False):
@@ -467,12 +466,11 @@ class AccountController(RestMixin,BaseHandler):
                     person = None
         else:
             pass #TODO:  raise error, or bad page
-        self.render('/account/settings.html',person=person,helptickets=helptickets,
+        self.render('/user/settings.html',person=person,helptickets=helptickets,
             activities_by_day=activities_by_day,activity_count=activity_count)
     
     def viewh(self,id='blah'):
-        person = meta.DBSession.query(Person).filter_by(
-            hashedemail=id).first()
+        person = meta.DBSession.query(Person).filter_by(hashedemail=id).first()
         return self._view(person,True)
     
     def view(self,id=0):
@@ -487,17 +485,116 @@ class AccountController(RestMixin,BaseHandler):
         return self._view(person,True)
     
     def view_mini(self,id=0):
-        c.person = None
-        if id > 0: # authenticated user
+        person = None
+        if id > 0:
             person = Person.get(self.user.site_id,id)
-            c.person = person
-        self.render('/account/profile_mini.html')
+        self.render('/user/profile_mini.html',person=person)
     
 
-#map.connect('user/{action}/{id}', controller='account')
-#map.connect('{controller}/{action}/{id}')
+
+class GroupController(RestMixin,BaseHandler):
+    def index(self,id=0):
+        return self.viewlist()
+    
+    def ajaxget(self,id=''):
+        if 'q' in self.request.arguments:
+            q = self.get_argument("q")
+            pl = meta.DBSession.query(Person).filter(or_(
+                Person.displayname.like('%' + q + '%'),
+                Person.email.like('%' + q + '%'))).limit(20)
+        else:
+            pl = meta.DBSession.query(Person).limit(20)
+        s = ''
+        for p in pl:
+            s += "%s|%s\n" % (p.displayname,p.email)
+        self.write(s)
+    
+    def viewlist(self,id=0):
+        item = None
+        groups = Group.by_site(self.user.site_id)
+        temp = """
+        filter = 'all'
+        if 'filter' in request.params:
+            filter = request.params['filter']
+        page = 1
+        if 'page' in request.params:
+            page = int(request.params['page'])
+        c.groups = webhelpers.paginate.Page(
+                Group.by_site(self.user.site_id),
+                page=page,items_per_page=5)
+                
+        ${h.dspager(c.groups)}
+        groups = h.dspager(groups)
+        """
+        
+        
+        self.render('/user/group.html',action='list',groups=groups)
+    
+    def view(self,id=0):
+        item = Group.get(self.user.site_id,id)
+        if not item or not item.site_id == self.user.site_id:
+            item = None
+        self.render('user/group.html',action='view',item=item)
+    
+    def addedit(self,id=0):
+        return self.viewlist(id)
+    
+    def addedit_post(self,id=''):
+        g = None
+        form = GroupForm(QueryDict(self.request.arguments))
+        print form.data
+        if form and form.validate():
+            if 'id' in self.request.arguments and self.get_argument("id") != '0':
+                g = Group.get(self.user.site_id,int(self.get_argument("id")))
+                g.name = form.name.data
+            else:
+                g = Group(self.user.site_id,form.name.data)
+            
+            newtogroup, newtosite = g.add_memberlist(form.members.data)
+            g.save()
+        #return 'newtogroup= %s,  \n newtosite=%s' % (newtogroup, newtosite)
+        return self.viewlist()
+        
+    
+    #@rest.dispatch_on(POST="group_popup_submit")
+    def popup(self,id=0):
+        item = Group()
+        self.render('/user/group_popup.html',action='edit',item=item)
+    
+    def popup_view(self,id=0):
+        item = Group.get(self.user.site_id,id)
+        if not item.site_id == self.user.site_id:
+            item = None
+        self.render('/user/group_popup.html',action='view',item=item)
+    
+    #@validate(schema=GroupFormValidation(), form='popup')
+    def popup_post(self,id=''):
+        g = None
+        form = GroupForm(QueryDict(self.request.arguments))
+        if form and form.validate():
+            if 'id' in self.request.arguments and self.get_argument("id") != '0':
+                g = Group.get(self.user.site_id,int(self.get_argument("id")))
+                g.name = form.name.data
+            else:
+                g = Group(self.user.site_id,form.name.data)
+            
+            newtogroup, newtosite = g.add_memberlist(form.members.data)
+            g.save()
+        #return 'newtogroup= %s,  \n newtosite=%s' % (newtogroup, newtosite)
+        self.popup_view(g.id)
+    
+    def edit(self,id=0):
+        item = Group.get(self.user.site_id,id)
+        if not item or not item.site_id == self.user.site_id:
+            item = None
+        self.render('/user/group.html',action='edit',item=item)
+
+
 _controllers = [
+    (r"/user/group/(.*?)/(.*?)/", GroupController),
+    (r"/user/group/(.*?)/(.*?)", GroupController),
+    (r"/user/group/(.*?)", GroupController),
     (r"/user/(.*?)/(.*?)/", AccountController),
-    (r"/account/(.*?)/(.*?)", AccountController),
-    (r"/account/(.*?)", AccountController),
+    (r"/user/(.*?)/(.*?)", AccountController),
+    (r"/user/(.*?)", AccountController),
 ]

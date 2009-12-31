@@ -1,0 +1,76 @@
+{% extends "_base2col.html" %}
+{% import 'service/service_bits.html' as service with context %}
+
+{% block title %}Demisauce Services and Applications Add/Edit{% endblock %}
+{% block head_more %}{% endblock %}
+{% block bodystart %}
+{% endblock %}
+
+{% block sidebar_top %}
+   {% if current_user is defined %}
+    <div >
+        {{service.actions()}}
+    </div>
+    <br />
+    
+    <!--
+    <div class="bar1">
+        <span class="h3">Filter By</span>
+    </div>
+    <div style="margin:8px;padding:0px;"><h4></h4></div>
+    <ul class="filter" style="margin:8px;">
+        <li><a href="/service/owner/mine" class="{{h2.is_current_filter(filter='owner',value='mine',filters=filters)}}">Owned By Me</a></li>
+        <li><a href="/service/owner/all" class="{{h2.is_current_filter(filter='owner',value='all',filters=filters)}}">All</a></li>
+        <li><a href="#" class=""></a></li>
+    </ul>
+    -->
+    {% endif %}
+    
+    
+   {% if item %}
+        <div class="box box2">
+             <h3 style="">Other Services for App: {{item.app.name}}</h3>
+            {% if item is defined and item.app.services %}
+                 {{service.minilist(item.app.services)}}
+             {% endif %}
+         </div>
+        <div class="box box2">
+             <h3 style="">Other Services for {{item.site.name}}</h3>
+            {% if item is defined and item.site.services %}
+                 {{service.minilist(item.site.services)}}
+             {% endif %}
+         </div>
+    {% else %}
+        <div class="box box2">
+            <h3 style="">Recent Updated Services</h3>
+           {% if recent %}
+                {{service.minilist(recent)}}
+            {% endif %}
+        </div>
+
+    {% endif %}
+{%- endblock %}
+
+
+
+{% block inner_body %}
+
+<div class="bar1">
+    <h3>Services listing</h3>
+</div>
+
+
+{% if item %}
+    <br />
+    {{service.detail_view(item)}}
+{% else %}
+    <div >
+        {{service.publicview(services)}}
+    </div>
+    
+{% endif %}
+
+{% endblock %}
+
+
+

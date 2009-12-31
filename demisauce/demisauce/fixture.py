@@ -6,7 +6,26 @@ site = '''
             "email": "sysadmin@demisauce.org", 
             "base_url": "http://localhost:4950",
             "slug": "demisauce",
-            "enabled":"True"
+            "enabled":"True",
+            "description":"This is to your local app non hosted version of demisauce"
+        },
+        {
+            "name": "Demisauce Sandbox", 
+            "key": "3c5121ce937a1126817b2af30b6604da6a95ffe4", 
+            "email": "sandbox@demisauce.org", 
+            "slug": "sandbox",
+            "base_url": "http://sandbox.demisauce.com",
+            "enabled":"True",
+            "description":"This is a sandbox for testing your app without touching production data"
+        },
+        {
+            "name": "Demisauce Prod", 
+            "key": "3c5121ce937a1126817b2af30b6604da6a95ffe4", 
+            "email": "prod@demisauce.org", 
+            "slug": "demisauce.com",
+            "base_url": "http://api.demisauce.com",
+            "enabled":"True",
+            "description":"This is to prod hosted version of demisauce"
         },
         {
             "name": "Django Demo App", 
@@ -31,15 +50,6 @@ site = '''
             "slug": "yoursitename",
             "base_url": "http://demisauce.yoursite.com",
             "enabled":"True"
-        },
-        {
-            "name": "Demisauce Sandbox", 
-            "key": "3c5121ce937a1126817b2af30b6604da6a95ffe4", 
-            "email": "sandbox@demisauce.org", 
-            "slug": "sandbox",
-            "base_url": "http://sandbox.demisauce.com",
-            "enabled":"True",
-            "description":"This is a sandbox for testing your app without touching production data"
         },
         {
             "name": "Local Food", 
@@ -74,7 +84,7 @@ person = '''
             "issysadmin": "False"
         },    
         {
-            "site_id": "2", 
+            "site_id": "4", 
             "displayname": "Djangodemo admin", 
             "email": "djangodemo@demisauce.org", 
             "raw_password": "admin",
@@ -84,7 +94,7 @@ person = '''
             "issysadmin": "False"
         },    
         {
-            "site_id": "3", 
+            "site_id": "5", 
             "displayname": "phpdemo admin", 
             "email": "phpdemo@demisauce.org", 
             "raw_password": "admin",
@@ -99,10 +109,18 @@ app = '''
         {
             "site_id": "1",
             "owner_id": "1",
-            "name": "demisauce.com", 
+            "name": "demisauce", 
             "list_public" : "1",
             "slug": "demisauce",
             "base_url": "http://localhost:4950", 
+            "authn": "demisauce"
+        },{
+            "site_id": "3",
+            "owner_id": "1",
+            "name": "demisauce.com", 
+            "list_public" : "1",
+            "slug": "demisauce",
+            "base_url": "http://www.demisauce.com", 
             "authn": "demisauce"
         },{
             "site_id": "1",
@@ -112,14 +130,14 @@ app = '''
             "base_url": "http://localhost:4950", 
             "authn": "demisauce"
         },{
-            "site_id": "2",
+            "site_id": "4",
             "owner_id": "3",
             "name": "djangodemo", 
             "slug": "djangodemo",
             "base_url": "http://djangodemo.test:8001", 
             "authn": "none"
         },{
-            "site_id": "3",
+            "site_id": "5",
             "owner_id": "4",
             "name": "phpdemo", 
             "slug": "phpdemo",
@@ -156,11 +174,10 @@ service = '''
             "app_id": "1",
             "owner_id": "1",
             "list_public": "1",
-            "name": "Poll Html Service", 
-            "method_url": "/api/poll/{key}.{format}?apikey={api_key}", 
-            "key": "poll",
-            "views": "",
-            "description": "Simple Polls, embeddable within your application"
+            "name": "Service Json Service", 
+            "method_url": "/api/service/{key}.{format}?apikey={api_key}", 
+            "key": "service",
+            "description": "Service Definition for the Service api itself (kinda meta)"
         },
         {
             "description": "Person Get/Add service",
@@ -194,7 +211,7 @@ service = '''
             "format": "xml",
             "description": "Email template, Get, Post"
         },{
-            "site_id": "2",
+            "site_id": "4",
             "app_id": "3",
             "owner_id": "3",
             "name": "django secure hello world html service", 
@@ -203,7 +220,7 @@ service = '''
             "views": "",
             "description": "hello world test service "
         },{
-            "site_id": "3",
+            "site_id": "5",
             "app_id": "4",
             "owner_id": "4",
             "name": "Php Demo secure hello world html service", 

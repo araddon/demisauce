@@ -167,7 +167,7 @@ def create_fixture_data(classtype):
             items.append(site)
     elif classtype == 'person':
         for persondata in jsondata:
-            person = model.person.Person().from_dict(persondata)
+            person = model.user.Person().from_dict(persondata)
             items.append(person)
         [m.after_load() for m in items]
     elif classtype == 'email':

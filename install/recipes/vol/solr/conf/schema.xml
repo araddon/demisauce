@@ -454,6 +454,12 @@
    <field name="price"  type="float" indexed="true" stored="true"/>
    <field name="popularity" type="int" indexed="true" stored="true" />
    
+   <!-- Spatial/Location Fields -->
+   <field name="lat" type="tdouble" indexed="true" stored="true"/>
+   <field name="lng" type="tdouble" indexed="true" stored="true"/>
+   <field name="geo_distance" type="tdouble"/>
+   <dynamicField name="_local*" type="tdouble" indexed="true" stored="true"/>
+   
 
 
    <!-- Common metadata fields, named specifically to match up with

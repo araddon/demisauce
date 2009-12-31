@@ -3,7 +3,7 @@ import json
 
 #import demisauce.model as model
 #from demisauce.model import mapping, meta
-#from demisauce.model.person import Person
+#from demisauce.model.user import Person
 
 log = logging.getLogger(__name__)
 """

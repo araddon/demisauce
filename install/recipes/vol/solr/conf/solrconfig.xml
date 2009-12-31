@@ -572,7 +572,7 @@
          to identify values which should be appended to the list of
          multi-val params from the query (or the existing "defaults").
 
-         In this example, the param "fq=instock:true" will be appended to
+         In this example, the param "fq=in_stock:true" will be appended to
          any query time fq params the user may specify, as a mechanism for
          partitioning the index, independent of any user selected filtering
          that may also be desired (perhaps as a result of faceted searching).
@@ -582,7 +582,7 @@
          unless you are sure you always want it.
       -->
     <lst name="appends">
-      <str name="fq">instock:true</str>
+      <str name="fq">in_stock:true</str>
     </lst>
     <!-- "invariants" are a way of letting the Solr maintainer lock down
          the options available to Solr clients.  Any params values
@@ -606,6 +606,17 @@
       <str name="facet.query">price:[* TO 500]</str>
       <str name="facet.query">price:[500 TO *]</str>
     </lst>
+  </requestHandler>
+  
+  <!-- Demisauce Spatial Addition -->
+  <requestHandler name="geo" class="org.apache.solr.handler.component.SearchHandler">
+      <arr name="components">
+          <str>localsolr</str>
+          <str>facet</str>
+          <str>mlt</str>
+          <str>highlight</str>
+          <str>debug</str>
+      </arr>
   </requestHandler>
 
 
@@ -642,7 +653,10 @@
       <str>myLastComponentName</str>
     </arr>
   -->
-
+  
+  <!-- Demisauce Spatial Addition -->
+  <searchComponent name="localsolr" class="com.pjaol.search.solr.component.LocalSolrQueryComponent" />
+  
    <!-- The spell check component can return a list of alternative spelling
   suggestions.  -->
   <searchComponent name="spellcheck" class="solr.SpellCheckComponent">
@@ -959,6 +973,18 @@
     </lst>
    </formatter>
   </highlighting>
+  
+  <!-- Demisauce Added Spatial Search -->
+  <updateRequestProcessorChain>
+      <processor class="com.pjaol.search.solr.update.LocalUpdateProcessorFactory">
+          <str name="latField">lat</str>
+          <str name="lngField">lng</str>
+          <int name="startTier">4</int>
+          <int name="endTier">25</int>
+      </processor>
+      <processor class="solr.RunUpdateProcessorFactory" />
+      <processor class="solr.LogUpdateProcessorFactory" />
+  </updateRequestProcessorChain>
 
   <!-- An example dedup update processor that creates the "id" field on the fly
        based on the hash code of some other fields.  This example has overwriteDupes
@@ -1012,7 +1038,7 @@
     <int name="xsltCacheLifetimeSeconds">5</int>
   </queryResponseWriter>
   <!--
-  <queryParser name="spatial" class="   .tier.SpatialTierQueryParserPlugin" />
+  <queryParser name="spatial" class="org.apache.solr.spatial.tier.SpatialTierQueryParserPlugin" />
   -->
   
   <!-- example of registering a query parser

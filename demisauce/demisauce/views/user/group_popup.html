@@ -1,0 +1,23 @@
+{% extends "_baseiframe.html" %}
+{% import 'user/group_bits.html' as group with context %}
+
+{% block title %}Demisauce Group Admin Page{% endblock %}
+{% block head_more %}
+{%- endblock %}
+{% block bodystart %}
+{% endblock %}
+
+{% block body %}
+
+    {% if action == 'edit' %}
+        
+        {{group.form(item,mode='popup')}}
+        
+    {% elif action == 'view' %}
+        
+        {{group.view(item)}
+        
+    {% endif %}
+    
+{% endblock %}
+

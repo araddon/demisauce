@@ -71,7 +71,7 @@
             <img alt="" src="http://www.gravatar.com/avatar/{{item.hashedemail}}?s=24" class="avatar avatar-48" height="24" width="24">
         {% endif %}
         {% if item.isuser %}
-            <a href="/account/viewh/{{item.hashedemail}}" >{{item.authorname}}</a>
+            <a href="/user/viewh/{{item.hashedemail}}" >{{item.authorname}}</a>
         {% else %}
             {{item.authorname}}
         {% endif %}
@@ -88,15 +88,15 @@
     <div id="profilesettingsform"></div>
     <div id="profilesettings">
         <div class="actionbar">
-            <span class="h3">Profile Settings</span>
-            {% if user is defined and person.id == user.id and showedit %}
-                <div class="boxlinks right"  style="margin-top:-27px;margin-right:-13px;height:25px;">
-                    <a id="profile{{person.id}}" href="/account/edit">Edit</a>
+            
+            {% if current_user and person.id == current_user.id and showedit %}
+                <div class="boxlinks right"  style="margin-top:px;margin-right:0px;height:25px;">
+                    <a id="profile{{person.id}}" href="/user/edit">Edit</a>
                 </div>
                 <script type="text/javascript">
                     $(document).ready(function(){
                         $("#NOTprofile{{person.id}}").click(function() {
-                            $.get("/account/usersettings/" ,function(data){
+                            $.get("/user/usersettings/" ,function(data){
                                 $("#profilesettingsform").html(data);
                                 $("#profilesettings").hide();
                             });
@@ -104,7 +104,7 @@
                     });
                 </script>
             {% endif %}
-
+            <span class="h3">Profile Settings</span>
         </div>
         <div class="clear"></div>
         <dl>

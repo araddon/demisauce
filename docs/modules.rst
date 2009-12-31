@@ -7,7 +7,7 @@ But, this is more.
 .. automodule:: demisauce.controllers
 .. automodule:: demisauce.model
     :members:
-.. autoclass:: demisauce.model.person.Person
+.. autoclass:: demisauce.model.user.Person
     :members:
 .. autoclass:: demisauce.model.comment.Comment
     :members:

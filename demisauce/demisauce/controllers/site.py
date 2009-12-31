@@ -10,7 +10,7 @@ from demisauce.controllers import RestMixin, BaseHandler, requires_admin
 from demisauce import model
 from demisauce.model import meta
 from demisauce.model import mapping
-from demisauce.model.person import Person
+from demisauce.model.user import Person
 from demisauce.model.site import Site
 from demisauce.model.email import Email
 

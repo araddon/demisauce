@@ -1,20 +1,19 @@
 {% import 'common.bits.html' as common with context %}
 {% import 'help/help_bits.html' as helpbits with context %}
-{% set title = 'base' %}
-{% set pagehelp = 'not' %}
-{% set attributes= {} %}
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html lang="en">
 <head>
-    <title>{% block title %}Demisauce{% endblock %} On Demisauce</title>
-    <link rel="stylesheet" href="/static/css/local.css" />
+    <title>{% block title %}Data Pipeline Appliance{% endblock %} On Demisauce</title>
     {% if settings.debug == True %}
+        <link rel="stylesheet" href="/static/css/local.css" type="text/css" />
+        <link rel="stylesheet" href="/static/js/jquery.autocomplete.css" type="text/css" />
+        <link rel="stylesheet" href="/static/css/ds.widgets.css" type="text/css" />
+        <link rel="stylesheet" href="/static/js/jquery.treeview.css" type="text/css" />
         <!--
-        <script type="text/javascript" gears="truex" src="/static/js/jquery-1.2.6.pack.js"></script>
-        <script type='text/javascript' gears="truex" src='/js/jquery.dimensions.js'></script>
-        <script type="text/javascript" gears="truex" src="/static/js/ui.mouse.js"></script>
+        <script type="text/javascript" src="/static/js/jquery-1.2.6.pack.js"></script>
+        <script type='text/javascript' src='/js/jquery.dimensions.js'></script>
+        <script type="text/javascript" src="/static/js/ui.mouse.js"></script>
         <script type="text/javascript" src="/static/js/jquery.cookie.js"></script>
-        <script type="text/javascript" src="/static/js/jquery.treeview.js"></script>
         <script type="text/javascript" src="/static/js/ui.draggable.js"></script>
         <script type="text/javascript" src="/static/js/ui.sortable.js"></script>
         <script type="text/javascript" src="/static/js/jquery.form.js"></script>
@@ -28,9 +27,8 @@
         <script type="text/javascript" src="/static/js/ds.adminbase.js"></script>
         <script type="text/javascript" src="/static/js/ds.base.js"></script>
         <script type="text/javascript" src="/static/js/ds.slugeditor.js"></script>
-        <script type="text/javascript" src="/static/js/gears_init.js"></script>
-        <script type="text/javascript" src="/static/js/ds.gears.js"></script>
     {% else %}
+        <link rel="stylesheet" href="/static/css/all-css.css" />
         <script type="text/javascript" src="/static/js/lib-js.js"></script>
         <script type="text/javascript" src="/static/js/ds-js.js"></script>
     {% endif %}
@@ -40,10 +38,6 @@
             $.ds.defaults.base_url = '{{base_url}}';
         })
     </script>
-    <link rel="stylesheet" type="text/css" href="/static/js/jquery.autocomplete.css" />
-    <link rel="stylesheet" href="/static/css/ds.widgets.css" />
-    <link rel="stylesheet" href="/static/js/jquery.treeview.css" />
-    <!--<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.3.0/build/assets/skins/sam/skin.css" />-->
     {% block head_more %}{% endblock %}
 
     <style type="text/css">
@@ -92,12 +86,12 @@
                 <div id="topnav-aux-menu">
                 {% if current_user %}
                     <a href="#" rel="facebox" id="facebox_show_href">Help</a> |
-                    <a href="/account/usersettings">Profile</a> |
-                    <a href="/account/logout">Logout</a>
+                    <a href="/user/usersettings">Profile</a> |
+                    <a href="/user/logout">Logout</a>
                 {% else %}
                     <a href="#" rel="facebox" id="facebox_show_href">Help</a> |
-                    <a href="/account/signup">Signup</a> |
-                    <a href="/account/signin">Login</a>
+                    <a href="/user/signup">Signup</a> |
+                    <a href="/user/signin">Login</a>
                 {% endif %}
                 </div>
             </div>
@@ -112,10 +106,10 @@
                 <li><a href="/dashboard" class="{{ h2.is_current(url,['/dashboard']) }}">Dashboard</a></li>
                 <li><a href="/helpadmin" class="{{h2.is_current(url,['/helpadmin'])}}">Help/Feedback</a></li>
             {% elif current_user and current_user.isadmin and ('current' == h2.is_current(url,['/account','/site','/groupadmin','/poll'])) %}
-                <li><a href="/account/usersettings" class="{{h2.is_current(url,['/account/usersettings'])}}">profile</a></li>
+                <li><a href="/user/usersettings" class="{{h2.is_current(url,['/user/usersettings'])}}">profile</a></li>
                 <li><a href="/site/view" class="{{h2.is_current(url,['/site/view'])}}">siteinfo</a></li>
                 <li><a href="/site/help" class="{{h2.is_current(url,['/site/help'])}}">Help System</a></li>
-                <li><a href="/groupadmin" class="{{h2.is_current(url,['/groupadmin'])}}">Groups</a></li>
+                <li><a href="/user/group/" class="{{h2.is_current(url,['/user/group/'])}}">Groups</a></li>
             {% elif current_user and current_user.isadmin and ('current' == h2.is_current(url,['/service/'])) %}
                 <li><a href="/service/apps" class="{{h2.is_current(url,['/service/apps'])}}">Apps</a></li>
             {% elif current_user and current_user.issysadmin and ('current' == h2.is_current(url,['/admin','/environment', '/home/css','/home/formcss'])) %}
@@ -165,7 +159,7 @@
                   <ul>
                     <li><a href="http://demisaucedoc.appspot.com">Documentation</a></li>
                     <li><a href="http://demisauce.googlecode.com">Community</a></li>
-                    <li><a href="/account/signin">Admin Login</a></li>
+                    <li><a href="/user/signin">Admin Login</a></li>
                     <li><a href="file:///Users/aaron/Dropbox/demisauce/demisauce/trunk/docs/.build/html/index.html">Documentation</a></li>
                   </ul>
                   <a href="#">testing</a>
@@ -181,10 +175,10 @@
                     <li><a href="/">Home</a></li>
                     {% if current_user and current_user.issysadmin %}
                     <li><a href="/email/">Email Admin</a></li>
-                    <li><a href="/environment">environment</a></li>
-                    <li><a href="/home/csscolors">css colors</a></li>
-                    <li><a href="/home/cssform">css form</a></li>
-                    <li><a href="/home/cssdialog">css Dialog form</a></li>
+                    <li><a href="/admin/environment">Debug</a></li>
+                    <li><a href="/admin/csscolors">css colors</a></li>
+                    <li><a href="/admin/cssform">css form</a></li>
+                    <li><a href="/admin/cssdialog">css Dialog form</a></li>
                     {% endif %}                    
                   </ul>
                 </li>

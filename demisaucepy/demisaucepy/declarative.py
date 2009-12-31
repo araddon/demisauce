@@ -13,13 +13,14 @@ Events and Aggregations::
         
         def newuser_setup(entity):
             # your logic here
-            
+        
+    
 """
 import datetime, urllib, logging, threading, time, urlparse
 from demisaucepy.cache import cache
-from demisaucepy import demisauce_ws, hash_email, \
-    ServiceDefinition, ServiceClient, RetrievalError, \
-    args_substitute
+from demisaucepy import demisauce_ws, hash_email
+from demisaucepy.service import ServiceDefinition, ServiceClient, \
+    RetrievalError, args_substitute
 
 
 DSDEBUG = False

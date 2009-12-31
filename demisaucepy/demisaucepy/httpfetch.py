@@ -88,7 +88,7 @@ def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT
     
     if urlparse.urlparse(source)[0] == 'http':
         # open URL with urllib2, or gae fetch
-        log.debug('about to open %s, extra_headers=%s' % (source,extra_headers))
+        #log.debug('about to open %s, extra_headers=%s' % (source,extra_headers))
         if ISGAE:
             if data == None or data == {}:
                 response = urlfetch.fetch(url=source,headers=extra_headers)

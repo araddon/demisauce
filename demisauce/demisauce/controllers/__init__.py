@@ -8,7 +8,7 @@ import os, logging, functools, urllib
 import re, datetime, random, string
 from demisauce import model
 from demisauce.lib import helpers, sanitize as libsanitize
-from demisauce.model.person import Person
+from demisauce.model.user import Person
 from demisauce.lib import assetmgr
 import demisauce
 import webhelpers

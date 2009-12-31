@@ -1,0 +1,219 @@
+{% macro actions() %}
+    <div class="actionbar" style="height:34px; ">
+        <div class="right boxlinks_action boxlinks"  style="margin-top:-4px;">
+            <ul>
+                <li><a href="/user/group/edit" id="addgroup" objid="0">
+                    <img  alt="Add New Group" src="/static/images/icon_add.png" style="vertical-align: bottom;" border="0" />
+                    Add New Group</a></li>
+            </ul>
+        </div>
+    </div>
+{%- endmacro %}
+{% macro group_view(item) %}
+    <div id="group_view_{{item.id}}" class="group">
+        <div class="actionbar">
+            <span class="h3">Edit</span>
+           {% if item.site_id == current_user.site_id %}
+            <div class="boxlinks right"  style="margin-top:-10px;margin-right:px;height:25px;">
+                <a id="group_{{item.id}}" href="/user/group/edit/{{item.id}}">Edit</a>
+            </div>
+             {% endif %}
+        </div>
+        <div class="clear"></div>
+        <dl>
+            <dt>Name:</dt>                  <dd>{{item.name}}</dd>
+            <dt>Created:</dt>               <dd>{{(item.created).strftime("%b %d, %Y") or ''}}</dd>
+            <dt>Description:</dt>           <dd>{{item.description}}</dd>
+            <dt>Is Public:</dt>             <dd>{{(item and item.public) or 'False'}}</dd>
+        </dl>
+        <div class="clear"></div>
+    </div>
+{%- endmacro %}
+{% macro table(items) %}
+<table class="dsadmin">
+    <thead>
+        <tr >
+            <th>Group</th>
+            <th></th>
+            <th>Created</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+   {% for item in items %}
+        <tr class='{{loop.cycle("", "alternate") }}'>
+            <td><a href="/user/group/edit/{{item.id}}">{{item.name}}</a></td>
+            <td><a href="/api/group/{{item.id}}">View JSON</a></td>
+            <td>{{(item.created).strftime("%b %d, %Y %H:%m") or ''}}</td>
+            <td>{{h2.truncate(item.description, 50)}}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<!--
+h2.dspager2(groups)
+-->
+
+{%- endmacro %}
+{% macro list(items) %}
+   {% if items %}
+   {% for item in items %}
+
+        <div id="item_{{item.id}}" class="nodedisplay clearfix">
+            <td><a href="/user/group/edit/{{item.id}}">{{item.name}}</a></td>
+            <a href="/api/group/{{item.id}}.json">View Json API</a>
+            <p class="description">
+                {{h.simple_format(item.description)}}
+            </p>
+        </div>
+
+    {% endfor %}
+    {% endif %}
+{%- endmacro %}
+{% macro view(item) %}
+   {% if item %}
+        <div id="item_{{item.id}}" class="nodedisplay clearfix">
+            <p class="description">
+                {{item.name}}, members: {{item.email_list}}
+            </p>
+        </div>
+    {% endif %}
+{%- endmacro %}
+
+{% macro form(item,mode='admin') %}
+
+    <script type="text/javascript">
+    $(document).ready(function() {
+        $('#name').focus();
+        function findValueCallback(event, data, formatted) {
+            $("<li>").html( !data ? "No match!" : "Selected: " + formatted).appendTo("#result");
+        }
+        function formatItem(row) {
+            return row[0] + " (<strong>id: " + row[1] + "</strong>)";
+        }
+        function formatResult(row) {
+            return row[1].replace(/(<.+?>)/gi, '');
+        }
+        $("#members").autocomplete('/user/group/ajaxget', {
+            width: 300,
+            multiple: true,
+            mustMatch: false,
+            selectFirst: false,
+            matchContains: true,
+            formatItem: formatItem,
+            formatResult: formatResult
+        });
+        $(":text, textarea").result(findValueCallback).next().click(function() {
+            $(this).prev().search();
+        });
+        $("#members").result(function(event, data, formatted) {
+            //var hidden = $(this).parent().next().find(">:input");
+            var hidden = $('#member_list');
+            hidden.val( (hidden.val() ? hidden.val() + ";" : hidden.val()) + data[1]);
+        });
+        $("#clear").click(function() {
+            $(":input").unautocomplete();
+        });
+        $("#ds_popup_group").click(function() {
+            jQuery.facebox({ ajax: '{{base_url}}/user/group/popup' });
+        });
+        
+    });
+    </script>
+    
+{% if mode == 'popup'%}
+    <div id="group_popup_content" style="display:;">
+        <form action="/user/group/popup_post" class="cccsmall" id="demisauce_groupadin_popupform" method="post">
+        <div class="base_form small_form" id="FormWrapper">
+            <div>
+                <div style="margin:12px 12px">
+                    <input type="hidden" id="id" name="id" value="{{item.id if item.id else 0}}">
+                    <input type="hidden" name="_xsrf" id="_xsrf" value="{{ xsrf_token }}"/>
+                    <h3>Group Add Edit</h3>
+                   <div class="required">
+                        <label for="name">Group Name</label>
+                        {{h.text('name', value=(item and item.name) or '', size=40)}}
+                    </div>
+                    <div class="optional">
+                        <label for="members">Members:</label>
+                        {{h.textarea("members", content=(item and item.email_list) or '', size="40x6")}}
+                        <input type="hidden" id="member_list" name="member_list" value="{{(item and item.email_list) or ''}}" />
+                    </div>
+                    <div class="optional">
+                        <fieldset> 
+                            <legend>Public Group?</legend>
+                                {{h.radio('public', '0',checked=(item and item.public == 0))}} False <br />
+                                {{h.radio('public', '1',checked=(item and item.public == 1))}} True <br />
+                        </fieldset> 
+                    </div>
+                </div>
+            </div>
+            <div class="actions submit">
+                <input type="submit" class="primary" id="submit" value="Save &#187;">
+            </div>
+        </div>
+        </form>
+        <script type="text/javascript">
+        $(document).ready(function() {
+            $('#demisauce_groupadin_popupform').ajaxForm({ 
+                // target identifies the element(s) to update with the server response 
+                target: '#group_popup_content', 
+                // success identifies the function to invoke when the server response 
+                // has been received; here we apply a fade-in effect to the new content 
+                success: function() { 
+                    $('#group_popup_content').fadeIn('slow'); 
+                } 
+            });
+        });
+        </script>
+    </div>
+{% else %}
+    <form action="/user/group/addedit_post" method='POST' class="cccsmall">
+    <input type="hidden" id="group_id" name="group_id" value="{{(item and item.id) or '0'}}">
+
+    <div class="base_form main_form" id="FormWrapper">
+        <div class="yui-gc" >
+            <div class="yui-u first">
+                <div>
+                    <input type="hidden" id="id" name="id" value="{{(item and item.id) or '0'}}">
+                    <input type="hidden" name="_xsrf" id="_xsrf" value="{{ xsrf_token }}"/>
+                    <h1>Group Add Edit</h1>
+                    <strong>Bold</strong> fields are required.
+                    <div class="required">
+                        <label for="name">Group Name</label>
+                        {{h.text('name', value=(item and item.name) or '', size=40)}}
+                    </div>
+                    <div class="required">
+                        <label for="members">Members:</label>
+                        {{h.textarea("members", content=(item and item.email_list) or '', size="40x6")}}
+                        <input type="hidden" id="member_list" name="member_list" value="{{(item and item.email_list) or ''}}" />
+                    </div>
+                    <div class="optional">
+                        <fieldset> 
+                            <legend>Public Group?</legend>
+                            {{h.radio('public', '0',checked=(item and item.public == 0))}} False <br />
+                            {{h.radio('public', '1',checked=(item and item.public == 1))}} True <br />
+                        </fieldset> 
+                    </div>
+                </div>
+            </div>
+            <div class="yui-u">
+                <div>
+                   {% if item %}
+                        <a href="/api/group/{{item.id}}.json">View Json API</a>
+                    {% endif %}
+                    <div class="box2" style="margin:10px 0px;">
+                        <!-- remote help html -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="actions">
+            <input type="submit" class="primary" id="submit" value="Save &#187;">
+            &nbsp;&nbsp;<a href="/user/group/index" id="cancelnode">cancel</a>
+        </div>
+    </div>
+    </form>
+
+{% endif %}
+{%- endmacro %}

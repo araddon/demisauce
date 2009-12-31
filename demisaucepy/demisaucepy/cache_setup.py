@@ -40,7 +40,7 @@ def load_memcache():
     try:
         from demisaucepy import cache as cachemodule
         cachemodule.cache = MemcacheCache(options.memcached_servers)
-        log.debug('In cache setup, setting MemcacheCache')
+        #log.debug('In cache setup, setting MemcacheCache')
         return True
     except ImportError:
         return False

@@ -12,7 +12,6 @@ def load_config():
     """load's config"""
     tornado.options.parse_command_line(["--config=../../demisauce.conf"])
     from demisaucepy import cache_setup
-    logging.debug("setting up load_cache")
     cache_setup.load_cache(cachetype=options.demisauce_cache)
 load_config()
 

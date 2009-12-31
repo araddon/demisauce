@@ -1,0 +1,70 @@
+{% extends "_base1col.html" %}
+
+{% block title %}Demisauce Integration and Services Appliance Login Page{% endblock %}
+{% block head_more %}{% endblock %}
+{% block bodystart %}
+{% endblock %}
+
+{% block inner_body %}
+
+        <div id="dialog" style="margin-top: 50px;" class="dialog base_form">
+            <div id="dialogHead"><h2>Please Login</h2></div>
+
+            <form class="small", method='post' >
+                <fieldset style="padding:10px 10px 10px 25px; height: 150px; text-align:left;" class="small">
+                    <input type="hidden" name="_xsrf" id="_xsrf" value="{{ xsrf_token }}"/>
+                    <div class="required">
+                        <label for="email">Email</label>
+                        {{h.text('email', value=user.email if user and user.eamil else '', size=40)}}
+                    </div>
+                    <div class="required">
+                        <label for="password">Password</label>
+                        {{h.text('password', type="password", size=40)}}
+                    </div>
+                    <div class="optional" style="text-align:center;">
+                        <label for="rememberme">Remember Me:</label>
+                         {{h.checkbox("remember_me", value="1", checked=(item or False), class_="inputCheckbox")}}
+                    </div>
+                </fieldset>
+                <div class="actions">
+                    <input type="submit" class="primary" id="submit" value="Login &#187;">    &nbsp;&nbsp;
+                    <a href="/" id="cancel">cancel</a>
+                </div>
+            </form>
+            <div ><h3>OR</h3></div>
+            <br />
+            {{h.form('/user/getpassword',  class_="small", id="getpassword")}}
+                <fieldset style="height: 115px; margin-top:0px; display:none;" class="small">
+                    <input type="hidden" name="_xsrf" id="_xsrf" value="{{ xsrf_token }}"/>
+                    <h3 style="margin:0px;" >Have you forgotten your password?</h3>
+                    <div class="required">
+                        <label for="name">Email</label>
+                        {{h.text('name', value=(item and item.email) or '', size=40)}}
+                    </div>
+                    <div class="required">
+                        <label for="name"></label>
+                        <input type="submit" id="submit" value="Getpassword &#187;" style="width: 180px;" >    &nbsp;&nbsp;
+                    </div>
+                </fieldset>
+
+            {{h.end_form()}}
+            
+            
+            <div><h2>Sign In using <a target="_parent" href="{{google_auth_url}}">Google</a></h2></div>
+            
+            
+            <div><h2><a href="signup" >Signup</a> for an account</h2></div>
+            
+            
+            
+            <a href="#" id="cancel">forgot your password?</a>
+
+        </div>
+    </div>
+<div class="yui-g">
+    <div class="yui-g first">
+    <div class="yui-g">
+
+    </div>
+</div>
+{% endblock %}

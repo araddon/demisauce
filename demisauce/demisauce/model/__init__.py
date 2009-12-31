@@ -99,6 +99,7 @@ def init_model(enginelocal):
 
 class JsonMixin(object):
     _json_ignore_keys = []
+    _allowed_api_keys = []
     def to_dict(self,keys=None):
         """serializes to dictionary, converting non serializeable fields
         to some other format or ignoring them"""
@@ -220,6 +221,12 @@ class ModelBase(object):
         Converts a string title to a url safe key that is unique per site
         """
         return make_key(key)
+    
+    def after_load(self):
+        pass
+    
+    def isvalid(self):
+        return True
     
     def delete(self):
         meta.DBSession.delete(self)

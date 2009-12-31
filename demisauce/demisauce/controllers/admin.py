@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import logging
+import pickle
 import json
 import urllib
 from formencode import Invalid, validators
@@ -10,7 +11,7 @@ from demisauce.controllers import NeedsadminController, RestMixin
 from demisauce import model
 from demisauce.model import meta
 from demisauce.model import mapping
-from demisauce.model.person import Person
+from demisauce.model.user import Person
 from demisauce.model.site import Site
 from demisauce.model.email import Email
 from gearman.task import Task
@@ -37,10 +38,10 @@ class AdminController(RestMixin, NeedsadminController):
             if site:
                 user = meta.DBSession.query(Person).filter_by(email=site.email).first()
                 if user:
-                    url = '%s/account/site_signup?invitecode=%s&return_url=%s' % \
+                    url = '%s/user/site_signup?invitecode=%s&return_url=%s' % \
                         (options.base_url,
                             user.user_uniqueid,
-                            urllib.quote_plus('/account/viewh/%s' % (user.hashedemail)))
+                            urllib.quote_plus('/user/viewh/%s' % (user.hashedemail)))
                     json_dict = {
                         'emails':[user.email],
                         'template_name':'welcome_to_demisauce',
@@ -57,6 +58,8 @@ class AdminController(RestMixin, NeedsadminController):
             
         return self.write('whoops, that didn\'t work')
     
+    def environment(self):
+        self.write("tbd")
 
 _controllers = [
     (r"/admin/(.*?)/(.*?)", AdminController),

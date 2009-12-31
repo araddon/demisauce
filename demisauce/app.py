@@ -55,7 +55,7 @@ class Application(tornado.web.Application):
             "static_path":os.path.join(os.path.dirname(__file__), "demisauce/static"),
             "xsrf_cookies": False,
             "cookie_secret":"32oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
-            "login_url":"/account/signin",
+            "login_url":"/user/signin",
             "redis_host":options.redis_host,
             "demisauce_url":options.demisauce_url,
             "asset_url":options.asset_url,

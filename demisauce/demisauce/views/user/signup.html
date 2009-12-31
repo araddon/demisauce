@@ -1,0 +1,43 @@
+{% extends "_base1col.html" %}
+
+{% block title %}Demisauce Integration and Services Appliance Signup Page{% endblock %}
+{% block head_more %}{% endblock %}
+{% block bodystart %}
+{% endblock %}
+
+{% block inner_body %}
+
+<div id="dialog" style="margin-top: 50px;" class="dialog">
+    <div id="dialogHead"><h2>Request an Invitation</h2></div>
+
+    {{h.form("/user/interest",  class_="small", id="interestform")}}
+        
+        <fieldset class="small" style="padding:10px 20px 10px 20px;">
+            <div class="instructions"><b></b> We are still in private beta enter your email and we
+                will send you an invitation when they are available. 
+            </div>
+            <input type="hidden" name="_xsrf" id="_xsrf" value="{{ xsrf_token }}"/>
+            <br /><br />
+            <div class="required">
+                <label for="email">Email</label>
+                {{h.text('email', value=item.email if (item and item.email) else '', size=40)}}
+                {{common.field_errors(form.email)}}
+            </div>
+        </fieldset>
+        <div class="actions">
+            <input type="submit" class="primary" id="submit" value="Submit &#187;">    &nbsp;&nbsp;
+            <a href="/" id="cancel">cancel</a>
+        </div>
+    </form>
+    <br />
+</div>
+
+
+<div class="yui-g">
+    <div class="yui-g first">
+    <div class="yui-g">
+
+    </div>
+</div>
+
+{% endblock %}

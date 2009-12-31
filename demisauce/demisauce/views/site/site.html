@@ -47,7 +47,7 @@
                            {% if item and item.users %}
                                {% for user in item.users %}
                                    {% if user.verified %}
-                                        <div><a href="/account/view/{{user.id}}">{{user.displayname}}</a></div>
+                                        <div><a href="/user/view/{{user.id}}">{{user.displayname}}</a></div>
                                     {% endif %}
                                 {% endfor %}
                             {% endif %}
@@ -64,7 +64,7 @@
                                             $("#inviteusers").click(function() {
                                                 $("#inviteusersformdiv").show();
                                                 $("#actionbarusers").hide();
-                                                $.get("/account/inviteusers" ,function(data){
+                                                $.get("/user/inviteusers" ,function(data){
                                                     $("#inviteusersformdiv").html(data);
                                                     $("#inviteusersformdiv").show();
                                                 });

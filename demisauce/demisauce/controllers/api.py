@@ -10,7 +10,7 @@ from demisauce import model
 from demisauce.model import meta
 from demisauce.model.site import Site
 from demisauce.model.email import Email
-from demisauce.model.person import Person
+from demisauce.model.user import Person, Group
 from demisauce.model.activity import Activity
 from demisauce.model.service import Service
 from gearman import GearmanClient
@@ -39,72 +39,6 @@ def requires_api(method):
         return method(self, *args, **kwargs)
     return wrapper
 
-
-class RestMethod(object):
-    def __init__(self,db,site,action='all',id='all',start=0,limit=100,request=None):
-        self.db = db
-        self.site=site
-        self.object = None
-        self.start=start
-        self.limit=limit
-        self.id = id
-        self.action=action
-        self.qry = []
-        self.request = request
-    
-    def json(self):
-        json_data = [self.json_formatter(row) for row in self.qry]
-        return json.dumps(json_data)
-    
-    def json_formatter(self,o):
-        """default json formatter, uses JsonMixin """
-        if o:
-            return o.to_dict()
-        return ''
-    
-    def handle_post(self,postargs,get_func):
-        if not self.object:
-            return []
-        
-        for key in self.__class__.object_cls._json_api_keys:
-            if key in postargs:
-                if get_func(key) == 'true':
-                    setattr(self.object,key,True)
-                elif get_func(key) == 'false':
-                    setattr(self.object,key,False)
-                else:
-                    setattr(self.object,key,get_func(key)) 
-                logging.debug("setting key,val = %s, %s" % (key,get_func(key)))
-        self.object.save()
-    
-    def get_object(self,id):
-        self.id = id
-        self.object = self.__class__.object_cls.get(id)
-        self.qry = [self.object]
-    
-    def list(self,q=None):
-        if not q:
-            logging.debug("In list.q limit = %s" % self.limit)
-            qry = self.db.session.query(self.__class__.object_cls).limit(self.limit)
-            if self.start > 0:
-                logging.debug("self.start = %s" % self.start)
-                qry = qry.offset(self.start)
-        else:
-            qry = self.db.session.query(self.__class__.object_cls).filter(
-                    self.__class__.object_cls.name.like('%' + q + '%'))
-        self.qry = qry
-    
-    def do_delete(self):
-        if self.object and hasattr(self.object,'delete'):
-            self.object.delete()
-    
-
-class RestMethodJsonPost(RestMethod):
-    def handle_post(self,postargs,get_func):
-        if not self.request:
-            return
-
-
 def requires_site(target):
     """
     A decorator to protect the API methods to be able to
@@ -130,47 +64,11 @@ def requires_site_slug(target):
         else:
             return target(self,*args)
     return decorator
-    
 
-class ApipublicController(object):
-    def activity(self,id=''):
-        if not self.user and 'hashedemail' in request.params: 
-            user = person.Person.by_hashedemail(str(request.params['hashedemail']))
-        elif self.user:
-            user = self.user
-        else:
-            return ''
-        if 'site_slug' in request.params:
-            site_slug = str(request.params['site_slug'])
-        if 'activity' in request.params:
-            action = str(request.params['activity'])
-        a = activity.Activity(site_id=user.site_id,person_id=user.id,activity=action)
-        if 'ref_url' in request.params:
-            a.ref_url = request.params['ref_url']
-        if 'category' in request.params:
-            a.category = request.params['category']
-        if 'cnames' in request.params:
-            names = [n for n in request.params['cnames'].split(',') if n != '']
-            if len(names) > 0:
-                a.custom1name = names[0]
-                a.custom1val = request.params[names[0]]
-            if len(names) > 1:
-                a.custom2name = names[1]
-                a.custom2val = request.params[names[1]]
-        a.save()
-        return a.id
-    
-
-class ApiControllerOld(object):
-    def __before__(self):
-        BaseController.__before__(self)
-        
-        # Authentication required?
-        if self.site and self.site.id > 0:
-            request.environ['api.isauthenticated'] = 'true'
-            request.environ['site'] = self.site
-        else:
-            log.debug('no apikey or self.user')
+class ApiBaseHandler(BaseHandler):
+    def __init__(self, application, request, transforms=None):
+        super(ApiBaseHandler, self).__init__(application, request, transforms=transforms)
+        self.set_status(200)
     
     def nokey(self):
         """
@@ -178,403 +76,8 @@ class ApiControllerOld(object):
         """
         response.headers['Content-Type'] = 'application/xhtml+xml'
         return "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" + \
-                "<exception id=\"401\" >Invalid API Key</exception>" 
+                "<exception id=\"401\" >Invalid API Key</exception>"
     
-    def connect(self,format='html',id=''):
-        """
-        Used by clients to test connectivity
-        returns
-            'connected, valid api key' if api key is valid
-            'invalid api key but connected' if api key isn't valid
-        """
-        if self.site and self.site.id > 0:
-            return 'connected, valid api key'
-        else:
-            return 'invalid api key but connected'
-    
-    @requires_site
-    def cms(self,format='html',id=''):
-        if not 'site' in request.environ:
-            return self.nokey()
-        
-        c.len = 0
-        from demisauce.model.cms import Cmsitem
-        if id != '' and id != None:
-            rid = urllib.unquote_plus(id)
-            c.cmsitems = meta.DBSession.query(Cmsitem).filter_by(rid=rid).all()
-            if (c.cmsitems and len(c.cmsitems) == 1) and \
-                (c.cmsitems[0].item_type == "folder" or \
-                c.cmsitems[0].item_type == 'root'):
-                c.cmsitems = [itemassoc.item for itemassoc in c.cmsitems[0].children]
-        else:
-            c.cmsitems = meta.DBSession.query(Cmsitem).all()
-        
-        c.resource_id = id
-        if c.cmsitems == []:
-            log.debug('404, no items rid=%s' % id)
-            abort(404, 'No items found')
-        
-        if format == 'html':
-            self.render('/api/cms.html')
-        elif format == 'xml':
-            response.headers['Content-Type'] = 'application/xhtml+xml'
-            c.len = len(c.cmsitems)
-            self.render('/api/cms.xml')
-        elif format == 'script':
-            self.render('/api/cmsjs.js')
-        else:
-            raise 'not implemented'
-    
-    @requires_site
-    def help(self,format='script',id=''):
-        if id != '' and id != None:
-            rid = urllib.unquote_plus(id)
-            c.cmsitems = meta.DBSession.query(cms.Cmsitem).filter_by(rid=rid).all()
-            if (c.cmsitems and len(c.cmsitems) == 1) and \
-                (c.cmsitems[0].item_type == "folder" or \
-                c.cmsitems[0].item_type == 'root'):
-                c.cmsitems = [itemassoc.item for itemassoc in c.cmsitems[0].children]
-            
-        if c.site and c.site.id:
-            url = id.replace('root/help','')
-            topinfo = help.HelpResponse.for_url(c.site,url,5)
-            c.topinfo = [hr for hr in topinfo] # get something that can do a len()
-            log.debug('url=%s, topinfo = %s' % (url,c.topinfo))
-        
-        c.resource_id = id
-        results = render('/api/cms.html')
-        data = {'success':True,'html':results,'key':id}
-        jsonstring = json.dumps(data)
-        if format == 'json':
-            response.headers['Content-Type'] = 'text/json'
-            return '%s(%s)' % (request.params['jsoncallback'],jsonstring)
-        else:
-            return results
-        #self.render('/api/cmsjs.js')
-    
-    @requires_site
-    def comment(self,format='json',id=''):
-        site = request.environ['site']
-        #site2 = Site.by_slug(str(id))
-        #if site2.id != site.id and 'apikey' in request.params and request.params['apikey'] == site2.key:
-        #    site = site2 # logged in user not same as 
-        c.len = 0
-        
-        if id != '' and id != None:
-            rid = urllib.unquote_plus(id)
-            log.info('comment rid= %s' % id)
-            c.comments = Comment.for_url(site_id=site.id,url=rid)
-        else:
-            c.comments = Comment.all(site.id)
-        
-        c.items = c.comments
-        c.resource_id = urllib.quote_plus(id)
-        
-        if format == 'html':
-            self.render('/api/comment.html')
-        elif format == 'xml':
-            response.headers['Content-Type'] = 'application/xhtml+xml'
-            if c.comments == []:
-                #log.info('404, no comments siteid=%s, uri=%s' %(site.id,rid))
-                #abort(404, 'No items found')
-                c.len = 0 # no comments is ok, right?
-            else:
-                c.len = len(c.comments)
-            self.render('/api/comment.xml')
-        elif format == 'view':
-            c.show_form = True
-            c.source = 'remote_html'
-            c.len = len(c.comments)
-            c.hasheader = True
-            c.site_slug = site.slug
-            #raise 'eh'
-            self.render('/comment/comment_nobody.html')
-        elif format == 'json':
-            self.render('/api/comment.js')
-        else:
-            raise NotImplementedError('format of type %s not supported' % format)
-    
-    @requires_site
-    def email(self,format='html',id='',**kw):
-        site = request.environ['site']
-        class email(RestApiMethod):
-            def get(self, **kw):
-                self.render('/api/email.xml')
-            def post(self, **kw):
-                return 'not implemented'
-            def put(self, **kw):
-                return 'not implemented'
-            def delete(self, **kw):
-                return 'not implemented'
-        
-        if id != '' and id != None:
-            c.emailtemplates = Email.by_key(site_id=site.id,key=id)  
-            if c.emailtemplates:
-                c.item = c.emailtemplates
-                c.emailtemplates = [c.item]       
-        else:
-            c.emailtemplates = Email.all(site_id=site.id)
-        
-        if not c.emailtemplates:
-            log.info('no email templates?  Should be site=%s' % site)
-            c.emailtemplates = []
-        
-        kw.update({'format':format})
-        return email()(**kw)
-    
-    @requires_site
-    def send_email(self,format='xml',id=''):
-        """
-        Sends an email, accepts dictionary of info
-        that it will hash into email to send
-        """
-        if not 'site' in request.environ:
-            return self.nokey()
-        
-        if id != '' and id != None:
-            site = request.environ['site']
-            email = Email.by_key(site.id,id)
-            if email:
-                c.item = email
-            
-    
-    #@requires_site
-    def service(self,format='xml',id='',**kw):
-        #site = request.environ['site']
-        class servicerest(RestApiMethod):
-            def get(self, **kw):
-                self.render('/api/service.xml')
-            def post(self, **kw):
-                return 'not implemented'
-            def put(self, **kw):
-                return 'not implemented'
-            def delete(self, **kw):
-                return 'not implemented'
-        
-        if id != '' and id != None:
-            app,service = id.split('/')
-            services = model.service.Service.by_app_service(appkey=app,servicekey=service)  
-            if services:
-                c.services = [services]       
-        else:
-            c.services = model.service.Service.all()
-        
-        if not c.services:
-            log.info('no services?  Should be id=%s' % id)
-        
-        kw.update({'format':format})
-        return servicerest()(**kw)
-    
-    @requires_site
-    def person(self,format='xml',id=''):
-        if c.site:
-            verb = request.environ['REQUEST_METHOD'].lower()
-            p = None
-            if verb == 'get':
-                if id == '' or id == None:
-                    c.persons = person.Person.by_site(c.site.id)
-                else:
-                    p = person.Person.by_hashedemail(c.site.id,id)
-                    c.persons = [p]
-            elif verb == 'post' or verb == 'put':
-                postvals = {}
-                p = person.Person.by_hashedemail(c.site.id,id)
-                for pkey in request.params:
-                    postvals[pkey] = request.params[pkey]
-                if p == None: # new not edit
-                    p = person.Person(site_id=c.site.id,email=request.params['email'])
-                if 'authn' in request.params:
-                    p.authn = request.params['authn']
-                if 'displayname' in request.params:
-                    p.displayname = request.params['displayname']
-                p.save()
-                c.persons = [p]
-            elif verb == 'delete':
-                return 'delete'
-            else:
-                return 'what?'
-            response.headers['Content-Type'] = 'application/xhtml+xml'
-            
-            self.render('/api/person.xml')
-        else:
-            log.info('person: no site key %s' % (c.site))
-            return 'no site key'
-    
-    @requires_site
-    def group(self,format='xml',id=0, **kwargs):
-        if c.site:
-            verb = request.environ['REQUEST_METHOD'].lower()
-            g = group.Group.get(c.site.id,id)
-            if not g or not g.site_id == c.site.id:
-                #g = None
-                return 'crap %s' % id
-            if verb == 'get':
-                pass
-            elif verb == 'post' or verb == 'put':
-                postvals = {}
-                for pkey in request.params:
-                    postvals[pkey] = request.params[pkey]
-                else:
-                    g = group.Group(c.site.id,request.params['name'])
-                if 'authn' in request.params:
-                    g.authn = request.params['authn']
-                if 'displayname' in request.params:
-                    g.displayname = request.params['displayname']
-                g.save()
-            elif verb == 'delete':
-                return 'delete'
-            else:
-                return 'what?'
-            response.headers['Content-Type'] = 'application/xhtml+xml'
-            c.groups = [g]
-            self.render('/api/group.xml')
-        else:
-            return 'no site key'
-    
-    @requires_site
-    def poll(self,format='xml',id='',**kw):
-        site = request.environ['site']
-        if site:
-            p = None
-            c.polls = []
-            if id != '' and id != None:
-                id = str(urllib.unquote_plus(id))
-            
-            if id == '' or id == None:
-                c.polls = poll.Poll.by_site(site.id)
-            else:
-                p = poll.Poll.by_key(site.id,id)
-                if p is None:
-                    c.polls = []
-                elif type(p) != list:
-                    c.polls = [p]
-            class pollrest(RestApiMethod):
-                def get(self, **kw):
-                    self.render('/api/poll.xml')
-                def post(self, **kw):
-                    raise NotImplementedError('not implemented')
-                def put(self, **kw):
-                    raise NotImplementedError('not implemented')
-                def delete(self, **kw):
-                    raise NotImplementedError('not implemented')
-            
-            if format == 'xml':
-                response.headers['Content-Type'] = 'application/xhtml+xml'
-            elif p is not None and format == 'view':
-                return '%s %s' % (p.html,p.results)
-            kw.update({'format':format})
-            return pollrest()(**kw)
-        else:
-            return 'no site key'
-    
-
-class ApiHandler(BaseHandler):
-    def nonresponse(self,status_code):
-        self.set_status(status_code)
-        self.write("{'status':'failure'}")
-        return
-    
-    def do_api_method(self,http_method="get",noun=None,id='list', action=None,format="json"):
-        object_id = 0
-        # /api/noun/id/action.format?apikey=key&limit=100&start=101
-        # /api/noun/id/selector(action).format
-        # /api/noun.format shortcut for /api/noun/list.format or /api/noun/all.format
-        # /api/noun/id.format
-        format = format if format is not None else "json"
-        id = 'list' if (id == '' or id == 'all') else id
-        format = format.replace('.','')
-        q = self.get_argument("q",None)
-        limit = self.get_argument("limit",'100')
-        if not limit.isdigit():
-            limit = 100
-        else:
-            limit = int(limit)
-            limit = 1000 if limit > 1000 else limit
-        start = self.get_argument("start",'0')
-        if not start.isdigit():
-            start = 0
-        else:
-            start = int(start)
-        logging.debug("API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s" % (noun,id,action,format,self.request.path,start,limit))
-        
-        if noun in {}:
-            api_handler = {}[noun](self.db,self.site,action=action,id=id,
-                    limit=limit,start=start,request=self.request)
-            jsonstring = '{}'
-            if id and id == 'list':
-                api_handler.list(q=q)
-                logging.debug("found list request")
-            else:
-                id = int(id) if id.isdigit() else id
-                logging.debug("get_object %s" % id)
-                api_handler.get_object(id)
-            
-            if http_method == 'post':
-                logging.debug("BODY = %s" % (self.request.body))
-                logging.debug("POST ARGS: %s" % (self.request.arguments))
-                api_handler.handle_post(self.request.arguments,self.get_argument)
-            elif http_method == 'delete':
-                api_handler.delete()
-            
-            #  ===== Which data to show, prep formatting
-            if action in ['addupdate','delete']:
-                jsonstring = '{"msg":"success"}'
-            elif action == 'list' or action == 'get':
-                logging.debug("list/get json()")
-                jsonstring = api_handler.json()
-            elif hasattr(api_handler,action):
-                logging.debug("custom action = %s" % action)
-                jsonstring = getattr(api_handler,action)()
-            else: 
-                jsonstring = api_handler.json()
-            
-            # ==== Serialization Format
-            if format == 'json':
-                self.set_header("Content-Type", "application/json")
-                if 'jsoncallback' in self.request.arguments:
-                    self.write('%s(%s)' % (self.get_argument('jsoncallback'),jsonstring))
-                elif 'callback' in self.request.arguments:
-                    self.write('%s(%s)' % (self.get_argument('callback'),jsonstring))
-                else:
-                    self.write('%s' % (jsonstring))
-            elif format == 'xml':
-                self.set_header("Content-Type", 'application/xhtml+xml')
-                
-        
-        else:
-            raise tornado.web.HTTPError(404)
-    
-    def get(self,noun=None,id='all',action=None,format="json"):
-        log.debug("in api handler")
-        self.do_api_method("get",noun, id,action,format)
-    
-    def post(self,noun=None,id='all',action=None,format="json"):
-        self.do_api_method("post",noun, id,action,format)
-    
-    def delete(self,noun=None,id='all',action=None,format="json"):
-        logging.info("in DELETE")
-        self.do_api_method("delete",noun, id,action,format)
-    
-
-class ApiSimpleHandler(ApiHandler):
-    @requires_site
-    def get(self,noun=None,id=0,format="json"):
-        logging.debug("hit on simple handler")
-        super(ApiSimpleHandler,self).get(noun,id,'get',format)
-    
-    @requires_site
-    def post(self,noun=None,id=0,format="json"):
-        logging.debug("in simple handler")
-        super(ApiSimpleHandler,self).post(noun,id,'addupdate',format)
-    
-    @requires_site
-    def delete(self,noun=None,id=0,format="json"):
-        logging.debug("in simple handler")
-        super(ApiSimpleHandler,self).delete(noun,id,'delete',format)
-    
-
-
-class ApiBaseHandler(BaseHandler):
     def args_todict(self):
         d = {}
         for k in self.request.arguments.keys():
@@ -644,7 +147,7 @@ class ApiBaseHandler(BaseHandler):
             return o.to_dict()
         return ''
     
-    def handle_post(self):
+    def handle_post_old(self):
         if not hasattr(self,'object') or not self.object:
             return []
         
@@ -660,8 +163,41 @@ class ApiBaseHandler(BaseHandler):
                     logging.debug("setting key,val = %s, %s" % (key,self.get_argument(key)))
             self.object.save()
     
+    def _add_object(self,data_dict):
+        if self.id not in ['',None,'list','get','all']:
+            o = None
+            if self.id == 0:
+                pass
+            else:
+                o = self.__class__.object_cls.get(self.site.id,self.id)
+            if not o:
+                o = self.__class__.object_cls()
+                o.site_id = self.site.id
+            log.debug("about to update %s" % data_dict)
+            o.from_dict(data_dict,allowed_keys=self.__class__.object_cls._allowed_api_keys)
+            o.after_load()
+        
+        if o and o.isvalid():
+            self.object = o
+            self.qry.append(o)
+            log.debug("saving updated object")
+            o.save()
+            self.set_status(201)
+        else:
+            log.error("what went wrong, not valid %s" % o)
+    
+    def handle_post(self):
+        logging.debug("in handle post, args= %s, body=%s" % (self.request.arguments,self.request.body))
+        if self.is_json_post():
+            json_dict = json.loads(self.request.body)
+            if json_dict:
+                for json_data in json_dict:
+                    self._add_object(json_data)
+        else:
+            self._add_object(self.args_todict())
+    
     def action_get_object(self,id):
-        self.object = self.__class__.object_cls.get(id)
+        self.object = self.__class__.object_cls.saget(id)
         self.qry = [self.object]
     
     def action_get_list(self,q=None):
@@ -753,7 +289,13 @@ class ApiBaseHandler(BaseHandler):
     
     def post(self,noun=None,requestid='all',action=None,format="json"):
         self.normalize_args(noun, requestid,action,format)
-        logging.debug("API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit))
+        logging.debug("POST API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit))
+        self.do_post()
+        self.render_to_format()
+    
+    def put(self,noun=None,requestid='all',action=None,format="json"):
+        self.normalize_args(noun, requestid,action,format)
+        logging.debug("PUT API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit))
         self.do_post()
         self.render_to_format()
     
@@ -781,14 +323,12 @@ class ActivityApiHandler(ApiBaseHandler):
         self.qry = []
     
     def get(self,site_slug='',format="json"):
-        #logging.debug("hit on activity handler")
-        #super(ActivityApiHandler,self).get(noun="activity",id=site_slug,action='get',format=format)
         if not self.user and 'hashedemail' in self.request.arguments: 
-            user = person.Person.by_hashedemail(str(self.get_argument('hashedemail')))
+            user = user.Person.by_hashedemail(str(self.get_argument('hashedemail')))
         elif self.user:
             user = self.user
         else:
-            return 
+            return
         
         if 'site_slug' in self.request.arguments:
             site_slug = str(self.get_argument('site_slug'))
@@ -796,6 +336,7 @@ class ActivityApiHandler(ApiBaseHandler):
             activity_name = str(self.get_argument('activity'))
         
         a = Activity(site_id=user.site_id,person_id=user.id,activity=activity_name)
+        a.ip = self.request.remote_ip 
         if 'ref_url' in self.request.arguments:
             a.ref_url = self.get_argument('ref_url')
         if 'category' in self.request.arguments:
@@ -825,7 +366,7 @@ class EmailApiHandler(ApiSecureHandler):
         if type(id) == int:
             self.object = Email.get(site_id=self.site.id,id=id) 
         else:
-            self.object = Email.by_key(site_id=self.site.id,key=id)  
+            self.object = Email.by_slug(site_id=self.site.id,slug=id)  
         if self.object:
             self.qry = [self.object]
         else:
@@ -842,7 +383,7 @@ class EmailApiHandler(ApiSecureHandler):
     
     def json_formatter(self,o):
         if o:
-            keys=['key','name','subject','from_email',
+            keys=['slug','name','subject','from_email',
                 'reply_to','id','from_name','template','to']
             output = o.to_dict(keys=keys)
             return output
@@ -851,7 +392,7 @@ class EmailApiHandler(ApiSecureHandler):
     def action_get_list(self,q=None):
         if q:
             qry = self.db.session.query(Email).filter(and_(
-                Email.name.like('%' + qry + '%'),Email.site_id==self.site.id))
+                Email.name.like('%' + q + '%'),Email.site_id==self.site.id))
         else:
             qry = Email.all(site_id=self.site.id)
             logging.debug("in email list, qry = %s" % qry)
@@ -889,7 +430,7 @@ class PersonApiHandler(ApiSecureHandler):
         self.object = Person.by_hashedemail(self.site.id,self.id)
         self.qry = [self.object]
     
-    def _add_user(self,user_dict):
+    def _add_object(self,user_dict):
         if self.id not in ['',None,'list','get','all']:
             p = Person.by_hashedemail(self.site.id,self.id)
             if not p:
@@ -905,20 +446,21 @@ class PersonApiHandler(ApiSecureHandler):
             p.save()
             self.set_status(201)
     
-    def handle_post(self):
+    def handle_post_old(self):
         #logging.debug("in handle post, args= %s, body=%s" % (self.request.arguments,self.request.body))
         if self.is_json_post():
             json_dict = json.loads(self.request.body)
             if json_dict:
                 for json_user in json_dict:
-                    self._add_user(json_user)
+                    self._add_object(json_user)
         else:
-            self._add_user(self.args_todict())
+            self._add_object(self.args_todict())
     
     def json_formatter(self,o):
         if o:
-            output = o.to_dict(keys=['name','displayname','id','email','url',
-                'hashedemail','user_uniqueid','foreign_id','authn','extra_json'])
+            logging.debug("in person api handler  %s" % o.profile_url)
+            output = o.to_dict(keys=['name','displayname','id','email','profile_url','url',
+                'hashedemail','foreign_id','authn','extra_json'])
             #if o.region and o.region.id > 0:
             #    output['region'] = o.region.to_dict(keys=['name','metro_code']) # keys=['name','metro_code']
             return output
@@ -927,7 +469,7 @@ class PersonApiHandler(ApiSecureHandler):
     def action_get_list(self,q=None):
         if q:
             qry = self.db.session.query(Person).filter(and_(
-                Person.name.like('%' + qry + '%'),Person.is_anonymous==1))
+                Person.name.like('%' + q + '%'),Person.is_anonymous==1))
         else:
             qry = self.db.session.query(Person).filter(and_(Person.site_id==self.site.id))
         self.qry = qry
@@ -969,12 +511,45 @@ class PersonApiHandler(ApiSecureHandler):
 
 class ServiceApiHandler(ApiSecureHandler):
     object_cls = Service
+    def _add_object_notneeded(self,data_dict):
+        if self.id not in ['',None,'list','get','all']:
+            o = None
+            if self.id != 0:
+                o = Service.get(self.site.id,self.id)
+            if not o:
+                o = Service()
+                o.site_id = self.site.id
+            
+            o.from_dict(data_dict,allowed_keys=Service._allowed_api_keys)
+            o.after_load()
+        
+        if o and o.isvalid():
+            self.object = o
+            self.qry.append(o)
+            o.save()
+            self.set_status(201)
+    
+    def handle_post_notneeded(self):
+        #logging.debug("in handle post, args= %s, body=%s" % (self.request.arguments,self.request.body))
+        if self.is_json_post():
+            json_dict = json.loads(self.request.body)
+            if json_dict:
+                for json_data in json_dict:
+                    self._add_object(json_data)
+        else:
+            self._add_object(self.args_todict())
+    
     def action_get_object(self,id):
-        self.object = Service.by_app_service(servicekey=id)  
+        if isinstance(id,int):
+            self.object = Service.saget(id)  
+        else:
+            self.object = Service.by_app_service(servicekey=id)  
+        
         if self.object:
             self.qry = [self.object]
         else:
-            logging.error("no service %s" % self.action)
+            self.set_status(404)
+            logging.error("no service %s" % self.id)
     
     def json_formatter(self,o):
         if o:
@@ -991,32 +566,84 @@ class ServiceApiHandler(ApiSecureHandler):
     def action_get_list(self,q=None):
         if q:
             qry = self.db.session.query(Service).filter(and_(
-                Service.name.like('%' + qry + '%'),Service.list_public==True))
+                Service.name.like('%' + q + '%'),Service.list_public==True))
         else:
             qry = self.db.session.query(Service).filter(Service.list_public==True)
             logging.debug("in services list, qry = %s" % qry)
         self.qry = qry
     
 
+class GroupApiHandler(ApiSecureHandler):
+    object_cls = Group
+    def action_get_object(self,id):
+        if type(id) == int:
+            self.object = Group.get(site_id=self.site.id,id=id) 
+        else:
+            self.object = Group.by_slug(site_id=self.site.id,slug=id)  
+        if self.object:
+            self.qry = [self.object]
+        else:
+            logging.error("no Group %s" % self.id)
+    
+    def send(self):
+        logging.error("in send of email api")
+        emailjson = json.loads(self.request.body)
+        if emailjson and 'template_name' in emailjson:
+            logging.error("weehah, body json = %s" % emailjson)
+            #TODO:  revamp and use self.db.gearman_client
+            gearman_client = GearmanClient(options.gearman_servers)
+            gearman_client.do_task(Task("email_send",self.request.body, background=True))
+    
+    def json_formatter(self,o):
+        if o:
+            output = o.to_dict(keys=['name','slug','id','url'])
+            if o.members:
+                members = []
+                for m in o.members:
+                    members.append(m.to_dict(keys=['displayname','email','id']))
+                output['members'] = members
+            return output
+        return None
+    
+    def action_get_list(self,q=None):
+        if q:
+            qry = self.db.session.query(Group).filter(and_(
+                Group.name.like('%' + q + '%'),Email.site_id==self.site.id))
+        else:
+            qry = self.db.session.query(Group).filter(Email.site_id==self.site.id)
+            logging.debug("in group list, qry = %s" % qry)
+        self.qry = qry
+    
+
+class HookApiHandler(BaseHandler):
+    def get(self,*args,**kwargs):
+        logging.debug("in get")
+    
+    def post(self,*args):
+        logging.debug("POST %s" % self.request.arguments)
+    
 
 """ GET  : get
     POST : add/update
     DELETE: delete
     
     /api/noun/id/(action|filter|property)
-    (?:\/)?
     
     (r"/api/(.*?)/([0-9]*?|.*?|all|list)/(.*?)(?:\.)?(json|xml|custom)?", ApiSecureHandler),
     (r"/api/(.*?)/([0-9]*?|.*?|all|list)(.json|.xml|.custom)?", ApiSimpleHandler),
 """
 _controllers = [
+    (r"/api/(hook|webhook)(?:\/)?(.*?)",HookApiHandler), 
     (r"/api/(activity)/(.*?)", ActivityApiHandler),
     (r"/api/(user|person)/(.*?)/(init_user|tbdmorestuff)", PersonAnonApi),
     (r"/api/(user|person)/([0-9]*?|.*?)/(.*?).(json|xml|custom)?", PersonApiHandler),
     (r"/api/(user|person)/(.*?).(?:json|xml|custom)", PersonApiHandler),
     (r"/api/(user|person)/(.*?)", PersonApiHandler),
+    (r"/api/group/([0-9]*?|.*?)/(.*?).(json|xml|custom)?", GroupApiHandler),
+    (r"/api/group/(.*?).(?:json|xml|custom)", GroupApiHandler),
+    (r"/api/group/(.*?)", GroupApiHandler),
     (r"/api/(email)/([0-9]*?|.*?|all|list)/(.*?)(?:\.)?(json|xml|custom)?", EmailApiHandler),
     (r"/api/(email)/(.*?)(.json|.xml|.custom)", EmailApiHandler),
     (r"/api/(service)/([0-9]*?|.*?|all|list)/(.*?)(?:\.)?(json|xml|custom)?", ServiceApiHandler),
-    (r"/api/(service)/(.*?)(.json|.xml|.custom)", ServiceApiHandler),
+    (r"/api/(service)/(.*?)(?:.json|.xml|.custom)", ServiceApiHandler),
 ]

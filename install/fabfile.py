@@ -7,8 +7,10 @@ from fabric.contrib.project import rsync_project
 import os, json, datetime
 
 # TODO convert to chef
-# mysql isn't reachable from remote because of permissions in db
 # TODO persistent state?   between runs?  couchdb?  json file on server?
+# TODO: add this line to /etc/mysql/my.cnf    bind-address            = 192.168.0.106
+#   mysql isn't reachable from remote because of permissions in db
+# TODO:  stderr files in /tmp from supervisord?   
 
 # =============    globals
 env.project_name = 'demisauce'
@@ -343,7 +345,18 @@ EOL
     sudo("chmod 755 /etc/init.d/tomcat6")
     sudo("sudo update-rc.d tomcat6 start 91 2 3 4 5 . stop 20 0 1 6 .")
     sudo("/etc/init.d/tomcat6 start")
+    
 
+
+def _solr_spatial():
+    'install solr spatial search'
+    #http://craftyfella.blogspot.com/2009/12/installing-localsolr-onto-solr-14.html
+    with cd("/tmp"):
+        sudo("rm -rf *")
+        run("wget http://www.nsshutdown.com/solr-example.tgz")
+        run("tar xfzv solr-example.tgz")
+        sudo("mv /tmp/solr-example/apache-solr-1.4.0/example/solr/lib/lucene-spatial-2.9.1.jar  /usr/local/tomcat6/webapps/dssolr/WEB-INF/lib/")
+        sudo("mv /tmp/solr-example/apache-solr-1.4.0/example/solr/lib/localsolr.jar  /usr/local/tomcat6/webapps/dssolr/WEB-INF/lib/")
 
 def _install_ds():
     "Installs Demisauce From Source"
@@ -519,6 +532,7 @@ def build(rootmysqlpwd="demisauce",userdbpwd="demisauce",host=None,local=False):
     _redis_conf_update()
     _supervisord_install()
     _install_solr()
+    _solr_spatial()
     # move from temp home to /etc
     sudo("rsync  -pthrvz  /home/demisauce/src/demisauce/install/recipes/etc /") 
     #supervisor_update() # also starts supervisord

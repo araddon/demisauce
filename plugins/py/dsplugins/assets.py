@@ -78,15 +78,13 @@ def image_resize(job_object):
                 ratio = size/width
             elif height > width and height > size:
                 ratio = size/height
+            else: # 1/1
+                ratio = size/width
             
             height = int(height*ratio)
             width = int(width*ratio)
             #print("new ratio = %s:  size(x,y) = %s,%s" % (ratio,width,height))
-            if ratio != float(1):
-                img.resize((width, height),Image.ANTIALIAS).save(new_file)
-            else:
-                img.save(new_file)
-        
+            img.resize((width, height),Image.ANTIALIAS).save(new_file)
         
         logging.debug("going to try to find at:  %s" % local_path_wfile)
         keeptrying, seconds = True, 0

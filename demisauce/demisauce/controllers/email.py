@@ -27,7 +27,7 @@ class EmailController(RestMixin, SecureController):
             items = [meta.DBSession.query(Email).get(id)]
         else:
             items = meta.DBSession.query(Email).filter_by(site_id=self.user.site_id).all()
-        self.render('/email.html',items=items)
+        self.render('email.html',items=items)
     
     #@validate(schema=EmailFormValidation(), form='index')
     def addupdate(self,id=0):
@@ -41,7 +41,7 @@ class EmailController(RestMixin, SecureController):
         item.template = self.form_result['template']
         item.from_name = self.form_result['from_name']
         item.from_email = self.form_result['from_email']
-        item.key = self.form_result['real_permalink']
+        item.slug = self.form_result['real_permalink']
         item.to = self.form_result['to']
         item.save()
         self.add_alert('updated email template')
@@ -55,10 +55,11 @@ class EmailController(RestMixin, SecureController):
         return self.redirect('/email/index')
     
     def edit(self,id=0):
+        logging.debug("????? in edit")
         item = Email.get(self.user.site_id,id=id)
         if item == None and (id == None or id == 0):
             item = Email(site_id=self.user.site_id,subject='')
-        self.render('/email.html',item=item)
+        self.render('email.html',item=item)
     
     @requires_admin
     def testsecurity(self,id=0):
@@ -68,5 +69,6 @@ class EmailController(RestMixin, SecureController):
     
 
 _controllers = [
-    (r"/email(?:\.)?(.*?)", EmailController),
+    (r"/email/(.*?)/(.*?)", EmailController),
+    (r"/email/(.*?)", EmailController),
 ]
