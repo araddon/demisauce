@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 
 #  chmod +x install.sh
-#  usage:   $install.sh mysql_root_password  demisauce_mysql_pwd role(all|web|db|memcached)
+#  usage:   $install.sh mysql_root_password  demisauce_mysql_pwd role(all|web|solr)
 #
 #  Starting from this base:   
 #       apt-get update
@@ -43,13 +43,13 @@ return to accept [demisauce]"
     if [ "$DEMISAUCE_MYSQL_PWD" = "" ] ; then
         DEMISAUCE_MYSQL_PWD="demisauce"
     fi
-    echo -en "Please enter 'ec2' or 'vm' 
-    return to accept:  'vm'   :   "
+    echo -en "Please enter role:  solr, all
+    return to accept:  'all'   :   "
     read vmorec2
     if [ "$vmorec2" != "" ] ; then
         VMOREC2=$vmorec2
     fi
-    echo -en "Please enter password for the root password to run sudo
+    echo -en "Please enter password for the root user on vm to run sudo on vm
 return to accept [demisauce]"
     read ROOT_PWD
     if [ "$ROOT_PWD" = "" ] ; then
@@ -59,10 +59,6 @@ return to accept [demisauce]"
 
 #-----------------------------------  Start of program
 DEMISAUCE_HOME='/home/demisauce'
-MYSQL_HOME='/vol/lib'
-ZRM_HOME='/vol/mysql-zrm'
-DEMISAUCE_WEB_HOME=$DEMISAUCE_HOME/current_web
-VMOREC2="vm"
 
 checkRoot
 askArgs
@@ -100,7 +96,13 @@ cd $DEMISAUCE_HOME/src
 git clone git://github.com/araddon/demisauce.git
 chown -R demisauce:demisauce /home/demisauce/src
 cd /home/demisauce/src/demisauce/install
-fab vmlocal build:rootmysqlpwd="$MYSQL_ROOT_PWD",userdbpwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME" -p $ROOT_PWD
-fab vmlocal release:userdbpwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME" -p $ROOT_PWD
-
+if [ $SERVER_ROLE = "all" ] || [ $SERVER_ROLE = "db" ] 
+then
+  fab vmlocal build:rootmysqlpwd="$MYSQL_ROOT_PWD",userdbpwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME" -p $ROOT_PWD
+  fab vmlocal release:userdbpwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME" -p $ROOT_PWD
+fi
+if [ $SERVER_ROLE = "solr" ] 
+then
+  fab vmlocal build_solr:host="$HOSTNAME" -p $ROOT_PWD
+fi
 

@@ -275,7 +275,7 @@ class BaseHandler(tornado.web.RequestHandler):
             return self.site
         if 'apikey' in self.request.arguments:
             site = model.site.Site.by_apikey(self.get_argument('apikey'))
-            log.debug("found site by apikey site=%s" % site)
+            log.debug("found site by apikey=%s, site=%s" % (self.get_argument('apikey'),site))
         else:
             user = self.get_current_user()
             if user and user.is_authenticated:

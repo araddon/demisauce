@@ -287,10 +287,10 @@ class RemoteObject(jsonwrapper):
         action = None
         if len(data) > 0:
             self._response = demisauce_ws(self._service,self._id,action,
-                    data=data,http_method='PUT')
+                    data=json.dumps(data),http_method='PUT')
         else:
             self._response = demisauce_ws(self._service,self._id,action,
-                            data=self._json_dict,http_method='PUT')
+                            data=json.dumps(self._json_dict),http_method='PUT')
         if self._response.success and self._response.status in SUCCESS_STATUS:
             self._load(self._response.json)
     

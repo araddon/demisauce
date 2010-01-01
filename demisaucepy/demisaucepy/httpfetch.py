@@ -105,7 +105,8 @@ def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT
                 request = urllib2.Request(source,urllib.urlencode(data))
             else:
                 request = urllib2.Request(source,data)
-                http_method = "POST"
+                if not http_method in ('PUT','POST'):
+                    http_method = "POST"
             if http_method in ['PUT','DELETE',"POST"]:
                 request.get_method = lambda: http_method
             request.add_header('User-Agent', agent)

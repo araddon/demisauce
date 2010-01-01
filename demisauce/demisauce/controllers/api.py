@@ -86,10 +86,11 @@ class ApiBaseHandler(BaseHandler):
     
     def is_json_post(self):
         'Determines if json post?'
-        if self.request.body and self.request.body.find("{") > 0 and self.request.body.find("{") < 4:
-            return True
-        else:
-            return False
+        if self.request.body:
+            if self.request.body.find("{") > -1 and self.request.body.find("{") < 4 or \
+                self.request.body.find("[") > -1 and self.request.body.find("[") < 4:
+                return True
+        return False
     
     def normalize_args(self,noun=None,requestid=None,action=None,format="json"):
         "Normalizes and formats arguments"
@@ -189,9 +190,12 @@ class ApiBaseHandler(BaseHandler):
     def handle_post(self):
         logging.debug("in handle post, args= %s, body=%s" % (self.request.arguments,self.request.body))
         if self.is_json_post():
-            json_dict = json.loads(self.request.body)
-            if json_dict:
-                for json_data in json_dict:
+            log.debug("yes, json post")
+            pyvals = json.loads(self.request.body)
+            if pyvals and isinstance(pyvals,dict):
+                self._add_object(pyvals)
+            elif pyvals and isinstance(pyvals,list):
+                for json_data in pyvals:
                     self._add_object(json_data)
         else:
             self._add_object(self.args_todict())

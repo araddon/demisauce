@@ -331,16 +331,20 @@ def _install_solr():
         run("tar xfzv apache-solr-1.4.0.tgz")
         run("tar xfzv apache-tomcat-6.0.20.tar.gz")
         sudo("mv apache-tomcat-6.0.20/ /usr/local/tomcat6/")
-        sudo("cp apache-solr-1.4.0/dist/apache-solr-1.4.0.war /usr/local/tomcat6/webapps/dssolr.war")
-        sudo("cp -r apache-solr-1.4.0/example/solr/ /usr/local/tomcat6/dssolr/")
+
+
+def _install_solr_war(name):
+    'copies example war to given name'
+        sudo("cp apache-solr-1.4.0/dist/apache-solr-1.4.0.war /usr/local/tomcat6/webapps/%s.war" % (name))
+        sudo("cp -r apache-solr-1.4.0/example/solr/ /usr/local/tomcat6/%s/" % (name))
     sudo("mkdir -p /usr/local/tomcat6/conf/Catalina/localhost/")
-    sudo("""cat <<EOL > /usr/local/tomcat6/conf/Catalina/localhost/dssolr.xml
-<Context docBase="/usr/local/tomcat6/webapps/dssolr.war" debug="0" crossContext="true" >
-    <Environment name="solr/home" type="java.lang.String" value="/usr/local/tomcat6/dssolr" override="true" />
+    sudo("""cat <<EOL > /usr/local/tomcat6/conf/Catalina/localhost/%s.xml
+<Context docBase="/usr/local/tomcat6/webapps/%s.war" debug="0" crossContext="true" >
+    <Environment name="solr/home" type="java.lang.String" value="/usr/local/tomcat6/%s" override="true" />
 </Context>
 EOL
-""")
-    sudo("rsync  -pthrvz  /vol/solr/conf /usr/local/tomcat6/dssolr/")
+""" % (name,name,name))
+    sudo("rsync  -pthrvz  /vol/solr/conf /usr/local/tomcat6/%s/" % (name))
     sudo("rsync  -pthrvz /home/demisauce/src/demisauce/install/recipes/etc /") 
     sudo("chmod 755 /etc/init.d/tomcat6")
     sudo("sudo update-rc.d tomcat6 start 91 2 3 4 5 . stop 20 0 1 6 .")
@@ -532,6 +536,7 @@ def build(rootmysqlpwd="demisauce",userdbpwd="demisauce",host=None,local=False):
     _redis_conf_update()
     _supervisord_install()
     _install_solr()
+    _install_solr_war('dssolr')
     _solr_spatial()
     # move from temp home to /etc
     sudo("rsync  -pthrvz  /home/demisauce/src/demisauce/install/recipes/etc /") 
@@ -546,14 +551,19 @@ def all(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
     _install_ds()
     restart_web()
 
-def build_solr(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
+def build_solr(name='dssolr',host=None):
     """Build a solr server"""
     sudo("apt-get -y install rsync")
+    if host:
+        env.host = host
+    print("====== starting build:  env=%s" % env)
     sync_etc() # do this first to force rsynch/ssh pwd at beginning to it doesn't 255 error timeout
     
     add_sources()
     _linux_base()
     _install_solr()
+    _install_solr_war(name)
+    _solr_spatial()
 
 def build_dev():
     "build dev linux machine with dependencies"
