@@ -94,8 +94,6 @@ echo $HOSTNAME
 mkdir -p $DEMISAUCE_HOME/src
 cd $DEMISAUCE_HOME/src
 git clone git://github.com/araddon/demisauce.git
-cd demisauce
-git checkout -t origin/wjinja
 chown -R demisauce:demisauce /home/demisauce/src
 cd /home/demisauce/src/demisauce/install
 if [ $SERVER_ROLE = "all" ] || [ $SERVER_ROLE = "db" ] 
