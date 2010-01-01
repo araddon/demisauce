@@ -8,9 +8,9 @@ from sqlalchemy.sql import and_
 from demisauce.model.site import site_table, Site
 from demisauce.model.user import person_table, Person, Group, groupperson_table, group_table
 from demisauce.model.email import *
-from demisauce.model.comment import Comment, comment_table
-from demisauce.model.help import Help, help_table, \
-        HelpResponse, help_response_table
+#from demisauce.model.comment import Comment, comment_table
+#from demisauce.model.help import Help, help_table, \
+#        HelpResponse, help_response_table
 from demisauce.model.activity import Activity, activity_table
 from demisauce.model.service import App, app_table, Service, service_table
 from demisauce.model.tag import Tag, TagAssoc, taggable, tag_table, \
@@ -41,6 +41,7 @@ mapper(Person, person_table, properties={
     'activities':dynamic_loader(Activity),
     'tags':relation(Tag,lazy=True,backref='taggers')
 })
+'''
 
 mapper(Help, help_table, properties={
     'site':relation(Site, lazy=True, order_by=help_table.c.created.desc(),
@@ -53,12 +54,12 @@ mapper(HelpResponse, help_response_table, properties={
     'helpticket':relation(Help, backref='helpresponses'),
 })
 taggable(Help, 'tags', uselist=True)
-
-mapper(Email, email_table, properties={
-    'site':relation(site.Site),
-})
 mapper(Comment, comment_table, properties={
     'site':relation(Site, backref='comments')
+})
+'''
+mapper(Email, email_table, properties={
+    'site':relation(site.Site),
 })
 
 mapper(App, app_table, properties={
