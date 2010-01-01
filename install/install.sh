@@ -44,7 +44,7 @@ return to accept [demisauce]"
         DEMISAUCE_MYSQL_PWD="demisauce"
     fi
     echo -en "Please enter role:  solr, all
-    return to accept:  'all'   :   "
+    return to accept:  'solr'   :   "
     read serverrole
     if [ "$serverrole" != "" ] ; then
         SERVER_ROLE=$serverrole

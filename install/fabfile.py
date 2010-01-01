@@ -564,6 +564,7 @@ def build_solr(name='dssolr',host=None):
     _install_solr()
     _install_solr_war(name)
     _solr_spatial()
+    sudo("/etc/init.d/tomcat6 restart")
 
 def build_dev():
     "build dev linux machine with dependencies"
