@@ -1,7 +1,6 @@
 """
     see documentaiton:  http://github.com/araddon/demisauce/tree/master/install
 """
-from __future__ import with_statement # needed for python 2.5
 from fabric.api import *
 from fabric.contrib.project import rsync_project
 import os, json, datetime
@@ -335,6 +334,7 @@ def _install_solr():
 
 def _install_solr_war(name):
     'copies example war to given name'
+    with cd("/tmp"):
         sudo("cp apache-solr-1.4.0/dist/apache-solr-1.4.0.war /usr/local/tomcat6/webapps/%s.war" % (name))
         sudo("cp -r apache-solr-1.4.0/example/solr/ /usr/local/tomcat6/%s/" % (name))
     sudo("mkdir -p /usr/local/tomcat6/conf/Catalina/localhost/")
@@ -557,7 +557,7 @@ def build_solr(name='dssolr',host=None):
     if host:
         env.host = host
     print("====== starting build:  env=%s" % env)
-    sync_etc() # do this first to force rsynch/ssh pwd at beginning to it doesn't 255 error timeout
+    push_recipes() # do this first to force rsynch/ssh pwd at beginning to it doesn't 255 error timeout
     
     add_sources()
     _linux_base()

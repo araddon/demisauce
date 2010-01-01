@@ -45,9 +45,9 @@ return to accept [demisauce]"
     fi
     echo -en "Please enter role:  solr, all
     return to accept:  'all'   :   "
-    read vmorec2
-    if [ "$vmorec2" != "" ] ; then
-        VMOREC2=$vmorec2
+    read serverrole
+    if [ "$serverrole" != "" ] ; then
+        SERVER_ROLE=$serverrole
     fi
     echo -en "Please enter password for the root user on vm to run sudo on vm
 return to accept [demisauce]"
@@ -59,7 +59,7 @@ return to accept [demisauce]"
 
 #-----------------------------------  Start of program
 DEMISAUCE_HOME='/home/demisauce'
-
+SERVER_ROLE='all'
 checkRoot
 askArgs
 
@@ -79,7 +79,7 @@ apt-get install --yes --force-yes -q python-dev python-setuptools
 
 cd $DEMISAUCE_HOME/lib
 git clone git://github.com/bitprophet/fabric.git
-pip install pycrypto
+easy_install pycrypto
 cd fabric
 python setup.py install
 # IP="$(wget -o/dev/null -O- http://jackson.io/ip/)"
@@ -94,6 +94,7 @@ echo $HOSTNAME
 mkdir -p $DEMISAUCE_HOME/src
 cd $DEMISAUCE_HOME/src
 git clone git://github.com/araddon/demisauce.git
+git pull origin wjinja
 chown -R demisauce:demisauce /home/demisauce/src
 cd /home/demisauce/src/demisauce/install
 if [ $SERVER_ROLE = "all" ] || [ $SERVER_ROLE = "db" ] 
