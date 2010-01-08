@@ -12,7 +12,6 @@ from demisauce.model.activity import Activity
 from demisauce.model.user import Person, Group, PersonValidation, \
     SignupForm, PersonEditValidation, InviteForm, GroupForm
 from demisauce.lib import QueryDict, scheduler
-from demisauce.model.comment import Comment
 from demisauce.model.activity import Activity, add_activity
 from formencode import Invalid, validators
 from formencode.validators import *
@@ -450,7 +449,7 @@ class AccountController(RestMixin,BaseHandler):
     
     def _view(self,person,getcomments=False):
         if person:
-            helptickets = person.help_tickets()
+            helptickets = None #person.help_tickets()
             activities_by_day = Activity.stats_by_person(person.site_id,person.id)
             activity_count = len(activities_by_day)
             if self.user is None:

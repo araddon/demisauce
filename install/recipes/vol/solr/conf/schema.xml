@@ -435,8 +435,8 @@
    <field name="name" type="textgen" indexed="true" stored="true"/>
    <field name="food" type="textgen" indexed="true" stored="true"/>
    <!-- use type="string" so that it is exact match -->
-   <field name="tags" type="string" indexed="true" stored="false" multiValued="true"/>
-   <field name="cat" type="string" indexed="true" stored="false" multiValued="true" />
+   <field name="tags" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="cat" type="string" indexed="true" stored="true" multiValued="true" />
    
    <!-- non-tokenized version of producer to make it easier to sort or group
         results by producer.  copied from "producer" via copyField -->

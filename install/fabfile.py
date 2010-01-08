@@ -62,7 +62,7 @@ base_config = {
 vmlocal = _server(base_config,{"desc":"LocalHost","host"  : "127.0.0.1", "ip":"127.0.0.1"})
 d8 = _server(base_config,{"desc":"VM 1.43 D8 Demisauce Server","host"  : "192.168.1.43", "ip":"192.168.1.43"})
 d5 = _server(base_config,{"desc":"KVM 1.9 Demisauce Server","host"  : "192.168.1.9", "ip":"192.168.1.9"})
-d4 = _server(base_config,{"desc":"KVM 1.7 Demisauce Server","host"  : "192.168.1.7", "ip":"192.168.1.7"})
+d1 = _server(base_config,{"desc":"KVM 1.7 Demisauce Server","host"  : "192.168.1.7", "ip":"192.168.1.7"})
 s1 = _server(base_config,{"desc":"KVM 1.5 Demisauce Solr Server","host"  : "192.168.1.5", "ip":"192.168.1.5"})
 s2 = _server(base_config,{"desc":"KVM Demisauce Solr Server","host"  : "192.168.1.14", "ip":"192.168.1.14"})
 ec2prod = _server(base_config,{"desc":"EC2 Prod 1","host"  : "aws.amazon.com",
@@ -266,10 +266,14 @@ def _demisauce_pre_reqs():
         sudo('easy_install http://gdata-python-client.googlecode.com/files/gdata.py-1.1.1.tar.gz')
         sudo('easy_install http://boto.googlecode.com/files/boto-1.8d.tar.gz')
         sudo('easy_install http://www.crummy.com/software/BeautifulSoup/download/3.x/BeautifulSoup-3.1.0.tar.gz')
+        # this needs to be removed once all formencode is removed soon!
+        sudo("easy_install formencode")
         sudo("apt-get install -y libgearman2")
         sudo('pip install http://github.com/samuel/python-gearman/tarball/master')
         sudo("pip install http://github.com/samuel/python-scrubber/tarball/master")
         sudo("pip install Jinja2")
+        sudo("pip install wtforms")
+        sudo("pip install decorator")
 
 def _exists(path):
     with settings(
@@ -330,6 +334,7 @@ def _install_solr():
         run("tar xfzv apache-solr-1.4.0.tgz")
         run("tar xfzv apache-tomcat-6.0.20.tar.gz")
         sudo("mv apache-tomcat-6.0.20/ /usr/local/tomcat6/")
+    
 
 
 def _install_solr_war(name):
@@ -352,31 +357,36 @@ EOL
     
 
 
-def _solr_spatial():
+def _solr_spatial(name="dssolr"):
     'install solr spatial search'
     #http://craftyfella.blogspot.com/2009/12/installing-localsolr-onto-solr-14.html
     with cd("/tmp"):
         sudo("rm -rf *")
         run("wget http://www.nsshutdown.com/solr-example.tgz")
         run("tar xfzv solr-example.tgz")
-        sudo("mv /tmp/solr-example/apache-solr-1.4.0/example/solr/lib/lucene-spatial-2.9.1.jar  /usr/local/tomcat6/webapps/dssolr/WEB-INF/lib/")
-        sudo("mv /tmp/solr-example/apache-solr-1.4.0/example/solr/lib/localsolr.jar  /usr/local/tomcat6/webapps/dssolr/WEB-INF/lib/")
+        sudo("mv /tmp/solr-example/apache-solr-1.4.0/example/solr/lib/lucene-spatial-2.9.1.jar  /usr/local/tomcat6/webapps/%s/WEB-INF/lib/" % name)
+        sudo("mv /tmp/solr-example/apache-solr-1.4.0/example/solr/lib/localsolr.jar  /usr/local/tomcat6/webapps/%s/WEB-INF/lib/" % name)
 
 def _install_ds():
     "Installs Demisauce From Source"
     with cd("/home/demisauce/ds/current"):
         with cd("demisaucepy"):
             sudo("python setup.py develop")
+    with cd("/home/demisauce/ds/current/plugins/py"):
+        sudo("python setup.py develop")
     with cd("/home/demisauce/ds/web"):
         sudo("python setup.py develop")
+        run("python manage.py --action=create_data --config=./demisauce.conf")
         run("python manage.py --action=updatesite --config=./demisauce.conf")
+
 
 def _wordpress_install(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
     #http://nielsvz.com/2009/02/nginx-and-wordpress/
     #http://elasticdog.com/2008/02/howto-install-wordpress-on-nginx/
-    sudo("apt-get install --yes --force-yes -q php5 php5-dev php5-mysql php5-memcache php5-cgi php5-gd")
     # get fast-cgi module from lighttpd
     sudo("apt-get install -y -q lighttpd")
+    #  php5-dev php5-ldap
+    sudo("apt-get install --yes --force-yes -q php5-cli php5-cgi php5-memcache php5-gd php5-mysql ")
     # but don't start it, we just need the fast cgi module
     sudo("update-rc.d -f lighttpd remove")
     put('%(local_path)s/install/install_wordpress.sh' % env, '/tmp/install_wordpress.sh' % env)
@@ -393,9 +403,15 @@ def _wordpress_updateconf():
 
 
 #   Tasks   =======================
-def wordpress():
+def wordpress(rootmysqlpwd="demisauce",userdbpwd="demisauce",standalone=False):
     "Install wordpress"
-    #_wordpress_install()
+    
+    if standalone:
+        push_recipes() # do this first to force rsynch/ssh pwd at beginning to it doesn't 255 error timeout
+        _linux_base()
+        _mysql(rootmysqlpwd,userdbpwd)
+        _nginx()
+    _wordpress_install()
     _wordpress_updateconf()
     print("don't forget to call release_nginx supervisor_update")
 
@@ -451,13 +467,8 @@ def release(userdbpwd="demisauce",host=None,local=False):
     rsync_project('/home/demisauce/ds/%s/' % release,local_dir='%(local_path)s/' % env)
     sudo('ln -s /home/demisauce/ds/%s/demisauce /home/demisauce/ds/web' % (release))
     sudo('ln -s /home/demisauce/ds/%s/ /home/demisauce/ds/current' % (release))
-    sudo('ln -s /home/demisauce/upload/ /home/demisauce/ds/web/demisauce/static/upload' % (release))
-    with cd("/home/demisauce/ds/current/demisaucepy"):
-        sudo("python setup.py develop")
-    with cd("/home/demisauce/ds/web"):
-        sudo("python setup.py develop")
-    with cd("/home/demisauce/ds/current/plugins/py"):
-        sudo("python setup.py develop")
+    sudo('ln -s /home/demisauce/upload/ /home/demisauce/ds/web/demisauce/static/upload')
+    _install_ds()
 
 def release_simple():
     """Simple release, just web and dspy sync, no new folders"""
@@ -479,11 +490,16 @@ def push_recipes(local=False):
         rsync_project('/home/demisauce/src/demisauce/install/recipes/etc/',local_dir='%(local_path)s/install/recipes/etc/' % env)
         rsync_project('/vol/',local_dir='%(local_path)s/install/recipes/vol/' % env)
 
-def db_backup_apply():
+def db_backup_apply(rootmysqlpwd="demisauce"):
     """Apply a backup """
     require("mysql_root_pwd")
-    print("Mysql_root_pwd = %s" % env.mysql_root_pwd)
-    #sudo("mysql -uroot -p%(mysql_root_pwd)s < /home/demisauce/ds/current/backup-file.sql " % env)
+    sudo("rm /tmp/*.sql")
+    #print("Mysql_root_pwd = %s" % env.mysql_root_pwd)
+    put('%s/demisaucedb.sql' % PROJECT_ROOT, '/tmp/demisaucedb.sql')
+    put('%s/wordpressdb.sql' % PROJECT_ROOT, '/tmp/wordpressdb.sql')
+    sudo("mysql -uroot -p%s < /tmp/demisaucedb.sql " % rootmysqlpwd)
+    sudo("mysql -uroot -p%s < /tmp/wordpressdb.sql " % rootmysqlpwd)
+    sudo("rm /tmp/*.sql")
 
 def release_nginx():
     """Updates nginx config, and restarts
@@ -502,9 +518,13 @@ def ec2_save_image():
     """Takes an instance on EC2 and saves to S3"""
     raise NotImplemented("needs to be done")
 
-def db_sqldump(pwd):
+def db_sqldump(rootmysqlpwd="demisauce"):
     """Takes a full sql dump"""
-    sudo("mysqldump -uroot -p%s demisauce > backup-file.sql" % pwd)
+    sudo("mysqldump -uroot -p%s demisauce > /tmp/demisaucedb.sql" % rootmysqlpwd)
+    sudo("mysqldump -uroot -p%s wordpress > /tmp/wordpressdb.sql" % rootmysqlpwd)
+    get('/tmp/demisaucedb.sql', '%s/demisaucedb.sql' % PROJECT_ROOT)
+    get('/tmp/wordpressdb.sql', '%s/wordpressdb.sql' % PROJECT_ROOT)
+    sudo("rm /tmp/*.sql")
 
 def build(rootmysqlpwd="demisauce",userdbpwd="demisauce",host=None,local=False):
     """base linux install, then manually run::
@@ -546,7 +566,7 @@ def build(rootmysqlpwd="demisauce",userdbpwd="demisauce",host=None,local=False):
 
 def all(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
     """Build AND Release"""
-    #build(rootmysqlpwd=rootmysqlpwd,userdbpwd=userdbpwd)
+    build(rootmysqlpwd=rootmysqlpwd,userdbpwd=userdbpwd)
     release(userdbpwd=userdbpwd)
     _install_ds()
     restart_web()

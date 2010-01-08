@@ -1,22 +1,18 @@
 #!/usr/bin/env bash
 # 
 #  chmod +x install.sh
-#  usage:   $install.sh mysql_root_password  demisauce_mysql_pwd role(all|web|solr)
+#  usage:   $install.sh \
+#                 -m mysql_root_password  \ # mysql root pwd
+#                 -p demisauce_mysql_pwd \  # mysql pwd to run app
+#                 -i all \                  # role:   (solr|all)
+#                 -r root_pwd               # pwd to do install via ssh
 #
 #  Starting from this base:   
 #       apt-get update
-#       apt-get install openssh-server wget
-#  If VMWare:
-#       execute the install_openvmtools.sh script first
+#       apt-get install openssh-server
 # ----------------------------------------------------------------------------
 #  TODO
-#   - consider changing log level in apache2/sites-available/default
-#   - other than ubuntu (move to puppet/capistrano?)
-#   - security hardening:  https://help.ubuntu.com/community/Security
 # ----------------------------------------------------------------------------
-# Password locations:
-#  - /home/demisauce/current_web/production.ini (mysql)
-#  - /etc/mysql-zrm/demisauce/mysql-zrm.conf  (mysql-backup pwd)
 function die
 {
     echo $*
@@ -61,7 +57,29 @@ return to accept [demisauce]"
 DEMISAUCE_HOME='/home/demisauce'
 SERVER_ROLE='all'
 checkRoot
-askArgs
+# IP="$(wget -o/dev/null -O- http://jackson.io/ip/)"
+# http://jackson.io/ip/service.html
+#TODO: this doesn't work on mac
+#linux$  eth0   inet addr:192.168.0.106  Bcast:192.168.0.255  Mask:255.255.255.0
+#mac$ en0   inet 192.168.0.101 netmask 0xffffff00 broadcast 192.168.0.255
+HOSTNAME=`ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}'`
+
+if [ $# -eq "0" ] ; then
+    askArgs
+else 
+    while [ $# -gt 0 ]; do
+        case $1 in
+            -p) DEMISAUCE_MYSQL_PWD=$2;                         shift 2 ;;
+            -m) MYSQL_ROOT_PWD=$2;                              shift 2 ;;
+            -i) SERVER_ROLE=$2;                                 shift 2 ;;
+            -r) ROOT_PWD=$2;                                    shift 2 ;;
+            *)             echo "$0: Unrecognized option: $2" >&2; exit 1;
+        esac
+    done
+fi
+echo "========================================================================"
+echo "Installing Demisauce; Role = $SERVER_ROLE to $DEMISAUCE_HOME host $HOSTNAME"
+echo "========================================================================"
 
 mkdir -p $DEMISAUCE_HOME/lib
 cd /tmp
@@ -71,7 +89,7 @@ apt-get -y update
 echo "----  installing build-essentials-----"
 apt-get install --yes --force-yes -q build-essential
 echo "----  installing ssh server, wget, cron, rsync, unzip -----"
-apt-get install --yes --force-yes -q openssh-server  wget unzip cron rsync 
+apt-get install --yes --force-yes -q openssh-server  curl wget unzip cron rsync 
 echo "----  installing git-core ------------"
 apt-get install --yes --force-yes -q git-core
 echo "----  installing python tools -----"
@@ -82,27 +100,18 @@ git clone git://github.com/bitprophet/fabric.git
 easy_install pycrypto
 cd fabric
 python setup.py install
-# IP="$(wget -o/dev/null -O- http://jackson.io/ip/)"
-# http://jackson.io/ip/service.html
-#TODO: this doesn't work on mac
-#linux$  eth0   inet addr:192.168.0.106  Bcast:192.168.0.255  Mask:255.255.255.0
-#mac$ en0   inet 192.168.0.101 netmask 0xffffff00 broadcast 192.168.0.255
-HOSTNAME=`ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}'`
 
-echo $HOSTNAME
 #perl -pi -e "s/\/var\/lib\/mysql/$escaped_mysql_home/g" /etc/mysql/my.cnf || die "could not change my.cnf"
 mkdir -p $DEMISAUCE_HOME/src
 cd $DEMISAUCE_HOME/src
 git clone git://github.com/araddon/demisauce.git
 chown -R demisauce:demisauce /home/demisauce/src
 cd /home/demisauce/src/demisauce/install
-if [ $SERVER_ROLE = "all" ] || [ $SERVER_ROLE = "db" ] 
-then
+if [ $SERVER_ROLE = "all" ] ; then
   fab vmlocal build:rootmysqlpwd="$MYSQL_ROOT_PWD",userdbpwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME" -p $ROOT_PWD
   fab vmlocal release:userdbpwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME" -p $ROOT_PWD
 fi
-if [ $SERVER_ROLE = "solr" ] 
-then
+if [ $SERVER_ROLE = "solr" ] ; then
   fab vmlocal build_solr:host="$HOSTNAME" -p $ROOT_PWD
 fi
 

@@ -1,0 +1,39 @@
+#facebox .b {background:url(/static/images/facebox/b.png);}
+#facebox .tl {background:url(/static/images/facebox/tl.png);}
+#facebox .tr {background:url(/static/images/facebox/tr.png);}
+#facebox .bl {background:url(/static/images/facebox/bl.png);}
+#facebox .br {background:url(/static/images/facebox/br.png);}
+#facebox {position: absolute;top: 0;left: 0;z-index: 100;text-align: left;}
+#facebox_black {position: absolute;top: 0;left: 0;z-index: 100;text-align: left;
+    background:#000000 none repeat scroll 0%;opacity:0.9;z-index:1500;}
+#facebox .popup {position: relative;}
+#facebox table {border-collapse: collapse;}
+#facebox td {border-bottom: 0;padding: 0;}
+#facebox .body {padding: 10px;background: #fff;}
+#facebox .loading {text-align: center;}
+#facebox .image {text-align: center;}
+#facebox img {border: 0;margin: 0;}
+#facebox .footer {border-top: 1px solid #DDDDDD;padding-top: 5px;margin-top: 10px;text-align: right;vertical-align: bottom;}
+#facebox .tl, #facebox .tr, #facebox .bl, #facebox .br {height: 10px;width: 10px;overflow: hidden;padding: 0;}
+#facebox_overlay {position: fixed;top: 0px;left: 0px;height:100%;width:100%;}
+.facebox_hide {z-index:-100;}
+.facebox_overlayBG {background-color: #000;z-index: 99;}
+
+* html #facebox_overlay { /* ie6 hack */
+  position: absolute;
+  height: expression(document.body.scrollHeight > document.body.offsetHeight ? document.body.scrollHeight : document.body.offsetHeight + 'px');
+}
+/*
+	HUMANIZED MESSAGES 1.0
+	idea - http://www.humanized.com/weblog/2006/09/11/monolog_boxes_and_transparent_messages
+	home - http://humanmsg.googlecode.com
+*/
+html, body {heightxx: 100%; /* Damn you IE! */}
+.humanMsg {font: normal 20px/50px Helvetica, Arial, Sans-Serif;letter-spacing: -1px;position: fixed;top: 130px;left: 25%;
+    width: 50%;color: white;background-color: #000;text-align: center;display: none;opacity: 0;z-index: 100000;
+-moz-border-radius:3px;}
+.humanMsg p {padding: .3em;display: inline; }
+.humanMsg a {display: none;}
+
+
+

@@ -1,4 +1,4 @@
-# the demisauce pylons web app configuration
+# the Demisauce Tornado App
 
 
 upstream demisaucetornado {
@@ -10,7 +10,7 @@ upstream demisaucetornado {
 
 server {
     listen   80;
-    server_name  demisauce;
+    #server_name  demisauce;
     
     access_log  /vol/log/nginx/demisauce.access.log;
     

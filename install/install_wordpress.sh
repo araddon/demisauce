@@ -1,17 +1,55 @@
 #!/usr/bin/env bash
 # 
-#  chmod +x install_wordpress.sh
+#  chmod +x install_wordpress.sh mysql_root_pwd wp_mysql_pwd
 # ----------------------------------------------------------------------------
 #  TODO
 #   - 
 # ----------------------------------------------------------------------------
+function die
+{
+    echo $*
+    exit 1
+}
+function checkRoot
+{
+    if [ ! $( id -u ) -eq 0 ]; then
+        die "Must have super-user rights to run this script.  Run with the command 'sudo $0'"
+    fi
+}
+# Get all arguments if not supplied
+function askArgs
+{
+      echo -en "Please enter your MySQL root password: or 
+  return to accept [demisauce]"
+      read MYSQL_ROOT_PWD
+      if [ "$MYSQL_ROOT_PWD" = "" ] ; then
+          MYSQL_ROOT_PWD="demisauce"
+      fi
+      echo -en "Please enter password for the MySQL password for the wordpress web app or
+  return to accept [demisauce]"
+      read DEMISAUCE_MYSQL_PWD
+      if [ "$DEMISAUCE_MYSQL_PWD" = "" ] ; then
+          DEMISAUCE_MYSQL_PWD="demisauce"
+      fi
+}
+
+#------- Start of program
+DEMISAUCE_HOME='/home/demisauce'
+SERVER_ROLE='all'
+#DEMISAUCE_MYSQL_PWD='demisauce'
+#MYSQL_ROOT_PWD='demisauce'
+
+checkRoot
+if [ $# -eq "0" ] ; then
+    askArgs
+else 
+    MYSQL_ROOT_PWD=$1
+    DEMISAUCE_MYSQL_PWD=$2
+fi
 
 
-DEMISAUCE_MYSQL_PWD='demisauce'
-MYSQL_ROOT_PWD='demisauce'
 
-echo "----  installing php ------------"
-apt-get install --yes --force-yes -q php5 php5-dev libapache2-mod-php5 php5-mysql php5-memcache php5-cgi php5-gd
+
 echo "----  adding memcached extension to php  /etc/php5/apache2/php.ini "
 #  Adds this:    extension=memcache.so    
 perl -pi -e s/\;\ extension_dir\ directive\ above./\;\ extension_dir\ directive\ above.\\nextension=memcache.so/g /etc/php5/apache2/php.ini || die "Could not update php.ini"

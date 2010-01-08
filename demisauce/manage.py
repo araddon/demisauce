@@ -25,9 +25,8 @@ import app
 import json
 from demisauce import fixture
 from demisauce import model
-from demisauce.model import mapping
-from demisauce.model import cms, email, site, person, \
-    comment, meta, poll, service, tag, help
+from demisauce.model import meta
+from demisauce.model import email, site, user, service, tag
 
 log = logging.getLogger(__name__)
 define("action", default=None, help="Action to perform, [updatesite,create_data]")
@@ -55,7 +54,7 @@ def updatesite(app):
     s.base_url = options.site
     s.save()
     log.debug("Updates site, %s" % s)
-    p = app.db.session.query(person.Person).filter_by(id=1).first()
+    p = app.db.session.query(user.Person).filter_by(id=1).first()
     p.set_password(options.adminpwd)
     p.email = options.adminemail
     p.save()
@@ -104,8 +103,8 @@ def create_data_new(classtype,drop=False):
         site.site_table.drop(checkfirst=True,bind=meta.engine)
         site.site_table.create(checkfirst=True,bind=meta.engine)
     elif classtype == 'person' and drop:
-        person.person_table.drop(checkfirst=True,bind=meta.engine)
-        person.person_table.create(checkfirst=True,bind=meta.engine)
+        user.person_table.drop(checkfirst=True,bind=meta.engine)
+        user.person_table.create(checkfirst=True,bind=meta.engine)
         [m.after_load() for m in models]
     elif classtype == 'email' and drop:
         email.email_table.drop(checkfirst=True,bind=meta.engine)
@@ -209,12 +208,12 @@ def create_data(app,ini_file = {}):
     if s.key != options.demisauce_api_key:
         print 'Update %s demisauce.apikey to %s \n'  % (ini_file,s.key)  
     
-    user = app.db.session.query(person.Person).filter_by(site_id=s.id,email="sysadmin@demisauce.org").first()
-    if not user:
+    nu = app.db.session.query(user.Person).filter_by(site_id=s.id,email="sysadmin@demisauce.org").first()
+    if not nu:
         # pwd = raw_input('Enter the Password for admin: ')
         log.debug("Creating persons?")
         create_fixture_data('person')
-        user = person.Person.get(1,1)
+        nu = user.Person.get(1,1)
     
     create_fixture_data('email')
     create_fixture_data('app')
@@ -242,4 +241,11 @@ if __name__ == "__main__":
     elif options.action == 'create_data':
         log.debug("in create_data call")
         create_data(application)
+    elif options.action == 'test':
+        json_string = fixture.service
+        jsondata = json.loads(json_string)
+        items = []
+        for servicedata in jsondata:
+            service = model.service.Service().from_dict(servicedata)
+            items.append(service)
 

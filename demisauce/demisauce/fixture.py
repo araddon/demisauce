@@ -178,10 +178,9 @@ service = '''
             "method_url": "/api/service/{key}.{format}?apikey={api_key}", 
             "key": "service",
             "description": "Service Definition for the Service api itself (kinda meta)"
-        },
-        {
+        },{
             "description": "Person Get/Add service",
-            "views": '',
+            "views": "",
             "site_id": "1",
             "app_id": "1",
             "owner_id": "1",
@@ -189,7 +188,7 @@ service = '''
             "key": "person",
             "name": "Person Get/Add service",
             "format": "json",
-            "cache_time": 900,
+            "cache_time": "900"
         },{
             "site_id": "1",
             "app_id": "1",

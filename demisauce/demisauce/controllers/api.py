@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import logging
 import urllib
 import json
@@ -620,11 +619,30 @@ class GroupApiHandler(ApiSecureHandler):
     
 
 class HookApiHandler(BaseHandler):
-    def get(self,*args,**kwargs):
-        logging.debug("in get")
+    def _do_proxy(self,*args,**kwargs):
+        logging.debug("PROXY %s *args, **kwargs = %s, %s" % (kwargs['method'],args,kwargs))
+        logging.debug("PROXY %s %s, body=%s" % (kwargs['method'],self.request.arguments,self.request.body))
+        http = tornado.httpclient.HTTPClient()
+        response = http.fetch("http://192.168.1.43/blog/xmlrpc.php",
+            method=kwargs['method'],
+            headers=self.request.headers, 
+            body=self.request.body)
+        logging.debug(str(response))
+        self.write(response.body)
+    
+    def get(self,*args):
+        logging.debug("HOOK?PROXY GET *args, **kwargs = %s" % (str(args)))
+        if args and len(args) > 0 and 'proxy' == args[0]:
+            self._do_proxy(*args,method='GET')
+        else:
+            pass
     
     def post(self,*args):
-        logging.debug("POST %s" % self.request.arguments)
+        if args and len(args) > 0 and 'proxy' == args[0]:
+            self._do_proxy(*args,method="POST")
+        else:
+            logging.debug("POST %s" % self.request.arguments)
+        
     
 
 """ GET  : get
@@ -638,6 +656,7 @@ class HookApiHandler(BaseHandler):
 """
 _controllers = [
     (r"/api/(hook|webhook)(?:\/)?(.*?)",HookApiHandler), 
+    (r"/api/(tbdproxy|proxy)/(.*?)",HookApiHandler), 
     (r"/api/(activity)/(.*?)", ActivityApiHandler),
     (r"/api/(user|person)/(.*?)/(init_user|tbdmorestuff)", PersonAnonApi),
     (r"/api/(user|person)/([0-9]*?|.*?)/(.*?).(json|xml|custom)?", PersonApiHandler),

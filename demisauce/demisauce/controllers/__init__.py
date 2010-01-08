@@ -197,6 +197,8 @@ class BaseHandler(tornado.web.RequestHandler):
         self.msg_alerts = []
         self.form_errors = []
         next = ""
+        logging.debug("user-agent:  %s" % self.request.headers['User-Agent'])
+        logging.debug("RemoteIP = %s" % request.remote_ip )
         if self.get_argument("next",None) is not None:
             logging.debug(urllib.urlencode({"next":self.get_argument("next","")}))
             next = urllib.urlencode({"next":self.get_argument("next","")})

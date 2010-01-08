@@ -60,7 +60,7 @@ class ServiceController(RestMixin,BaseHandler):
         if not hasattr(self,'filters'):
             #self.db.cache.delete("filters-personid-%s" % self.current_user.id)
             logging.debug("Creating filter list, passing info")
-            self.filters = FilterList(cache=self.db.cache,person_id=self.current_user.id)
+            self.filters = FilterList(cache=self.db.cache,person_id=self.current_user.id if self.current_user else 0)
         self.filters.context = 'service'
         if self.filters.current() == None:
             self.filters.set(ServiceFilter(name='owner',clauses={'owner':'all'}),
