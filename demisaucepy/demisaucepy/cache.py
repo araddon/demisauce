@@ -56,7 +56,7 @@ class CacheBase(object):
     Credits:  Django:
     http://code.djangoproject.com/browser/django/trunk/django/core/cache/backends/base.py
     """
-    def __init__(self,default_timeout = 300):
+    def __init__(self,default_timeout = 0):
         self.default_timeout = default_timeout
     
     def add(self, key, value, timeout=None):
@@ -102,7 +102,7 @@ class CacheBase(object):
     
 
 class MemcacheCache(CacheBase):
-    def __init__(self, servers, default_timeout = 300):
+    def __init__(self, servers, default_timeout = 0):
         super(MemcacheCache,self).__init__(default_timeout = default_timeout)
         self._cache = memcache.Client(servers,debug=0)
     

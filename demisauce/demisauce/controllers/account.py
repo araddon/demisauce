@@ -162,9 +162,10 @@ class AccountController(RestMixin,BaseHandler):
             user.displayname = form.displayname.data
             user.verified = True
             user.isadmin = True
+            user.save()
             model.setup_site(user)
             self.set_current_user(user,is_authenticated=True,islogon=True)
-            user.save()
+            
             self.add_alert('Account was created')
             
             return self.redirect('/home/index?msg=Account+was+created')

@@ -13,6 +13,7 @@ def email_send(job_object):
     format::
         
         jsondict = {
+            'apikey':'optional val to override ds default',
             'template_name':'thank_you_for_registering_with_demisauce',
             'emails':['afakeuser@email.com'],
             'template_data':{
@@ -27,7 +28,10 @@ def email_send(job_object):
     try:
         emailargs = json.loads(job_object.arg)
         email_name = urllib.quote_plus(emailargs['template_name'])
-        response = demisauce_ws_get('email',email_name,cache=True)
+        if 'apikey' in emailargs:
+            response = demisauce_ws_get('email',email_name,cache=True,api_key=emailargs['apikey'])
+        else:
+            response = demisauce_ws_get('email',email_name,cache=True)
         if response.success and response.json and len(response.json) ==1:
             emailjson = response.json[0]
             s = Template(emailjson['template'])
@@ -40,7 +44,7 @@ def email_send(job_object):
                 template, 
                 '%s<%s>' % (emailjson['from_name'],emailjson['from_email']), 
                 emailargs['emails']))
-            logging.debug('sent email to %s, num_sent = %s' % (emailargs['emails'], num_sent))
+            logging.info('sent email to %s, num_sent = %s' % (emailargs['emails'], num_sent))
             return num_sent
         else:
             logging.error('Error retrieving that template %s  \n\n %s' % (emailargs,response.json))

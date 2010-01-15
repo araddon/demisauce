@@ -60,7 +60,7 @@ base_config = {
     "mysql_root_pwd": "demisauce",
 }
 vmlocal = _server(base_config,{"desc":"LocalHost","host"  : "127.0.0.1", "ip":"127.0.0.1"})
-d8 = _server(base_config,{"desc":"VM 1.43 D8 Demisauce Server","host"  : "192.168.1.43", "ip":"192.168.1.43"})
+d8 = _server(base_config,{"desc":"VM 1.3 D8 Demisauce Server","host"  : "192.168.1.3", "ip":"192.168.1.3"})
 d5 = _server(base_config,{"desc":"KVM 1.9 Demisauce Server","host"  : "192.168.1.9", "ip":"192.168.1.9"})
 d1 = _server(base_config,{"desc":"KVM 1.7 Demisauce Server","host"  : "192.168.1.7", "ip":"192.168.1.7"})
 s1 = _server(base_config,{"desc":"KVM 1.5 Demisauce Solr Server","host"  : "192.168.1.5", "ip":"192.168.1.5"})
@@ -512,6 +512,7 @@ def release_nginx():
 def restart_web():
     """restarts nginx, and demisauce python app"""
     sudo("supervisorctl restart demisauce")
+    sudo("supervisorctl restart dspygearman")
     sudo("/etc/init.d/nginx restart")
 
 def ec2_save_image():

@@ -1,27 +1,40 @@
 import logging
 import urllib
-from formencode import Invalid, validators
-from formencode.validators import *
-import formencode
+from wtforms import Form, BooleanField, TextField, TextAreaField, \
+    PasswordField, SelectField, SelectMultipleField, HiddenField, \
+    IntegerField, validators
+from wtforms.validators import ValidationError
 #from sqlalchemy.orm import eagerload
+from demisauce.lib import QueryDict
+from sqlalchemy.sql import and_, or_, not_, func, select
 from demisauce import model
-from demisauce.model.email import *
+from demisauce.model import meta
+from demisauce.model.email import Email
 from demisauce.controllers import BaseHandler, RestMixin, SecureController, \
     requires_admin
 
 log = logging.getLogger(__name__)
 
-class EmailFormValidation(formencode.Schema):
-    """Form validation for the email web admin"""
-    allow_extra_fields = True
-    filter_extra_fields = False
-    subject = formencode.All(String(not_empty=True))
+class EmailForm(Form):
+    def validate_slug(form, field):
+        logging.debug("validating slug:  person_id = %s" % (form.id.data))
+        e = meta.DBSession.query(Email).filter(and_(
+            Email.slug == field.data.lower(),Email.site_id==form.site_id.data)).first()
+        if e and e.id != int(form.id.data):
+            logging.debug("dupe slug for email: form.id.data:  %s, pid=%s" % (form.id.data,e.id))
+            raise ValidationError(u'That slug is already in use, please choose another')
+    id              = HiddenField('id',default=0)
+    site_id         = HiddenField('site_id',default=0)
+    template        = TextField('Template')
+    subject         = TextField('subject')
+    slug            = TextField('from_name', [validate_slug])
+    from_name      = TextField('from_name')
+    from_email      = TextField('from_email')
+    to              = TextField('to')
 
 class EmailController(RestMixin, SecureController):
     requires_auth = True
     
-    #@requires_role('admin')
-    #@rest.dispatch_on(POST="addupdate")
     def index(self,id=0):
         if id > 0:
             items = [meta.DBSession.query(Email).get(id)]
@@ -29,23 +42,28 @@ class EmailController(RestMixin, SecureController):
             items = meta.DBSession.query(Email).filter_by(site_id=self.user.site_id).all()
         self.render('email.html',items=items)
     
-    #@validate(schema=EmailFormValidation(), form='index')
-    def addupdate(self,id=0):
-        if self.form_result['objectid'] == "0":
-            item = Email(site_id=self.user.site_id, subject=self.form_result['subject'])
+    def edit_POST(self,id=0):
+        if self.get_argument("id") == "0":
+            item = Email(site_id=self.user.site_id, subject=self.get_argument("subject"))
         else:
-            id = self.form_result['objectid']
+            id = self.get_argument("id")
             item = meta.DBSession.query(Email).filter_by(id=id,site_id=self.user.site_id).first()
-            item.subject = self.form_result['subject']
             
-        item.template = self.form_result['template']
-        item.from_name = self.form_result['from_name']
-        item.from_email = self.form_result['from_email']
-        item.slug = self.form_result['real_permalink']
-        item.to = self.form_result['to']
-        item.save()
-        self.add_alert('updated email template')
-        return self.redirect('/email/index')
+        form = EmailForm(QueryDict(self.request.arguments),item)
+        form.site_id.data = self.user.site_id
+        form.id.data = self.current_user.id
+        if item and form.validate():
+            item.subject = form.subject.data
+            item.template = form.template.data
+            item.from_name = form.from_name.data
+            item.from_email = form.from_email.data
+            item.slug = self.get_argument('real_permalink')
+            item.to = form.to.data
+            item.save()
+            self.add_alert('updated email template')
+            return self.index()
+        else:
+            return self.render('email.html',form=form,item=item)
     
     def delete(self,id=0):
         item = Email.get(self.user.site_id,id=id)

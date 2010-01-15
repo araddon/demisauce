@@ -22,7 +22,7 @@ class TestApi(TestDSBase):
             u'template': u'Welcome to Demisauce;\n\nYour account has been enabled, and you can start using services on demisauce.\n\nTo verify your account you need to click and finish registering $link\n\nThank You\n\nDemisauce Team', 
             u'from_email': u'demisauce@demisauce.org', 
             u'to': None, 
-            u'key': u'welcome_to_demisauce', 
+            u'slug': u'welcome_to_demisauce', 
             u'reply_to': None, 
             u'id': 1, u'subject': 
             u'Welcome To Demisauce'}

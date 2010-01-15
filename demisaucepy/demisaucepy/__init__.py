@@ -19,7 +19,6 @@ log = logging.getLogger(__name__)
 __version__ = '0.1.1'
 
 
-
 DATETIME_REGEX = re.compile('^(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})T(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})(\.\d+)?Z$')
 
 define("site_root", default="/home/demisauce", help="Root Path of site, set at runtime")
@@ -38,12 +37,12 @@ define("demisauce_cache", default="memcache",
 def hash_email(email):
     return hashlib.md5(email.lower()).hexdigest()
 
-def demisauce_ws_get(noun,resource_id,data={},cfgl={},format='html',extra_headers={},cache=True):
-    return demisauce_ws(noun,resource_id,action='get',data=data,
-                cfgl=cfgl,format=format,extra_headers=extra_headers,cache=cache)
+def demisauce_ws_get(noun,resource_id,data={},format='html',extra_headers={},api_key=None,cache=True):
+    return demisauce_ws(noun,resource_id,action='get',data=data,api_key=api_key,
+                format=format,extra_headers=extra_headers,cache=cache)
 
 
-def demisauce_ws(noun,resource_id,action=None,data={},format='json',servicedef=None,
+def demisauce_ws(noun,resource_id,action=None,data={},format='json',api_key=None,servicedef=None,
         extra_headers={},app='demisauce',http_method='GET',cache=True,cache_time=900):
     """Core web service get
     
@@ -61,13 +60,16 @@ def demisauce_ws(noun,resource_id,action=None,data={},format='json',servicedef=N
         - (post=add/update, get=read, delete=delete)
     returns
     """
-    client = ServiceClient(service=ServiceDefinition(
+    servicedef = ServiceDefinition(
         name=noun,
         format=format,
         app_slug=app,
         cache=cache,
+        api_key=api_key,
         cache_time=cache_time
-    ))
+    )
+    
+    client = ServiceClient(service=servicedef)
     client.use_cache = cache
     client.extra_headers = extra_headers
     if action:
@@ -300,5 +302,7 @@ class RemoteObject(jsonwrapper):
 
 class Service(RemoteObject):
     service = 'service'
-    
+
+class Email(RemoteObject):
+    service = 'email'
     

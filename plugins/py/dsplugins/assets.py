@@ -92,6 +92,7 @@ def image_resize(job_object):
             if os.path.exists(local_path_wfile):
                 resize_and_save(local_path_wfile,'%s/%s_t.jpg' % (local_path,job['file']),100)
                 resize_and_save(local_path_wfile,'%s/%s_m.jpg' % (local_path,job['file']),317)
+                resize_and_save(local_path_wfile,'%s/%s_l.jpg' % (local_path,job['file']),800)
                 keeptrying = False
             else:
                 logging.debug("haven't found file yet at seconds: #%s" % seconds)

@@ -169,7 +169,8 @@ class ApiBaseHandler(BaseHandler):
             if self.id == 0:
                 pass
             else:
-                o = self.__class__.object_cls.get(self.site.id,self.id)
+                self.action_get_object(self.id)
+                o = self.object
             if not o:
                 o = self.__class__.object_cls()
                 o.site_id = self.site.id
@@ -369,6 +370,7 @@ class EmailApiHandler(ApiSecureHandler):
         if type(id) == int:
             self.object = Email.get(site_id=self.site.id,id=id) 
         else:
+            logging.debug("trying to get by slug %s" % (id))
             self.object = Email.by_slug(site_id=self.site.id,slug=id)  
         if self.object:
             self.qry = [self.object]

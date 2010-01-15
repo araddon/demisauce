@@ -26,6 +26,7 @@ email_table = Table("email", meta.metadata,
 
 class Email(ModelBase,JsonMixin):
     schema = email_table
+    _allowed_api_keys = ['slug','subject','from_email','reply_to','from_name','to','template']
     def __init__(self, **kwargs):
         super(Email, self).__init__(**kwargs)
     
@@ -37,7 +38,7 @@ class Email(ModelBase,JsonMixin):
             self.from_email = self.site.email
     
     def __str__(self):
-        return 'site_id=%s, email subject=%s key = %s' % (self.site_id, self.subject,self.slug)
+        return 'site_id=%s, email subject=%s slug = %s' % (self.site_id, self.subject,self.slug)
     
     @classmethod
     def all(cls,site_id=0):

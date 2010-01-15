@@ -20,9 +20,11 @@ server {
     }
     location = /favicon.ico {
         root   /home/demisauce/ds/web/demisauce/static;
+        log_not_found  off;
     }
     location = /robots.txt {
         root   /home/demisauce/ds/web/demisauce/static;
+        log_not_found  off;
     }
     
     location /blog {
