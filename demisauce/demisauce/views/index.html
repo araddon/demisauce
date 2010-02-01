@@ -9,11 +9,11 @@
 
 <div><h1>Demisauce is an Open Source Integration Appliance</h1> 
     <h3 style="line-height:1.5em;">
-        It provides single api's that add users to many services (Google Apps, Salesforce, 37 Signals)
-        or apps (Wordpress, etc).  It also provides the pre-integrated pieces necessary
-        to integrate apps today (Queuing, Logging, Analytics), it is an appliance
-        made up of gluing together many of the best open source apps and adding a network
-        centric (not component centric) plugin architecture.
+        Provision users to common services (Google Apps, Salesforce, 37 Signals)
+        or apps (Wordpress, etc).  It also provides the pre-integrated services necessary
+        to integrate apps today (Queuing, Logging, Analytics/Reporting).  Unlike 
+        most appliances Demisauce focus's
+        on integration at the data-level, not just operations/deployment automation.
     </h3> 
 
 </div>
@@ -31,22 +31,18 @@ list-style-type:disc;
 <div id="mainpage">
     <div class="yui-gb" >
         <div class="yui-u first" style="border-right: 1px solid #666666;height:165px">
-            <h3 style="">User Provising Plugins</h3>
+            <h3 style="">User Provisioning</h3>
             <p style="">
-                Provides plugin's to provision Users to other systems upon 
-                your call to <i>AddUser API</i>.  
-                
-                Altough LDAP or AD integration is a common way to integrate user
-                with cloud SaaS apps (Google Apps, Salesforce, etc) you need
-                to push, this aids the integration.  <a href="">More...</a> 
+                Call an <i>AddUser API</i> and Demisauce has hooks to add
+                that user to LDAP, Google Apps, Salesforce, Wordpress, Memcached.
             </p>
         </div>
         <div class="yui-u" style="background-color:#ddd;border-right: 1px solid #666666;height:165px">
             <h3 style="">Network Plugin Architecture</h3>
             <p style="">
-                Inspired by the Wordpress <i>add_action(), do_action()</i> Plugin architecture, 
-                a pub-sub type plugin system on top of <a href="http://www.gearman.org">Gearman</a>. 
-                <a class="more" href="http://aaronspotlatch.appspot.com/" style="">More ...</a>
+                Inspired by the Wordpress <i>add_action(), do_action()</i> plugin architecture, except
+                for network oriented.  A pub-sub type plugin system built
+                on top of <a href="http://www.gearman.org">Gearman</a>.
             </p>
         </div>
         <div class="yui-u">
@@ -61,23 +57,22 @@ list-style-type:disc;
     </div>
     <div class="yui-g" >
         <div class="yui-u first" style="background-color:#ddd;border-right: 1px solid #666666;height:142px;margin-right:-1px;">
-            <h3 style="">Activity Tracking</h3>
-                <img src="http://demisaucepub.s3.amazonaws.com/s3/activity_t.jpg" style="float:right;" width="100" height="59" border="0" />
-                <p style="">Easily embed single javascript file, and track your users behavior and provide embeddable 
-                visualizations for your applications.  <a class="more" href="http://aaronspotlatch.appspot.com/" style="">More ...</a><br />
-
-        
+            <h3 style="">Appliance at the Data Level</h3>
+                This appliance is trying to integrate at the data level:  for instance, all your users are together in LDAP, 
+                and provisioned to apps such as Wordpress, Google Apps, Salesforce.  
+                Also, logging from web logs is available in reporting.
+                Events logged from apps get moved to reporting engine.   
             </p>
         </div>
         <div class="yui-u">
-            <h3 style="">How it Works</h3>
-                <p style="">A demisauce server (either in your data center, or hosted on Demisauce.com) would host
-                a set of services, that you embed in your application with javascript, or using the PHP, or Python client
-                API's.  Additionally, the Demisauce server allows you to register additional service's, it is a plugin framework
-                for services.  There are examples in the demo of an externa PHP, or django app hosting services and being 
-                easily consumable from other applications.
-
-                </p>
+            <h3 style="">Data Integration Reporting</h3>
+            <img src="http://demisaucepub.s3.amazonaws.com/s3/activity_t.jpg" style="float:right;" width="100" height="59" border="0" />
+            <p style="">
+                By integrating at a data level, we can move events such 
+                as user-logon's, nginx/apache log files (for a specific user), etc over to
+                reporting.  Then filter these events to build segments (all users
+                that use wordpress at least 20 times, all users never used wordpress).
+            </p>
         </div>
     </div>
     <div class="yui-gc" >
@@ -85,11 +80,12 @@ list-style-type:disc;
             <h3 style="">Why?</h3>
             <p style="">
                 <ul class="summary">
-                    <li>The need for application capability across a suite of applications.  ie:  same help system on all apps at a company.</li>
-                    <li>Many Apps fragment User data:  A users comments across many apps are not visible.   Building just one app isnt realistic.</li>
-                    <li>Easy functionality:  As consumer javascript embedded services, or wordpress 
-                        style plugins have shown, there is a need for easy additional fucntionality.</li>
-                    <li>Need for a service oriented plugin framework to provide coherency to ad-hoc integration.</li>
+                    <li>With move to Cloud Services such as Google Apps/Salesforce
+                        many companies are needing to integrate with these services, this 
+                        appliance makes it easier.</li>
+                    <li>Existing appliances focus on deploying software,
+                        not integrating that software so events in one piece are
+                        available in reporting etc.</li>
                 </ul>
             </p>
         </div>

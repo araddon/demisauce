@@ -24,7 +24,7 @@
             <dt>SharedSecret:</dt>         <dd>{{site.sharedsecret}}</dd>
             <dt>Is Public:</dt>                <dd>{{(site and site.public) or 'False'}}</dd>
             {% endif %}
-            
+
            {% if current_user and current_user.issysadmin %}
             <dt>Is Enabled:</dt>          <dd id="site">{{(site and site.enabled) or 'False'}},  
                                                {% if not site.enabled %}

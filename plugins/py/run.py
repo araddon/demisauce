@@ -13,10 +13,11 @@ import demisaucepy
 from demisaucepy import mail
 import dsplugins
 from dsplugins import emailer, assets
-from tornado.options import options
+from tornado.options import options, define
 from gearman import GearmanClient, GearmanWorker
 from gearman.task import Task
 
+define("asset_root", default="/var/www/ds/static", help="Root Path of images to be saved")
 
 app = None
 

@@ -1,7 +1,14 @@
 import urllib, urllib2, os, sys, logging
 import string
 import httpfetch
-import json
+try:
+    import json
+except ImportError:
+    try:
+        import simplejson as json
+    except ImportError:
+        # for GAE
+        from django.utils import simplejson as json
 import datetime
 from demisaucepy.service import ServiceDefinition, ServiceClient, \
     RetrievalError, args_substitute, SUCCESS_STATUS
@@ -22,22 +29,22 @@ __version__ = '0.1.1'
 DATETIME_REGEX = re.compile('^(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})T(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})(\.\d+)?Z$')
 
 define("site_root", default="/home/demisauce", help="Root Path of site, set at runtime")
-define("redis_host", default="192.168.1.7",help="List of redis hosts:  192.168.1.1:5555,etc",multiple=False)
-define("gearman_servers",default=["192.168.1.7"],multiple=True,help="gearman hosts format host:port,host:port")
-define("solr_server",default="http://192.168.1.9:8080/dssolr",help="http url and path of solr server")
+define("redis_host", default="127.0.0.1",help="List of redis hosts:  192.168.1.1:5555,etc",multiple=False)
+define("gearman_servers",default=["127.0.0.1"],multiple=True,help="gearman hosts format host:port,host:port")
+define("solr_server",default="http://127.0.0.1:8080/dssolr",help="http url and path of solr server")
 define("asset_url",default="http://assets.yourdomain.com", help="fq url to asset address")
 define("demisauce_url",default="http://localhost:4950", help="path to demisauce server")
 define("demisauce_api_key",default="5c427992131479acb17bcd3e1069e679",help="api key")
 define("demisauce_admin",default="demisauce@demisauce.org",help='email address of demisauce admin')
 
-define("memcached_servers", default=["192.168.1.7:11211"],multiple=True, help="list of memcached servers")
+define("memcached_servers", default=["127.0.0.1:11211"],multiple=True, help="list of memcached servers")
 define("demisauce_cache", default="memcache", 
         help="type of cache (memcache|pylons|gae|django|redis|dummy)")
 
 def hash_email(email):
     return hashlib.md5(email.lower()).hexdigest()
 
-def demisauce_ws_get(noun,resource_id,data={},format='html',extra_headers={},api_key=None,cache=True):
+def demisauce_ws_get(noun,resource_id,data={},format='json',extra_headers={},api_key=None,cache=True):
     return demisauce_ws(noun,resource_id,action='get',data=data,api_key=api_key,
                 format=format,extra_headers=extra_headers,cache=cache)
 
@@ -127,6 +134,7 @@ class jsonwrapper(dict):
     
     def __getattr__(self, name):
         if self._json_dict:
+            logging.debug("getting %s from keys = %s" % (name,self._json_dict.keys()))
             val = self._json_dict[name]
             return self._to_python(val)
         else:
@@ -238,6 +246,7 @@ class jsonwrapper(dict):
 
 class RemoteObject(jsonwrapper):
     service = 'tbd'
+    id_field = 'id'
     def __init__(self,*args,**kwargs):
         #print('service = %s' % self.__class__.service)
         #print('kwargs typeof = %s   && args = %s, len(args) %s' % (type(kwargs), args, len(args)) )

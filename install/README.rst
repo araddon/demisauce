@@ -1,47 +1,65 @@
-This is the main installer and it is assumed you are doing a server install, or on a VMWare.   As Demisauce is meant to be services used by your app, the recommended install is in vm/kvm/xen for development, not onto your actual machine.  If you install on VM in dev you can setup your desktop dev machine configs to point to this image for Memcached, Redis, Gearman, MySQL etc and do python on your desktop.
+This is the main installer and it is assumed you are doing a server install, or on a VMWare/KVM/EC2.   As Demisauce is meant to be services used by your app, the recommended install is in vm/kvm/ec2 for development, not onto your actual machine. 
+
+Simple Workflow:  Setup a KVM/VM/EC2 image for trial of Demisauce
+===============================================================================
+If you are doing this to try out, there is a bootstrap installer (install.sh) that will install with all default configuration allowing you to try it out.  If you want to adjust the configuration more you will need to install `Fabric <http://docs.fabfile.org>`_.  
 
 
+I find the easiest vm install is to use VMBuilder for KVM on Ubuntu. Run this command to create a new kvm ubuntu machine and you are ready.  Update path, passwords, proxy server (ip address below) etc.  More info `At Ubuntu <https://help.ubuntu.com/9.10/serverguide/C/jeos-and-vmbuilder.html>`_::
 
-Simple Workflow:  Setup a VM/EC2 image for trial of Demisauce
-===============================================================
-This uses `Fabric <http://docs.fabfile.org>`_  for installation download and install.
+    sudo vmbuilder kvm ubuntu --suite karmic --flavour virtual \
+        --arch i386 -o --mem=512 \
+        --libvirt qemu:///system --bridge=br0 \
+        --user demisauce --name Demisauce --pass demisauce \
+        --addpkg openssh-server --addpkg git-core \
+        --mirror http://192.168.1.4:9999/ubuntu --tmpfs -  \
+        --hostname=demisauce1 --dest ~/vm/demisauce1
+    sudo virsh -c qemu:///system
+    start demisauce1
 
-
-If doing local VM install, Get `Ubuntu Server <http://www.ubuntu.com/getubuntu/download-server>`_ and start the install by doing updates and adding SSH and wget.  This also prints out the IP address (use bridging in vm if you want access via web from your desktop)::
+If doing local VMWare install, Get `Ubuntu Server <http://www.ubuntu.com/getubuntu/download-server>`_ and start the install by doing updates and adding SSH and wget.  This also prints out the IP address (use bridging in vm if you want access via web from your desktop)::
 
     sudo apt-get update
-    sudo apt-get install openssh-server 
-    ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}
+    sudo apt-get install wget openssh-server 
 
-Download `Demisauce Source <http://github.com/araddon/demisauce>`_  using `git <http://git-scm.com/>`_ ::
+If running on EC2, you can run an EC2 instance, create a volume, and attach it to instance.  To use on EC2 you will need to install `Fabric <http://docs.fabfile.org>`_ modify info in demisauce/install/fabfile.py and run::
 
-    git clone git://github.com/araddon/demisauce.git
+    fab ec2 build_ec2
+
+
+Now that you have a KVM/EC2/VM machine Logon and run the bootstrap installer or see next step for full configuration::
+
+    cd tmp
+    wget http://github.com/araddon/demisauce/raw/master/install/install.sh
+    sudo chmod +x install.sh
+    # install.sh mysql_root_pwd mysql_user_pwd role
+    sudo ./install.sh
     
-Edit the Fab files at /demisauce/instal/fabfile.py for your IP(hostname) addresses of VM and run the install::
+    
+**Full installation**  `Get Demisauce <http://github.com/araddon/demisauce>`_,  Install `Fabric <http://docs.fabfile.org>`_ and edit the Fab files at /demisauce/install/fabfile.py and then install::
 
-    fab vm107 build:rootmysqlpwd="demisauce",userdbpwd="demisauce" -p demisauce
+    fab d3 all:mysql_root_pwd="demisauce",mysql_user_pwd="demisauce"
 
 
 Full Lifecycle Workflow:  Setup, dev, test, prod, deploy, repeat
 ================================================================
-Follow steps in Simple Worflow to install Fabric, and download
-VM's for dev on local.   
+Follow steps above to get appliance image created.  
 
 **1. Build Base Image (Dev, Test, Prod)**
     Build a machine from Scratch (see #2 for upgrades), you need to do the one step manually because it times out quite often::
     
-        fab vm107 build:rootmysqlpwd="demisauce",userdbpwd="demisauce" -p demisauce
+        fab d1 build:mysql_root_pwd="demisauce",mysql_user_pwd="demisauce" -p demisauce
 
 
 **2. Deploy Latest code to your env (Dev, Test, Prod)**
     Get latest set of source code, and potentially DB changes to deploy to Dev, Test or Prod machine(s). Note, this does *Not* include db script updates (see below)::
         
-        fab vm107 release:userdbpwd="demisauce" -p demisauce
+        fab d1 release:mysql_user_pwd="demisauce" -p demisauce
 
 **3. Backup DB on Prod Machine**
     Backup/Copies of prod data for backup as well as usage on #4.  Combination of EC2 EBS as well as sql backups::
     
-    fab vm107 db_backup_apply -p demisauce
+    fab d1 db_backup_apply -p demisauce
 
 **4. Restore Prod Data on Dev, Test for testing next release**
     Getting your prod data onto machine to verify next release 

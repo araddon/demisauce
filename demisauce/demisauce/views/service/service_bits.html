@@ -155,10 +155,10 @@
                 <div class="optional">
                     <fieldset> 
                         <legend>Auth Method?</legend>
-                        {{h.radio('authn', 'demisauce',checked=(item and str(item.authn)  == 'demisauce'))}} demisauce <br />
-                        {{h.radio('authn', 'oauth',checked=(item and str(item.authn)  == 'oauth'))}} oauth <br />
-                        {{h.radio('authn', 'xmlrpc',checked=(item and str(item.authn)  == 'xmlrpc'))}} xmlrpc <br />
-                        {{h.radio('authn', 'None',checked=(item and str(item.authn) == 'None'))}} None <br />
+                        {{h.radio('authn', 'demisauce',checked=(item and item.authn  == 'demisauce'))}} demisauce <br />
+                        {{h.radio('authn', 'oauth',checked=(item and item.authn  == 'oauth'))}} oauth <br />
+                        {{h.radio('authn', 'xmlrpc',checked=(item and item.authn  == 'xmlrpc'))}} xmlrpc <br />
+                        {{h.radio('authn', 'None',checked=(item and item.authn == 'None'))}} None <br />
                     </fieldset> 
                 </div>
             </div>
@@ -239,20 +239,20 @@
 <dl>
     <dt>Name:</dt>          <dd><h3>{{item.name}}
                    {% if current_user and current_user.isadmin and current_user.site_id == item.site_id %}
-                            {{h.link_to('Edit', h.url(controller="service",action="appeditform", id=item.id))}}
+                            <a href="/service/appeditform/{{item.id}}">Edit</a>
                     {% endif %}
     </h3></dd>
     <dt>Slug:</dt>          <dd>{{item.slug}}</dd>
 
     <dt>Author:</dt>        <dd>
                                {% if current_user and current_user.isadmin and current_user.site_id == item.site_id %}
-                                    {{h.link_to(item.owner.displayname, h.url(controller="account",action="viewh", id=item.owner.hashedemail))}}
+                                    <a href="/account/viewh/{{item.owner.hashedemail}}">{{item.owner.displayname}}</a>
                                 {% else %}
                                     {{item.owner.displayname}}
                                 {% endif %}
                             </dd>
     <dt>Created:</dt>       <dd>{{(item.created).strftime("%b %d, %Y") or ''}}</dd>
-    <dt>Site:</dt>          <dd>{{h.link_to(item.site.name, h.url(controller="site",action="view", id=item.site_id))}}</dd>  
+    <dt>Site:</dt>          <dd><a href="/site/view/{{item.site_id}}">{{item.site.name}}</a></dd>  
     <dt>base_url:</dt>      <dd>{{item.base_url}}</dd> 
     <dt>Description:</dt>   <dd>{{item.description}}</dd>
     <dt>Public:</dt>        <dd>{{item.list_public}}</dd>

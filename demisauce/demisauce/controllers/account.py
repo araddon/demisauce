@@ -5,7 +5,7 @@ from tornado.options import options
 import tornado.escape
 from datetime import datetime, timedelta
 from sqlalchemy.sql import and_, or_, not_, func, select
-import demisauce.model
+from demisauce import model
 from demisauce.model import meta
 from demisauce.model.site import Site
 from demisauce.model.activity import Activity
@@ -105,6 +105,7 @@ class AccountController(RestMixin,BaseHandler):
         """
         admin is sending out a number of invites to users
         """
+        raise Exception("not implemented")
         if 'emails' in self.request.arguments:
             emails = self.request.arguments['emails']
             delay = 4
@@ -190,14 +191,14 @@ class AccountController(RestMixin,BaseHandler):
                     user_uniqueid=request.params['unique'].lower()).first()
             
             if user is None:
-                h.add_error("That link does not appear to be valid,\
+                self.add_error("That link does not appear to be valid,\
                     please contact the person that invited you or sign up.")
                 
                 return redirect_wsave("/user/signup" )
                 return self.signup()
             elif user.verified == True:
                 # this user already registered
-                h.add_alert('Already verified account')
+                self.add_alert('Already verified account')
                 return redirect_wsave("/user/signin" )
             else:
                 self.user = user
@@ -214,7 +215,7 @@ class AccountController(RestMixin,BaseHandler):
             # TODO should we validate a time stamp?
             
             if user is None:
-                h.add_error("We were not able to verify this invite, please try again")
+                self.add_error("We were not able to verify this invite, please try again")
                 
             elif 'password' in self.form_result:
                 user.displayname = self.form_result['displayname']
@@ -227,12 +228,12 @@ class AccountController(RestMixin,BaseHandler):
                 user.save()
                 
             else:
-                h.add_error("You did not submit a password, please try again.")
+                self.add_error("You did not submit a password, please try again.")
             
             return self.returnurl_orgoto(controller='home',action='index')
         
         else:
-            h.add_error("You need to enter an email and password to signin.")
+            self.add_error("You need to enter an email and password to signin.")
         
         self.render('/user/signin.html')
     
@@ -243,7 +244,7 @@ class AccountController(RestMixin,BaseHandler):
             # TODO should we validate a time stamp?
             
             if user is None:
-                h.add_error("Whoops, there was an error, please click on the \
+                self.add_error("Whoops, there was an error, please click on the \
                     link in the email again.")
                 return self.verify()
             
@@ -338,7 +339,7 @@ class AccountController(RestMixin,BaseHandler):
                         email=self.get_argument('email').lower()).first()
             
             if user is None:
-                h.add_error("We were not able to verify that email\
+                self.add_error("We were not able to verify that email\
                      or password, please try again")
             
             elif 'password' in self.request.arguments:
@@ -354,12 +355,12 @@ class AccountController(RestMixin,BaseHandler):
                     self.set_current_user(user,is_authenticated = True,remember_me=remember_me,islogon=True)
                     return self.redirect("/dashboard")
                 else:
-                    h.add_error("We were not able to verify that \
+                    self.add_error("We were not able to verify that \
                         email or password, please try again")
             else:
-                h.add_error("You did not submit a password, please try again.")
+                self.add_error("You did not submit a password, please try again.")
         else:
-            h.add_error("You need to enter an email and password to signin.")
+            self.add_error("You need to enter an email and password to signin.")
             
         self.render('/user/signin.html')
     
@@ -411,33 +412,30 @@ class AccountController(RestMixin,BaseHandler):
         """
         if self.user and 'email' in self.request.arguments:
             user = Person.get(self.user.site_id,self.user.id)
-            user.displayname = self.request.arguments['displayname']
-            user.set_email(self.request.arguments['email'])
-            user.url = self.request.arguments['url']
-            self.start_session(user)
+            user.displayname = self.get_argument('displayname')
+            user.set_email(self.get_argument('email'))
+            user.url = self.get_argument('url')
             user.save()
-            c.person = user
-            self.user = user
-            self.start_session(user)
-        self.render('/user/settings.html')
+            self.set_current_user(user)
+        self.render('/user/settings.html',person=user)
     
     def change_pwd(self,id=0):
         if self.user:
             user = meta.DBSession.query(Person).filter_by(
                             email=self.user.email.lower()).first()
             
-            c.person = user
-            if user.is_authenticated(self.form_result['password']):
+            person = user
+            if user.is_authenticated(self.get_argument('password')):
                 #a = Activity(site_id=user.site_id,person_id=user.id,activity='Changing Password',category='account')
                 #a.save()
                 add_activity(user,activity='Changing Password',category='account')
-                user.set_password(self.form_result['password1'])
+                user.set_password(self.get_argument('password1'))
                 user.save()
-                h.add_alert("Your Password was updated")
+                self.add_alert("Your Password was updated")
             else:
-                h.add_error("We were not able to verify the \
+                self.add_error("We were not able to verify the \
                     existing password, please try again")
-        self.render('/user/settings.html')
+        self.render('/user/settings.html',person=person)
     
     def usersettings(self,id=0):
         if not self.user:

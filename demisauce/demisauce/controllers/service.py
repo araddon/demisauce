@@ -142,7 +142,7 @@ class ServiceController(RestMixin,BaseHandler):
     
     @requires_admin
     def appedit(self,id=0):
-        #log.info('what the heck, in edit %s' % id)
+        log.info('what the heck, in edit %s' % id)
         id = self.get_argument("app_id")
         site = Site.get(-1,self.user.site_id)
         if id == 0 or id == None or id == '0':
@@ -152,14 +152,15 @@ class ServiceController(RestMixin,BaseHandler):
             log.info('hm, id == 0')
         else:
             app = App.get(site.id,id)
-        
+        log.info('args = %s' % (str(self.request.arguments)))
         app.slug = sanitize(self.get_argument('real_permalink2'))
         app.name = sanitize(self.get_argument('app_name'))
         app.authn = sanitize(self.get_argument('authn'))
-        app.description = sanitize(self.get_argument('description'))
+        #if 'description' in self.request.arguments:
+        app.description = sanitize(self.get_argument('description',''))
         app.base_url = sanitize(self.get_argument('base_url'))
         app.save()
-        return app.id
+        self.write(str(app.id))
     
     #@validate(schema=ServiceValidation(), form='edit')
     def edit_POST(self,id=0):
@@ -203,7 +204,7 @@ class ServiceController(RestMixin,BaseHandler):
         else:
             service = Service.get(self.user.site_id,id)
             if not service and not self.user.issysadmin:
-                h.add_alert('No permission to this service')
+                self.add_alert('No permission to this service')
                 return self.index()
             elif self.user.issysadmin:
                 service = Service.get(-1,id)

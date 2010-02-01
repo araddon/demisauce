@@ -62,24 +62,35 @@ def image_resize(job_object):
             local_file.write(f.read())
             local_file.close()
         
-        local_path = '%s/upload/%s' % (options.site_root,job['path'])
+        local_path = '%s/upload/%s' % (options.asset_root,job['path'])
         local_path_wfile = '%s/%s%s' % (local_path,job['file'],job['extension'])
         filename = '%s%s' % (job['file'],job['extension'])
         #download_file(job['url'],local_path,filename)
         write_file(local_path,filename,base64_file)
         
-        def resize_and_save(local_file,new_file,size):
+        def resize_and_save(local_file,new_file,maxsize=None,maxw=None):
             """Resize the image and save"""
             img = Image.open(local_file)
             width,height = img.size
-            width,height,size = float(width), float(height), float(size)
+            width,height = float(width), float(height)
             ratio = float(1)
-            if width > height and width > size:
-                ratio = size/width
-            elif height > width and height > size:
-                ratio = size/height
-            else: # 1/1
-                ratio = size/width
+            if maxsize:
+                size = maxsize
+                if width >= height and width > size:
+                    ratio = size/width
+                elif height > width and height > size:
+                    ratio = size/height
+                else: 
+                    ratio = 1 # too small
+            elif maxw:
+                size = maxw
+                if width > size:
+                    ratio = size/width
+                else:
+                    # too small
+                    ratio = 1
+            else:
+                raise Exception("must specify max width, OR max size")
             
             height = int(height*ratio)
             width = int(width*ratio)
@@ -90,9 +101,9 @@ def image_resize(job_object):
         keeptrying, seconds = True, 0
         while keeptrying == True:
             if os.path.exists(local_path_wfile):
-                resize_and_save(local_path_wfile,'%s/%s_t.jpg' % (local_path,job['file']),100)
-                resize_and_save(local_path_wfile,'%s/%s_m.jpg' % (local_path,job['file']),317)
-                resize_and_save(local_path_wfile,'%s/%s_l.jpg' % (local_path,job['file']),800)
+                resize_and_save(local_path_wfile,'%s/%s_t.jpg' % (local_path,job['file']),maxsize=100)
+                resize_and_save(local_path_wfile,'%s/%s_m.jpg' % (local_path,job['file']),maxw=317)
+                resize_and_save(local_path_wfile,'%s/%s_l.jpg' % (local_path,job['file']),maxsize=800)
                 keeptrying = False
             else:
                 logging.debug("haven't found file yet at seconds: #%s" % seconds)

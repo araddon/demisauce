@@ -1,30 +1,33 @@
-<%namespace name="service" file="service_bits.html"/>
-<%inherit file="../_base2col.html"/>
+{% import 'service/service_bits.html' as service with context %}
+{% extends "_base2col.html" %}
 
+{% block title %}Demisauce Integration Services and Applications Add/Edit {% endblock %}
+{% block head_more %}{% endblock %}
+{% block bodystart %}
+{% endblock %}
 
-{% macro title() %}Services and Applications Add/Edit {%- endmacro %}
-
+{% block inner_body %}
 
 <div class="bar1">
     <h3>Application's' listing</h3>
 </div>
 
 
-% if c.item:
+{% if item %}
     <br />
-    {{service.app_view(c.item)}
+    {{service.app_view(item)}}
 {% else %}
     <div >
-        {{service.appminilist(c.apps)}
+        {{service.appminilist(apps)}}
     </div>
     
 {% endif %}
 
 
 {% macro sidebar_top() %}
-   {% if current_user is not None:
+   {% if current_user is defined %}
     <div >
-        {{service.actions()}
+        {{service.actions()}}
     </div>
     <br />
     
@@ -33,38 +36,38 @@
     </div>
     <div style="margin:8px;padding:0px;"><h4></h4></div>
     <ul class="filter" style="margin:8px;">
-        <li><a href="/service/owner/mine" class="{{h2.is_current_filter(filter='owner',value='mine')}">Owned By Me</a></li>
-        <li><a href="/service/owner/all" class="{{h2.is_current_filter(filter='owner',value='all')}">All</a></li>
+        <li><a href="/service/owner/mine" class="{{h2.is_current_filter(filter='owner',value='mine')}}">Owned By Me</a></li>
+        <li><a href="/service/owner/all" class="{{h2.is_current_filter(filter='owner',value='all')}}">All</a></li>
         <li><a href="#" class=""></a></li>
     </ul>
     {% endif %}
     
     
-   {% if c.item:
+   {% if item %}
         <div class="box box2">
-             <h3 style="">Other Services for {{c.item.name}</h3>
-            {% if c.item is not None and c.item.services:
-                 {{service.minilist(c.item.services)}
+             <h3 style="">Other Services for {{item.name}}</h3>
+            {% if item is defined and item.services %}
+                 {{service.minilist(item.services)}}
              {% endif %}
          </div>
          
          <div class="box box2">
-              <h3 style="">Other Apps for {{c.item.site.name}</h3>
-             {% if c.item is not None and c.item.site.apps:
-                  {{service.appminilist(c.item.site.apps)}
+              <h3 style="">Other Apps for {{item.site.name}}</h3>
+             {% if item is defined and item.site.apps %}
+                  {{service.appminilist(item.site.apps)}}
               {% endif %}
           </div>
     {% else %}
         <div class="box box2">
             <h3 style="">Recent Updated Services</h3>
-           {% if c.recent:
-                {{service.minilist(c.recent)}
+           {% if recent %}
+                {{service.minilist(recent)}}
             {% endif %}
         </div>
 
     {% endif %}
+{% endmacro %}
 
-
-{%- endmacro %}
+{% endblock %}
 
 

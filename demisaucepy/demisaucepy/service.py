@@ -1,7 +1,14 @@
 import urllib, urllib2, os, sys, logging
 import string
 import httpfetch
-import json
+try:
+    import json
+except ImportError:
+    try:
+        import simplejson as json
+    except ImportError:
+        # for GAE
+        from django.utils import simplejson as json
 import datetime
 import hashlib
 import warnings
@@ -68,6 +75,7 @@ class ServiceDefinition(object):
         if api_key == None:
             self.api_key = options.demisauce_api_key
         if base_url == None:
+            logging.debug("setting base url == %s" % options.demisauce_url)
             self.base_url = options.demisauce_url
     
     def substitute_args(self,pattern,data={},request=''):
@@ -146,8 +154,8 @@ class ServiceDefinition(object):
         self.isdefined = True
         if jsondata and 'url' in jsondata:
             #print dir(model)
-            if 'site' in jsondata and 'base_url' in jsondata['site']:
-                self.base_url = jsondata['site']['base_url']
+            #if 'site' in jsondata and 'base_url' in jsondata['site']:
+            #    self.base_url = jsondata['site']['base_url']
             #log.debug('setting base_url to%s for%s %s ' % (self.base_url, self.app_slug, self.name))
             if 'method_url' in jsondata and jsondata['method_url'] != 'None':
                 self.method_url = jsondata['method_url']
@@ -450,17 +458,18 @@ class ServiceClient(ServiceClientBase):
             self.transport.service = self.service
         url = self.service.get_url(request=request)
         self.response.url = url
-        #print('fetch_service method = %s, url= %s' % (http_method,url))
+        
         cache_key = self.cache_key(url=url)
         #log.debug('about to check cache for url=%s' % url)
         if http_method != "GET" or not self.check_cache(cache_key):
-            #print('no cache found')
+            log.debug('fetch_service method = %s, url= %s' % (http_method,url))
             self.response = self.transport.fetch(url,data=data,extra_headers=self.extra_headers,http_method=http_method)
             
             if self.response.success:
                 if self.service.format=='json' and self.response.data and len(self.response.data) > 3:
                     try:
                         self.response.json = json.loads(self.response.data)
+                        #logging.debug("loaded json data = %s" % (self.response.data))
                     except:
                         self.response.json = None
                     

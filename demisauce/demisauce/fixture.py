@@ -50,15 +50,6 @@ site = '''
             "slug": "yoursitename",
             "base_url": "http://demisauce.yoursite.com",
             "enabled":"True"
-        },
-        {
-            "name": "Local Food", 
-            "key": "aaabbbcccddd1126817b2af30b6604da6a95ffe4", 
-            "email": "araddon+localfood@gmail.com", 
-            "slug": "localfood",
-            "base_url": "http://api.towngrub.com",
-            "enabled":"True",
-            "description":"This is a dev for towngrub"
         }
 ]'''
 person = '''
@@ -194,39 +185,11 @@ service = '''
             "app_id": "1",
             "owner_id": "1",
             "list_public": "1",
-            "name": "Comment Html Service", 
-            "method_url": "/api/comment/{key}.{format}?apikey={api_key}", 
-            "key": "comment",
-            "views": "",
-            "description": "Comment html and form "
-        },{
-            "site_id": "1",
-            "app_id": "1",
-            "owner_id": "1",
-            "list_public": "1",
             "name": "Email Template Sending service", 
             "method_url": "/api/email/{key}.{format}?apikey={api_key}", 
             "key": "email",
-            "format": "xml",
+            "format": "json",
             "description": "Email template, Get, Post"
-        },{
-            "site_id": "4",
-            "app_id": "3",
-            "owner_id": "3",
-            "name": "django secure hello world html service", 
-            "method_url": "service/helloworld/", 
-            "key": "helloworld",
-            "views": "",
-            "description": "hello world test service "
-        },{
-            "site_id": "5",
-            "app_id": "4",
-            "owner_id": "4",
-            "name": "Php Demo secure hello world html service", 
-            "method_url": "service/helloworld/", 
-            "key": "helloworld",
-            "views": "",
-            "description": "secure hello world"
         },{
             "site_id": "1",
             "app_id": "1",

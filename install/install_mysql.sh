@@ -65,6 +65,7 @@ fi
 
 echo "----   Starting MySQL install  ------------"
 # suppress interactive screens asking for pwd of root
+echo "Setting pwd = $MYSQL_ROOT_PWD  "
 echo "mysql-server mysql-server/root_password select $MYSQL_ROOT_PWD" | debconf-set-selections
 echo "mysql-server mysql-server/root_password_again select $MYSQL_ROOT_PWD" | debconf-set-selections
 apt-get install -y mysql-server
@@ -74,7 +75,7 @@ cat <<EOL > demisauce.sql
 create database if not exists demisauce DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 use mysql;
 delete from user where user = '';
-GRANT ALL PRIVILEGES ON demisauce.* TO 'ds_web'@'localhost' IDENTIFIED BY '$DEMISAUCE_MYSQL_PWD' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON demisauce.* TO 'ds_web'@'%' IDENTIFIED BY '$DEMISAUCE_MYSQL_PWD' WITH GRANT OPTION;
 grant select, insert, update, create, drop, reload, shutdown, alter, super, lock tables, replication client on *.* to 'backup-user'@'localhost' identified by '$DEMISAUCE_MYSQL_PWD'; 
 flush privileges;
 EOL
@@ -84,20 +85,13 @@ rm -f demisauce.sql
 /etc/init.d/mysql stop
 killall mysqld_safe
 
-if [ "$VMOREC2" = 'ec2' ] ; then
-    echo " It appears to be EC2, creating xfs fs"
-    mkfs.xfs /dev/sdh
-    echo "/dev/sdh /vol xfs noatime 0 0" >> /etc/fstab
-    mkdir /vol
-    mount /vol
-else
-    # vm
-    mkdir /vol
-fi
+
+mkdir -p /vol
+
 mkdir /vol/lib /vol/log /vol/tmp
 #sudo chown -R mysql:mysql
 chown -R mysql:mysql /vol/lib
-chown -R mysql:mysql /vol/log
+#chown -R mysql:mysql /vol/log
 chown -R mysql:mysql /vol/tmp
 
 

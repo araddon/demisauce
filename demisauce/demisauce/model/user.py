@@ -40,8 +40,8 @@ person_table = Table("person", meta.metadata,
         Column("url", DBString(255),default="http://yourapp.wordpress.com",nullable=False),
         Column("random_salt", DBString(120)),
         Column("hashed_password", DBString(120)),
-        Column("extra_json", DBString),
-        UniqueConstraint('email','site_id'),
+        Column("extra_json", DBText),
+        UniqueConstraint('hashedemail','site_id'),
     )
 
 # DB Table:  group ---------------------------
@@ -204,7 +204,7 @@ class Person(ModelBase,JsonMixin):
         if self.email != None:
             self.set_email(self.email)
             self.hashedemail = Person.create_hashed_email(self.email)
-        if not hasattr(self,'displayname'):
+        if not hasattr(self,'displayname') and self.email != None:
             self.displayname = self.email
         if hasattr(self,'raw_password'): 
              self.set_password(self.raw_password)

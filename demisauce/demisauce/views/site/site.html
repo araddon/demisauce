@@ -40,22 +40,19 @@
                 </div>
             </div>
             <div class="yui-u">
-                
-                   {% if current_user is defined and item.id == current_user.site.id %}
+                   {% if viewing_user is defined and item.id == viewing_user.site.id %}
                         <div class="box box2">
                             <h3 style="">Users</h3>
                            {% if item and item.users %}
                                {% for user in item.users %}
-                                   {% if user.verified %}
-                                        <div><a href="/user/view/{{user.id}}">{{user.displayname}}</a></div>
-                                    {% endif %}
+                                    <div><a href="/user/view/{{user.id}}">{{user.displayname}}</a></div>
                                 {% endfor %}
                             {% endif %}
                             <div id="inviteusersformdiv"></div>
                             <div class="actionbar" id="actionbarusers" style="height:34px; ">
                                 <div class="boxlinks right"  style="margin-top:-4px;">
                                     <ul>
-                                        <li><a href="javascript:void(0)" id="inviteusers" objid="{{(c.item and c.item.id) or '0'}}">
+                                        <li><a href="javascript:void(0)" id="inviteusers" objid="{{(item and item.id) or '0'}}">
                                             <img  alt="Invite users" src="/static/images/icon_add.png" style="vertical-align: bottom;" border="0" />
                                             Invite Users</a></li>
                                     </ul>

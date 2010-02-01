@@ -54,7 +54,8 @@ class SiteController(RestMixin,BaseHandler):
             item = Site.get(-1,id)
             if not item.public:
                 item = None
-        self.render('site/site.html',item=item)
+        user = Person.get(self.current_user.site_id,self.current_user.id)
+        self.render('site/site.html',viewing_user=user,item=item)
     
     @requires_admin
     def cmntconfig(self):

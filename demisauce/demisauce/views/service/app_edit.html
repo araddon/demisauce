@@ -1,17 +1,20 @@
-<%namespace name="service" file="service_bits.html"/>
-<%inherit file="../_base2col.html"/>
+{% import 'service/service_bits.html' as service with context %}
+{% extends "_base2col.html" %}
 
+{% block title %}Demisauce Integration Services and Applications Add/Edit {% endblock %}
+{% block head_more %}{% endblock %}
+{% block bodystart %}
+{% endblock %}
 
-{% macro title() %}Services and Applications Add/Edit {%- endmacro %}
-
+{% block inner_body %}
 
 <div class="bar1">
     <h3>Application</h3>
 </div>
 
 
-% if c.item:
-    {{service.app_form(c.item)}
+{% if item %}
+    {{service.app_form(item)}}
     <script type="text/javascript">
         $(document).ready(function(){
             $('#app_form').dshints();
@@ -31,6 +34,8 @@
 No app
     
 {% endif %}
+
+{% endblock %}
 
 
 

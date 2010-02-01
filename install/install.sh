@@ -40,7 +40,7 @@ return to accept [demisauce]"
         DEMISAUCE_MYSQL_PWD="demisauce"
     fi
     echo -en "Please enter role:  solr, all
-    return to accept:  'solr'   :   "
+    return to accept:  'all'   :   "
     read serverrole
     if [ "$serverrole" != "" ] ; then
         SERVER_ROLE=$serverrole
@@ -108,8 +108,9 @@ git clone git://github.com/araddon/demisauce.git
 chown -R demisauce:demisauce /home/demisauce/src
 cd /home/demisauce/src/demisauce/install
 if [ $SERVER_ROLE = "all" ] ; then
-  fab vmlocal build:rootmysqlpwd="$MYSQL_ROOT_PWD",userdbpwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME" -p $ROOT_PWD
-  fab vmlocal release:userdbpwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME" -p $ROOT_PWD
+  fab vmlocal build:mysql_root_pwd="$MYSQL_ROOT_PWD",mysql_user_pwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME" -p $ROOT_PWD
+  fab vmlocal release:mysql_user_pwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME" -p $ROOT_PWD
+  fab vmlocal restart_web
 fi
 if [ $SERVER_ROLE = "solr" ] ; then
   fab vmlocal build_solr:host="$HOSTNAME" -p $ROOT_PWD

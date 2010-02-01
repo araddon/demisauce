@@ -3,23 +3,21 @@
 """
 from fabric.api import *
 from fabric.contrib.project import rsync_project
-import os, json, datetime
+import os, json, datetime, time
+from string import Template
 
-# TODO convert to chef
-# TODO persistent state?   between runs?  couchdb?  json file on server?
+# TODO =================================
+# convert to ssh keys on local dev machines not just ec2
+# TODO: mysql ip binding  Needed?  remove?
+# todo:  ec2 wants to restart?
+# TODO convert to chef or kokki?
 # TODO: add this line to /etc/mysql/my.cnf    bind-address            = 192.168.0.106
 #   mysql isn't reachable from remote because of permissions in db
-# TODO:  stderr files in /tmp from supervisord?   
-
 # =============    globals
-env.project_name = 'demisauce'
 INSTALL_ROOT = os.path.dirname(os.path.realpath(__file__))
 PROJECT_ROOT = os.path.realpath(INSTALL_ROOT + '/../' )
-env.path = "/home/demisauce"
-env.local_path = PROJECT_ROOT
-env.redis_version = "redis-1.02"
-env.keys_added = False
-
+USER_HOME = os.path.realpath('../../../')
+#env.keys_added = False
 # ============   environments
 class _server(object):
     """not used directly, for inheritance, defines base server"""
@@ -49,46 +47,43 @@ class _server(object):
 
 base_config = {
     "host"  : "localhost",
-    "ip"    : "192.168.0.1",
+    "project_name" : 'demisauce',
+    "ip"    : "127.0.0.1",
+    "redis_version":'redis-1.02',
     "user" : "demisauce",
     "path" : "/home/demisauce",
     "desc" : "Default demisauce server",
     "os"   : "ubuntu9.10",
     "type" : 'vm',
+    "local_path": PROJECT_ROOT,
+    "user_home": USER_HOME,
     "environment" : 'dev',
     "mailhostname" : 'demisauce.org',
     "mysql_root_pwd": "demisauce",
+    "mysql_user":'ds_web',
+    "mysql_user_pwd":'demisauce',
+    "smtp_pwd": 'yourpwd',
+    "ds_api_key":'a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202',
+    "ds_url":'http://localhost:4950'
 }
 vmlocal = _server(base_config,{"desc":"LocalHost","host"  : "127.0.0.1", "ip":"127.0.0.1"})
-d8 = _server(base_config,{"desc":"VM 1.3 D8 Demisauce Server","host"  : "192.168.1.3", "ip":"192.168.1.3"})
-d5 = _server(base_config,{"desc":"KVM 1.9 Demisauce Server","host"  : "192.168.1.9", "ip":"192.168.1.9"})
-d1 = _server(base_config,{"desc":"KVM 1.7 Demisauce Server","host"  : "192.168.1.7", "ip":"192.168.1.7"})
-s1 = _server(base_config,{"desc":"KVM 1.5 Demisauce Solr Server","host"  : "192.168.1.5", "ip":"192.168.1.5"})
-s2 = _server(base_config,{"desc":"KVM Demisauce Solr Server","host"  : "192.168.1.14", "ip":"192.168.1.14"})
-ec2prod = _server(base_config,{"desc":"EC2 Prod 1","host"  : "aws.amazon.com",
-    "mailhostname" : 'smtp.demisauce.org', "ip":"192.168.0.112"})
-imac = _server(base_config,{"desc":"iMac Desktop Dev", "os": "osx", "host"  : "localhost","user":"aaron"})
-ubuntu1 = _server(base_config,{"desc":"HP Ubuntu Desktop", "host"  : "192.168.1.4","user":"aaron"})
+d1 = _server(base_config,{"desc":"Your VM/KVM Demisauce server","host"  : "192.168.1.10", "ip":"192.168.1.10"})
+ec2 = _server(base_config,{"desc":"EC2 Dev Trial Env",'user':'ubuntu','type':'ec2',
+    "host"  : "ec2.your.ip.from.amazon.amazonaws.com",
+    "mailhostname" : 'smtp.demisauce.org', "ip":"127.0.0.1", 
+    'key_filename': '%s/.ec2/id_rsa' % base_config['user_home'], 
+    'ec2instance':'i-1111111','ec2volume':'vol-a0111111',
+    'ec2zone':'us-east-1a','env':'prod'})
+
+try:
+    # if you want private recipes to include
+    from privatefab import *
+except ImportError:
+    pass
 
 #from subprocess import PIPE, Popen
 #o = Popen("ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}'",shell=True,stdout=PIPE).communicate()[0].strip()
 
-
-"""list of dir(env)
-    {'mailhostname': 'localhost', 
-    'show': None, 'key_filename': None, 'reject_unknown_hosts': False, 
-    'project_name': 'demisauce', 'roledefs': {}, 'redis_version': 'redis-1.02', 
-    'path_behavior': 'append', 'hide': None, 'sudo_prefix': "sudo -S -p '%s' ", 
-    'host_string': '192.168.0.106', 'environment': 'dev', 'version': '1.0a0', 
-    'command': 'db_backup_apply', 'fabfile': 'fabfile', 'type': 'vm', 'cwd': '', 
-    'disable_known_hosts': False, 'real_fabfile': '/Users/aaron/Dropbox/demisauce/install/fabfile.py', 
-    'shell': '/bin/bash -l -c', 'always_use_pty': False, 'all_hosts': ['192.168.0.106'], 
-    'sudo_prompt': 'sudo password:', 'again_prompt': 'Sorry, try again.\n', 
-    'host': '192.168.0.106', 'port': '22', 'user': 'demisauce', 'path': '/home/demisauce', 
-    'password': 'xyz', 'rcfile': '/Users/aaron/.fabricrc', 'desc': 'VMware 106 Demisauce Server', 
-    'roles': [], 'local_path': '/Users/aaron/Dropbox/demisauce', 'use_shell': True, 
-    'hosts': ['192.168.0.106'], 'mysql_root_pwd': 'demisauce', 'warn_only': False, 'os': 'ubuntu9.04'} 
-"""
 # ===== Private Tasks ==========
 def _nginx_release():
     sudo("/etc/init.d/nginx stop")
@@ -116,9 +111,9 @@ def _memcached():
     sudo("sudo update-rc.d memcached start 91 2 3 4 5 . stop 20 0 1 6 .")
     sudo('/etc/init.d/memcached start')
 
-def _mysql(rootmysqlpwd,mysqlpwd):
+def _mysql():
     put('%(local_path)s/install/install_mysql.sh' % env, '/tmp/install_mysql.sh' % env)
-    sudo('chmod +x /tmp/install_mysql.sh; /tmp/install_mysql.sh %s %s %s' % (rootmysqlpwd,mysqlpwd,env.type))
+    sudo('chmod +x /tmp/install_mysql.sh; /tmp/install_mysql.sh %(mysql_root_pwd)s %(mysql_user_pwd)s %(type)s' % (env))
     sudo('rm /tmp/install_mysql.sh')
     if env.environment == 'dev':
         """mysql -u[user] -p[pass] <<QUERY_INPUT
@@ -126,15 +121,15 @@ def _mysql(rootmysqlpwd,mysqlpwd):
         QUERY_INPUT
         or
         mysql -u[user] -p[pass] -e"use mysql;  select * from user;"  """
-        run("""mysql -uroot -p%(pwd)s <<QUERY_INPUT
+        run("""mysql -uroot -p%(mysql_root_pwd)s <<QUERY_INPUT
             use mysql; 
             update user set host = '%(host)s' where user = 'ds_web' and host = 'localhost';
-            \nQUERY_INPUT""" % ({'pwd':'demisauce', 'host':'%'}))
+            \nQUERY_INPUT""" % ({'mysql_root_pwd':'%s' % env.mysql_root_pwd, 'host':'%'}))
         
         sudo('perl -pi -e "s/127.0.0.1/127.0.0.1\nbind-address = %s\n/g" /etc/mysql/my.cnf' % (env.ip))
         sudo('/etc/init.d/mysql restart')
 
-def _zamanda(mysqlpwd):
+def _zamanda():
     """ install backup tools"""
     """setting myhostname: demisauce
     setting alias maps
@@ -148,7 +143,7 @@ def _zamanda(mysqlpwd):
     setting inet_interfaces: all
     """
     put('%(local_path)s/install/install_zamanda.sh' % env, '/tmp/install_zamanda.sh' % env)
-    sudo('chmod +x /tmp/install_zamanda.sh; /tmp/install_zamanda.sh %s %s %s' % (mysqlpwd,mysqlpwd,env.type))
+    sudo('chmod +x /tmp/install_zamanda.sh; /tmp/install_zamanda.sh %(mysql_root_pwd)s %(mysql_user_pwd)s %(type)s' % (env))
     sudo('rm /tmp/install_zamanda.sh')
     #sudo('echo "%(mailhostname)s" >> /etc/mailname' % env)
 
@@ -185,10 +180,16 @@ def _postfix():
 def _nginx():
     """Installs Nginx"""
     sudo("apt-get -y update; apt-get -y install nginx")
+    sudo("apt-get -y install libgeoip-dev")
     #get('/etc/nginx/mime.types', '%s/nginx/mime.types' % INSTALL_ROOT)
     #get('/etc/nginx/nginx.conf', '%s/nginx/nginx.conf' % INSTALL_ROOT)
+    with cd("/tmp"):
+        run('wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz')
+        run('gunzip GeoLiteCity.dat.gz')
+        sudo('mv GeoLiteCity.dat /home/demisauce/GeoLiteCity.dat')
     sudo("rm /etc/nginx/sites-enabled/default")
     sudo("mkdir -p /vol/log/nginx")
+    sudo("mkdir -p /var/www; chown -R www-data:www-data /var/www")
 
 def _gearmanDrizzle():
     """Install Gearman, requires base linux"""
@@ -240,7 +241,8 @@ def _linux_base():
 def _demisauce_pre_reqs():
     """install python-mysqldb, gdata, boto(amazon api's), solr, oauth"""
     sudo("mkdir -p /home/demisauce/lib")
-    sudo("chown -R demisauce:demisauce /home/demisauce/lib")
+    sudo("chown -R %s:%s /home/demisauce/lib" % (env.user,env.user))
+    sudo("chmod -R 770 /home/demisauce/lib")
     with cd("/home/demisauce/lib"):
         #rsync_project('/home/demisauce/lib/tornado/',local_dir='/Users/aaron/dev/tornado/')
         
@@ -315,6 +317,7 @@ def _redis_install():
             if not run('ls redis | grep data'):
                 sudo('mkdir -p redis/data', pty=True)
                 sudo('chown demisauce redis')
+                sudo("chmod -R 770 redis")
 
 def _redis_conf_update():
     put('%(local_path)s/install/recipes/vol/redis/redis.conf' % env, '/vol/redis/redis.conf')
@@ -378,9 +381,14 @@ def _install_ds():
         sudo("python setup.py develop")
         run("python manage.py --action=create_data --config=./demisauce.conf")
         run("python manage.py --action=updatesite --config=./demisauce.conf")
+    
+    sudo("mkdir -p /var/www/ds/static/upload")
+    sudo("chown -R www-data:www-data /var/www")
+    #sudo("chmod -R 770 /home/demisauce/ds")
+        
 
 
-def _wordpress_install(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
+def _wordpress_install():
     #http://nielsvz.com/2009/02/nginx-and-wordpress/
     #http://elasticdog.com/2008/02/howto-install-wordpress-on-nginx/
     # get fast-cgi module from lighttpd
@@ -390,7 +398,7 @@ def _wordpress_install(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
     # but don't start it, we just need the fast cgi module
     sudo("update-rc.d -f lighttpd remove")
     put('%(local_path)s/install/install_wordpress.sh' % env, '/tmp/install_wordpress.sh' % env)
-    sudo('chmod +x /tmp/install_wordpress.sh; /tmp/install_wordpress.sh %s %s %s' % (rootmysqlpwd,userdbpwd,env.type))
+    sudo('chmod +x /tmp/install_wordpress.sh; /tmp/install_wordpress.sh %(mysql_root_pwd)s %(mysql_user_pwd)s' % env)
     sudo('rm /tmp/install_wordpress.sh')
 
 def _wordpress_updateconf():
@@ -403,9 +411,21 @@ def _wordpress_updateconf():
 
 
 #   Tasks   =======================
-def wordpress(rootmysqlpwd="demisauce",userdbpwd="demisauce",standalone=False):
+def update_config(mysql_user_pwd=None):
+    'drops new config on said host'
+    if mysql_user_pwd:
+        env.mysql_user_pwd = mysql_user_pwd
+    with settings(hide('warnings', 'stderr'),warn_only=True):
+        sudo("rm /home/demisauce/ds/web/demisauce.conf")
+    s = Template(open('%(local_path)s/demisauce/conf.tmpl' % env).read())
+    run("echo '%s' > /home/demisauce/ds/web/demisauce.conf" % s.substitute(env))
+
+def wordpress(mysql_root_pwd=None,mysql_user_pwd=None,standalone=False):
     "Install wordpress"
-    
+    if mysql_root_pwd:
+        env.mysql_root_pwd = mysql_root_pwd
+    if mysql_user_pwd:
+        env.mysql_user_pwd = mysql_user_pwd
     if standalone:
         push_recipes() # do this first to force rsynch/ssh pwd at beginning to it doesn't 255 error timeout
         _linux_base()
@@ -425,7 +445,7 @@ def supervisor_update():
     sudo('/etc/init.d/supervisord restart')
 
 def add_sources():
-    """This often times out, so run it first"""
+    "adds ubuntu sources, does update"
     # sources for nginx
     sudo('echo "deb http://ppa.launchpad.net/jdub/devel/ubuntu hardy main" >> /etc/apt/sources.list')
     #sudo("""echo "deb http://ppa.launchpad.net/jdub/devel/ubuntu hardy main" >> /etc/apt/sources.list
@@ -456,49 +476,62 @@ def add_sources():
     # do update before getting keys
     sudo("apt-get -y --force-yes update")
 
-def release(userdbpwd="demisauce",host=None,local=False):
+def release(mysql_user_pwd=None,host=None,local=False):
     'Deploy a new/updated demisauce web release to the target server'
+    if mysql_user_pwd:
+        env.mysql_user_pwd = mysql_user_pwd
     _nginx_release()
     with settings(hide('warnings', 'running', 'stdout', 'stderr'),warn_only=True):
         sudo("rm /home/demisauce/ds/current; rm /home/demisauce/ds/web")
     release = datetime.datetime.now().strftime("%Y%m%d%H")
     sudo("mkdir -p /home/demisauce/ds/%s" % release)
-    sudo("chown -R demisauce:demisauce /home/demisauce/ds")
+    sudo("chown -R %s:%s /home/demisauce/ds" % (env.user,env.user))
+    sudo("chmod -R 770 /home/demisauce/ds")
     rsync_project('/home/demisauce/ds/%s/' % release,local_dir='%(local_path)s/' % env)
     sudo('ln -s /home/demisauce/ds/%s/demisauce /home/demisauce/ds/web' % (release))
     sudo('ln -s /home/demisauce/ds/%s/ /home/demisauce/ds/current' % (release))
-    sudo('ln -s /home/demisauce/upload/ /home/demisauce/ds/web/demisauce/static/upload')
+    update_config()
     _install_ds()
+    sudo("rsync  -pthrvz  /home/demisauce/ds/web/demisauce/static /var/www/ds") 
+    sudo("chown -R www-data:www-data /var/www")
+    sudo("chmod -R 775 /var/www")
 
-def release_simple():
+def release_simple(mysql_user_pwd=None):
+    if mysql_user_pwd:
+        env.mysql_user_pwd = mysql_user_pwd
     """Simple release, just web and dspy sync, no new folders"""
     rsync_project('/home/demisauce/ds/current/demisaucepy/',local_dir='%(local_path)s/demisaucepy/' % env)
     rsync_project('/home/demisauce/ds/current/plugins/',local_dir='%(local_path)s/plugins/' % env)
     rsync_project('/home/demisauce/ds/web/',local_dir='%(local_path)s/demisauce/' % env)
+    sudo("rsync  -pthrvz  /home/demisauce/ds/web/demisauce/static /var/www/ds") 
+    sudo("chown -R www-data:www-data /var/www")
+    sudo("chmod -R 775 /var/www")
+    update_config()
     restart_web()
 
 def push_recipes(local=False):
     """Configuration Sync"""
-    sudo("mkdir -p /vol; chown -R demisauce:demisauce /vol")
     if local:
         pass # already retrieved from install.sh git clone
         rsync_project('/vol/',local_dir='%(local_path)s/install/recipes/vol/' % env)
     else:
         # in dev, get from dev machine
         sudo("mkdir -p /home/demisauce/src/demisauce/install/recipes/etc")
-        sudo("chown -R demisauce:demisauce /home/demisauce")
+        sudo("chown -R %s:%s /home/demisauce" % (env.user,env.user))
+        sudo("chmod -R 770 /home/demisauce")
         rsync_project('/home/demisauce/src/demisauce/install/recipes/etc/',local_dir='%(local_path)s/install/recipes/etc/' % env)
         rsync_project('/vol/',local_dir='%(local_path)s/install/recipes/vol/' % env)
+    
 
-def db_backup_apply(rootmysqlpwd="demisauce"):
+def db_backup_apply(mysql_root_pwd=None):
     """Apply a backup """
-    require("mysql_root_pwd")
-    sudo("rm /tmp/*.sql")
-    #print("Mysql_root_pwd = %s" % env.mysql_root_pwd)
+    if mysql_root_pwd:
+        env.mysql_root_pwd = mysql_root_pwd
+    sudo("rm -f /tmp/*.sql")
     put('%s/demisaucedb.sql' % PROJECT_ROOT, '/tmp/demisaucedb.sql')
-    put('%s/wordpressdb.sql' % PROJECT_ROOT, '/tmp/wordpressdb.sql')
-    sudo("mysql -uroot -p%s < /tmp/demisaucedb.sql " % rootmysqlpwd)
-    sudo("mysql -uroot -p%s < /tmp/wordpressdb.sql " % rootmysqlpwd)
+    #put('%s/wordpressdb.sql' % PROJECT_ROOT, '/tmp/wordpressdb.sql')
+    sudo("mysql -uroot -p%(mysql_root_pwd)s < /tmp/demisaucedb.sql " % env)
+    #sudo("mysql -uroot -p%(mysql_root_pwd)s < /tmp/wordpressdb.sql " % env)
     sudo("rm /tmp/*.sql")
 
 def release_nginx():
@@ -519,38 +552,36 @@ def ec2_save_image():
     """Takes an instance on EC2 and saves to S3"""
     raise NotImplemented("needs to be done")
 
-def db_sqldump(rootmysqlpwd="demisauce"):
+def db_sqldump(mysql_root_pwd=None):
     """Takes a full sql dump"""
-    sudo("mysqldump -uroot -p%s demisauce > /tmp/demisaucedb.sql" % rootmysqlpwd)
-    sudo("mysqldump -uroot -p%s wordpress > /tmp/wordpressdb.sql" % rootmysqlpwd)
+    if mysql_root_pwd:
+        env.mysql_root_pwd = mysql_root_pwd
+    sudo("mysqldump -uroot -p%(mysql_root_pwd)s demisauce > /tmp/demisaucedb.sql" % env)
+    #sudo("mysqldump -uroot -p%(mysql_root_pwd)s wordpress > /tmp/wordpressdb.sql" % env)
     get('/tmp/demisaucedb.sql', '%s/demisaucedb.sql' % PROJECT_ROOT)
-    get('/tmp/wordpressdb.sql', '%s/wordpressdb.sql' % PROJECT_ROOT)
+    #get('/tmp/wordpressdb.sql', '%s/wordpressdb.sql' % PROJECT_ROOT)
     sudo("rm /tmp/*.sql")
 
-def build(rootmysqlpwd="demisauce",userdbpwd="demisauce",host=None,local=False):
-    """base linux install, then manually run::
-        apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C73E014
-        as it will timeout
-    """
-    
+def build(mysql_root_pwd=None,mysql_user_pwd=None,host=None,local=False):
+    if mysql_root_pwd:
+        env.mysql_root_pwd = mysql_root_pwd
+    if mysql_user_pwd:
+        env.mysql_user_pwd = mysql_user_pwd
     if host:
         env.host = host
     print("====== starting build:  env=%s" % env)
     sudo("apt-get -y install rsync")
-    
+    sudo("mkdir -p /vol; chown -R %s:%s /vol" % (env.user,env.user))
+    sudo("chmod -R 770 /vol")
+    sudo("usermod -a -G www-data ubuntu; usermod -a -G www-data demisauce")
     push_recipes() # do this first to force rsynch/ssh pwd at beginning to it doesn't 255 error timeout
-    
     add_sources()
     _linux_base()
-    # this would only work if we have a more persistent "state" across runs
-    #if not env.keys_added:
-    #    print("You need to run add_sources first, as it times out quite often we do that first in case it times out")
-    #    return
     _gearman()
     _memcached()
     _postfix()# must be installed before zamanda which installs it in interactive mode
-    _mysql(rootmysqlpwd,userdbpwd)
-    _zamanda(userdbpwd)
+    _mysql()
+    #_zamanda()
     _nginx()
     _demisauce_pre_reqs()
     _redis_install()
@@ -562,14 +593,15 @@ def build(rootmysqlpwd="demisauce",userdbpwd="demisauce",host=None,local=False):
     # move from temp home to /etc
     sudo("rsync  -pthrvz  /home/demisauce/src/demisauce/install/recipes/etc /") 
     #supervisor_update() # also starts supervisord
+    sudo('/etc/init.d/tomcat6 restart')
     sudo('/etc/init.d/supervisord restart')
+    sudo('/etc/init.d/memcached start')
     sudo('sudo update-rc.d supervisord defaults')
 
-def all(rootmysqlpwd="demisauce",userdbpwd="demisauce"):
+def all(mysql_root_pwd=None,mysql_user_pwd=None):
     """Build AND Release"""
-    build(rootmysqlpwd=rootmysqlpwd,userdbpwd=userdbpwd)
-    release(userdbpwd=userdbpwd)
-    _install_ds()
+    build(mysql_root_pwd=mysql_root_pwd,mysql_user_pwd=mysql_user_pwd)
+    release(mysql_user_pwd=mysql_user_pwd)
     restart_web()
 
 def build_solr(name='dssolr',host=None):
@@ -602,5 +634,53 @@ def solr_conf():
     sudo("/etc/init.d/tomcat6 restart")
 
 
+def build_ec2():
+    env.user = 'ubuntu'
+    #http://www.barregren.se/blog/how-install-ubuntu-amazon-ec2
+    #http://www.equivalence.co.uk/archives/1521
+    # USE boto local('bin/ec2-create-volume -z %s -s 10' % (env.ec2zone))
+    #thread.thread.sleep(30)
+    #local('%s/.ec2/bin/ec2-attach-volume -d /dev/sdh -i %s %s' % (USER_HOME,env.ec2instance,env.ec2volume))
+    sudo("useradd -d /home/demisauce -m demisauce")
+    sudo("usermod -a -G admin demisauce; usermod -a -G demisauce ubuntu; usermod -a -G ubuntu demisauce")
+    run("""
+    export DEBIAN_FRONTEND=noninteractive
+    echo "deb http://ppa.launchpad.net/ubuntu-on-ec2/ec2-tools/ubuntu karmic main" |
+      sudo tee /etc/apt/sources.list.d/ubuntu-on-ec2-ec2-tools.list &&
+    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9EE6D873 &&
+    sudo apt-get update &&
+    sudo -E apt-get upgrade -y &&
+    sudo apt-get install -y xfsprogs &&
+    sudo -E apt-get install -y \
+      python-vm-builder ec2-ami-tools ec2-api-tools bzr &&
+    bzr branch lp:vmbuilder
+    codename=$(lsb_release -cs)
+    echo "deb http://ppa.launchpad.net/alestic/ppa/ubuntu $codename main"|
+      sudo tee /etc/apt/sources.list.d/alestic-ppa.list    
+    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BE09C571
+    sudo apt-get update && 
+    sudo apt-get install -y ec2-consistent-snapshot &&
+    sudo PERL_MM_USE_DEFAULT=1 cpan Net::Amazon::EC2
+    """)
+    #time.sleep(60)
+    sudo("mkfs.xfs /dev/sdh")
+    sudo('sudo su; echo "/dev/sdh /vol xfs noatime 0 0" >> /etc/fstab')
+    sudo('mkdir /vol; mount /vol')
+
+def bundle_ec2(access_key_id, secret_access_key):
+    'first, start instance'
+    # lets get your amazon keypair up onto the instance: 
+    #os.system("scp -i ~/.ec2/id_rsa-%s ~/.ec2/{cert,pk}-*.pem root@%s:/mnt/" % (KEY_PAIR,instance_info.dnsName))
+    put('~/.ec2/id_rsa-%s ~/.ec2/{cert,pk}-*.pem', '/tmp/')
+    # move up the demisauce install file
+    #os.system("scp -i ~/.ec2/id_rsa-%s %s root@%s:/mnt/" % (KEY_PAIR,DS_INSTALL_FILE,instance_info.dnsName))
+    #put("scp -i ~/.ec2/id_rsa-%s %s root@%s:/mnt/" % (KEY_PAIR,DS_INSTALL_FILE,instance_info.dnsName))
+    # ssh command
+    ssh_cmd = 'ssh -i %sid_rsa-%s root@%s' % (DOT_EC2,KEY_PAIR,instance_info.dnsName)
+    """Run these commands on your local machine
+    ~/.ec2/bin/ec2-create-volume -z us-east-1a -s 10
+    ~/.ec2/bin/ec2-describe-volumes vol-VVVV1111
+    ec2-attach-volume -d /dev/sdh -i i-IIII1111 vol-VVVV1111
+    """
 
 

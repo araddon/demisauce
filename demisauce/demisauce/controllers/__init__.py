@@ -117,17 +117,17 @@ def requires_role(role):
             session.save()
             if user:
                 if request.environ['pylons.routes_dict']['controller'] == 'dashboard':
-                    h.add_alert('Not Authorized')
+                    self.add_alert('Not Authorized')
                     log.info('403, current user doesnt have role=%s redirect to public page' % (role))
                     # TODO:  switch to abort instead of redirect
                     #abort(403, 'Not authorized')
                     redirect_wsave(h.url_for(controller='home',action='index'))
                 else:
-                    h.add_alert('Not Authorized')
+                    self.add_alert('Not Authorized')
                     log.info('not authorized' )
                     redirect_wsave(h.url_for(controller='dashboard',action='index'))
             else:
-                h.add_alert('Must Sign In')
+                self.add_alert('Must Sign In')
                 log.info('not logged in or wrong role, about to redirect to signin' )
                 redirect_wsave(h.url_for(controller='account',action='signin'))
         else:
@@ -244,10 +244,11 @@ class BaseHandler(tornado.web.RequestHandler):
                 redis_user_json = self.db.redis.get("person-%s" % self._user_json['id'])
             
             if not redis_user_json:
-                if self.get_cookie("dsu"):
+                p = None
+                if self.get_cookie("dsu",None):
                     p = Person.by_unique(self.get_cookie("dsu").lower())
-                elif self.get_cookie("dsuserkey"):
-                    p = Person.by_unique(self.get_cookie("dsu").lower())
+                elif self.get_cookie("dsuserkey",None):
+                    p = Person.by_unique(self.get_cookie("dsuserkey").lower())
                 if p:
                     self.set_current_user(p,islogon=False)
                     redis_user_json = p.to_json()
@@ -353,8 +354,8 @@ class BaseHandler(tornado.web.RequestHandler):
         """Custom UI error handler"""
         logging.error("in get_error_html %s, method=%s" % (status_code,self.request.method))
         logging.error("In get error template vals = %s" % self.template_vals)
-        return self.render_string("error.html",settings=self.application.settings,
-            code=status_code,message=httplib.responses[status_code])
+        return self.render_string("error.html",code=status_code,
+            message=httplib.responses[status_code],**self.template_vals)
     
     def render(self,template_file, **kwargs):
         """

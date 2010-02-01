@@ -1,6 +1,4 @@
 # the Demisauce Tornado App
-
-
 upstream demisaucetornado {
         server 127.0.0.1:4950;
         #server 127.0.0.1:4951;
@@ -10,20 +8,25 @@ upstream demisaucetornado {
 
 server {
     listen   80;
+    server_name dev.demisauce.com;
+    server_name *.demisauce.com;
+    server_name demisauce.com;
+    server_name demisauce.org;
+    server_name assets.*;
     #server_name  demisauce;
     
     access_log  /vol/log/nginx/demisauce.access.log;
     
     location /static {
-        root   /home/demisauce/ds/web/demisauce;
+        root   /var/www/ds;
         #rewrite ^/static/(.*)$ /public/$1 last;
     }
     location = /favicon.ico {
-        root   /home/demisauce/ds/web/demisauce/static;
+        root   /var/www/ds/static;
         log_not_found  off;
     }
     location = /robots.txt {
-        root   /home/demisauce/ds/web/demisauce/static;
+        root   /var/www/ds/static;
         log_not_found  off;
     }
     

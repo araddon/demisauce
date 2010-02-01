@@ -158,7 +158,7 @@ class JsonMixin(object):
                 if key.find('datetime_') == 0:
                     setattr(self,key[9:],datetime.fromtimestamp(float(json_dict[key])))
                 else:
-                    setattr(self,key,json_dict[key])
+                    setattr(self,key,self._to_python(json_dict[key]))
         
         #logging.debug("from_json after Time:  %.2fms", (1000.0 * (time.time() - _start_time)))
         return self
@@ -173,7 +173,22 @@ class JsonMixin(object):
         self.from_dict(escape.json_decode(json_string))
         return self
     
-
+    def _to_python(self,val):
+        if val is None:
+            return val
+        
+        if isinstance(val, (int, float, long, complex)):
+            return val
+        if val in (u'none',u'None','none','None'):
+            return None
+        
+        if val in ('true',u'true','True',u'True'):
+            return True
+        elif val in ('false',u'false','False',u'False'):
+            return False
+        
+        # else, probably string?
+        return val
 
 def setup_site(user):
     """does the base site setup for a new account
@@ -184,9 +199,6 @@ def setup_site(user):
     app.name = user.site.name
     app.base_url = user.site.base_url
     app.save()
-    cmsitem = meta.DBSession.query(cms.Cmsitem).filter_by(site_id=user.site_id,
-        item_type='root').first()
-    
 
 def create_schema():
     #metadata.bind = config['pylons.g'].sa_engine
