@@ -55,10 +55,13 @@ class TestServices(TestDSBase):
         # test updates
         #svc.name = 'updated name'
         svc.PUT({'name':'updated name'})
+        log.debug(svc._response.json)
+        assert svc._response.success 
         assert svc.name == 'updated name'
-        # Needs to update cache on PUT/POST
+        # Needs to update cache on PUT/POST 
         svc2 = Service.GET(svc.id)
         assert svc2 is not None
+        
         assert svc2.name == 'updated name'
         assert svc._response.status == 201
         svc2.DELETE()

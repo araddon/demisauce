@@ -165,7 +165,6 @@ def print_timing(func):
     
     return wrapper
 
-# http://pythonisito.blogspot.com/2008/07/restfulness-in-turbogears.html
 class RestMethod(object):
     def __call__(self,**kwargs):
         return self.result(**kwargs)
@@ -197,8 +196,8 @@ class BaseHandler(tornado.web.RequestHandler):
         self.msg_alerts = []
         self.form_errors = []
         next = ""
-        logging.debug("user-agent:  %s" % self.request.headers['User-Agent'])
-        logging.debug("RemoteIP = %s" % request.remote_ip )
+        #logging.debug("user-agent:  %s" % self.request.headers['User-Agent'])
+        #logging.debug("RemoteIP = %s" % request.remote_ip )
         if self.get_argument("next",None) is not None:
             logging.debug(urllib.urlencode({"next":self.get_argument("next","")}))
             next = urllib.urlencode({"next":self.get_argument("next","")})
@@ -241,7 +240,7 @@ class BaseHandler(tornado.web.RequestHandler):
                 redis_user_json = None
             else:
                 logging.debug("get_current_user: found cookie, getting user from redis")
-                redis_user_json = self.db.redis.get("person-%s" % self._user_json['id'])
+                redis_user_json = self.db.redis.get("DS-person-%s" % self._user_json['id'])
             
             if not redis_user_json:
                 p = None
@@ -278,7 +277,7 @@ class BaseHandler(tornado.web.RequestHandler):
             return self.site
         if 'apikey' in self.request.arguments:
             site = model.site.Site.by_apikey(self.get_argument('apikey'))
-            log.debug("found site by apikey=%s, site=%s" % (self.get_argument('apikey'),site))
+            #log.debug("found site by apikey=%s, site=%s" % (self.get_argument('apikey'),site))
         else:
             user = self.get_current_user()
             if user and user.is_authenticated:
@@ -316,7 +315,7 @@ class BaseHandler(tornado.web.RequestHandler):
         self._current_user = Person().from_json(user_json)
         self.user = self._current_user
         self._user_json = user_dict
-        self.db.redis.set("person-%s" % sauser.id,user_json)
+        self.db.redis.set("DS-person-%s" % sauser.id,user_json)
     
     def redirect_wsave(self, *args, **kwargs):
         """
@@ -460,6 +459,7 @@ class SecureController(BaseHandler):
     def __before__(self):
         BaseHandler.__before__(self)
     
+
 class CrossDomain(BaseHandler):
     def get(self):
         self.render("crossdomain.xml")
@@ -497,6 +497,7 @@ class CustomErrorHandler(BaseHandler):
         super(CustomErrorHandler,self).__init__(application,request)
     
     def get(self):
+        self.set_status(self.error_code)
         logging.error("ErrorHandler:  code=%s, path=%s" % (self.error_code,self.request.path) )
         self.render("error.html",code=self.error_code,
             message=httplib.responses[self.error_code])

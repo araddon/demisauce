@@ -52,6 +52,16 @@ class PasswordChangeValidation(formencode.Schema):
 
 class AccountController(RestMixin,BaseHandler):
     requires_auth = False
+    def validate(self,id="0"):
+        'for validating'
+        if self.user and self.user.is_authenticated:
+            if isinstance(self.user.extra_json,(dict)) and 'wordpress_user_id' in self.user.extra_json:
+                self.write(self.user.extra_json['wordpress_user_id'])
+                log.debug(self.user.extra_json['wordpress_user_id'])
+                self.set_status(200)
+        else:
+            self.set_status(403)
+    
     def options(self,action="",id=""):
         logging.debug("in Account api OPTIONS action=%s" % action)
         if action in ['pre_init_user','init_user']:
@@ -441,6 +451,7 @@ class AccountController(RestMixin,BaseHandler):
         if not self.user:
              redirect_to(controller='home', action='index', id=None)
         else:
+            log.debug('getting user.id = %s site_id=%s' % (self.user.id,self.user.site_id))
             person = meta.DBSession.query(Person).filter_by(
                 site_id=self.user.site_id, id=self.user.id).first()
             
@@ -464,7 +475,7 @@ class AccountController(RestMixin,BaseHandler):
                     person = None
         else:
             pass #TODO:  raise error, or bad page
-        self.render('/user/settings.html',person=person,helptickets=helptickets,
+        self.render('/user/settings.html',person=person,
             activities_by_day=activities_by_day,activity_count=activity_count)
     
     def viewh(self,id='blah'):
@@ -473,7 +484,7 @@ class AccountController(RestMixin,BaseHandler):
     
     def view(self,id=0):
         if not self.user:
-            redirect_to(controller='home', action='index', id=None)
+            self.redirect('/')
         
         if self.user.issysadmin and id > 0:
             person = Person.get(-1,id)

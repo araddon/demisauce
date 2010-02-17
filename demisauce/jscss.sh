@@ -25,16 +25,25 @@ java -jar ~/dev/yuicompressor-2.4.2.jar $basedir/lib-js.js -o $basedir/lib-js-mi
 
 
 echo "Combinning all demisauce js into single ds-js.js"
-#$basedir/gears_init.js \
-$basedir/ds.gears.js
 rm $basedir/ds-js.js
 rm $basedir/ds-js-min.js
 cat $basedir/ds.adminbase.js $basedir/ds.base.js \
     $basedir/ds.slugeditor.js > $basedir/ds-js.js
 java -jar ~/dev/yuicompressor-2.4.2.jar $basedir/ds-js.js -o $basedir/ds-js-min.js
 
+
+echo "Combinning all demisauce js into single ds.client.js"
+#$basedir/gears_init.js \
+rm $basedir/ds.client.js
+rm $basedir/ds.client.min.js
+cat $basedir/ds.base.js \
+    $basedir/jquery.uploadify-v2.1.0/jquery.uploadify.v2.1.0.min.js \
+    $basedir/jquery.uploadify-v2.1.0/swfobject.js \
+    $basedir/ds.slugeditor.js > $basedir/ds.client.js
+java -jar ~/dev/yuicompressor-2.4.2.jar $basedir/ds.client.js -o $basedir/ds.client.min.js
+
 # now css
-echo "Combinning js into single alll-css.css"
+echo "Combinning js into single all-css.css"
 rm $cssdir/all-css.css
 cat $cssdir/local.css $cssdir/ds.widgets.css $basedir/jquery.treeview.css \
    $basedir/jquery.autocomplete.css > $cssdir/all-css.css

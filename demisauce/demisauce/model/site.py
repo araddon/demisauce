@@ -22,9 +22,12 @@ site_table = Table("site", meta.metadata,
         Column("base_url", DBString(255),nullable=False,default='http://localhost:4950'),
         Column("site_url", DBString(255),nullable=False,default='http://yoursite.com/'),
         Column("created", DateTime,default=datetime.now),
+        Column("last_update", DateTime,default=datetime.now),
+        Column("extra_json", DBText),
         Column("send_invites", Boolean, default=False),
         Column("enabled", Boolean, default=False),
         Column("public", Boolean, default=False),
+        Column("is_sysadmin", Boolean, default=False),
     )
 
 class Site(ModelBase,JsonMixin):

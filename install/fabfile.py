@@ -8,11 +8,10 @@ from string import Template
 
 # TODO =================================
 # convert to ssh keys on local dev machines not just ec2
-# TODO: mysql ip binding  Needed?  remove?
-# todo:  ec2 wants to restart?
-# TODO convert to chef or kokki?
-# TODO: add this line to /etc/mysql/my.cnf    bind-address            = 192.168.0.106
-#   mysql isn't reachable from remote because of permissions in db
+# mysql ip binding  Needed?  remove?
+# ec2 wants to restart?
+# convert to chef or kokki?
+# mysql isn't reachable from remote because of permissions in db
 # =============    globals
 INSTALL_ROOT = os.path.dirname(os.path.realpath(__file__))
 PROJECT_ROOT = os.path.realpath(INSTALL_ROOT + '/../' )
@@ -64,10 +63,11 @@ base_config = {
     "mysql_user_pwd":'demisauce',
     "smtp_pwd": 'yourpwd',
     "ds_api_key":'a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202',
-    "ds_url":'http://localhost:4950'
+    "ds_url":'http://localhost:4950',
+    "recipes":['wp','solr','redis','gearman','mysql','demisauce','postfix']
 }
 vmlocal = _server(base_config,{"desc":"LocalHost","host"  : "127.0.0.1", "ip":"127.0.0.1"})
-d1 = _server(base_config,{"desc":"Your VM/KVM Demisauce server","host"  : "192.168.1.10", "ip":"192.168.1.10"})
+d1 = _server(base_config,{"desc":"Your VM/KVM Demisauce server","host"  : "192.168.1.15", "ip":"192.168.1.15"})
 ec2 = _server(base_config,{"desc":"EC2 Dev Trial Env",'user':'ubuntu','type':'ec2',
     "host"  : "ec2.your.ip.from.amazon.amazonaws.com",
     "mailhostname" : 'smtp.demisauce.org', "ip":"127.0.0.1", 
@@ -86,20 +86,22 @@ except ImportError:
 
 # ===== Private Tasks ==========
 def _nginx_release():
-    sudo("/etc/init.d/nginx stop")
     with settings(hide('warnings', 'stderr'),warn_only=True):
         sudo("rm /etc/nginx/sites-enabled/default")
-    with settings(
-        hide('warnings', 'running', 'stdout', 'stderr'),
-        warn_only=True
-    ):
+        sudo("rm /tmp/wordpress.conf; rm /tmp/demisauce; rm /tmp/nginx.conf")
+    with settings(hide('warnings', 'running', 'stdout', 'stderr'), warn_only=True):
         with cd("/etc/nginx"):
             sudo("rm nginx.conf")
             sudo("rm sites-enabled/demisauce;")
+            sudo("rm sites-enabled/wordpress")
+            
     put('%s/recipes/etc/nginx/nginx.conf' % INSTALL_ROOT, '/tmp/nginx.conf')
-    put('%s/recipes/etc/nginx/sites-enabled/demisauce' % INSTALL_ROOT, '/tmp/sa-ds')
+    if 'wp' in env['recipes']:
+        put('%s/recipes/etc/nginx/sites-enabled/wordpress.conf' % INSTALL_ROOT, '/tmp/wordpress.conf')
+        sudo('mv /tmp/wordpress.conf /etc/nginx/sites-enabled/wordpress.conf')
+    put('%s/recipes/etc/nginx/sites-enabled/demisauce' % INSTALL_ROOT, '/tmp/demisauce')
     sudo('mv /tmp/nginx.conf /etc/nginx/nginx.conf')
-    sudo('mv /tmp/sa-ds /etc/nginx/sites-enabled/demisauce')
+    sudo('mv /tmp/demisauce /etc/nginx/sites-enabled/demisauce')
 
 def _memcached():
     sudo("apt-get install --yes --force-yes -q memcached")
@@ -250,12 +252,16 @@ def _demisauce_pre_reqs():
         with cd("tornado"):
             sudo("python setup.py build; python setup.py install")
         
-        run("git clone git://github.com/leah/python-oauth.git oauth")
+        run("git clone git://github.com/ptarjan/python-oauth.git oauth")
+        with cd("oauth"):
+            sudo("python setup.py install")
+            
+        run("git clone git://github.com/sciyoshi/pyfacebook.git")
         with cd("oauth"):
             sudo("python setup.py install")
         
         run("git clone git://github.com/araddon/redis-py.git")
-        with cd("redis-py"):
+        with cd("pyfacebook"):
             sudo("python setup.py install")
         
         run("hg clone http://bitbucket.org/araddon/python-solr/")
@@ -276,6 +282,7 @@ def _demisauce_pre_reqs():
         sudo("pip install Jinja2")
         sudo("pip install wtforms")
         sudo("pip install decorator")
+        sudo("pip install http://python-twitter.googlecode.com/files/python-twitter-0.6.tar.gz")
 
 def _exists(path):
     with settings(
@@ -400,6 +407,20 @@ def _wordpress_install():
     put('%(local_path)s/install/install_wordpress.sh' % env, '/tmp/install_wordpress.sh' % env)
     sudo('chmod +x /tmp/install_wordpress.sh; /tmp/install_wordpress.sh %(mysql_root_pwd)s %(mysql_user_pwd)s' % env)
     sudo('rm /tmp/install_wordpress.sh')
+    sudo('chmod 777 /var/www/blog /var/www/blog/wp-content/ ')
+
+def _wordpressmu_install():
+    #http://nielsvz.com/2009/02/nginx-and-wordpress/
+    #http://elasticdog.com/2008/02/howto-install-wordpress-on-nginx/
+    # get fast-cgi module from lighttpd
+    sudo("apt-get install -y -q lighttpd")
+    #  php5-dev php5-ldap
+    sudo("apt-get install --yes --force-yes -q php5-cli php5-cgi php5-memcache php5-gd php5-mysql ")
+    # but don't start it, we just need the fast cgi module
+    sudo("update-rc.d -f lighttpd remove")
+    put('%(local_path)s/install/install_wordpressmu.sh' % env, '/tmp/install_wordpressmu.sh' % env)
+    sudo('chmod +x /tmp/install_wordpressmu.sh; /tmp/install_wordpressmu.sh %(mysql_root_pwd)s %(mysql_user_pwd)s' % env)
+    sudo('rm /tmp/install_wordpressmu.sh')
 
 def _wordpress_updateconf():
     "update wordpress configuration on nginx, ini, supervisord etc"
@@ -427,13 +448,30 @@ def wordpress(mysql_root_pwd=None,mysql_user_pwd=None,standalone=False):
     if mysql_user_pwd:
         env.mysql_user_pwd = mysql_user_pwd
     if standalone:
+        print("====== starting build ============")
+        sudo("apt-get -y install rsync")
+        sudo("mkdir -p /vol; chown -R %s:%s /vol" % (env.user,env.user))
+        sudo("chmod -R 770 /vol")
+        sudo("usermod -a -G www-data ubuntu; usermod -a -G www-data demisauce")
+        add_sources()
         push_recipes() # do this first to force rsynch/ssh pwd at beginning to it doesn't 255 error timeout
         _linux_base()
-        _mysql(rootmysqlpwd,userdbpwd)
+        _mysql()
         _nginx()
-    _wordpress_install()
+    
+    _wordpressmu_install()
     _wordpress_updateconf()
+    if standalone:
+        _supervisord_install()
+        sudo("rsync  -pthrvz  /home/demisauce/src/demisauce/install/recipes/etc /") 
+        sudo('/etc/init.d/supervisord restart')
+        sudo('sudo update-rc.d supervisord defaults')
+        sudo("/etc/init.d/nginx restart")
+    
     print("don't forget to call release_nginx supervisor_update")
+
+def dswp_plugin():
+    rsync_project('/var/www/blog/wp-content/plugins/',local_dir='%(user_home)s/Dropbox/wordpress/wp-content/plugins/demisauce' % env)
 
 def supervisor_update():
     """Refresh conf file for supervisord, restart"""
@@ -483,11 +521,14 @@ def release(mysql_user_pwd=None,host=None,local=False):
     _nginx_release()
     with settings(hide('warnings', 'running', 'stdout', 'stderr'),warn_only=True):
         sudo("rm /home/demisauce/ds/current; rm /home/demisauce/ds/web")
+    
+    local("cd %(local_path)s/demisauce; sh %(local_path)s/demisauce/jscss.sh" % env)
     release = datetime.datetime.now().strftime("%Y%m%d%H")
     sudo("mkdir -p /home/demisauce/ds/%s" % release)
     sudo("chown -R %s:%s /home/demisauce/ds" % (env.user,env.user))
     sudo("chmod -R 770 /home/demisauce/ds")
     rsync_project('/home/demisauce/ds/%s/' % release,local_dir='%(local_path)s/' % env)
+    rsync_project('/var/www/blog/wp-content/plugins/',local_dir='%(user_home)s/wordpress/wp-content/plugins/demisauce' % env)
     sudo('ln -s /home/demisauce/ds/%s/demisauce /home/demisauce/ds/web' % (release))
     sudo('ln -s /home/demisauce/ds/%s/ /home/demisauce/ds/current' % (release))
     update_config()
@@ -500,9 +541,14 @@ def release_simple(mysql_user_pwd=None):
     if mysql_user_pwd:
         env.mysql_user_pwd = mysql_user_pwd
     """Simple release, just web and dspy sync, no new folders"""
+    local("cd %(local_path)s/demisauce; sh %(local_path)s/demisauce/jscss.sh" % env)
     rsync_project('/home/demisauce/ds/current/demisaucepy/',local_dir='%(local_path)s/demisaucepy/' % env)
     rsync_project('/home/demisauce/ds/current/plugins/',local_dir='%(local_path)s/plugins/' % env)
     rsync_project('/home/demisauce/ds/web/',local_dir='%(local_path)s/demisauce/' % env)
+    sudo("chown -R ubuntu:ubuntu /var/www/blog/wp-content/themes")
+    rsync_project('/var/www/blog/wp-content/themes/',local_dir='%(user_home)s/Dropbox/wordpress/wp-content/themes/' % env)
+    sudo("chown -R ubuntu:ubuntu /var/www/blog/wp-content/plugins")
+    rsync_project('/var/www/blog/wp-content/plugins/',local_dir='%(user_home)s/Dropbox/wordpress/wp-content/plugins/demisauce' % env)
     sudo("rsync  -pthrvz  /home/demisauce/ds/web/demisauce/static /var/www/ds") 
     sudo("chown -R www-data:www-data /var/www")
     sudo("chmod -R 775 /var/www")
@@ -535,18 +581,14 @@ def db_backup_apply(mysql_root_pwd=None):
     sudo("rm /tmp/*.sql")
 
 def release_nginx():
-    """Updates nginx config, and restarts
-    
-    fab vm107 release_nginx -p demisauce
-    """
+    """Updates nginx config, and restarts"""
     _nginx_release()
-    sudo("/etc/init.d/nginx restart")
+    sudo("/etc/init.d/nginx reload")
 
 def restart_web():
     """restarts nginx, and demisauce python app"""
     sudo("supervisorctl restart demisauce")
     sudo("supervisorctl restart dspygearman")
-    sudo("/etc/init.d/nginx restart")
 
 def ec2_save_image():
     """Takes an instance on EC2 and saves to S3"""

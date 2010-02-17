@@ -76,12 +76,12 @@ class ServiceHandler(object):
         self.client = None
         self.previous_call = ''
     
-    def get_service(self,service='views',format='view',data={}):
+    def get_service(self,service='views',format='json',data={}):
         self.service.format = format
         client = ServiceClient(service=self.service)
         client.extra_headers = self.extra_headers
         log.debug('about to fetch %s' % self.key())
-        
+        response = None
         try:
             response = client.fetch_service(request=self.key())
         except Exception, e:
@@ -89,7 +89,7 @@ class ServiceHandler(object):
         if response and response.success == True and self.service.format == 'view':
             #print response.data
             return response.data
-        elif response and self.service.format == 'xml':
+        elif response and self.service.format == 'json':
             return response
         else:
             log.error('On Service definition fetch, found unexpected type?  msg=%s %s' % 
@@ -115,7 +115,7 @@ class ServiceHandler(object):
         
         if get_what.lower() == 'model':
             if not get_what in self.__dict__:
-                resp = self.get_service(service='model',format='xml')
+                resp = self.get_service(service='model',format='json')
                 if resp.success:
                     model = resp.model
                     setattr(self,get_what,model)
@@ -196,12 +196,12 @@ class ServiceProperty(object):
         
         about: http://docs.python.org/ref/descriptors.html
         """
-        #print 'in __get__ %s, class=%s,  name=%s' %(model_instance,model_class,self._attr_name())
+        print 'in __get__ %s, class=%s,  name=%s' %(model_instance,model_class,self._attr_name())
         if model_instance is None:
             return self
         
         if not hasattr(model_instance,self._attr_name()):
-            self.reload_cfg()
+            #self.reload_cfg()
             log.debug('getting service handler for %s' % (self.service))
             sh = ServiceHandler(model_instance=model_instance,service=self.service,
                     local_key=self.local_key,this_app=self.this_app_slug,key_format=self.key_format)
@@ -246,6 +246,7 @@ class AggregatorMeta(type):
     at definition time with information necessary for ServiceProperty
     to use"""
     def __init__(cls, classname, bases, dict_):
+        #log.info("in aggregator meta %s" % (classname))
         super(AggregatorMeta, cls).__init__(classname, bases, dict_)
         make_declarative(dict_)
     

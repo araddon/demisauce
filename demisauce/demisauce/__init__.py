@@ -3,9 +3,9 @@ import tornado.ioloop
 import tornado.options
 import os, logging, functools
 from tornado.options import define, options
+import demisaucepy
 from demisaucepy.cache import DummyCache, MemcacheCache
 import demisauce
-import demisaucepy
 from demisauce import model
 
 __version__ = '0.1.1'

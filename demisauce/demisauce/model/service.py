@@ -6,6 +6,7 @@ from sqlalchemy.types import Integer, String as DBString, DateTime, \
     Text as DBText, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.orm import eagerload
+from sqlalchemy.sql import and_
 
 from demisauce import model
 from demisauce.model import meta, ModelBase, JsonMixin
@@ -46,12 +47,20 @@ class App(ModelBase,JsonMixin):
         super(App, self).__init__(**kwargs)
     
     @classmethod
+    def by_slug(cls,site_id,slug=''):
+        """get list of apps by site::
+        
+            App.by_site(c.site_id)
+        """
+        return meta.DBSession.query(App).filter(and_(App.site_id==site_id,App.slug==slug)).first()
+    
+    @classmethod
     def by_site(cls,site_id):
         """get list of apps by site::
         
             App.by_site(c.site_id)
         """
-        return meta.DBSession.query(App).filter_by(site_id=site_id).all()
+        return meta.DBSession.query(App).filter_by(site_id=site_id).first()
     
 
 service_table = Table("service", meta.metadata,

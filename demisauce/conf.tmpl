@@ -1,0 +1,35 @@
+#set the Python log level
+logging = "debug"  # info|warning|error
+debug = "False"
+# --- /Users/aaron/Dropbox/demisauce/demisauce/trunk/demisauce/model/__init__.py ---
+sqlalchemy_default_echo = "False"  
+sqlalchemy_default_url = "mysql://$mysql_user:$mysql_user_pwd@$ip/demisauce"  
+
+# --- app.py ---
+asset_url = "http://assets.demisauce.com"  
+base_url = "$ds_url" 
+demisauce_api_key = "$ds_api_key"  
+demisauce_url = "$ds_url"  
+#Gearman servers, comma delimited:   192.168.1.1,192.168.1.2  
+gearman_servers = "$ip"  
+#comma delimmited
+memcached_servers = "$ip:11211"  
+#run on the given port
+port = "4950"  
+#None
+redis_host = "$ip"  
+#Setup Initial Data
+setup_data = "False"  
+#Root Path of site
+site_root = "/home/demisauce"  
+#solr server http address
+solr_server = "http://$ip:8080/dssolr"  
+
+# Smtp Section
+smtp_password = "$smtp_pwd"  
+#smtp_server = "localhost"
+#smtp_server = "mockserver.com"  # use this for testing, testing doesnt send email
+smtp_server = "smtp.gmail.com"  
+smtp_username = "demisauce@demisauce.org"
+email_from = "demisauce@demisauce.org"  
+email_from_name = "Demisauce Admin"

@@ -2,7 +2,7 @@
 This code [especially CacheBase] is from Django, so that license is
 intact
 """
-import os, logging
+import os, logging, hashlib
 from tornado.options import options
 try:
     from google.appengine.api import memcache as gaememcache
@@ -34,6 +34,10 @@ isgae = False
 
 log = logging.getLogger(__name__)
 
+
+def cache_key(url):
+    cache_key = hashlib.md5(url.lower()).hexdigest()
+    return cache_key
 
 class DummyCache(object):
     def __init__(self, *args, **kwargs):

@@ -1,7 +1,4 @@
-"""
-This is the DataModel to persist to the DB through Sql Alchemy
-"""
-#!/usr/bin/env python
+import logging
 from sqlalchemy import Column, MetaData, ForeignKey, Table
 from sqlalchemy.types import Integer, String as DBString
 from sqlalchemy.types import Text as DBText, DateTime
@@ -10,7 +7,8 @@ from demisauce.model import meta, ModelBase, site, JsonMixin
 #from demisaucepy.declarative import Aggregator
 from datetime import datetime
 
-# Define a table.
+log = logging.getLogger(__name__)
+
 email_table = Table("email", meta.metadata,
         Column("id", Integer, primary_key=True),
         Column("site_id", Integer, ForeignKey('site.id')),
@@ -22,7 +20,7 @@ email_table = Table("email", meta.metadata,
         Column("to", DBString(1000), nullable=True),
         Column("template", DBText, default=''),
         Column("created", DateTime,default=datetime.now),
-    )
+)
 
 class Email(ModelBase,JsonMixin):
     schema = email_table
@@ -56,5 +54,7 @@ class Email(ModelBase,JsonMixin):
             
             Email.by_slug(c.site_id,'welcome_to_demisauce')
         """
-        return meta.DBSession.query(Email).filter_by(site_id=site_id,slug=slug).first()
+        qry = meta.DBSession.query(Email).filter_by(site_id=site_id,slug=slug)
+        #log.debug(qry)
+        return qry.first()
     

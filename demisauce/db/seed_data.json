@@ -1,16 +1,6 @@
-site = '''
-[
-        {
-            "name": "demisauce", 
-            "key": "a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202", 
-            "email": "sysadmin@demisauce.org", 
-            "base_url": "http://localhost:4950",
-            "slug": "demisauce",
-            "enabled":"True",
-            "description":"This is to your local app non hosted version of demisauce"
-        },
-        {
+{"site":[{
             "name": "Demisauce Sandbox", 
+            "id": "2", 
             "key": "3c5121ce937a1126817b2af30b6604da6a95ffe4", 
             "email": "sandbox@demisauce.org", 
             "slug": "sandbox",
@@ -19,16 +9,8 @@ site = '''
             "description":"This is a sandbox for testing your app without touching production data"
         },
         {
-            "name": "Demisauce Prod", 
-            "key": "3c5121ce937a1126817b2af30b6604da6a95ffe4", 
-            "email": "prod@demisauce.org", 
-            "slug": "demisauce.com",
-            "base_url": "http://api.demisauce.com",
-            "enabled":"True",
-            "description":"This is to prod hosted version of demisauce"
-        },
-        {
             "name": "Django Demo App", 
+            "id": "3", 
             "key": "173726158347a26b3836d1c6c09e6c646461517a", 
             "email": "djangodemo@demisauce.org", 
             "slug": "djangodemo",
@@ -37,6 +19,7 @@ site = '''
         },
         {
             "name": "PHP Demo App", 
+            "id": "4", 
             "key": "4cf01693843baaedaf59caf26437cb4b2f0560c6", 
             "email": "phpdemo@demisauce.org", 
             "slug": "phpdemo",
@@ -45,16 +28,15 @@ site = '''
         },
         {
             "name": "your test app", 
+            "id": "5", 
             "key": "252484057901f25c1536d1c6c09e6c646461528e", 
             "email": "email@yourdomain.org", 
             "slug": "yoursitename",
             "base_url": "http://demisauce.yoursite.com",
             "enabled":"True"
         }
-]'''
-person = '''
-[
-        {
+    ],
+"person":[{
             "site_id": "1", 
             "displayname": "Sys Admin @Demisauce", 
             "email": "sysadmin@demisauce.org", 
@@ -75,7 +57,7 @@ person = '''
             "issysadmin": "False"
         },    
         {
-            "site_id": "4", 
+            "site_id": "3", 
             "displayname": "Djangodemo admin", 
             "email": "djangodemo@demisauce.org", 
             "raw_password": "admin",
@@ -94,24 +76,14 @@ person = '''
             "waitinglist": "False",
             "issysadmin": "False"
         }
-]'''
-app = '''
-[
-        {
+    ],
+"app":[{
             "site_id": "1",
             "owner_id": "1",
             "name": "demisauce", 
             "list_public" : "1",
             "slug": "demisauce",
             "base_url": "http://localhost:4950", 
-            "authn": "demisauce"
-        },{
-            "site_id": "3",
-            "owner_id": "1",
-            "name": "demisauce.com", 
-            "list_public" : "1",
-            "slug": "demisauce",
-            "base_url": "http://www.demisauce.com", 
             "authn": "demisauce"
         },{
             "site_id": "1",
@@ -121,14 +93,14 @@ app = '''
             "base_url": "http://localhost:4950", 
             "authn": "demisauce"
         },{
-            "site_id": "4",
+            "site_id": "3",
             "owner_id": "3",
             "name": "djangodemo", 
             "slug": "djangodemo",
             "base_url": "http://djangodemo.test:8001", 
             "authn": "none"
         },{
-            "site_id": "5",
+            "site_id": "4",
             "owner_id": "4",
             "name": "phpdemo", 
             "slug": "phpdemo",
@@ -143,24 +115,15 @@ app = '''
             "authn": "xmlrpc"
         },{
             "site_id": "1",
+            "id":"7",
             "owner_id": "1",
             "name": "delicious.com", 
             "slug": "deliciouscom",
             "base_url": "http://delicious.com", 
             "authn": "none"
-        },{
-            "site_id": "1",
-            "owner_id": "1",
-            "name": "delicious feeds", 
-            "slug": "deliciousfeeds",
-            "base_url": "http://feeds.delicious.com", 
-            "authn": "none"
         }
-]'''
-
-service = '''
-[
-        {
+    ],
+"service":[{
             "site_id": "1",
             "app_id": "1",
             "owner_id": "1",
@@ -192,17 +155,7 @@ service = '''
             "description": "Email template, Get, Post"
         },{
             "site_id": "1",
-            "app_id": "1",
-            "owner_id": "1",
-            "list_public": "1",
-            "name": "Help/Idea/Feedback Submission widget.", 
-            "method_url": "help/feedback_service/{request}", 
-            "key": "feedback",
-            "views": "badge,publiclist,adminrecent,adminfiltered",
-            "description": "An Idea, Problem, Feedback set of services."
-        },{
-            "site_id": "1",
-            "app_id": "6",
+            "app_id": "7",
             "owner_id": "1",
             "list_public": "1",
             "name": "Delicious Tags Html Page", 
@@ -212,76 +165,57 @@ service = '''
             "description": "Just gets a page on delicious"
         },{
             "site_id": "1",
-            "app_id": "5",
+            "app_id": "6",
             "owner_id": "1",
-            "name": "Wordpress content service", 
-            "method_url": "metaWeblog.getRecentPosts", 
-            "key": "wordpress",
-            "format": "xmlrpc",
-            "views": "",
-            "description": "Wordpress CMS extraction service"
+            "name": "Object content service", 
+            "method_url": "/api/object/{key}.json?apikey={api_key}",
+            "key": "object",
+            "format": "json",
+            "description": "Generic Object Content Service"
         }
-]'''
-
-email = '''
-[
-        {
+    ],
+"email":[{
             "site_id": "1", 
             "subject":"Welcome To Demisauce",
-            "key":"welcome_to_demisauce",
+            "slug":"welcome_to_demisauce",
             "from_email":"guest@demisauce.org",
             "from_name":"Demisauce Admin",
-            "template": "Welcome to Demisauce;\
-\\n\\nYour account has been enabled, and you can start using services on demisauce.\
-\\n\\nTo verify your account you need to click and finish registering $link\
-\\n\\nThank You\\n\\nDemisauce Team"
+            "template": "Welcome to Demisauce;\n\n\nYour account has been enabled, and you can start using services on demisauce.\n\nTo verify your account you need to click and finish registering $link\n\nThank You\n\nDemisauce Team"
         },    
         {
             "site_id": "1", 
             "subject":"Invitation to Demisauce",
-            "key":"invitation_to_demisauce",
+            "slug":"invitation_to_demisauce",
             "from_email":"guest@demisauce.org",
             "from_name":"Demisauce Web",
-            "template": "Welcome to Demisauce;\
-\\n\\nYou have recieved an invite from $from , and an account has been created for you.\
-\\n\\nTo verify your account you need to click and finish registering $link\
-\\n\\nThank You\\n\\nDemisauce Team"
+            "template": "Welcome to Demisauce;\n\nYou have recieved an invite from $from , and an account has been created for you.\n\nTo verify your account you need to click and finish registering $link\n\nThank You\n\nDemisauce Team"
         },    
         {
             "site_id": "1", 
             "subject":"Thank You for registering with Demisauce",
-            "key":"thank_you_for_registering_with_demisauce",
+            "slug":"thank_you_for_registering_with_demisauce",
             "from_email":"guest@demisauce.org",
             "from_name":"Demisauce Web",
-            "template": "Welcome to Demisauce;\
-\\n\\nWe are are currently allowing a few users to try out our hosted service, and will send you an invite \
-when we can accept more testers.  However, this is also an open source project so please feel free to download \
-and try it out yourself.\
-\\n\\nMore info at http://www.demisauce.com\
-\\n\\nYour Email address $email will not be used other than for logging in.\
-\\n\\nThank You\\n\\nDemisauce Team"
+            "template": "Welcome to Demisauce;\n\nWe are are currently allowing a few users to try out our hosted service, and will send you an invite when we can accept more testers.  However, this is also an open source project so please feel free to download and try it out yourself.\n\\More info at http://www.demisauce.com\n\nYour Email address $email will not be used other than for logging in.\n\nThank You\n\nDemisauce Team"
         },    
         {
             "site_id": "1", 
             "subject":"A new user has registered",
-            "key":"a-new-user-has-registered",
+            "slug":"a-new-user-has-registered",
             "from_email":"guest@demisauce.org",
             "from_name":"Demisauce Admin",
-            "template": "A new user has signed up at demisauce.\
-\\nTheir Email address $email and $displayname\
-\\n\\nThank You\\n\\nThe Demisauce Team"
+            "template": "A new user has signed up at demisauce.\nTheir Email address $email and $displayname\n\nThank You\n\nThe Demisauce Team"
         },   
         {
             "site_id": "1", 
             "subject":"Comment Notification",
-            "key":"comment-notification",
+            "slug":"comment-notification",
             "from_email":"guest@demisauce.org",
             "from_name":"Demisauce Web",
-            "template": "Hello;\
-\\n\\n$email has Commented on your $sitename on page $url\
-\\n\\nThank You\\n\\nDemisauce Team"
+            "template": "Hello;\n\n$email has Commented on your $sitename on page $url\n\nThank You\n\nDemisauce Team"
         }
-]'''
+    ]
+}
 
 
 

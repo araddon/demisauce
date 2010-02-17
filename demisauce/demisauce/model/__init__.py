@@ -18,7 +18,7 @@ from gearman import GearmanClient
 log = logging.getLogger(__name__)
 
 define("sqlalchemy_default_url", default=("mysql://root:demisauce@192.168.1.7/demisauce"))
-define("sqlalchemy_default_echo", default="True")
+define("sqlalchemy_default_echo", default=True, type=bool,help="run in echo mode")
 
 class sqlalchemydb(object):
     def __init__(self,engine=None,session=None,metadata=None,
@@ -125,7 +125,7 @@ class JsonMixin(object):
                         dout.update({key:attr})
                     else:
                         # mysql escapes wrong?
-                        attr = attr.replace("'","\"")
+                        #attr = attr.replace("'","\"")
                         dout.update({key:json.loads(attr)})
                 elif type(attr) == str:
                     dout.update({key:attr})
@@ -151,16 +151,41 @@ class JsonMixin(object):
             keys = allowed_keys
         
         _start_time = time.time()
+        extra_json = {}
         #logging.debug("from_json after pre Time:  %.2fms", (1000.0 * (time.time() - _start_time)))
         self._json = json_dict # save decoded json
         for key in json_dict:
             if key in keys:
-                if key.find('datetime_') == 0:
+                if key == 'extra_json':
+                    #log.debug(type(json_dict[key]))
+                    if json_dict[key] is None:
+                        pass
+                    elif isinstance(json_dict[key],(str,unicode)):
+                        log.debug(json_dict[key])
+                        extra_json.update(json.loads(json_dict[key]))
+                    else:
+                        extra_json.update(json_dict[key])
+                elif key.find('datetime_') == 0:
                     setattr(self,key[9:],datetime.fromtimestamp(float(json_dict[key])))
                 else:
                     setattr(self,key,self._to_python(json_dict[key]))
+            else:
+                extra_json.update({key:self._to_python(json_dict[key])})
         
-        #logging.debug("from_json after Time:  %.2fms", (1000.0 * (time.time() - _start_time)))
+        if len(extra_json) > 0 and 'apikey' in extra_json:
+            extra_json.pop('apikey')
+        if len(extra_json) > 0:
+            if hasattr(self,'extra_json') and isinstance(self.extra_json,dict):
+                self.extra_json.update(extra_json)
+            elif hasattr(self,'extra_json') and isinstance(self.extra_json,(str,unicode)):
+                log.debug(self.extra_json)
+                tmpjson = json.loads(self.extra_json)
+                tmpjson.update(extra_json)
+                self.extra_json = tmpjson
+            elif hasattr(self,'extra_json') and self.extra_json == None:
+                self.extra_json = extra_json
+            else:
+                log.error("type = , val=%s" % (extra_json))
         return self
     
     def from_json(self,json_string):
@@ -189,6 +214,7 @@ class JsonMixin(object):
         
         # else, probably string?
         return val
+    
 
 def setup_site(user):
     """does the base site setup for a new account
@@ -245,6 +271,9 @@ class ModelBase(object):
         meta.DBSession.commit()
     
     def save(self):
+        if hasattr(self,'extra_json') and isinstance(self.extra_json,(list,dict)):
+            json_str = json.dumps(self.extra_json)
+            self.extra_json = json_str
         meta.DBSession.add(self)
         meta.DBSession.commit()
     

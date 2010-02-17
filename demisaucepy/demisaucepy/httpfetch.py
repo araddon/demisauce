@@ -61,7 +61,7 @@ class GAEResponse(object):
         pass
     
 
-def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT,extra_headers={},http_method="GET"):
+def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT,extra_headers={},qs={},http_method="GET"):
     """    
     This function lets you define parsers that take any input source
     (URL, pathname to local or network file, or actual data as a string)
@@ -88,6 +88,11 @@ def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT
     
     if urlparse.urlparse(source)[0] == 'http':
         # open URL with urllib2, or gae fetch
+        if qs != {} and qs and isinstance(qs,dict):
+            if source.find('?') > 0:
+                source = '%s&%s' % (source,urllib.urlencode(qs))
+            else:
+                source = '%s?%s' % (source,urllib.urlencode(qs))
         #log.debug('about to open %s, extra_headers=%s' % (source,extra_headers))
         if ISGAE:
             if data == None or data == {}:
@@ -102,15 +107,18 @@ def openAnything(source, data={}, etag=None, lastmodified=None, agent=USER_AGENT
             if data == None or data == {}:
                 request = urllib2.Request(source)
             elif type(data) == dict:
+                #log.debug("sending data dict = %s" % (str(data)))
                 request = urllib2.Request(source,urllib.urlencode(data))
             else:
                 request = urllib2.Request(source,data)
-                if not http_method in ('PUT','POST'):
-                    http_method = "POST"
+                #if not http_method in ('PUT','POST'):
+                #    http_method = "POST"
             if http_method in ['PUT','DELETE',"POST"]:
                 request.get_method = lambda: http_method
+            #log.debug("opening %s:%s" % (http_method,source))
             request.add_header('User-Agent', agent)
             # HACK to allow webhooks into tornado without _xsrf
+            # XSS attacks target browsers generally
             request.add_header('X-Requested-With', 'XMLHttpRequest')
             if lastmodified:
                 request.add_header('If-Modified-Since', lastmodified)

@@ -8,6 +8,7 @@ from sqlalchemy.sql import and_
 from demisauce.model.site import site_table, Site
 from demisauce.model.user import person_table, Person, Group, groupperson_table, group_table
 from demisauce.model.email import *
+from demisauce.model.object import Object, object_table
 #from demisauce.model.comment import Comment, comment_table
 #from demisauce.model.help import Help, help_table, \
 #        HelpResponse, help_response_table
@@ -61,6 +62,11 @@ mapper(Comment, comment_table, properties={
 mapper(Email, email_table, properties={
     'site':relation(site.Site),
 })
+mapper(Object, object_table, properties={
+    'site':relation(site.Site),
+    'person':relation(Person, lazy=True, backref='objects'),
+})
+
 
 mapper(App, app_table, properties={
     'site':relation(Site, backref='apps'),

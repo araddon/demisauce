@@ -1,4 +1,4 @@
-
+import demisaucepy
 from demisaucepy.cache import PylonsCache, GaeCache, \
     MemcacheCache, DummyCache
 import os, logging
@@ -40,9 +40,11 @@ def load_memcache():
     try:
         from demisaucepy import cache as cachemodule
         cachemodule.cache = MemcacheCache(options.memcached_servers)
-        log.debug('In cache setup, setting MemcacheCache')
+        #from demisaucepy.cache import cache
+        log.debug('In cache setup, setting MemcacheCache %s' % options.memcached_servers)
         return True
     except ImportError:
+        logging.error('in load_memcache error')
         return False
 
 def load_pylons_cache():
@@ -66,6 +68,8 @@ def load_pylons_cache():
 def load_cache(cachetype=None):
     from demisaucepy import cache as cachemodule
     if cachetype == None:
+        cachetype = options.demisauce_cache
+    if cachetype == None:
         if load_gae_memcache():
             return
         elif load_django_cache():
@@ -83,10 +87,10 @@ def load_cache(cachetype=None):
     elif cachetype == 'memcache':
         load_memcache()
     else:
-        pass
+        log.error("what?  cachetype=%s" % cachetype)
     
     if cachemodule.cache == None:
         log.debug('no caching was found')
         
 
-load_cache()
+#load_cache()

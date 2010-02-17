@@ -4,7 +4,7 @@ from sqlalchemy import Column, MetaData, ForeignKey, Table, \
 from sqlalchemy import Integer, String as DBString, DateTime, Boolean, \
     Text as DBText
 from sqlalchemy import engine, orm
-from sqlalchemy.sql import and_
+from sqlalchemy.sql import and_, text
 from datetime import datetime
 import formencode
 import random, hashlib, string
@@ -25,7 +25,7 @@ from datetime import datetime
 person_table = Table("person", meta.metadata,
         Column("id", Integer, primary_key=True),
         Column("site_id", Integer, ForeignKey('site.id')),
-        Column("foreign_id", Integer, default=0),
+        Column("foreign_id", Integer, default=0, index=True),
         Column("email", DBString(255)),
         Column("displayname", DBString(50)),
         Column("created", DateTime,default=datetime.now),
@@ -175,7 +175,7 @@ class Person(ModelBase,JsonMixin):
     .. _Gravatar: http://www.gravatar.com/
     """
     __jsonkeys__ = ['email','displayname','url','site_id', 'raw_password','created']
-    _allowed_api_keys = ['email','displayname','url','raw_password','authn','user_uniqueid','foreign_id','extra_json']
+    _allowed_api_keys = ['isadmin','email','displayname','url','raw_password','authn','user_uniqueid','foreign_id','extra_json']
     schema = person_table
     def __init__(self, **kwargs):
         super(Person, self).__init__(**kwargs)
@@ -344,6 +344,11 @@ class Person(ModelBase,JsonMixin):
                 return True
         return False
     
+    def delete(self):
+        res = meta.engine.execute(text("delete from activity where person_id=%s" % self.id))
+        res = meta.engine.execute(text("delete from person_group where person_id=%s" % self.id))
+        res = meta.engine.execute(text("delete from person where id = %s" % self.id))
+    
     @classmethod
     def by_site(cls,site_id=0):
         """
@@ -360,6 +365,17 @@ class Person(ModelBase,JsonMixin):
     def by_hashedemail(self,site_id=0,hash=''):
         """Get the user by hashed email"""
         return meta.DBSession.query(Person).filter_by(site_id=site_id,hashedemail=hash).first()
+    
+    @classmethod
+    def by_email(self,site_id=0,email=''):
+        """Get the user by email"""
+        return meta.DBSession.query(Person).filter_by(site_id=site_id,email=email.lower()).first()
+    
+    @classmethod
+    def by_foreignid(self,site_id=0,id=0):
+        """Get the user by foreignid"""
+        return meta.DBSession.query(Person).filter_by(site_id=site_id,foreign_id=id).first()
+    
     
     @classmethod
     def by_email(self,site_id=0,email=''):

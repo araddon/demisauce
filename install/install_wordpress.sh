@@ -54,10 +54,11 @@ echo "----  adding memcached extension to php  /etc/php5/apache2/php.ini "
 #  Adds this:    extension=memcache.so    
 perl -pi -e s/\;\ extension_dir\ directive\ above./\;\ extension_dir\ directive\ above.\\nextension=memcache.so/g /etc/php5/apache2/php.ini || die "Could not update php.ini"
 
-cd /home/demisauce
+cd /var/www
 wget http://wordpress.org/latest.tar.gz
 tar -xzvf latest.tar.gz  
 rm latest.tar.gz
+mv -f wordpress blog
 cat <<EOL > wordpress.sql
 create database if not exists wordpress DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 use mysql;

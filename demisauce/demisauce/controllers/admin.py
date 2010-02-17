@@ -28,6 +28,9 @@ class AdminController(RestMixin, NeedsadminController):
         else:
             return self.view(self.user.site_id)
     
+    def createdb(self,id=0):
+        self.application.db.metadata.create_all(self.application.db.engine)
+    
     def enablesite(self,id=0):
         if not self.user or not self.user.issysadmin:
             # Get Out Of Here

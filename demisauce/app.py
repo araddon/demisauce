@@ -36,9 +36,7 @@ class Jinja2Environment( jinja2.Environment ):
 
 class Application(tornado.web.Application):
     def __init__(self):
-        
         template_path = os.path.join(os.path.dirname(__file__), "demisauce/views")
-        logging.debug("template_path = %s" % template_path)
         
         # create scheduler
         from demisauce.lib import scheduler
@@ -98,6 +96,8 @@ class Application(tornado.web.Application):
 
 def main():
     tornado.options.parse_command_line()
+    from demisaucepy import cache_setup
+    cache_setup.load_cache()
     application = Application()
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(options.port)

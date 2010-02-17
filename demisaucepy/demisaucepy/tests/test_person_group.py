@@ -1,21 +1,77 @@
 """
 This is the base tests for creating/reading user data remotely
 """
-import json
+import json, hashlib, random
 from demisaucepy.tests import *
 from demisaucepy import demisauce_ws, hash_email, jsonwrapper
-from demisaucepy.models import Person
+#from demisaucepy.models import Person
+from demisaucepy import DSUser
+
+def create_random_email(domain='@demisauce.org'):
+    """
+    create a random email for testing
+    accepts a @demisauce.org domain argument optionally
+    """
+    return '%s%s' % (hashlib.md5(str(random.random())).hexdigest(),
+        domain)
 
 class test_person_group_api(TestDSBase):
     
+    def test_delete_person(self):
+        'test deletion of person'
+        person_data = {
+            'email':create_random_email(),
+            'displayname':'library testing user',
+            'url':'http://testingurls.com',
+            'authn':'local',
+            'foreign_id': 515,
+            'extra_json':{
+                'segment1':'value1',
+                'age':'99'
+            }
+        }
+        user = DSUser(person_data)
+        user.POST()
+        assert user._response.success
+        assert user.id > 0
+        assert user.foreign_id == 515
+        user2 = DSUser.GET(user.id)
+        assert user.id == user2.id
+        
+        userd = DSUser(id=user.id)
+        userd.DELETE()
+        user3 = DSUser.GET(user.id)
+        assert user3 is None
+    
+    def test_extra_json(self):
+        'test that extra json gets made'
+        user = DSUser({
+            'email':create_random_email(),
+            'displayname':'library testing user',
+            'url':'http://testingurls.com',
+            'authn':'local',
+            'extra_json':{
+                'segment1':'value1',
+                'age':99
+            },
+            'an_extra_key':'aaron'
+        })
+        user.POST()
+        assert user._response.success
+        assert user.extra_json.age == 99
+        assert user.an_extra_key == 'aaron'
+        user.DELETE()
+        
+    
     def test_change_email(self):
         'since hashedemail is our key, if it changes we need to change'
-        email = Person.create_random_email()
+        email = create_random_email()
         person_data = {
             'email':email,
             'displayname':'library testing user',
             'url':'http://testingurls.com',
-            'authn':'local'
+            'authn':'local',
+            'foreign_id':345
         }
         hashed_email = hash_email(email)
         response = demisauce_ws('person',hashed_email,'add',data=person_data,cache=False)
@@ -23,7 +79,7 @@ class test_person_group_api(TestDSBase):
         user = jsonwrapper(response.json[0])
         assert user.email == email
         assert user.id > 0
-        new_email = Person.create_random_email()
+        new_email = create_random_email()
         response = demisauce_ws("person",hashed_email,'change_email',data={'email':new_email})
         user2 = jsonwrapper(response.json[0])
         assert user.id == user2.id
@@ -36,18 +92,19 @@ class test_person_group_api(TestDSBase):
         print(response.status)
         assert response.status == 204
     
-    def test_person(self):
+    def txest_person(self):
         """
         Test the json get capabilities of person/user account system
         Gets/Posts 
         """
-        email = Person.create_random_email()
+        email = create_random_email()
         
         person_data = {
             'email':email,
             'displayname':'library testing user',
             'url':'http://testingurls.com',
             'authn':'local',
+            'foreign_id': 515,
             'extra_json':{
                 'segment1':'value1',
                 'age':99
@@ -86,7 +143,7 @@ class test_person_group_api(TestDSBase):
         print(response.status)
         assert response.status == 204
     
-    def test_group_add_update(self):
+    def txest_group_add_update(self):
         """test creation of groups remotely, and update"""
         group_data = {
             'email_list':'impossiblynonexistent@demisauce.org',
@@ -94,4 +151,5 @@ class test_person_group_api(TestDSBase):
             'authn':'local'
         }
         assert True == True
+    
 

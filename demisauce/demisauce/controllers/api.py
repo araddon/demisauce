@@ -1,9 +1,8 @@
-import logging
-import urllib
-import json
+import logging, urllib, json, hashlib
 import tornado.escape
 from tornado.options import options
 from sqlalchemy.sql import and_
+from sqlalchemy.orm import eagerload
 from demisauce.controllers import BaseHandler, requires_authn
 from demisauce import model
 from demisauce.model import meta
@@ -11,12 +10,15 @@ from demisauce.model.site import Site
 from demisauce.model.email import Email
 from demisauce.model.user import Person, Group
 from demisauce.model.activity import Activity
-from demisauce.model.service import Service
+from demisauce.model.service import Service, App
 from demisauce.model.object import Object
 from gearman import GearmanClient
 from gearman.task import Task
+from demisaucepy import cache, cache_setup
 
 log = logging.getLogger(__name__)
+
+
 
 def requires_api(method):
     """Decorate methods with this to require that the user be logged in
@@ -99,12 +101,17 @@ class ApiBaseHandler(BaseHandler):
         self.noun = noun
         self.qry = []
         self.object = None
-        if requestid is None or requestid in ['',None,'all']:
+        #log.debug("in normalize:  noun=%s, requestid=%s, action=%s" % (noun,requestid,action))
+        if requestid is None or requestid in ['',None,'all','list']:
             # /api/noun.format 
             # /api/noun/list.format
             # /api/noun/all.format
+            # /api/noun/all/selector(action).format
+            # /api/noun/list/selector(action).format
             self.id = 'list'
-            action = 'list'
+            #action = 'list'
+            if action == None:
+                action = 'list'
         else:
             # /api/noun/id/action.format?apikey=key&limit=100&start=101
             # /api/noun/id/selector(action).format
@@ -137,7 +144,14 @@ class ApiBaseHandler(BaseHandler):
     
     def json(self):
         if self.qry and self.qry != []:
-            json_data = [self.json_formatter(row) for row in self.qry]
+            json_data = []
+            for row in self.qry:
+                data = self.json_formatter(row) 
+                if isinstance(data,(list)):
+                    json_data = json_data + data
+                else:
+                    # normally it is a dict
+                    json_data.append(data)
             return json.dumps(json_data)
         else:
             return None
@@ -148,25 +162,13 @@ class ApiBaseHandler(BaseHandler):
             return o.to_dict()
         return ''
     
-    def handle_post_old(self):
-        if not hasattr(self,'object') or not self.object:
-            return []
-        
-        if hasattr(self.__class__.object_cls,'_allowed_api_keys'):
-            for key in self.__class__.object_cls._allowed_api_keys:
-                if key in self.request.arguments:
-                    if self.get_argument(key) == 'true':
-                        setattr(self.object,key,True)
-                    elif self.get_argument(key) == 'false':
-                        setattr(self.object,key,False)
-                    else:
-                        setattr(self.object,key,self.get_argument(key)) 
-                    logging.debug("setting key,val = %s, %s" % (key,self.get_argument(key)))
-            self.object.save()
+    def object_load_dict(self,o,data_dict):
+        'http post handle args'
+        return data_dict
     
     def _add_object(self,data_dict):
+        o = None
         if self.id not in ['',None,'list','get','all']:
-            o = None
             self.action_get_object(self.id, data_dict)
             o = self.object
             if not o:
@@ -175,6 +177,7 @@ class ApiBaseHandler(BaseHandler):
                 if len(self.qry) == 0:
                     self.qry.append(o)
             log.debug("about to update %s" % data_dict)
+            data_dict = self.object_load_dict(o,data_dict)
             o.from_dict(data_dict,allowed_keys=self.__class__.object_cls._allowed_api_keys)
             o.after_load()
         
@@ -182,6 +185,7 @@ class ApiBaseHandler(BaseHandler):
             self.object = o
             log.debug("saving updated object")
             o.save()
+            cache.cache.delete(cache.cache_key(self.request.full_url()))
             self.set_status(201)
         else:
             log.error("what went wrong, not valid %s" % o)
@@ -223,11 +227,13 @@ class ApiBaseHandler(BaseHandler):
         if self.id and self.id not in ['list','all']:
             self.action_get_object(self.id)
         if self.object and hasattr(self.object,'delete'):
-            logging.info("about to delete, id=%s" % self.id)
+            url = self.request.full_url()
+            logging.info("DELETE id=%s for url=%s" % (self.id,url))
             self.object.delete()
             self.object = None
             self.qry = None
             self.set_status(204)
+            cache.cache.delete(cache.cache_key(url))
         else:
             logging.error("not found?   %s, %s" % (self.noun, self.id))
     
@@ -237,7 +243,7 @@ class ApiBaseHandler(BaseHandler):
         return
     
     def do_get(self):
-        if self.id and self.id == 'list':
+        if self.id and self.id == 'list' and self.action == 'list':
             self.action_get_list(q=self.q)
             logging.debug("found list request")
         elif self.id and self.action == 'get':
@@ -249,6 +255,8 @@ class ApiBaseHandler(BaseHandler):
         else:
             logging.debug("get_object %s" % self.id)
             self.action_get_object(self.id)
+        if self.object is None and self.qry == [] and self._status_code == 200:
+            self.set_status(404)
     
     def do_post(self):
         if hasattr(self,"%s_POST" % self.action):
@@ -280,6 +288,9 @@ class ApiBaseHandler(BaseHandler):
                 jsonstring = self.json()
             else: 
                 jsonstring = self.json()
+        # objectid
+        if self.request.method in ('POST','PUT','DELETE') and self.object:
+            self.set_header("X-Demisauce-ID", str(self.object.id))
         
         # ==== Serialization Format
         if self.format == 'json':
@@ -292,6 +303,7 @@ class ApiBaseHandler(BaseHandler):
         self.normalize_args(noun, requestid,action,format)
         logging.debug("API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit))
         self.do_get()
+        logging.debug("in get status = %s" % (self._status_code))
         self.render_to_format()
     
     def post(self,noun=None,requestid='all',action=None,format="json"):
@@ -383,7 +395,8 @@ class EmailApiHandler(ApiSecureHandler):
         if self.object:
             self.qry = [self.object]
         else:
-            logging.error("no email %s" % self.id)
+            self.set_status(404)
+            logging.error("no email %s, status=%s" % (self.id, self._status_code))
     
     def send(self):
         logging.error("in send of email api")
@@ -416,24 +429,23 @@ class PersonAnonApi(ApiBaseHandler):
     object_cls = Person
     def init_user(self):
         # Need site?   
-        hashed_email = self.id
-        site_key = self.db.cache.get(str(hashed_email))
-        logging.debug("init_user key,site_key = %s = %s" % (hashed_email,site_key))
+        ds_id = self.id
+        site_key = self.db.cache.get(str(ds_id))
+        logging.debug("init_user ds_id,site_key = %s = %s" % (ds_id,site_key))
         if site_key:
             site = Site.by_apikey(str(site_key))
             if site:
-                user = meta.DBSession.query(Person).filter_by(
-                    site_id=site.id, hashedemail=hashed_email).first()
+                user = Person.get(site.id,ds_id)
                 if not user:
-                    logging.error("user not found? hashed_email = %s" % hashed_email)
+                    logging.error("user not found? id = %s" % ds_id)
             else:
-                logging.error("no site? %s" % hashed_email)
+                logging.error("no site? %s" % ds_id)
                 
             self.set_current_user(user,is_authenticated = True)
             self.write("{'status':'success'}")
-            logging.info("tried to init_user succeeded")
+            logging.debug("tried to init_user succeeded")
         else:
-            logging.error("tried to init_user failed hashed_email = %s" % (hashed_email))
+            logging.error("tried to init_user failed ds_id = %s" % (ds_id))
             self.set_status(400)
             self.write("{'status':'failure'}")
     
@@ -441,37 +453,32 @@ class PersonAnonApi(ApiBaseHandler):
 class PersonApiHandler(ApiSecureHandler):
     object_cls = Person
     def change_email(self):
-        self.handler_post()
+        self.handle_post()
+    
+    def delete_by_get(self):
+        self.action_get_object(self.id)
+        if self.object and hasattr(self.object,'delete'):
+            self.object.delete()
+            self.object = None
+            self.qry = None
+            self.set_status(204)
+        else:
+            logging.error("not found?   %s, %s" % (self.noun, self.id))
     
     def action_get_object(self,id, data_dict = {}):
-        self.object = Person.by_hashedemail(self.site.id,self.id)
-        self.qry = [self.object]
-    
-    def _add_object(self,user_dict):
-        if self.id not in ['',None,'list','get','all']:
-            p = Person.by_hashedemail(self.site.id,self.id)
-            if not p:
-                p = Person()
-                p.site_id = self.site.id
-            
-            p.from_dict(user_dict,allowed_keys=Person._allowed_api_keys)
-            p.after_load()
-        
-        if p.isvalid():
-            self.object = p
-            self.qry.append(p)
-            p.save()
-            self.set_status(201)
-    
-    def handle_post_old(self):
-        #logging.debug("in handle post, args= %s, body=%s" % (self.request.arguments,self.request.body))
-        if self.is_json_post():
-            json_dict = json.loads(self.request.body)
-            if json_dict:
-                for json_user in json_dict:
-                    self._add_object(json_user)
+        if isinstance(self.id,int) and self.id > 0:
+            self.object = Person.get(self.site.id,self.id)
+            if not self.object:
+                self.object = Person.by_foreignid(self.site.id,self.id)
+        elif isinstance(self.id,int) and self.id == 0 and 'email' in data_dict:
+            self.object = Person.by_email(self.site.id,data_dict['email'].lower())
+        elif 'foreign_id' in data_dict:
+            self.object = Person.by_foreignid(self.site.id,data_dict['foreign_id'])
         else:
-            self._add_object(self.args_todict())
+            self.object = Person.by_hashedemail(self.site.id,self.id)
+            log.debug('getting by hashed:  %s, %s' % (self.id, self.object))
+        if self.object:
+            self.qry = [self.object]
     
     def json_formatter(self,o):
         if o:
@@ -494,13 +501,6 @@ class PersonApiHandler(ApiSecureHandler):
     def pre_init_user(self):
         """A push to pre-initiate session (step 1) optional
         body of json to add/update user"""
-        user_key = self.id
-        logging.debug("setting cache = %s, %s" % (str(user_key),self.site.key))
-        self.db.cache.set(str(user_key),self.site.key,120)
-        site_key = self.db.cache.get(str(user_key))
-        logging.debug("site_key, self.site.key = %s, %s" % (site_key, self.site.key))
-        assert site_key == self.site.key
-        
         user = None
         user_dict = {}
         if self.request.method == 'POST':
@@ -509,25 +509,26 @@ class PersonApiHandler(ApiSecureHandler):
             else:
                 user_dict = self.args_todict()
             logging.debug("Loaded data user_dict=%s" % user_dict)
-            user = Person.by_hashedemail(self.site.id,self.id)
-            if not user:
-                logging.debug("userdict type = %s" % type(user_dict))
-                user_dict.update({'hashedemail':self.id})
+            self.action_get_object(self.id, user_dict)
+            if not self.object:
                 logging.debug("creating new user, not found %s dict=%s" % (self.id,user_dict))
-                p = Person(site_id=self.site.id,hashedemail=self.id)
-                p.from_dict(user_dict,allowed_keys=Person._allowed_api_keys)
-                p.save()
-                user = p
-            else:
-                pass
-                #TODO:  update user
+                self.object = Person(site_id=self.site.id,foreign_id=self.id)
+            if self.object:
+                self.object.from_dict(user_dict,allowed_keys=Person._allowed_api_keys)
+                self.object.save()
+            
         else:
-            user = meta.DBSession.query(Person).filter_by(
-                   site_id=self.site.id, hashedemail=user_key).first()
+            self.action_get_object(self.id)
         
-        if user:
-            self.object = user
-            self.qry = [user]
+        if self.object:
+            user_key = self.object.id
+            logging.debug("setting cache = %s, %s" % (str(user_key),self.site.key))
+            self.db.cache.set(str(user_key),self.site.key,120) # 2 minutes only
+            site_key = self.db.cache.get(str(user_key))
+            logging.debug("site_key, self.site.key = %s, %s" % (site_key, self.site.key))
+            assert site_key == self.site.key
+            
+            self.qry = [self.object]
     
     def options(self,site_slug='',format='json'):
         logging.debug("in person api OPTIONS")
@@ -535,45 +536,19 @@ class PersonApiHandler(ApiSecureHandler):
 
 class ServiceApiHandler(ApiSecureHandler):
     object_cls = Service
-    def _add_object_notneeded(self,data_dict):
-        if self.id not in ['',None,'list','get','all']:
-            o = None
-            if self.id != 0:
-                o = Service.get(self.site.id,self.id)
-            if not o:
-                o = Service()
-                o.site_id = self.site.id
-            
-            o.from_dict(data_dict,allowed_keys=Service._allowed_api_keys)
-            o.after_load()
-        
-        if o and o.isvalid():
-            self.object = o
-            self.qry.append(o)
-            o.save()
-            self.set_status(201)
-    
-    def handle_post_notneeded(self):
-        #logging.debug("in handle post, args= %s, body=%s" % (self.request.arguments,self.request.body))
-        if self.is_json_post():
-            json_dict = json.loads(self.request.body)
-            if json_dict:
-                for json_data in json_dict:
-                    self._add_object(json_data)
-        else:
-            self._add_object(self.args_todict())
-    
     def action_get_object(self,id, data_dict = {}):
-        if isinstance(id,int):
+        if isinstance(id,int) and self.id > 0:
             self.object = Service.saget(id)  
+        elif isinstance(id,int) and self.id == 0:
+            if 'key' in data_dict:
+                self.object = Service.by_app_service(data_dict['key'])  
         else:
-            self.object = Service.by_app_service(servicekey=id)  
-        
+            self.object = Service.by_app_service(self.id)  
         if self.object:
             self.qry = [self.object]
         else:
             self.set_status(404)
-            logging.error("no service %s" % self.id)
+            logging.error("no service %s for %s" % (self.id,self.request.full_url()))
     
     def json_formatter(self,o):
         if o:
@@ -597,71 +572,164 @@ class ServiceApiHandler(ApiSecureHandler):
         self.qry = qry
     
 
+class AppApiHandler(ApiSecureHandler):
+    object_cls = App
+    def action_get_object(self,id, data_dict = {}):
+        if isinstance(id,int) and self.id > 0:
+            self.object = App.saget(id)  
+        elif isinstance(id,int) and self.id == 0:
+            if 'slug' in data_dict:
+                self.object = App.by_slug(self.site.id,slug=data_dict['slug'])
+        else:
+            self.object = App.by_slug(site_id=self.site.id,slug=self.id)  
+        
+        if self.object:
+            self.qry = [self.object]
+        else:
+            self.set_status(404)
+            logging.error("no service %s" % self.id)
+    
+    def json_formatter(self,o):
+        if o:
+            keys=['slug','name','owner_id','site_id',
+                'list_public','id','base_url','url_format','authn','description']
+            output = o.to_dict(keys=keys)
+            output['services'] = []
+            for svc in o.services:
+                output['services'].append(svc.to_dict(keys=['key','name','format','url',
+                    'views','id','method_url','cache_time','description']) )
+            return output
+        return None
+    
+    def action_get_list(self,q=None):
+        if q:
+            qry = self.db.session.query(Service).filter(and_(
+                App.name.like('%' + q + '%'),App.list_public==True))
+        else:
+            qry = self.db.session.query(App).filter(App.list_public==True)
+            logging.debug("in services list, qry = %s" % qry)
+        self.qry = qry
+    
+
+class SiteApiHandler(ApiSecureHandler):
+    object_cls = Site
+    def _add_object(self,data_dict):
+        if self.site.is_sysadmin == True or self.site.id == self.id:
+            super(SiteApiHandler, self)._add_object(data_dict=data_dict)
+        else:
+            self.set_status(403)
+    
+    def action_get_object(self,id, data_dict = {}):
+        if self.site.is_sysadmin == True or self.site.id == self.id:
+            if type(id) == int and id > 0:
+                self.object = Site.saget(id) 
+            elif type(id) == int and id == 0 and 'slug' in data_dict:
+                logging.debug("they asked for id = 0, lets ignore and doublecheck slug = %s" % data_dict['slug'])
+                self.object = Site.by_slug(data_dict['slug'])
+            else:
+                logging.debug("they asked for id = %s, lets ignore and doublecheck slug" % (self.id))
+                self.object = Site.by_slug(self.id)   
+            if self.object:
+                self.qry = [self.object]
+            else:
+                self.set_status(404)
+                logging.error("no site %s, status=%s" % (self.id, self._status_code))
+        
+    
+    def json_formatter(self,o):
+        if o:
+            keys=['email','name','slug','description','id','extra_json',
+                'base_url','site_url','created','enabled','public']
+            output = o.to_dict(keys=keys)
+            if o.apps:
+                output['apps'] = []
+                for app in o.apps:
+                    appd = {}
+                    appd = app.to_dict(keys=['name','description','authn','base_url']) 
+                    appd['services'] = []
+                    for svc in app.services:
+                        appd['services'].append(svc.to_dict(keys=['key','name','format','url',
+                            'views','id','method_url','cache_time','description']) )
+                    output['apps'].append(appd)
+            return output
+        return None
+    
+    def action_get_list(self,q=None):
+        if q:
+            qry = self.db.session.query(Service).filter(and_(
+                Service.name.like('%' + q + '%'),Service.list_public==True))
+        else:
+            qry = self.db.session.query(Service).filter(Service.list_public==True)
+            logging.debug("in services list, qry = %s" % qry)
+        self.qry = qry
+    
 
 class ObjectApiHandler(ApiSecureHandler):
     object_cls = Object
-    def _add_object_notneeded(self,data_dict):
-        if self.id not in ['',None,'list','get','all']:
-            o = None
-            if self.id != 0:
-                o = Service.get(self.site.id,self.id)
-            if not o:
-                o = Service()
-                o.site_id = self.site.id
-            
-            o.from_dict(data_dict,allowed_keys=Service._allowed_api_keys)
-            o.after_load()
-        
-        if o and o.isvalid():
-            self.object = o
-            self.qry.append(o)
-            o.save()
-            self.set_status(201)
+    def object_load_dict(self,o,data_dict):
+        'http post handle args'
+        if 'post_type' in data_dict:
+            o.post_type = data_dict['post_type']
+            data_dict.pop('post_type')
+        if 'demisauce_id' in data_dict:
+            o.person_id = int(data_dict['demisauce_id'])
+            data_dict.pop('demisauce_id')
+            p = Person.get(self.site.id,o.person_id)
+            o.displayname = p.displayname
+        return data_dict
     
-    def handle_post_notneeded(self):
-        #logging.debug("in handle post, args= %s, body=%s" % (self.request.arguments,self.request.body))
-        if self.is_json_post():
-            json_dict = json.loads(self.request.body)
-            if json_dict:
-                for json_data in json_dict:
-                    self._add_object(json_data)
+    def posts(self,q=None):
+        if not q:
+            logging.debug("In posts.q limit = %s" % self.limit)
+            qry = self.db.session.query(Object).filter(Object.post_type=='post').options(eagerload('person')).limit(self.limit)
+            if self.start > 0:
+                logging.debug("self.start = %s" % self.start)
+                qry = qry.offset(self.start)
         else:
-            self._add_object(self.args_todict())
+            qry = self.db.session.query(self.__class__.object_cls).filter(
+                    self.__class__.object_cls.name.like('%' + q + '%'))
+        self.qry = qry
     
-    def action_get_object(self,id, data_dict = {}):
-        if isinstance(id,int):
-            self.object = Service.saget(id)  
+    def action_get_list(self,q=None):
+        if not q:
+            logging.debug("In list.q limit = %s" % self.limit)
+            qry = self.db.session.query(Object).options(eagerload('person')).limit(self.limit)
+            if self.start > 0:
+                logging.debug("self.start = %s" % self.start)
+                qry = qry.offset(self.start)
         else:
-            self.object = Service.by_app_service(servicekey=id)  
-        
-        if self.object:
-            self.qry = [self.object]
-        else:
-            self.set_status(404)
-            logging.error("no service %s" % self.id)
+            qry = self.db.session.query(self.__class__.object_cls).filter(
+                    self.__class__.object_cls.name.like('%' + q + '%'))
+        self.qry = qry
     
     def json_formatter(self,o):
         if o:
-            keys=['key','name','format','url',
-                'views','id','method_url','cache_time','description']
-            output = o.to_dict(keys=keys)
-            if o.site and o.site.id > 0:
-                output['site'] = o.site.to_dict(keys=['name','base_url']) 
-            if o.app and o.app.id > 0:
-                output['app'] = o.app.to_dict(keys=['name','description','authn','base_url']) 
+            output = o.to_dict()
+            #if o.region and o.region.id > 0:
+            #    output['region'] = o.region.to_dict(keys=['name','metro_code']) # keys=['name','metro_code']
+            if o.person:
+                output['foreign_id'] = o.person.foreign_id
             return output
         return None
     
-    def action_get_list(self,q=None):
-        if q:
-            qry = self.db.session.query(Service).filter(and_(
-                Service.name.like('%' + q + '%'),Service.list_public==True))
+    def action_get_object(self,id, data_dict = {}):
+        if isinstance(id,int) and self.id > 0:
+            self.object = Object.saget(id)  
+        elif isinstance(id,int) and self.id == 0:
+            pass
         else:
-            qry = self.db.session.query(Service).filter(Service.list_public==True)
-            logging.debug("in services list, qry = %s" % qry)
-        self.qry = qry
+            logging.debug("calling by_slug = %s" % (id))
+            self.object = Object.by_slug(site_id=self.site.id,slug=id)  
+        
+        logging.debug('METHOD: %s' % dir(self.request))
+        if self.object:
+            self.qry = [self.object]
+        elif self.request.method in ('POST','PUT','DELETE'):
+            self.qry = []
+        elif self.request.method == 'GET':
+            self.set_status(404)
+            logging.error("no object %s" % self.id)
     
-
 
 class GroupApiHandler(ApiSecureHandler):
     object_cls = Group
@@ -732,6 +800,8 @@ class HookApiHandler(BaseHandler):
         
     
 
+
+
 """ GET  : get
     POST : add/update
     DELETE: delete
@@ -749,11 +819,17 @@ _controllers = [
     (r"/api/(user|person)/([0-9]*?|.*?)/(.*?).(json|xml|custom)?", PersonApiHandler),
     (r"/api/(user|person)/(.*?).(?:json|xml|custom)", PersonApiHandler),
     (r"/api/(user|person)/(.*?)", PersonApiHandler),
-    (r"/api/group/([0-9]*?|.*?)/(.*?).(json|xml|custom)?", GroupApiHandler),
-    (r"/api/group/(.*?).(?:json|xml|custom)", GroupApiHandler),
-    (r"/api/group/(.*?)", GroupApiHandler),
+    (r"/api/(group)/([0-9]*?|.*?)/(.*?).(json|xml|custom)?", GroupApiHandler),
+    (r"/api/(group)/(.*?).(?:json|xml|custom)", GroupApiHandler),
+    (r"/api/(group)/(.*?)", GroupApiHandler),
+    (r"/api/(site)/([0-9]*?|.*?|all|list)/(.*?)(?:\.)?(json|xml|custom)?", SiteApiHandler),
+    (r"/api/(site)/(.*?)(.json|.xml|.custom)", SiteApiHandler),
+    (r"/api/(app)/([0-9]*?|.*?|all|list)/(.*?)(?:\.)?(json|xml|custom)?", AppApiHandler),
+    (r"/api/(app)/(.*?)(.json|.xml|.custom)", AppApiHandler),
     (r"/api/(email)/([0-9]*?|.*?|all|list)/(.*?)(?:\.)?(json|xml|custom)?", EmailApiHandler),
     (r"/api/(email)/(.*?)(.json|.xml|.custom)", EmailApiHandler),
     (r"/api/(service)/([0-9]*?|.*?|all|list)/(.*?)(?:\.)?(json|xml|custom)?", ServiceApiHandler),
     (r"/api/(service)/(.*?)(?:.json|.xml|.custom)", ServiceApiHandler),
+    (r"/api/(object)/([0-9]*?|.*?|all|list)/(.*?)(?:\.)?(json|xml|custom)?", ObjectApiHandler),
+    (r"/api/(object)/(.*?)(?:.json|.xml|.custom)", ObjectApiHandler),
 ]
