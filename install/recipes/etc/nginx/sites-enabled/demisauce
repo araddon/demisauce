@@ -13,8 +13,6 @@ server {
     server_name images.*;
     server_name static.*;
     server_name photos.*;
-    server_name ds.*;
-    server_name demisauce.*;
     server_name assets.demisauce.com;
     server_name images.demisauce.com;
     server_name static.demisauce.com;
@@ -39,12 +37,16 @@ server {
     server_name api.demisauce.com;
     server_name *.demisauce.com;
     server_name *.demisauce.org;
+    # wildcards for client domains
+    server_name ds.*;
+    server_name demisauce.*;
+    server_name app.*;
     
-    log_format main2 '$http_host - $remote_addr - $remote_user [$time_local]  '
+    log_format mainds '$http_host - $remote_addr - $remote_user [$time_local]  '
                         '"$request" $status $body_bytes_sent $upstream_response_time '
                         '"$http_referer" "$http_user_agent" $cookie_dsuserkey';
     
-    access_log  /vol/log/nginx/ds.access.log main2;
+    access_log  /vol/log/nginx/ds.access.log mainds;
     
     location /static {
         root   /var/www/ds;

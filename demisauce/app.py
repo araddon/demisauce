@@ -6,16 +6,23 @@ import tornado.ioloop
 import tornado.options
 import tornado.web
 import tornado.escape
+from tornado.options import define, options
 import os, logging, functools
+import jinja2 
+#from demisaucepy import options as dsoptions
+import demisaucepy.options
+import demisauce
+tornado.options.parse_command_line() # must force load of options for metaclass
+from demisaucepy import cache_setup
+from demisaucepy.cache import DummyCache, MemcacheCache
+cache_setup.load_cache()
 import demisauce
 from demisauce import model
-from tornado.options import define, options
-import jinja2 
 from demisauce.lib.cacheextension import FragmentCacheExtension
-from demisaucepy.cache import DummyCache, MemcacheCache
 import demisaucepy
 from demisauce.lib import helpers
-from demisauce import AppBase
+from demisauce.appbase import AppBase
+
 
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 PROJECT_ROOT = os.path.realpath(SITE_ROOT + '/../../' )
@@ -95,9 +102,6 @@ class Application(tornado.web.Application):
             
 
 def main():
-    tornado.options.parse_command_line()
-    from demisaucepy import cache_setup
-    cache_setup.load_cache()
     application = Application()
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(options.port)

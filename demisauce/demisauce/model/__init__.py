@@ -17,9 +17,6 @@ from gearman import GearmanClient
 
 log = logging.getLogger(__name__)
 
-define("sqlalchemy_default_url", default=("mysql://root:demisauce@192.168.1.7/demisauce"))
-define("sqlalchemy_default_echo", default=True, type=bool,help="run in echo mode")
-
 class sqlalchemydb(object):
     def __init__(self,engine=None,session=None,metadata=None,
         redis_host="localhost",cache=None,gearman_client=None):
@@ -100,6 +97,13 @@ def init_model(enginelocal):
 class JsonMixin(object):
     _json_ignore_keys = []
     _allowed_api_keys = []
+    def get_keys(self):
+        logging.debug("getting all keys from schema?  %s" % self.__class__)
+        return [c.name for c in self.__class__.schema.c]
+    
+    def get_ignore_keys(self):
+        return self.__class__._json_ignore_keys
+    
     def to_dict(self,keys=None):
         """serializes to dictionary, converting non serializeable fields
         to some other format or ignoring them"""
@@ -109,11 +113,10 @@ class JsonMixin(object):
         ignore_keys = []
         
         if not keys:
-            logging.debug("getting all keys from schema?  %s" % self.__class__)
-            keys = [c.name for c in self.__class__.schema.c] 
+            keys = self.get_keys()
         
         if hasattr(self.__class__,"_json_ignore_keys"):
-            ignore_keys = self.__class__._json_ignore_keys
+            ignore_keys = self.get_ignore_keys()
         
         for key in keys:
             if key not in ignore_keys and key.find("_") != 0 and hasattr(self,key):

@@ -93,7 +93,7 @@ class ServiceController(RestMixin,BaseHandler):
         
         self.render('/service/service.html')
     
-    @requires_admin
+    #@requires_admin
     def index(self,id=id):
         logging.debug("in index start")
         services = Service.all().filter_by(list_public=1)

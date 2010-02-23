@@ -304,11 +304,14 @@ class BaseHandler(tornado.web.RequestHandler):
                 # is_authenticated, but since they are already authenticated then 
                 # respect it
                 is_authenticated = True
+            elif _user_json['id'] != user_dict['id']:
+                self.clear_cookie('dsuser')
         
         # don't add this is_authenticated to redis!!! Or memcached, use cookie
         user_dict.update({"is_authenticated":is_authenticated})
         logging.debug("set_current_user:  user_hash = %s" % user_dict)
-        self.set_secure_cookie("dsuser", tornado.escape.json_encode(user_dict))
+        self.set_secure_cookie("dsuser", tornado.escape.json_encode(user_dict)) #,domain=options.demisauce_domain
+        self.set_secure_cookie("dsuser", tornado.escape.json_encode(user_dict),domain='blog.demisauce.com')
         self.set_cookie("dsuserkey",sauser.user_uniqueid)
         user_json = sauser.to_json()
         #logging.error("set_current_user: about to put into redis:  %s" % user_json)

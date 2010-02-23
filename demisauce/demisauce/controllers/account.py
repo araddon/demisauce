@@ -55,9 +55,10 @@ class AccountController(RestMixin,BaseHandler):
     def validate(self,id="0"):
         'for validating'
         if self.user and self.user.is_authenticated:
-            if isinstance(self.user.extra_json,(dict)) and 'wordpress_user_id' in self.user.extra_json:
-                self.write(self.user.extra_json['wordpress_user_id'])
-                log.debug(self.user.extra_json['wordpress_user_id'])
+            user = Person.saget(self.user.id)
+            if isinstance(user.extra_json,(dict)) and 'wordpress_user_id' in user.extra_json:
+                self.write(user.extra_json['wordpress_user_id'])
+                log.debug(user.extra_json['wordpress_user_id'])
                 self.set_status(200)
         else:
             self.set_status(403)
@@ -435,7 +436,7 @@ class AccountController(RestMixin,BaseHandler):
                             email=self.user.email.lower()).first()
             
             person = user
-            if user.is_authenticated(self.get_argument('password')):
+            if user.hashed_password == None or user.is_authenticated(self.get_argument('password')):
                 #a = Activity(site_id=user.site_id,person_id=user.id,activity='Changing Password',category='account')
                 #a.save()
                 add_activity(user,activity='Changing Password',category='account')

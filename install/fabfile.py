@@ -64,6 +64,7 @@ base_config = {
     "smtp_pwd": 'yourpwd',
     "ds_api_key":'a95c21ee8e64cb5ff585b5f9b761b39d7cb9a202',
     "ds_url":'http://localhost:4950',
+    "ds_domain":"localhost",
     "recipes":['wp','solr','redis','gearman','mysql','demisauce','postfix']
 }
 vmlocal = _server(base_config,{"desc":"LocalHost","host"  : "127.0.0.1", "ip":"127.0.0.1"})
@@ -437,7 +438,7 @@ def update_config(mysql_user_pwd=None):
     if mysql_user_pwd:
         env.mysql_user_pwd = mysql_user_pwd
     with settings(hide('warnings', 'stderr'),warn_only=True):
-        sudo("rm /home/demisauce/ds/web/demisauce.conf")
+        sudo("rm -f /home/demisauce/ds/web/demisauce.conf")
     s = Template(open('%(local_path)s/demisauce/conf.tmpl' % env).read())
     run("echo '%s' > /home/demisauce/ds/web/demisauce.conf" % s.substitute(env))
 

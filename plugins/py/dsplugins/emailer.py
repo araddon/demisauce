@@ -29,13 +29,15 @@ def email_send(job_object):
         emailargs = json.loads(job_object.arg)
         email_name = urllib.quote_plus(emailargs['template_name'])
         if 'apikey' in emailargs:
-            response = demisauce_ws('email',email_name,cache=True,api_key=emailargs['apikey'])
+            response = demisauce_ws('email',email_name,cache=True,apikey=emailargs['apikey'])
         else:
             response = demisauce_ws('email',email_name,cache=True)
         if response.success and response.json and len(response.json) ==1:
             emailjson = response.json[0]
             s = Template(emailjson['template'])
             if 'template_data' in emailargs:
+                template = s.substitute(emailargs['template_data'])
+            elif 'template_data' in emailargs:
                 template = s.substitute(emailargs['template_data'])
             else:
                 template = s.substitute({})

@@ -9,11 +9,15 @@ Runner for Gearman Workers
 """
 import logging
 import tornado
-import demisaucepy
-from demisaucepy import mail
+import demisaucepy.options
+from demisaucepy import mail # mail options
+import demisauce
+from tornado.options import options, define
+tornado.options.parse_command_line() # must force load of options for metaclass
+
+
 import dsplugins
 from dsplugins import emailer, assets
-from tornado.options import options, define
 from gearman import GearmanClient, GearmanWorker
 from gearman.task import Task
 
@@ -23,13 +27,14 @@ app = None
 
 def main():
     print("Running Worker .....")
-    tornado.options.parse_command_line()
     print("options.logging = %s" % options.logging)
-    
+    from demisaucepy import cache_setup
+    cache_setup.load_cache()
     #global app
     #app = AppBase()
     logging.info("site_root = %s" % options.site_root)
     logging.info("smtp servers = %s" % options.smtp_server)
+    logging.info("cache servers = %s" % options.memcached_servers)
     logging.info("gearman servers 2 = %s" % (options.gearman_servers))
     logging.error("where does this go in supervisord?")
     worker = GearmanWorker(options.gearman_servers)
