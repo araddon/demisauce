@@ -408,26 +408,30 @@
      default: a value that should be used if no value is specified
        when adding a document.
    -->
-
+   
+   <field name="object_type" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="id" type="string" indexed="true" stored="true" required="true" /> 
    <field name="region_id" type="int" indexed="true" stored="true" /> 
-   <field name="producer_id" type="int" indexed="true" stored="true" /> 
+   <field name="many_id" type="int" indexed="true" stored="true" /> 
+   <field name="many_name" type="int" indexed="true" stored="true" /> 
    <field name="category_id" type="int" indexed="true" stored="true" /> 
    <field name="in_stock" type="boolean" indexed="true" stored="true" />
-   <field name="producer" type="textgen" indexed="true" stored="true" omitNorms="true"/>
    <field name="name" type="textgen" indexed="true" stored="true"/>
-   <field name="food" type="textgen" indexed="true" stored="true"/>
+   
    <!-- use type="string" so that it is exact match -->
    <field name="tags" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="cat" type="string" indexed="true" stored="true" multiValued="true" />
+   <field name="meta" type="string" indexed="true" stored="true" multiValued="true"/>
+   <!-- Mark for deletion -->
+   <field name="producer_id" type="int" indexed="true" stored="true" /> 
+   <field name="producer" type="textgen" indexed="true" stored="true" omitNorms="true"/>
    
-   <!-- non-tokenized version of producer to make it easier to sort or group
-        results by producer.  copied from "producer" via copyField -->
+   <!-- non-tokenized version of item to make it easier to sort or group
+        results.  copied from "producer" via copyField -->
    <field name="producer_exact" type="string" indexed="true" stored="false"/>
-   <field name="food_exact" type="string" indexed="true" stored="false"/>
+   <field name="name_exact" type="string" indexed="true" stored="false"/>
    <field name="description" type="text" indexed="true" stored="true"/>
    <field name="comments" type="text" indexed="true" stored="true"/>
-   
    
    <field name="sku" type="textTight" indexed="true" stored="true" omitNorms="true"/>
    <field name="alphanamesort" type="alphaOnlySort" indexed="true" stored="false"/>
@@ -443,8 +447,6 @@
    <field name="geo_distance" type="tdouble"/>
    <dynamicField name="_local*" type="tdouble" indexed="true" stored="true"/>
    
-
-
    <!-- Common metadata fields, named specifically to match up with
      SolrCell metadata when parsing rich documents such as Word, PDF.
      Some fields are multiValued only because Tika currently may return
@@ -536,18 +538,16 @@
 
    <copyField source="cat" dest="text"/>
    <copyField source="name" dest="text"/>
-   <copyField source="food" dest="text"/>
    <copyField source="producer" dest="text"/>
    <copyField source="features" dest="text"/>
    <copyField source="tags" dest="text"/>
    <copyField source="includes" dest="text"/>
    
    <copyField source="producer" dest="producer_exact"/>
-   <copyField source="food" dest="food_exact"/>
+   <copyField source="name" dest="name_exact"/>
    
    <copyField source="cat" dest="textgen"/>
    <copyField source="name" dest="textgen"/>
-   <copyField source="food" dest="textgen"/>
    <copyField source="producer" dest="textgen"/>
    <copyField source="features" dest="textgen"/>
    <copyField source="tags" dest="textgen"/>

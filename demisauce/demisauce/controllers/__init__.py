@@ -479,10 +479,15 @@ class UploadHandler(BaseHandler):
             self.write("{filename:'%s', status: 'success'}" % (filewpath))
         else:
             f = self.request.files['userfile'][0]
-            logging.debug("upladed file:  %s  type=%s" % (f['filename'],f['content_type']))
+            args = self.get_argument("args",{})
+            #if 'maxsize' in self.request.arguments: args['maxsize'] self.get_argument("maxsize")
+            #if 'crop' in self.request.arguments: args['crop'] self.get_argument("crop")
+            if args != {}:
+                args = json.loads(args)
+            logging.debug("upladed file:  %s  type=%s, args=%s" % (f['filename'],f['content_type'],self.get_argument("args",{})))
             #TODO:  Check that it is image type first eh
             filewpath = assetmgr.stash_file(base64.encodestring(f['body']),f['filename'],
-                    gearman_client=self.db.gearman_client)
+                    gearman_client=self.db.gearman_client,args=args)
             #self.write("{filename:'%s', status: 'success'}" % (filewpath))
             self.write(filewpath)
     

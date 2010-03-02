@@ -12,7 +12,7 @@ from gearman import GearmanClient
 from gearman.task import Task
 
 
-def stash_file(base64file,filename=None,gearman_client=None):
+def stash_file(base64file,filename=None,gearman_client=None,args={}):
     """Accepts file handle from http upload, stashes, creates gearman worker"""
     new_file = ''.join([random.choice(string.letters + string.digits) for i in range(15)])
     if filename == None:
@@ -27,6 +27,7 @@ def stash_file(base64file,filename=None,gearman_client=None):
         gearman_client = GearmanClient(options.gearman_servers)
     json_data = {
         'file':new_file,
+        'args':args,
         'extension':extension,
         'path':new_path,
         'path_w_file':relative_path_wfile,

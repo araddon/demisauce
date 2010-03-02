@@ -296,7 +296,7 @@ class RemoteObject(jsonwrapper):
     def GET(cls,id=0,action=None,limit=None,cache=True):
         s = cls()
         s._get_method(id=id,action=action,limit=limit,cache=cache)
-        log.debug('GET id=%s for %s, status=%s' % (id,s._service,s._response.status))
+        #log.debug('GET id=%s for %s, status=%s' % (id,s._service,s._response.status))
         if s._response.success and s._response.status in SUCCESS_STATUS:
             return s
         else:

@@ -666,6 +666,16 @@ class SiteApiHandler(ApiSecureHandler):
 
 class ObjectApiHandler(ApiSecureHandler):
     object_cls = Object
+    def delete_by_get(self):
+        self.action_get_object(self.id)
+        if self.object and hasattr(self.object,'delete'):
+            self.object.delete()
+            self.object = None
+            self.qry = None
+            self.set_status(204)
+        else:
+            logging.error("not found?   %s, %s" % (self.noun, self.id))
+    
     def object_load_dict(self,o,data_dict):
         'http post handle args'
         if 'post_type' in data_dict:
@@ -705,10 +715,6 @@ class ObjectApiHandler(ApiSecureHandler):
     def json_formatter(self,o):
         if o:
             output = o.to_dict()
-            #if o.region and o.region.id > 0:
-            #    output['region'] = o.region.to_dict(keys=['name','metro_code']) # keys=['name','metro_code']
-            if o.person:
-                output['foreign_id'] = o.person.foreign_id
             return output
         return None
     

@@ -13,6 +13,8 @@ import demisaucepy.options
 from demisaucepy import mail # mail options
 import demisauce
 from tornado.options import options, define
+define("asset_root", default="/var/www/ds/static", help="Root Path of images to be saved")
+
 tornado.options.parse_command_line() # must force load of options for metaclass
 
 
@@ -21,7 +23,7 @@ from dsplugins import emailer, assets
 from gearman import GearmanClient, GearmanWorker
 from gearman.task import Task
 
-define("asset_root", default="/var/www/ds/static", help="Root Path of images to be saved")
+
 
 app = None
 
