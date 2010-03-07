@@ -17,7 +17,7 @@ from gearman.task import Task
 from demisaucepy import cache, cache_setup
 
 log = logging.getLogger(__name__)
-
+CACHE_DURATION = 600 if not options.debug else 1
 
 
 def requires_api(method):
@@ -101,6 +101,7 @@ class ApiBaseHandler(BaseHandler):
         self.noun = noun
         self.qry = []
         self.object = None
+        self._result = None
         #log.debug("in normalize:  noun=%s, requestid=%s, action=%s" % (noun,requestid,action))
         if requestid is None or requestid in ['',None,'all','list']:
             # /api/noun.format 
@@ -243,6 +244,8 @@ class ApiBaseHandler(BaseHandler):
         return
     
     def do_get(self):
+        if self._has_cache():
+            return
         if self.id and self.id == 'list' and self.action == 'list':
             self.action_get_list(q=self.q)
             logging.debug("found list request")
@@ -277,25 +280,44 @@ class ApiBaseHandler(BaseHandler):
         else:
             self.write('%s' % (jsonstring))
     
+    def _has_cache(self):
+        if not 'cache' in self.request.arguments:
+            url = self.request.full_url()
+            result = cache.cache.get(cache.cache_key(url))
+            if result:
+                log.debug("found cache")
+                self._result = result
+                return True
+        return False
+    
+    def do_cache(self,result_string,duration=CACHE_DURATION):
+        url = self.request.full_url()
+        cache.cache.set(cache.cache_key(url),result_string,duration)
+    
     def render_to_format(self):
+        _stringout = None
         #  ===== Which data to show, prep formatting
-        if self.format == 'json':
+        if self.format == 'json' and not self._result:
             if self.action in ['addupdate','delete']:
-                jsonstring = '{"msg":"success"}'
+                _stringout = '{"msg":"success"}'
             elif self.action == 'list' or self.action == 'get':
-                jsonstring = self.json()
+                _stringout = self.json()
             elif hasattr(self,self.action):
-                jsonstring = self.json()
+                _stringout = self.json()
             else: 
-                jsonstring = self.json()
+                _stringout = self.json()
         # objectid
         if self.request.method in ('POST','PUT','DELETE') and self.object:
             self.set_header("X-Demisauce-ID", str(self.object.id))
         
         # ==== Serialization Format
         if self.format == 'json':
-            if jsonstring:
-                self.render_json(jsonstring)
+            if _stringout:
+                self.render_json(_stringout)
+                if self.request.method == 'GET':
+                    self.do_cache(_stringout)
+            elif self._result:
+                self.render_json(self._result)
         elif self.format == 'xml':
             self.set_header("Content-Type", 'application/xhtml+xml')
     

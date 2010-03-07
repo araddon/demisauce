@@ -65,7 +65,7 @@ class Application(tornado.web.Application):
             "demisauce_url":options.demisauce_url,
             "asset_url":options.asset_url,
             "oauth_callback":("%saccount/" % options.base_url),
-            "debug":True,
+            "debug":options.debug,
             "base_url":options.base_url,
             "twitter_consumer_key":options.twitter_consumer_key,
             "twitter_consumer_secret":options.twitter_consumer_secret,
