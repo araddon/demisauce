@@ -1,6 +1,3 @@
-"""
-This is the base content item
-"""
 import logging
 import json
 import tornado

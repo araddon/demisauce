@@ -19,7 +19,7 @@ tornado.options.parse_command_line() # must force load of options for metaclass
 
 
 import dsplugins
-from dsplugins import emailer, assets
+from dsplugins import emailer, assets, echo
 from gearman import GearmanClient, GearmanWorker
 from gearman.task import Task
 
@@ -42,7 +42,7 @@ def main():
     worker = GearmanWorker(options.gearman_servers)
     worker.register_function("email_send", emailer.email_send)
     worker.register_function("image_resize", assets.image_resize)
-    
+    worker.register_function("echo", echo)
     worker.work()
 
 if __name__ == "__main__":

@@ -352,7 +352,7 @@ class BaseHandler(tornado.web.RequestHandler):
         self.db.finish()
         tornado.web.RequestHandler.finish(self,chunk)
     
-    def get_error_html(self, status_code):
+    def get_error_html(self, status_code,exception=None):
         """Custom UI error handler"""
         logging.error("in get_error_html %s, method=%s" % (status_code,self.request.method))
         logging.error("In get error template vals = %s" % self.template_vals)

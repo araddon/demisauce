@@ -411,6 +411,7 @@
    
    <field name="object_type" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="id" type="string" indexed="true" stored="true" required="true" /> 
+   <field name="object_id" type="string" indexed="false" stored="true" /> 
    <field name="region_id" type="int" indexed="true" stored="true" /> 
    <field name="many_id" type="int" indexed="true" stored="true" /> 
    <field name="many_name" type="int" indexed="true" stored="true" /> 

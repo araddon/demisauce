@@ -461,7 +461,7 @@ class ServiceClient(ServiceClientBase):
         cache_key = self.cache_key(url=url)
         #log.debug('about to call check cache for url=%s' % url)
         if http_method != "GET" or not self.check_cache(cache_key):
-            log.debug('fetch_service method = %s, url= %s' % (http_method,url))
+            #log.debug('fetch_service method = %s, url= %s' % (http_method,url))
             self.response = self.transport.fetch(url,data=data,extra_headers=self.extra_headers,http_method=http_method,qs=qs)
             
             if http_method == 'DELETE':

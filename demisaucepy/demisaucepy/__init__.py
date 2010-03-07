@@ -295,12 +295,13 @@ class RemoteObject(jsonwrapper):
     @classmethod
     def GET(cls,id=0,action=None,limit=None,cache=True):
         s = cls()
+        id = str(id)
         s._get_method(id=id,action=action,limit=limit,cache=cache)
         #log.debug('GET id=%s for %s, status=%s' % (id,s._service,s._response.status))
         if s._response.success and s._response.status in SUCCESS_STATUS:
             return s
         else:
-            log.debug('not found id=%s for %s' % (id,s._service))
+            #log.debug('not found id=%s for %s' % (id,s._service))
             if id in ('list'):
                 return []
             return None
@@ -319,7 +320,7 @@ class RemoteObject(jsonwrapper):
     
     def POST(self,id=0, data={},action=None,service=None):
         id = self.id if (id == 0 and self.id > 0) else id
-        log.debug("doing POST: service=%s, id=%s, action=%s" % (self._service,id,action))
+        #log.debug("doing POST: service=%s, id=%s, action=%s" % (self._service,id,action))
         if len(data) > 0:
             self._response = demisauce_ws(self._service,id,action,data=data,
                 http_method='POST',apikey=self._apikey)

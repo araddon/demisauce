@@ -1,6 +1,3 @@
-"""
-This is the base tests for creating/reading user data remotely
-"""
 import json, hashlib, random
 from demisaucepy.tests import *
 from demisaucepy import demisauce_ws, hash_email, jsonwrapper

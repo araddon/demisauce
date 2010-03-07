@@ -442,8 +442,8 @@ class PersonAnonApi(ApiBaseHandler):
                 logging.error("no site? %s" % ds_id)
                 
             self.set_current_user(user,is_authenticated = True)
-            self.write("{'status':'success'}")
             logging.debug("tried to init_user succeeded")
+            self.set_status(204) # succuess, no content
         else:
             logging.error("tried to init_user failed ds_id = %s" % (ds_id))
             self.set_status(400)

@@ -1,6 +1,3 @@
-"""
-Test connecting to service registry and getting service info
-"""
 import logging
 import json
 from tornado.options import options
@@ -55,7 +52,7 @@ class TestServices(TestDSBase):
         # test updates
         #svc.name = 'updated name'
         svc.PUT({'name':'updated name'})
-        log.debug(svc._response.json)
+        #log.debug(svc._response.json)
         assert svc._response.success 
         assert svc.name == 'updated name'
         # Needs to update cache on PUT/POST 

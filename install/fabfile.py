@@ -229,7 +229,7 @@ def _gearman():
     """you need to manually update key before this
     because it keeps !#%!#$ timing out"""
     sudo("apt-get -y update")
-    sudo("apt-get install -y gearman gearman-job-server gearman-tools libgearman2 libgearman-dev libgearman-dbg libgearman-doc")
+    sudo("apt-get install -y gearman gearman-job-server gearman-tools libgearman-dev libgearman-dbg libgearman-doc")
 
 def _linux_base():
     """Installs base Linux essentials (ubuntu install)"""
@@ -275,9 +275,11 @@ def _demisauce_pre_reqs():
         sudo('easy_install http://gdata-python-client.googlecode.com/files/gdata.py-1.1.1.tar.gz')
         sudo('easy_install http://boto.googlecode.com/files/boto-1.8d.tar.gz')
         sudo('easy_install http://www.crummy.com/software/BeautifulSoup/download/3.x/BeautifulSoup-3.1.0.tar.gz')
-        # this needs to be removed once all formencode is removed soon!
+        # this needs to be removed once all formencode is removed. soon!
         sudo("easy_install formencode")
-        sudo("apt-get install -y libgearman2")
+        #sudo("apt-get install -y libgearman2")
+        sudo("easy_install python-libgearman")
+        sudo("easy_install eventlet")
         sudo('pip install http://github.com/samuel/python-gearman/tarball/master')
         sudo("pip install http://github.com/samuel/python-scrubber/tarball/master")
         sudo("pip install Jinja2")
@@ -433,6 +435,9 @@ def _wordpress_updateconf():
 
 
 #   Tasks   =======================
+def fileconveyor():
+    sudo("apt-get install python-pyinotify")
+    
 def update_config(mysql_user_pwd=None):
     'drops new config on said host'
     if mysql_user_pwd:
