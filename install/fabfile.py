@@ -269,6 +269,7 @@ def _demisauce_pre_reqs():
         with cd("python-solr"):
             sudo("python setup.py install")
         
+        sudo("pip install avro")
         sudo("apt-get -y install python-dev python-pycurl") # ?  should be part of python  python-json
         sudo('apt-get -y install python-mysqldb python-memcache')
         sudo('apt-get -y install python-imaging')  # imaging library for image resize
@@ -285,6 +286,7 @@ def _demisauce_pre_reqs():
         sudo("pip install Jinja2")
         sudo("pip install wtforms")
         sudo("pip install decorator")
+        sudo("pip install feedparser")
         sudo("pip install http://python-twitter.googlecode.com/files/python-twitter-0.6.tar.gz")
 
 def _exists(path):

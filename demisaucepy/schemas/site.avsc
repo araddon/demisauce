@@ -1,0 +1,23 @@
+{
+    "type": "record",
+    "name": "Site","namespace":"org.demisauce",
+    "doc":"Documentation goes here",
+    "fields": [
+        {"name":"name","type":"string"},
+        {"name":"description","type":["string","null"]},
+        {"name":"email","type":["string","null"]},
+        {"name":"id", "type":["int","null"]},
+        {"name":"slug","type":"string"},
+        {"name":"foreign_id","type":["int","null"]},
+        {"name":"key", "type":["string","null"],"default":"null"},
+        {"name":"base_url","type":["string","null"],"default":"http://localhost:4950"},
+        {"name":"site_url","type":["string","null"],"default":"http://localhost:4950"},
+        {"name":"created", "type":["int","null"],"default":0},
+        {"name":"extra", "type":["string","null"],"default":"null"},
+        {"name":"extra_type", "type":["string","null"],"default":"json"},
+        {"name":"enabled", "type":["boolean","null"],"default":"false"},
+        {"name":"public", "type":["boolean","null"],"default":"false"},
+        {"name":"send_invites", "type":["boolean","null"],"default":"false"},
+        {"name":"is_sysadmin", "type":["boolean","null"],"default":"false"}
+    ]
+}

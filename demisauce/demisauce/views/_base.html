@@ -3,18 +3,21 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html lang="en">
 <head>
-    <title>{% block title %}Data Pipeline Appliance{% endblock %} On Demisauce</title>
-    {% if settings.debug == True %}
+    <title>{% block title %}Data Integration Appliance{% endblock %} On Demisauce</title>
+    
+    {% if settings.debug == True  and False == True %}
         <link rel="stylesheet" href="/static/css/local.css" type="text/css" />
         <link rel="stylesheet" href="/static/js/jquery.autocomplete.css" type="text/css" />
         <link rel="stylesheet" href="/static/css/ds.widgets.css" type="text/css" />
         <link rel="stylesheet" href="/static/js/jquery.treeview.css" type="text/css" />
+        <script type="text/javascript" src="/static/js/jquery-1.4.2.min.js"></script>
         <script type="text/javascript" src="/static/js/lib-js.js"></script>
         <script type="text/javascript" src="/static/js/ds.adminbase.js"></script>
         <script type="text/javascript" src="/static/js/ds.base.js"></script>
         <script type="text/javascript" src="/static/js/ds.slugeditor.js"></script>
     {% else %}
         <link rel="stylesheet" href="/static/css/all-css.css" />
+        <script type="text/javascript" src="/static/js/jquery-1.4.2.min.js"></script>
         <script type="text/javascript" src="/static/js/lib-js-min.js"></script>
         <script type="text/javascript" src="/static/js/ds-js-min.js"></script>
     {% endif %}

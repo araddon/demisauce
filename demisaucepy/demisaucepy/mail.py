@@ -8,6 +8,7 @@ from tornado.options import options,define
 # TODO:  extract send_email futher to allow mockserver to be passed in
 # TODO:  allow connection to be kept open, external to manage open/close (ie: 
 #            not all in one function)
+# multipart: http://stackoverflow.com/questions/882712/sending-html-email-in-python
 
 define("email_from",default="demisauce@demisauce.org",help="default email from address")
 define("smtp_username",default="demisauce@demisauce.org",help="smtp username")

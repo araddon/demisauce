@@ -4,7 +4,7 @@ from demisaucepy.cache import PylonsCache, GaeCache, \
 import os, logging
 from tornado.options import options
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("demisaucepy")
 
 def load_gae_memcache():
     try:

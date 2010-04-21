@@ -12,7 +12,7 @@ from demisauce.model import meta
 from demisauce.model import mapping
 from demisauce.model.user import Person
 from demisauce.model.site import Site
-from demisauce.model.email import Email
+from demisauce.model.template import Template
 
 log = logging.getLogger(__name__)
 

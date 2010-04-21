@@ -78,11 +78,11 @@ class Application(tornado.web.Application):
         
         from demisauce import controllers
         _handlers = [] + controllers._controllers
-        from demisauce.controllers import account, home, dashboard, email,\
+        from demisauce.controllers import account, home, dashboard, template,\
             admin, site, api, service
         
         _handlers += account._controllers + \
-            home._controllers + dashboard._controllers + email._controllers + \
+            home._controllers + dashboard._controllers + template._controllers + \
             admin._controllers + site._controllers + api._controllers + \
             service._controllers
         

@@ -9,7 +9,7 @@ from sqlalchemy.orm import eagerload
 from sqlalchemy.sql import and_
 
 from demisauce import model
-from demisauce.model import meta, ModelBase, JsonMixin
+from demisauce.model import meta, ModelBase, SerializationMixin
 from demisauce.model.site import Site
 from datetime import datetime
 
@@ -25,9 +25,10 @@ app_table = Table("app", meta.metadata,
         Column("url_format", DBString(255),nullable=True),
         Column("authn", DBString(50),default='None'),
         Column("description", DBText),
+        Column("json", DBText),
     )
 
-class App(ModelBase,JsonMixin):
+class App(ModelBase,SerializationMixin):
     """
     Application is collection of services, or pre-done integration
     usually apps share authentication, base_url etc.
@@ -78,9 +79,10 @@ service_table = Table("service", meta.metadata,
         Column("key", DBString(255)),
         Column("views", DBString(255)),
         Column("description", DBText),
+        Column("json", DBText),
     )
 
-class Service(ModelBase,JsonMixin):
+class Service(ModelBase,SerializationMixin):
     """
     Service is either a Demisauce, or "plug_in" service
     many->many:  a "plugin" like wordpress could have many 

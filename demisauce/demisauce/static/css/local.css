@@ -325,3 +325,18 @@ form img.delete { background:url(/static/images/cross.png);}
 #tooltip div.title{color:#9FD4FF;font-size:11px;font-weight:bold;margin:0;padding:8px 8px 4px;}
 
 
+.modalbox-overlay{z-index:900 !important;opacity:0.3;background:#000000 none repeat scroll 0 0;height:100%;margin:0;position:fixed;top:0;width:100%;}
+.modalbox{z-index:901 !important;position:fixed;text-align:center;top:140px;margin:0px auto 0;width:100%;height:1px;}
+.modalbox{display:block;padding:4px;}
+.modalbox-inner{-moz-box-shadow:0 1px 2px rgba(0,0,0,0.5);width:400px;border:4px solid #cccccc;margin:0px auto 0;background:rgba(255,255,255,0.3) none repeat scroll 0 0;}
+.modalbox-inner{z-index:902 !important;-moz-border-radius:4px;-webkit-border-radius:4px;background:#ffffff none repeat scroll 0 0;overflow:hidden;padding:0;text-align:left;}
+.modalbox-inner .modalformat h2{background:#eeeeee none repeat scroll 0 0;margin-bottom:4px;padding:8px 10px;}
+.modalbox-inner .modalformat h2 a.modalbox-close{-x-system-font:none;color:#999999;float:right;font-family:tahoma,sans-serif;font-size:16px;font-size-adjust:none;font-stretch:normal;font-style:normal;font-variant:normal;font-weight:bold;line-height:12px;margin-top:2px;text-decoration:none;text-shadow:1px 1px 1px #ffffff;}
+.modalbox-inner .modalformat h2 a.close{-x-system-font:none;color:#999999;float:right;font-family:tahoma,sans-serif;font-size:16px;font-size-adjust:none;font-stretch:normal;font-style:normal;font-variant:normal;font-weight:bold;line-height:12px;margin-top:2px;text-decoration:none;text-shadow:1px 1px 1px #ffffff;}
+.modalbox-content{padding:5px 10px 10px;}
+.modalbox-content fieldset{color:#888888;font-size:90%;padding-bottom:4px;width:100%;margin-bottom:3px;}
+.modalbox-content .input input{float:left;font-size:12px;margin-bottom:8px;margin-right:10px;outline-style:none;outline-width:0;padding:5px;}
+.modalbox-content .input textarea{float:left;font-size:12px;margin-bottom:8px;margin-right:10px;outline-style:none;outline-width:0;padding:5px;}
+.modalbox-content .options{float:left;font-size:11px;width:270px;}
+
+

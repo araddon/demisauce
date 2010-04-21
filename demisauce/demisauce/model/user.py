@@ -4,6 +4,7 @@ from sqlalchemy import Column, MetaData, ForeignKey, Table, \
 from sqlalchemy import Integer, String as DBString, DateTime, Boolean, \
     Text as DBText
 from sqlalchemy import engine, orm
+from sqlalchemy.orm import mapper, relation, class_mapper, synonym, dynamic_loader
 from sqlalchemy.sql import and_, text
 from datetime import datetime
 import formencode
@@ -18,8 +19,10 @@ from demisauce import model
 from demisauce.model import meta
 from demisauce.model.site import Site
 from demisauce.model.activity import Activity
-from demisauce.model import ModelBase, JsonMixin
+from demisauce.model import ModelBase, SerializationMixin
 from datetime import datetime
+
+log = logging.getLogger("demisauce.model")
 
 # Person 
 person_table = Table("person", meta.metadata,
@@ -57,9 +60,16 @@ group_table = Table("group", meta.metadata,
         Column("contacts", DBText),
         Column("public", Boolean, default=False),
     )
-groupperson_table = Table('person_group', meta.metadata,
-    Column('group_id', Integer, ForeignKey('group.id')),
+userattribute_table = Table('userattribute', meta.metadata,
+    Column('id', Integer, primary_key=True),
     Column('person_id', Integer, ForeignKey('person.id')),
+    Column('object_id', Integer,default=0),
+    Column('object_type', DBString(30)),
+    Column('name', DBString(80)),
+    Column("value", DBString(1000)),
+    Column('category', DBString(30)),
+    Column('encoding', DBString(10),default="str"),
+    Column("created", DateTime,default=datetime.now),
 )
 
 class SignupForm(Form):
@@ -157,7 +167,7 @@ class PersonEditValidation(formencode.Schema):
                            validators.String(not_empty=True))
     displayname = formencode.All(validators.String(not_empty=True))
 
-class Person(ModelBase,JsonMixin):
+class Person(ModelBase,SerializationMixin):
     """User/Person, base identity and user object
     :email: email of user
     :site_id: id of the site the current user belongs to
@@ -175,6 +185,7 @@ class Person(ModelBase,JsonMixin):
     .. _Gravatar: http://www.gravatar.com/
     """
     __jsonkeys__ = ['email','displayname','url','site_id', 'raw_password','created']
+    _readonly_keys = ['id','hashedemail','profile_url']
     _allowed_api_keys = ['isadmin','email','displayname','url','raw_password','authn','user_uniqueid','foreign_id','extra_json']
     schema = person_table
     def __init__(self, **kwargs):
@@ -185,6 +196,7 @@ class Person(ModelBase,JsonMixin):
     @orm.reconstructor
     def init_on_load(self):
         "called by sq after load as init type"
+        super(Person, self).init_on_load()
         self.session = {'testcrap':'crap'}
     
     @property
@@ -346,8 +358,60 @@ class Person(ModelBase,JsonMixin):
     
     def delete(self):
         res = meta.engine.execute(text("delete from activity where person_id=%s" % self.id))
-        res = meta.engine.execute(text("delete from person_group where person_id=%s" % self.id))
+        res = meta.engine.execute(text("delete from userattribute where person_id=%s" % self.id))
         res = meta.engine.execute(text("delete from person where id = %s" % self.id))
+    
+    def get_attribute(self,name):
+        """Returns the UserAttribute object for given name"""
+        for attribute in self.attributes:
+            if attribute.name == name:
+                if attribute.encoding == 'json' and isinstance(attribute.value,(str,unicode)):
+                    attribute.value = json.loads(attribute.value)
+                return attribute
+        log.debug("found none? for get_attribute name = %s" % name)
+        return None
+    
+    def get_val(self,name):
+        attr = self.get_attribute(name)
+        if attr:
+            return attr.value
+        return None
+    
+    def has_attribute(self,name):
+        """Returns True/False if it has given key attribute"""
+        for attribute in self.attributes:
+            if attribute.name == name:
+                return True
+        return False
+    
+    def has_attribute_value(self,name,value):
+        """Returns True/False if it has given key/value pair attribute"""
+        for attribute in self.attributes:
+            if attribute.name == name and value == attribute.value:
+                return True
+        return False
+    
+    def add_attribute(self,name,value,object_type="attribute",category="segment",encoding='str'):
+        """Add or Update attribute """
+        attr = self.get_attribute(name)
+        if isinstance(value,(dict,list)) or encoding == 'json':
+            value = json.dumps(value)
+            encoding = 'json'
+        if attr:
+            attr.encoding = encoding
+            attr.value = value
+            return attr
+        else:
+            attr = UserAttribute(object_type=object_type,
+                name=name,value=value,category=category,encoding=encoding)
+            if self._is_cache:
+                attr.person_id = self.id
+                meta.DBSession().commit(attr)
+            else:
+                self.attributes.append(attr)
+            return attr
+        return None
+    
     
     @classmethod
     def by_site(cls,site_id=0):
@@ -383,22 +447,25 @@ class Person(ModelBase,JsonMixin):
         return meta.DBSession.query(Person).filter_by(site_id=site_id,email=email).first()
     
 
-class Group(ModelBase,JsonMixin):
+class Group(ModelBase,SerializationMixin):
     """Groups of users
     :name: name of this group
     :email_list: comma delimited list of email address's of this group
-    :members: List of person objects
+    :members: List of userattribute objects
     :created:  date created
     :description: description
     """
-    def __init__(self,site_id=0, name='', description=""):
+    __jsonkeys__ = ['name','members','site_id','created']
+    _allowed_api_keys = ['name','members','extra_json']
+    schema = group_table
+    def __init__(self,**kwargs):
         super(Group, self).__init__(**kwargs)
         self.init_on_load()
     
     @orm.reconstructor
     def init_on_load(self):
-        "called by sq after load as init type"
-        pass
+        "called by sa after load as init type"
+        super(Group, self).init_on_load()
     
     def save(self):
         if ((not hasattr(self,'slug')) or self.slug == None) and self.name != None:
@@ -406,7 +473,7 @@ class Group(ModelBase,JsonMixin):
         super(Group, self).save()
     
     def get_email_list(self):
-         return ', '.join(['%s' % m.email.strip(string.whitespace).lower() for m in self.members])
+         return ', '.join(['%s' % m.member.email.strip(string.whitespace).lower() for m in self.members])
     email_list = property(get_email_list)
     
     def add_memberlist(self,member_list):
@@ -416,10 +483,15 @@ class Group(ModelBase,JsonMixin):
         2nd of users newly added to system
         """
         #ml = [m.strip(string.whitespace) for m in member_list.replace(';',',').split(',') if len(m) > 4]
-        ml_temp = member_list.replace(';',',').lower()
-        cl = [ e.strip(string.whitespace) for e in ml_temp.split(',') if len(e) > 5]
+        if isinstance(member_list,(list)):
+            ml_temp = member_list
+        elif isinstance(member_list,(str,unicode)):
+            ml_temp = member_list.replace(';',',').lower().split(',')
+        else:
+            raise Exception("Memberlist must be list, or comma delimited string")
+        cl = [ e.strip(string.whitespace) for e in ml_temp if len(e) > 5]
         
-        ml = ['%s' % m.email.strip(string.whitespace).lower() for m in self.members]
+        ml = ['%s' % m.member.email.strip(string.whitespace).lower() for m in self.members]
         
         newlist = [e for e in cl if not ml.__contains__(e.strip(string.whitespace))]
         
@@ -450,11 +522,17 @@ class Group(ModelBase,JsonMixin):
     def add_member(self, newemail):
         # don't trust this user is new
         p = Person.by_email(self.site_id,newemail)
-        if p and p.id > 0:
-            self.members.append(p)
+        if not p:
+            p = Person(site_id=self.site_id,email=newemail)
         else:
-            self.members.append(Person(site_id=self.site_id,email=newemail))
-            return newemail
+            newemail = None
+        self.add_user(p)
+        return newemail
+    
+    def add_user(self,user):
+        ua = UserAttribute(object_type='group',category='group')
+        user.attributes.append(ua)
+        self.members.append(ua)
     
     @classmethod
     def by_site(cls,site_id=0,ct=15,filter='new'):
@@ -472,4 +550,43 @@ class Group(ModelBase,JsonMixin):
         """
         return meta.DBSession.query(Group).filter_by(site_id=site_id,slug=slug).first()
     
-   
+
+
+class UserAttribute(ModelBase,SerializationMixin): 
+    __jsonkeys__ = ['name','value','encoding','category','id','object_type','object_id']
+    _allowed_api_keys = ['name','value','encoding','category','object_type','object_id']
+    schema = userattribute_table
+
+class GroupUserAttribute(UserAttribute):
+    def on_new(self):
+        self.object_type = 'group'
+    
+
+"""
+'groups':relation(Group, lazy=True, secondary=userattribute_table,
+        primaryjoin=person_table.c.id==userattribute_table.c.person_id,
+        secondaryjoin=and_(userattribute_table.c.group_id==group_table.c.id), 
+                    backref='members'),
+mapper(UserAttribute, where_assoc, properties={
+    'producer':relation(Producer, primaryjoin= where_assoc.c.producer_id==producer.c.id, 
+            lazy=True,backref="venues"),
+    'venue':relation(Producer, primaryjoin= where_assoc.c.venue_id==producer.c.id, 
+            lazy=False,backref="providers"),
+})
+"""
+def userlistable(cls,name="users"):
+    """User - List Mixin/Mutator"""
+    mapper = class_mapper(cls)
+    table = mapper.local_table
+    cls_name = str(cls)
+    cls_name = cls_name[cls_name.rfind('.')+1:cls_name.rfind('\'')].lower()
+    mapper.add_property(name, dynamic_loader(UserAttribute, 
+        primaryjoin=and_(table.c.id==userattribute_table.c.object_id,userattribute_table.c.object_type==cls_name),
+        foreign_keys=[userattribute_table.c.object_id],
+        backref='%s' % table.name))
+    #log.debug("userlistable table.name = %s" % table.name)
+    
+    # initialize some stuff
+    def on_new(self):
+        self.object_type = cls_name
+    setattr(cls, "on_new", on_new)

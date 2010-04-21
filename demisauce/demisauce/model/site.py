@@ -5,7 +5,7 @@ from sqlalchemy.sql import func
 from demisauce import model
 from demisauce import lib 
 #from demisauce.model import mapping
-from demisauce.model import JsonMixin
+from demisauce.model import SerializationMixin
 from demisauce.model import meta, ModelBase
 from datetime import datetime
 import re, hashlib, random
@@ -30,7 +30,7 @@ site_table = Table("site", meta.metadata,
         Column("is_sysadmin", Boolean, default=False),
     )
 
-class Site(ModelBase,JsonMixin):
+class Site(ModelBase,SerializationMixin):
     """
     Container for different user's and distinct sets of data.  Each Site 
     does not share anything with other site's.  Users in a site can be in 

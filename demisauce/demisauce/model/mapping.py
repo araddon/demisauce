@@ -6,8 +6,9 @@ dependency issues.
 from sqlalchemy.orm import mapper, relation, dynamic_loader
 from sqlalchemy.sql import and_
 from demisauce.model.site import site_table, Site
-from demisauce.model.user import person_table, Person, Group, groupperson_table, group_table
-from demisauce.model.email import *
+from demisauce.model.user import person_table, Person, Group, \
+    userattribute_table, group_table, userlistable, UserAttribute
+from demisauce.model.template import Template, template_table
 from demisauce.model.object import Object, object_table
 #from demisauce.model.comment import Comment, comment_table
 #from demisauce.model.help import Help, help_table, \
@@ -33,15 +34,28 @@ mapper(Tag, tag_table, properties={
 mapper(TagAssoc, tag_map_table, properties={
     'tags':relation(Tag, backref='association'),
 })
+mapper(UserAttribute, userattribute_table)
 mapper(Person, person_table, properties={
     'site':relation(Site, backref='users'),
-    'groups':relation(Group, lazy=True, secondary=groupperson_table,
-            primaryjoin=person_table.c.id==groupperson_table.c.person_id,
-            secondaryjoin=and_(groupperson_table.c.group_id==group_table.c.id), 
-                        backref='members'),
     'activities':dynamic_loader(Activity),
-    'tags':relation(Tag,lazy=True,backref='taggers')
+    'tags':relation(Tag,lazy=True,backref='taggers'),
+    'attributes':dynamic_loader(UserAttribute,backref="member"),
 })
+
+userlistable(Group,name="members")
+
+"""
+'groups':relation(Group, lazy=True, secondary=userattribute_table,
+        primaryjoin=person_table.c.id==userattribute_table.c.person_id,
+        secondaryjoin=and_(userattribute_table.c.group_id==group_table.c.id), 
+                    backref='members'),
+mapper(WhereAssoc, where_assoc, properties={
+    'producer':relation(Producer, primaryjoin= where_assoc.c.producer_id==producer.c.id, 
+            lazy=True,backref="venues"),
+    'venue':relation(Producer, primaryjoin= where_assoc.c.venue_id==producer.c.id, 
+            lazy=False,backref="providers"),
+})
+"""
 '''
 
 mapper(Help, help_table, properties={
@@ -59,11 +73,11 @@ mapper(Comment, comment_table, properties={
     'site':relation(Site, backref='comments')
 })
 '''
-mapper(Email, email_table, properties={
-    'site':relation(site.Site),
+mapper(Template, template_table, properties={
+    'site':relation(Site),
 })
 mapper(Object, object_table, properties={
-    'site':relation(site.Site),
+    'site':relation(Site),
     'person':relation(Person, lazy=True, backref='objects'),
 })
 

@@ -19,10 +19,10 @@ import formencode, urllib
 import demisaucepy.cache_setup
 from demisaucepy.cache import cache
 from demisauce.controllers import BaseHandler, RestMixin, SecureController, \
-    send_emails
+    send_emails, requires_admin
 from gearman.task import Task
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("demisauce.web")
 
 def google_auth_url(return_url):
     import urllib
@@ -118,7 +118,7 @@ class AccountController(RestMixin,BaseHandler):
         """
         raise Exception("not implemented")
         if 'emails' in self.request.arguments:
-            emails = self.request.arguments['emails']
+            emails = self.get_argument("emails")
             delay = 4
             from demisauce.lib import scheduler
             for email in emails.split(','):
@@ -409,11 +409,10 @@ class AccountController(RestMixin,BaseHandler):
         """
     
     def edit(self,id=0):
-        if not self.user:
-             redirect_to(controller='home', action='index', id=None)
-        else:
-            person = meta.DBSession.query(Person).filter_by(
-                    site_id=self.user.site_id, id=self.user.id).first()
+        if not self.user.isadmin and int(id) != self.user.id:
+            return self.redirect("/home/index")
+        person = meta.DBSession.query(Person).filter_by(
+                site_id=self.user.site_id, id=id).first()
             
         self.render('/user/edit.html',person=person)
     
@@ -421,13 +420,16 @@ class AccountController(RestMixin,BaseHandler):
         """
         User has selected to update profile
         """
-        if self.user and 'email' in self.request.arguments:
-            user = Person.get(self.user.site_id,self.user.id)
-            user.displayname = self.get_argument('displayname')
-            user.set_email(self.get_argument('email'))
-            user.url = self.get_argument('url')
-            user.save()
-            self.set_current_user(user)
+        if self.user and self.has_args('email','id'):
+            id = int(self.get_argument('id'))
+            if id == self.user.id or self.user.isadmin:
+                user = Person.get(self.user.site_id,id)
+                user.displayname = self.get_argument('displayname')
+                user.set_email(self.get_argument('email'))
+                user.url = self.get_argument('url')
+                user.save()
+            if id == self.user.id:
+                self.set_current_user(user)
         self.render('/user/settings.html',person=user)
     
     def change_pwd(self,id=0):
@@ -448,6 +450,7 @@ class AccountController(RestMixin,BaseHandler):
                     existing password, please try again")
         self.render('/user/settings.html',person=person)
     
+    @requires_admin
     def usersettings(self,id=0):
         if not self.user:
              redirect_to(controller='home', action='index', id=None)
@@ -483,6 +486,7 @@ class AccountController(RestMixin,BaseHandler):
         person = meta.DBSession.query(Person).filter_by(hashedemail=id).first()
         return self._view(person,True)
     
+    @requires_admin
     def view(self,id=0):
         if not self.user:
             self.redirect('/')
@@ -558,7 +562,7 @@ class GroupController(RestMixin,BaseHandler):
                 g = Group.get(self.user.site_id,int(self.get_argument("id")))
                 g.name = form.name.data
             else:
-                g = Group(self.user.site_id,form.name.data)
+                g = Group(site_id=self.user.site_id,name=form.name.data)
             
             newtogroup, newtosite = g.add_memberlist(form.members.data)
             g.save()
@@ -586,7 +590,7 @@ class GroupController(RestMixin,BaseHandler):
                 g = Group.get(self.user.site_id,int(self.get_argument("id")))
                 g.name = form.name.data
             else:
-                g = Group(self.user.site_id,form.name.data)
+                g = Group(site_id=self.user.site_id,name=form.name.data)
             
             newtogroup, newtosite = g.add_memberlist(form.members.data)
             g.save()
@@ -597,7 +601,11 @@ class GroupController(RestMixin,BaseHandler):
         item = Group.get(self.user.site_id,id)
         if not item or not item.site_id == self.user.site_id:
             item = None
+        log.debug(item.members)
+        for m in item.members:
+            log.debug(m)
         self.render('/user/group.html',action='edit',item=item)
+    
 
 
 _controllers = [

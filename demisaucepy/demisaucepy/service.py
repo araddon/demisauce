@@ -22,7 +22,7 @@ from demisaucepy import cache
 
 SUCCESS_STATUS = (200,201,204,304)
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("demisaucepy")
 
 class RetrievalError(Exception):
     def __init__(self,message="There was an error retrieving this message"):
@@ -178,7 +178,7 @@ class ServiceDefinition(object):
 
 class ServiceResponse(object):
     def __init__(self,format='json'):
-        self.success = False
+        self.success = True
         self.data = None
         self.body = None
         self.xmlrpc = None
@@ -188,7 +188,14 @@ class ServiceResponse(object):
         self.__xmlnode__ = None
         self.url = ''
         self.json = None
-        self.status = 0
+        self.status = 200
+        self.was_cache = False
+    
+    def load(self,body=None):
+        if body:
+            self.body = body
+        if self.format == 'json' and self.body:
+            self.json = json.loads(self.body)
     
     def handle_response(self):
         pass
@@ -330,18 +337,16 @@ class HttpServiceTransport(ServiceTransportBase):
             #log.debug('httptransport getting url: %s' % (url))
             response.params = httpfetch.fetch(url, data=data,agent=useragent,extra_headers=extra_headers,http_method=http_method)
             response.status = response.params['status']
-            if response.status in SUCCESS_STATUS:
-                response.body = response.params['data']
-                response.success = True
-            else:
-                log.debug("not success: status=%s" % (response.status))
+            response.url = url
+            if 'data' in response.params:
+                response.load(response.params['data'])
+            if not response.status in SUCCESS_STATUS:
+                response.success = False
         except urllib2.URLError, err:
             if err[0][0] == 10061:
-                #print 'error in demisauce_fetch'
-                log.debug('No Server = %s' % url)
-                # connection refused
-                response.message = 'the remote server didn\'t respond at \
-                        <a href=\"%s\">%s</a> ' % (url,url)
+                response.success = False
+                log.error('No Server, refused connection = %s' % url)
+                response.message = 'the remote server refused connection'
                         
         if hasattr(response,'handle_response'):
             response.handle_response()
@@ -406,24 +411,21 @@ class ServiceClient(ServiceClientBase):
         if self._cache_key:
             return self._cache_key
         cache_key = url
-        #TODO:  allow non vary by headers?
         for key in self.extra_headers:
             cache_key += '%s:%s' % (key,self.extra_headers[key])
         cache_key = hashlib.md5(cache_key.lower()).hexdigest()
-        #print 'md5cachekey = %s' % (cache_key)
         self._cache_key = cache_key
         return cache_key
     
     def check_cache(self,cache_key):
-        """
-        """
+        """Checks cache for this request"""
         #import demisaucepy.cache_setup
         #from demisaucepy.cache import cache
         
         if self.use_cache == False:
             return False
         if cache.cache == None:
-            log.error('doesnt have cache')
+            log.error('doesnt have cache configured')
             return False
         
         #log.debug('checking cache key=%s' % cache_key)
@@ -431,22 +433,22 @@ class ServiceClient(ServiceClientBase):
         #cache.delete(cache_key)
         cacheval = cache.cache.get(cache_key)
         if cacheval != None:
-            #log.debug('cache found for = %s' % (cache_key))
+            log.debug('cache found for =url = %s, key = %s' % (self.response.url,cache_key))
             #self.response.data = cacheval.data
-            self.response = cacheval
+            self.response.load(cacheval)
+            self.response.was_cache = True
             return True
         else:
             #log.debug('cache NOT found for = %s' % (cache_key))
             return False
     
     def fetch_service(self,request=None,data={},http_method='GET',qs={}):
+        '''fetch the service, check cache, cache result'''
         #self.connect(request=request)
         #self.authorize()
-        #import demisaucepy.cache_setup
-        #from demisaucepy.cache import cache
         request = str(request)
         if not self.service.isdefined and self.service.needs_service_def == True:
-            #log.debug('ServiceClient:  calling service definition load %s/%s' % (self.service.app_slug,self.service.name))
+            log.debug('ServiceClient:  calling service definition load %s/%s' % (self.service.app_slug,self.service.name))
             self.service.load_definition(request_key=request)
         
         if request is None:
@@ -462,7 +464,9 @@ class ServiceClient(ServiceClientBase):
         #log.debug('about to call check cache for url=%s' % url)
         if http_method != "GET" or not self.check_cache(cache_key):
             #log.debug('fetch_service method = %s, url= %s' % (http_method,url))
-            self.response = self.transport.fetch(url,data=data,extra_headers=self.extra_headers,http_method=http_method,qs=qs)
+            if self.use_cache == False:
+                url = '%s&cache=false' % url if url.find("?") > 0 else '%s?cache=false' % url 
+            self.response = self.transport.fetch(url,data=data,response=self.response,extra_headers=self.extra_headers,http_method=http_method,qs=qs)
             
             if http_method == 'DELETE':
                 #cache.cache.delete(cache_key)
@@ -471,22 +475,17 @@ class ServiceClient(ServiceClientBase):
             if self.response.success:
                 if self.service.format=='json' and self.response.body and len(self.response.body) > 3:
                     try:
-                        self.response.json = json.loads(self.response.body)
-                        #logging.debug("loaded json data = %s" % (self.response.body))
+                        #log.debug("loaded json data = %s" % (self.response.body))
+                        self.response.load()
                     except:
-                        logging.error("what up?")
+                        logging.error("error parsing json? %s" % self.response.body)
                         self.response.json = None
-                    
-                    #log.debug("creating json = %s" % self.response.json)
-                #log.debug('success for service %s, %s' % (self.service.name,cache))
-                #print self.response.data
+                
                 if cache is not None and self.use_cache and self.response.status in SUCCESS_STATUS:
                     #log.debug('setting cache key= %s, %s' % (cache_key,self.service.cache_time))
-                    cache.cache.set(cache_key,self.response,int(self.service.cache_time)) 
+                    cache.cache.set(cache_key,self.response.body,int(self.service.cache_time)) 
             else:
-                #pass
-                log.error('service error on fetch %s' % request)
-                #print('self.response.data = %s' % (self.response.data))
-        #log.debug('returning from fetch %s' % (self.response))
+                pass
+                #log.error('service error on fetch %s' % request)
         return self.response
     

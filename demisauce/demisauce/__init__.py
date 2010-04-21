@@ -15,7 +15,7 @@ define("twitter_consumer_key", help="your Twitter application API key",
 define("twitter_consumer_secret", help="your Twitter application secret",
         default="g9Wg0fDCcFN4IGtJ8PB9TYq5RiRMEPSfqZ3MkcPPl9Y")
 define("base_url", default="http://localhost:4950", help="base fq url, no trailing slash to site")
-define("debug",default=True,help="run in debug mode or not, if so auto-reloads")
+define("debug",default=True,help="run in debug mode or not, if so auto-reloads",type=bool)
 define("port", default=4950, help="run on the given port", type=int)
 
 define("sqlalchemy_default_url", default=("mysql://root:demisauce@192.168.1.7/demisauce"))

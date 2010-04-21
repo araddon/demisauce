@@ -3,7 +3,7 @@ from sqlalchemy import Column, MetaData, ForeignKey, Table
 from sqlalchemy.types import Integer, String as DBString, Boolean
 from sqlalchemy.types import Text as DBText, DateTime
 from demisauce import model
-from demisauce.model import meta, ModelBase, site, JsonMixin
+from demisauce.model import meta, ModelBase, site, SerializationMixin
 from datetime import datetime
 import json
 
@@ -22,9 +22,9 @@ object_table = Table("object", meta.metadata,
         Column("is_published", Boolean, default=False),
 )
 
-class Object(ModelBase,JsonMixin):
+class Object(ModelBase,SerializationMixin):
     schema = object_table
-    _allowed_api_keys = ['slug','description','json','is_published']
+    _allowed_api_keys = ['slug','description','json','is_published','foreign_id']
     def __init__(self, **kwargs):
         super(Object, self).__init__(**kwargs)
     
@@ -41,6 +41,6 @@ class Object(ModelBase,JsonMixin):
     @classmethod
     def by_slug(cls,site_id=0,slug=''):
         qry = meta.DBSession.query(Object).filter_by(site_id=site_id,slug=slug)
-        logging.debug('qry = %s, slug="%s"' % (qry,slug))
+        #logging.debug('qry = %s, slug="%s"' % (qry,slug))
         return qry.first()
     

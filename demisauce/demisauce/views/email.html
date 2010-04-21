@@ -111,8 +111,12 @@
 
                     </div>
                     <div class="optional">
-                        <label for="template">Email template:</label>
+                        <label for="template">Email template <small>(text)</small>:</label>
                         {{h.textarea("template", content=(item and item.template) or '', size="40x6")}}
+                    </div>
+                    <div class="optional">
+                       <label for="template_html">Email template <small>(html)</small>:</label>
+                        {{h.textarea("template_html", content=(item and item.template_html) or '', size="40x6")}}
                     </div>
                     <div class="optional">
                         <label for="from">From Name:</label>

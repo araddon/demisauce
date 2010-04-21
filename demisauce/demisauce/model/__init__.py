@@ -1,8 +1,7 @@
 """
 """
-import logging
+import logging, re, time, json, datetime
 from tornado import escape
-import time, json, datetime
 from sqlalchemy import create_engine
 from sqlalchemy import Column, MetaData, Table, types
 from sqlalchemy import engine, orm
@@ -10,12 +9,25 @@ from sqlalchemy.orm import mapper, relation
 from sqlalchemy.orm import scoped_session, sessionmaker
 from demisauce.model import meta
 from tornado.options import define, options
-
+from demisaucepy.serializer import SerializationMixin
 import redis
 from pythonsolr.pysolr import Solr
 from gearman import GearmanClient
 
 log = logging.getLogger(__name__)
+
+def slugify(name):
+    """
+    Convert's a string to a slugi-ifyed string
+    
+    >>> slugify("aaron's good&*^ 89 stuff")
+    'aarons-good-stuff'
+    """
+    name = name.lower()
+    name = re.sub('( {1,100})','-',name)
+    name = re.sub('[^a-z0-9\-]','',name)
+    #name = re.sub('(-{2,50})','-',name)
+    return name
 
 class sqlalchemydb(object):
     def __init__(self,engine=None,session=None,metadata=None,
@@ -94,131 +106,6 @@ def init_model(enginelocal):
     meta.DBSession = orm.scoped_session(sm)
 
 
-class JsonMixin(object):
-    _json_ignore_keys = []
-    _allowed_api_keys = []
-    def get_keys(self):
-        logging.debug("getting all keys from schema?  %s" % self.__class__)
-        return [c.name for c in self.__class__.schema.c]
-    
-    def get_ignore_keys(self):
-        return self.__class__._json_ignore_keys
-    
-    def to_dict(self,keys=None):
-        """serializes to dictionary, converting non serializeable fields
-        to some other format or ignoring them"""
-        # cs = time.mktime(self.created.timetuple()) # convert to seconds
-        # to get back:  datetime.datetime.fromtimestamp(cs)
-        dout = {}
-        ignore_keys = []
-        
-        if not keys:
-            keys = self.get_keys()
-        
-        if hasattr(self.__class__,"_json_ignore_keys"):
-            ignore_keys = self.get_ignore_keys()
-        
-        for key in keys:
-            if key not in ignore_keys and key.find("_") != 0 and hasattr(self,key):
-                attr = getattr(self,key)
-                if type(attr) == datetime or type(attr) == datetime.datetime:
-                    dout.update({u'datetime_%s' % key:time.mktime(attr.timetuple())})
-                elif key.find('json') >= 0:
-                    if attr in [None,'']:
-                        dout.update({key:attr})
-                    else:
-                        # mysql escapes wrong?
-                        #attr = attr.replace("'","\"")
-                        dout.update({key:json.loads(attr)})
-                elif type(attr) == str:
-                    dout.update({key:attr})
-                else:
-                    dout.update({key:attr})
-        
-        return dout
-    
-    def to_json(self,keys=None):
-        return escape.json_encode(self.to_dict(keys=keys))
-    
-    def from_dict(self,json_dict,allowed_keys=None):
-        """
-        Chainable - Converts from a json python dictionary
-        back to a populated object::
-            
-            peep = Person().from_dict(json_dict)
-        
-        """
-        if not allowed_keys:
-            keys = [c.name for c in self.__class__.schema.c]
-        else:
-            keys = allowed_keys
-        
-        _start_time = time.time()
-        extra_json = {}
-        #logging.debug("from_json after pre Time:  %.2fms", (1000.0 * (time.time() - _start_time)))
-        self._json = json_dict # save decoded json
-        for key in json_dict:
-            if key in keys:
-                if key == 'extra_json':
-                    #log.debug(type(json_dict[key]))
-                    if json_dict[key] is None:
-                        pass
-                    elif isinstance(json_dict[key],(str,unicode)):
-                        log.debug(json_dict[key])
-                        extra_json.update(json.loads(json_dict[key]))
-                    else:
-                        extra_json.update(json_dict[key])
-                elif key.find('datetime_') == 0:
-                    setattr(self,key[9:],datetime.fromtimestamp(float(json_dict[key])))
-                else:
-                    setattr(self,key,self._to_python(json_dict[key]))
-            else:
-                extra_json.update({key:self._to_python(json_dict[key])})
-        
-        if len(extra_json) > 0 and 'apikey' in extra_json:
-            extra_json.pop('apikey')
-        if len(extra_json) > 0:
-            if hasattr(self,'extra_json') and isinstance(self.extra_json,dict):
-                self.extra_json.update(extra_json)
-            elif hasattr(self,'extra_json') and isinstance(self.extra_json,(str,unicode)):
-                log.debug(self.extra_json)
-                tmpjson = json.loads(self.extra_json)
-                tmpjson.update(extra_json)
-                self.extra_json = tmpjson
-            elif hasattr(self,'extra_json') and self.extra_json == None:
-                self.extra_json = extra_json
-            else:
-                log.error("type = , val=%s" % (extra_json))
-        return self
-    
-    def from_json(self,json_string):
-        """
-        Chainable - Converts from a json string back to a populated object::
-            
-            peep = Person().from_json(json_string)
-        
-        """
-        self.from_dict(escape.json_decode(json_string))
-        return self
-    
-    def _to_python(self,val):
-        if val is None:
-            return val
-        
-        if isinstance(val, (int, float, long, complex)):
-            return val
-        if val in (u'none',u'None','none','None'):
-            return None
-        
-        if val in ('true',u'true','True',u'True'):
-            return True
-        elif val in ('false',u'false','False',u'False'):
-            return False
-        
-        # else, probably string?
-        return val
-    
-
 def setup_site(user):
     """does the base site setup for a new account
     """
@@ -252,10 +139,29 @@ class ModelBase(object):
     """
     Abstract base class implementing some shortcuts
     """
+    _allowed_api_keys = []
+    __all_schema_keys__ = None
     def __init__(self,**kwargs):
+        self._is_cache = False
         for key in kwargs:
             if hasattr(self,key):
                 setattr(self,key,kwargs[key])
+        self.on_new()
+    
+    @orm.reconstructor
+    def init_on_load(self):
+        self._is_cache = False
+    
+    def get_keys(self):
+        if hasattr(self.__class__,"__all_schema_keys__"):
+            if self.__class__.__all_schema_keys__ == None:
+                logging.debug("getting all keys from schema?  %s" % self.__class__)
+                self.__class__.__all_schema_keys__ = [c.name for c in self.__class__.schema.c]
+            return self.__class__.__all_schema_keys__
+        return []
+    
+    def on_new(self):
+        pass
     
     def makekey(self,key):
         """
@@ -273,10 +179,13 @@ class ModelBase(object):
         meta.DBSession.delete(self)
         meta.DBSession.commit()
     
-    def save(self):
+    def save_extra(self):
         if hasattr(self,'extra_json') and isinstance(self.extra_json,(list,dict)):
             json_str = json.dumps(self.extra_json)
             self.extra_json = json_str
+    
+    def save(self):
+        self.save_extra()
         meta.DBSession.add(self)
         meta.DBSession.commit()
     
@@ -306,3 +215,4 @@ class ModelBase(object):
         """Class method to get by id"""
         return meta.DBSession.query(cls).get(id)
     
+

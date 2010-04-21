@@ -74,7 +74,7 @@ def image_resize(job_object):
         
         def resize_and_save(local_file,new_file,maxsize=None,maxh=None,maxw=None,crop=None):
             """Resize the image and save"""
-            logging.debug("maxsize=%s, crop=%s" % (maxsize,crop))
+            logging.debug("maxw = %s, maxsize=%s, crop=%s" % (maxw,maxsize,crop))
             img = Image.open(local_file)
             width,height = img.size
             width,height = float(width), float(height)
@@ -112,6 +112,7 @@ def image_resize(job_object):
             else:
                 raise Exception("must specify max width, OR max size")
             
+            print("old: ratio = %s:  size(x,y) = %s,%s" % (ratio,width,height))
             height = int(height*ratio)
             width = int(width*ratio)
             print("new ratio = %s:  size(x,y) = %s,%s" % (ratio,width,height))
@@ -127,6 +128,8 @@ def image_resize(job_object):
                     img = img.crop((0,amt,crop,amt+crop))
             
             log.debug("saving new file %s" % new_file)
+            if img.mode != "RGB":
+                img = img.convert("RGB")
             img.save(new_file)
         
         

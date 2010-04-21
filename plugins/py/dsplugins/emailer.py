@@ -49,6 +49,7 @@ def email_send(job_object):
             logging.info('sent email to %s, num_sent = %s' % (emailargs['emails'], num_sent))
             return num_sent
         else:
+            #logging.error("len json = %s" % (len(response.json)))
             logging.error('Error retrieving that template %s  \n\n %s' % (emailargs,response.json))
             return -1
     except:

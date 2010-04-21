@@ -1,4 +1,4 @@
-import logging, urllib, json, hashlib
+import logging, urllib, json, hashlib, re
 import tornado.escape
 from tornado.options import options
 from sqlalchemy.sql import and_
@@ -7,7 +7,7 @@ from demisauce.controllers import BaseHandler, requires_authn
 from demisauce import model
 from demisauce.model import meta
 from demisauce.model.site import Site
-from demisauce.model.email import Email
+from demisauce.model.template import Template
 from demisauce.model.user import Person, Group
 from demisauce.model.activity import Activity
 from demisauce.model.service import Service, App
@@ -15,9 +15,11 @@ from demisauce.model.object import Object
 from gearman import GearmanClient
 from gearman.task import Task
 from demisaucepy import cache, cache_setup
+from demisaucepy.serializer import is_json
 
 log = logging.getLogger(__name__)
-CACHE_DURATION = 600 if not options.debug else 1
+CACHE_DURATION = 600 if not options.debug else 10
+mailsrch = re.compile(r'[\w\-][\w\-\.]+@[\w\-][\w\-\.]+[a-zA-Z]{1,4}')
 
 
 def requires_api(method):
@@ -72,6 +74,11 @@ class ApiBaseHandler(BaseHandler):
         super(ApiBaseHandler, self).__init__(application, request, transforms=transforms)
         self.set_status(200)
     
+    def cache_url(self):
+        url = self.request.full_url()
+        url = url.replace('&cache=false',"").replace("cache=false","")
+        return url
+    
     def nokey(self):
         """
         returns error code for no api key
@@ -84,15 +91,14 @@ class ApiBaseHandler(BaseHandler):
         d = {}
         for k in self.request.arguments.keys():
             d[k] = self.get_argument(k)
+        for k in ['cache','apikey']:
+            if self.request.query and k in d and "%s=" % k in self.request.query:
+                d.pop(k)
         return d
     
     def is_json_post(self):
         'Determines if json post?'
-        if self.request.body:
-            if self.request.body.find("{") > -1 and self.request.body.find("{") < 4 or \
-                self.request.body.find("[") > -1 and self.request.body.find("[") < 4:
-                return True
-        return False
+        return is_json(self.request.body)
     
     def normalize_args(self,noun=None,requestid=None,action=None,format="json"):
         "Normalizes and formats arguments"
@@ -158,7 +164,7 @@ class ApiBaseHandler(BaseHandler):
             return None
     
     def json_formatter(self,o):
-        """default json formatter, uses JsonMixin """
+        """default json formatter, uses SerializationMixin """
         if o:
             return o.to_dict()
         return ''
@@ -167,8 +173,17 @@ class ApiBaseHandler(BaseHandler):
         'http post handle args'
         return data_dict
     
+    def after_dict_load(self,o):
+        'handle post dict load cleanup'
+        pass
+    
+    def after_save(self,data_dict):
+        'after save of object'
+        pass
+    
     def _add_object(self,data_dict):
         o = None
+        
         if self.id not in ['',None,'list','get','all']:
             self.action_get_object(self.id, data_dict)
             o = self.object
@@ -180,13 +195,14 @@ class ApiBaseHandler(BaseHandler):
             log.debug("about to update %s" % data_dict)
             data_dict = self.object_load_dict(o,data_dict)
             o.from_dict(data_dict,allowed_keys=self.__class__.object_cls._allowed_api_keys)
+            self.after_dict_load(self.object)
             o.after_load()
         
         if o and o.isvalid():
             self.object = o
-            log.debug("saving updated object")
             o.save()
-            cache.cache.delete(cache.cache_key(self.request.full_url()))
+            cache.cache.delete(cache.cache_key(self.cache_url()))
+            self.after_save(data_dict)
             self.set_status(201)
         else:
             log.error("what went wrong, not valid %s" % o)
@@ -228,7 +244,7 @@ class ApiBaseHandler(BaseHandler):
         if self.id and self.id not in ['list','all']:
             self.action_get_object(self.id)
         if self.object and hasattr(self.object,'delete'):
-            url = self.request.full_url()
+            url = self.cache_url()
             logging.info("DELETE id=%s for url=%s" % (self.id,url))
             self.object.delete()
             self.object = None
@@ -248,7 +264,6 @@ class ApiBaseHandler(BaseHandler):
             return
         if self.id and self.id == 'list' and self.action == 'list':
             self.action_get_list(q=self.q)
-            logging.debug("found list request")
         elif self.id and self.action == 'get':
             logging.debug("do_get, id=%s,action=%s" % (self.id,self.action))
             self.action_get_object(self.id)
@@ -291,7 +306,8 @@ class ApiBaseHandler(BaseHandler):
         return False
     
     def do_cache(self,result_string,duration=CACHE_DURATION):
-        url = self.request.full_url()
+        url = self.cache_url()
+        #log.debug('saving cache url=%s = %s' % (url,result_string))
         cache.cache.set(cache.cache_key(url),result_string,duration)
     
     def render_to_format(self):
@@ -314,7 +330,7 @@ class ApiBaseHandler(BaseHandler):
         if self.format == 'json':
             if _stringout:
                 self.render_json(_stringout)
-                if self.request.method == 'GET':
+                if self.request.method in('GET','POST'):
                     self.do_cache(_stringout)
             elif self._result:
                 self.render_json(self._result)
@@ -323,7 +339,7 @@ class ApiBaseHandler(BaseHandler):
     
     def get(self,noun=None,requestid='all',action=None,format="json"):
         self.normalize_args(noun, requestid,action,format)
-        logging.debug("API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit))
+        logging.debug("API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s, args=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit,str(self.request.arguments)))
         self.do_get()
         logging.debug("in get status = %s" % (self._status_code))
         self.render_to_format()
@@ -401,19 +417,19 @@ class ActivityApiHandler(ApiBaseHandler):
         logging.debug("in activity api OPTIONS")
     
 
-class EmailApiHandler(ApiSecureHandler):
-    object_cls = Email
+class TemplateApiHandler(ApiSecureHandler):
+    object_cls = Template
     def action_get_object(self,id, data_dict = {}):
         if type(id) == int and id > 0:
-            self.object = Email.get(site_id=self.site.id,id=id) 
+            self.object = Template.get(site_id=self.site.id,id=id) 
         elif id == 0 and data_dict.has_key('slug'):
             logging.debug("they asked for id = 0, lets ignore and doublecheck slug = %s" % data_dict['slug'])
-            self.object = Email.by_slug(site_id=self.site.id,slug=data_dict['slug'])  
+            self.object = Template.by_slug(site_id=self.site.id,slug=data_dict['slug'])  
             if self.object:
                 logging.debug("found object, sweet!  %s" % self.object.id)
         else:
             logging.debug("trying to get by slug %s" % (id))
-            self.object = Email.by_slug(site_id=self.site.id,slug=id)  
+            self.object = Template.by_slug(site_id=self.site.id,slug=id)  
         if self.object:
             self.qry = [self.object]
         else:
@@ -432,17 +448,17 @@ class EmailApiHandler(ApiSecureHandler):
     def json_formatter(self,o):
         if o:
             keys=['slug','name','subject','from_email',
-                'reply_to','id','from_name','template','to']
+                'reply_to','id','from_name','template','template_html','to']
             output = o.to_dict(keys=keys)
             return output
         return None
     
     def action_get_list(self,q=None):
         if q:
-            qry = self.db.session.query(Email).filter(and_(
-                Email.name.like('%' + q + '%'),Email.site_id==self.site.id))
+            qry = self.db.session.query(Template).filter(and_(
+                Template.name.like('%' + q + '%'),Template.site_id==self.site.id))
         else:
-            qry = Email.all(site_id=self.site.id)
+            qry = Template.all(site_id=self.site.id)
             logging.debug("in email list, qry = %s" % qry)
         self.qry = qry
     
@@ -467,20 +483,46 @@ class PersonAnonApi(ApiBaseHandler):
             logging.debug("tried to init_user succeeded")
             self.set_status(204) # succuess, no content
         else:
-            logging.error("tried to init_user failed ds_id = %s" % (ds_id))
+            logging.error("tried to init_user failed ds_id = %s, url=%s" % (ds_id,self.request.full_url()))
             self.set_status(400)
             self.write("{'status':'failure'}")
     
 
 class PersonApiHandler(ApiSecureHandler):
     object_cls = Person
+    def object_load_dict(self,o,data_dict):
+        'http post handle args'
+        if 'attributes' in data_dict:
+            attr_list = []
+            if isinstance(data_dict['attributes'],list):
+                attr_list = data_dict['attributes']
+            elif isinstance(data_dict['attributes'],dict):
+                attr_list = [data_dict['attributes']]
+            for attr in attr_list:
+                object_type = "attribute" if not 'object_type' in attr else attr['object_type']
+                category = "attribute"  if not 'category' in attr else attr['category']
+                encoding = 'str' if not 'encoding' in attr else attr['encoding']
+                o.add_attribute(attr['name'],attr['value'],object_type=object_type,
+                    encoding=encoding,category=category)
+            data_dict.pop('attributes')
+        if 'delete_attributes' in data_dict:
+            for attr in data_dict['delete_attributes']:
+                ua = o.get_attribute(attr['name'])
+                log.debug('deletting attribute = id=%s, name=%s' % (ua.id, ua.name))
+                ua.delete()
+            data_dict.pop('delete_attributes')
+        return data_dict
+    
     def change_email(self):
         self.handle_post()
     
     def delete_by_get(self):
         self.action_get_object(self.id)
         if self.object and hasattr(self.object,'delete'):
+            url = self.request.full_url()
+            log.debug("DELETE id=%s for url=%s" % (self.id,url))
             self.object.delete()
+            cache.cache.delete(cache.cache_key(url))
             self.object = None
             self.qry = None
             self.set_status(204)
@@ -489,6 +531,9 @@ class PersonApiHandler(ApiSecureHandler):
     
     def action_get_object(self,id, data_dict = {}):
         if isinstance(self.id,int) and self.id > 0:
+            log.debug('calling get(%s,%s)' % (self.site.id,self.id))
+            meta.DBSession.close()
+            meta.DBSession()
             self.object = Person.get(self.site.id,self.id)
             if not self.object:
                 self.object = Person.by_foreignid(self.site.id,self.id)
@@ -497,18 +542,25 @@ class PersonApiHandler(ApiSecureHandler):
         elif 'foreign_id' in data_dict:
             self.object = Person.by_foreignid(self.site.id,data_dict['foreign_id'])
         else:
-            self.object = Person.by_hashedemail(self.site.id,self.id)
-            log.debug('getting by hashed:  %s, %s' % (self.id, self.object))
+            id = urllib.unquote_plus(self.id)
+            if mailsrch.match(id):
+                self.object = Person.by_email(self.site.id,id)
+            else:
+                self.object = Person.by_hashedemail(self.site.id,id)
+            log.debug('getting by hashed/email:  %s, %s' % (id, self.object))
         if self.object:
             self.qry = [self.object]
     
     def json_formatter(self,o):
         if o:
-            logging.debug("in person api handler  %s" % o.profile_url)
             output = o.to_dict(keys=['name','displayname','id','email','profile_url','url',
                 'hashedemail','foreign_id','authn','extra_json'])
-            #if o.region and o.region.id > 0:
-            #    output['region'] = o.region.to_dict(keys=['name','metro_code']) # keys=['name','metro_code']
+            if o.attributes:
+                attributes = []
+                for attr in o.attributes:
+                    attributes.append(attr.to_dict(keys=['name','value','encoding','category','id','object_type','object_id']))
+                if len(attributes) > 0:
+                    output['attributes'] = attributes
             return output
         return None
     
@@ -691,6 +743,7 @@ class ObjectApiHandler(ApiSecureHandler):
     def delete_by_get(self):
         self.action_get_object(self.id)
         if self.object and hasattr(self.object,'delete'):
+            log.debug("cutom delete by get %s" % self.id)
             self.object.delete()
             self.object = None
             self.qry = None
@@ -741,15 +794,18 @@ class ObjectApiHandler(ApiSecureHandler):
         return None
     
     def action_get_object(self,id, data_dict = {}):
-        if isinstance(id,int) and self.id > 0:
+        #if 'foreign_id' in data_dict and data_dict['foreign_id']:
+        #    self.object = Object.saget(data_dict['foreign_id'])  
+        #if not self.object:
+        if isinstance(id,int) and id> 0:
             self.object = Object.saget(id)  
-        elif isinstance(id,int) and self.id == 0:
+        elif isinstance(id,int) and id == 0:
             pass
         else:
             logging.debug("calling by_slug = %s" % (id))
             self.object = Object.by_slug(site_id=self.site.id,slug=id)  
         
-        logging.debug('METHOD: %s' % dir(self.request))
+        #logging.debug('METHOD: %s' % self.request)
         if self.object:
             self.qry = [self.object]
         elif self.request.method in ('POST','PUT','DELETE'):
@@ -761,6 +817,19 @@ class ObjectApiHandler(ApiSecureHandler):
 
 class GroupApiHandler(ApiSecureHandler):
     object_cls = Group
+    def after_save(self,data_dict):
+        'http post handle args'
+        if 'emails' in data_dict:
+            if isinstance(data_dict['emails'],(str,unicode)):
+                log.debug("trying to load = %s" % (data_dict['emails']))
+                data_dict['emails'] = json.loads(data_dict['emails'])
+            assert type(data_dict['emails']) is list
+            self.object.add_memberlist(data_dict['emails'])
+            self.object.save()
+    
+    def add_users_POST(self):
+        pass
+    
     def action_get_object(self,id, data_dict = {}):
         if type(id) == int:
             self.object = Group.get(site_id=self.site.id,id=id) 
@@ -786,7 +855,7 @@ class GroupApiHandler(ApiSecureHandler):
             if o.members:
                 members = []
                 for m in o.members:
-                    members.append(m.to_dict(keys=['displayname','email','id']))
+                    members.append(m.member.to_dict(keys=['displayname','email','id']))
                 output['members'] = members
             return output
         return None
@@ -794,9 +863,9 @@ class GroupApiHandler(ApiSecureHandler):
     def action_get_list(self,q=None):
         if q:
             qry = self.db.session.query(Group).filter(and_(
-                Group.name.like('%' + q + '%'),Email.site_id==self.site.id))
+                Group.name.like('%' + q + '%'),Template.site_id==self.site.id))
         else:
-            qry = self.db.session.query(Group).filter(Email.site_id==self.site.id)
+            qry = self.db.session.query(Group).filter(Template.site_id==self.site.id)
             logging.debug("in group list, qry = %s" % qry)
         self.qry = qry
     
@@ -829,6 +898,65 @@ class HookApiHandler(BaseHandler):
     
 
 
+class PubSubApiHandler(ApiBaseHandler):
+    object_cls = Object
+    def get(self,noun=None,requestid='all',action=None,format="json"):
+        self.normalize_args(noun, requestid,action,format)
+        # http://www.smugmug.com/hack/feed.mg?Type=keyword&Data=locifood&format=atom10
+        # http://api.flickr.com/services/feeds/photos_public.gne?tags=locifood&lang=en-us&format=rss_200
+        
+        logging.debug("API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit))
+        #http://dev.demisauce.com/api/pubsub/?apikey=c97933249d23a72362ec0f3da09b2c60
+        action = self.get_argument("hub.mode",None)
+        if action in ('subscribe','unsubscribe'):
+            self.write(self.get_argument('hub.challenge'))
+            topic = self.get_argument("hub.topic")
+            log.debug("subscribing to feed %s" % (topic))
+        else:
+            log.debug("should parse")
+        #hub.topic=http%3A%2F%2Fsuperfeedr.com%2Fdummy.xml
+        #hub.verify_token=
+        #hub.challenge=c5ee7a111126fdddc42e89ddf3fb3aad
+        #hub.mode=subscribe
+        pass
+        logging.debug("in get status = %s" % (self._status_code))
+        #self.render_to_format()
+    
+    def action_get_list(self,q=None):
+        pass
+        self.qry = []
+    
+    def posts(self,q=None):
+        if not q:
+            logging.debug("In posts.q limit = %s" % self.limit)
+            qry = self.db.session.query(Object).filter(Object.post_type=='post').options(eagerload('person')).limit(self.limit)
+            if self.start > 0:
+                logging.debug("self.start = %s" % self.start)
+                qry = qry.offset(self.start)
+        else:
+            qry = self.db.session.query(self.__class__.object_cls).filter(
+                    self.__class__.object_cls.name.like('%' + q + '%'))
+        self.qry = qry
+    
+    def action_get_object(self,id, data_dict = {}):
+        if isinstance(id,int) and self.id > 0:
+            self.object = Object.saget(id)  
+        elif isinstance(id,int) and self.id == 0:
+            pass
+        else:
+            logging.debug("calling by_slug = %s" % (id))
+            self.object = Object.by_slug(site_id=self.site.id,slug=id)  
+        
+        logging.debug('METHOD: %s' % dir(self.request))
+        if self.object:
+            self.qry = [self.object]
+        elif self.request.method in ('POST','PUT','DELETE'):
+            self.qry = []
+        elif self.request.method == 'GET':
+            self.set_status(404)
+            logging.error("no object %s" % self.id)
+    
+
 
 """ GET  : get
     POST : add/update
@@ -840,6 +968,7 @@ class HookApiHandler(BaseHandler):
     (r"/api/(.*?)/([0-9]*?|.*?|all|list)(.json|.xml|.custom)?", ApiSimpleHandler),
 """
 _controllers = [
+    (r"/api/(pubsub)/(.*?)",PubSubApiHandler), 
     (r"/api/(hook|webhook)(?:\/)?(.*?)",HookApiHandler), 
     (r"/api/(tbdproxy|proxy)/(.*?)",HookApiHandler), 
     (r"/api/(activity)/(.*?)", ActivityApiHandler),
@@ -854,10 +983,10 @@ _controllers = [
     (r"/api/(site)/(.*?)(.json|.xml|.custom)", SiteApiHandler),
     (r"/api/(app)/([0-9]*?|.*?|all|list)/(.*?)(?:\.)?(json|xml|custom)?", AppApiHandler),
     (r"/api/(app)/(.*?)(.json|.xml|.custom)", AppApiHandler),
-    (r"/api/(email)/([0-9]*?|.*?|all|list)/(.*?)(?:\.)?(json|xml|custom)?", EmailApiHandler),
-    (r"/api/(email)/(.*?)(.json|.xml|.custom)", EmailApiHandler),
+    (r"/api/(email|template)/([0-9]*?|.*?|all|list)/(.*?)(?:\.)?(json|xml|custom)?", TemplateApiHandler),
+    (r"/api/(email|template)/(.*?)(.json|.xml|.custom)", TemplateApiHandler),
     (r"/api/(service)/([0-9]*?|.*?|all|list)/(.*?)(?:\.)?(json|xml|custom)?", ServiceApiHandler),
     (r"/api/(service)/(.*?)(?:.json|.xml|.custom)", ServiceApiHandler),
-    (r"/api/(object)/([0-9]*?|.*?|all|list)/(.*?)(?:\.)?(json|xml|custom)?", ObjectApiHandler),
-    (r"/api/(object)/(.*?)(?:.json|.xml|.custom)", ObjectApiHandler),
+    (r"/api/(object|content)/([0-9]*?|.*?|all|list)/(.*?)(?:\.)?(json|xml|custom)?", ObjectApiHandler),
+    (r"/api/(object|content)/(.*?)(?:.json|.xml|.custom)", ObjectApiHandler),
 ]

@@ -16,7 +16,7 @@ import urllib, logging, os
 from StringIO import StringIO
 
 ISGAE = False
-log = logging.getLogger(__name__)
+log = logging.getLogger("demisaucepy")
 
 try:
     from google.appengine.api import urlfetch

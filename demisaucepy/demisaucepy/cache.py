@@ -32,7 +32,7 @@ except ImportError:
 cache = None
 isgae = False
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("demisaucepy")
 
 
 def cache_key(url):

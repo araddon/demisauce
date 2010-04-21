@@ -1,7 +1,7 @@
 <div id="dialog" style="margin-top: 5px;" >
     <form action='/user/inviteusers_POST' class="small" id="inviteusersform">
 
-        {{h.textarea('emails', value=(item and item.email) or '', size="50x6")}}
+        {{h.textarea('emails', value=(item and item.email) or '', size="50x6", style="width:90%;")}}
 
         <div class="actions submit">
             <input type="submit" class="primary" id="submit" value="Submit &#187;">    &nbsp;&nbsp;

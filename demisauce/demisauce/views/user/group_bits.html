@@ -155,14 +155,17 @@ h2.dspager2(groups)
         </form>
         <script type="text/javascript">
         $(document).ready(function() {
-            $('#demisauce_groupadin_popupform').ajaxForm({ 
-                // target identifies the element(s) to update with the server response 
-                target: '#group_popup_content', 
-                // success identifies the function to invoke when the server response 
-                // has been received; here we apply a fade-in effect to the new content 
-                success: function() { 
-                    $('#group_popup_content').fadeIn('slow'); 
-                } 
+            $('#demisauce_groupadin_popupform').live('submit', function() {
+                var qs = '_xsrf=' + $("#_xsrf",this).val(); 
+                var self = $(this);
+                $(this).ajaxSubmit({ 
+                    type: 'post',dataType: 'html',clearForm: true,
+                    success: function (html, statusText){
+                        $.showmessage( html);
+                        $('.modalbox').trigger("modalbox.close",[]);
+                    }
+                });
+                return false;
             });
         });
         </script>

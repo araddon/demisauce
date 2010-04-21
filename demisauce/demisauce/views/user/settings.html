@@ -32,9 +32,14 @@
                     $(document).ready(function(){
                         $("#group_popup_admin").click(function() {
                             //jQuery.facebox({ ajax: '{{base_url}}/groupadmin/popup' });
-                            $.ds.faceboxmanager.groupac();
+                            //$.ds.faceboxmanager.groupac();
                             //jQuery.facebox('pretend this is a group autocomplete tool');
+
                         });
+                        $("#group_popup_admin").modalbox({href:'/user/group/popup',onload:function(){
+                            log.debug("in group popup ");
+                            //$('#producerfood_id',$('#list-form')).val(pid);
+                        }});
                     });
                 </script>
             {% endif %}

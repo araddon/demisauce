@@ -239,7 +239,7 @@ class BaseHandler(tornado.web.RequestHandler):
             if self.get_argument("reload",None):
                 redis_user_json = None
             else:
-                logging.debug("get_current_user: found cookie, getting user from redis")
+                #logging.debug("get_current_user: found cookie, getting user from cache")
                 redis_user_json = self.db.redis.get("DS-person-%s" % self._user_json['id'])
             
             if not redis_user_json:
@@ -359,6 +359,14 @@ class BaseHandler(tornado.web.RequestHandler):
         return self.render_string("error.html",code=status_code,
             message=httplib.responses[status_code],**self.template_vals)
     
+    def has_args(self,*args):
+        _has_args = True
+        for arg in args:
+            if not arg in self.request.arguments:
+                _has_args = False
+                break
+        return _has_args
+    
     def render(self,template_file, **kwargs):
         """
         Helper method to render the appropriate template
@@ -468,6 +476,29 @@ class CrossDomain(BaseHandler):
         self.render("crossdomain.xml")
     
 
+class XsrfDemo(BaseHandler):
+    def get(self):
+        name=self.get_cookie('name',"")
+        self.render("xsrf.html",name=name)
+    
+    def options(self):
+        pass
+    
+    def post(self):
+        name = self.get_argument("name")
+        name = name.decode('ascii',"ignore")
+        #for c in name:
+        #    print ord(c)
+        print name
+        if re.search(r"[\x00-\x20]", 'name' + name):
+            print 'shit'
+            print ord('\x20')
+        
+        self.set_cookie('name',name)
+        # using get_argument instead of get_cookie as get_cookie reads browser cookies
+        # not to-be written cookies
+        self.write(str(self.get_argument("name")))
+
 class UploadHandler(BaseHandler):
     def get(self):
         self.write('hello')
@@ -513,6 +544,7 @@ class CustomErrorHandler(BaseHandler):
 
 _controllers = [
     (r"/hello", HelloHandler),
+    (r"/xsrfdemo", XsrfDemo),
     (r"/upload(?:\/)?", UploadHandler),
     (r"/crossdomain\.xml", CrossDomain),
 ] 

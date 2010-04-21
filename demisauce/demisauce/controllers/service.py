@@ -14,7 +14,7 @@ from demisauce.lib.filter import Filter, FilterList
 from demisauce import model
 from demisauce.model import meta, mapping
 from demisauce.model.site import Site
-from demisauce.model.email import Email
+from demisauce.model.template import Template
 from demisauce.model.service import Service, App
 
 log = logging.getLogger(__name__)
