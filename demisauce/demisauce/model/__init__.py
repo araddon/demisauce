@@ -14,7 +14,7 @@ import redis
 from pythonsolr.pysolr import Solr
 from gearman import GearmanClient
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('demisauce')
 
 def slugify(name):
     """
@@ -85,7 +85,7 @@ def get_database(cache=None):
     #pool_recycle=True # performance was horrible with this
     meta.engine = create_engine(options.sqlalchemy_default_url,
             echo=options.sqlalchemy_default_echo, pool_recycle=3600)
-    logging.debug("Setting up db with connection = %s" % options.sqlalchemy_default_url)
+    log.debug("Setting up db with connection = %s" % options.sqlalchemy_default_url)
     sm = orm.sessionmaker(autoflush=True, bind=meta.engine)
     meta.DBSession = orm.scoped_session(sm)
     db = sqlalchemydb(engine=meta.engine,
@@ -155,7 +155,7 @@ class ModelBase(object):
     def get_keys(self):
         if hasattr(self.__class__,"__all_schema_keys__"):
             if self.__class__.__all_schema_keys__ == None:
-                logging.debug("getting all keys from schema?  %s" % self.__class__)
+                log.debug("getting all keys from schema?  %s" % self.__class__)
                 self.__class__.__all_schema_keys__ = [c.name for c in self.__class__.schema.c]
             return self.__class__.__all_schema_keys__
         return []

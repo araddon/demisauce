@@ -2,6 +2,8 @@ from jinja2 import nodes
 from jinja2.ext import Extension
 import logging
 
+log = logging.getLogger('demisauce')
+
 class FragmentCacheExtension(Extension):
     # a set of names that trigger the extension.
     tags = set(['cache'])

@@ -13,15 +13,15 @@ from demisauce.model.template import Template
 from demisauce.controllers import BaseHandler, RestMixin, SecureController, \
     requires_admin
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('demisauce')
 
 class TemplateForm(Form):
     def validate_slug(form, field):
-        logging.debug("validating slug:  person_id = %s" % (form.id.data))
+        log.debug("validating slug:  person_id = %s" % (form.id.data))
         e = meta.DBSession.query(Template).filter(and_(
             Template.slug == field.data.lower(),Template.site_id==form.site_id.data)).first()
         if e and e.id != int(form.id.data):
-            logging.debug("dupe slug for email: form.id.data:  %s, pid=%s" % (form.id.data,e.id))
+            log.debug("dupe slug for email: form.id.data:  %s, pid=%s" % (form.id.data,e.id))
             raise ValidationError(u'That slug is already in use, please choose another')
     id              = HiddenField('id',default=0)
     site_id         = HiddenField('site_id',default=0)
@@ -75,7 +75,7 @@ class TemplateController(RestMixin, SecureController):
         return self.redirect('/email/index')
     
     def edit(self,id=0):
-        logging.debug("????? in edit")
+        log.debug("????? in edit")
         item = Template.get(self.user.site_id,id=id)
         if item == None and (id == None or id == 0):
             item = Template(site_id=self.user.site_id,subject='')

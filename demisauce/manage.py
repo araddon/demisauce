@@ -22,7 +22,8 @@ from demisauce import model
 from demisauce.model import meta
 from demisauce.model import email, site, user, service, tag
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('demisauce')
+
 define("action", default=None, help="Action to perform, [updatesite,create_data]")
 define("adminpwd", default="admin",
         help="Enter a password for Admin user [default email = sysadmin@demisauce.org, pwd = admin]")
@@ -131,7 +132,7 @@ if __name__ == "__main__":
     cache_setup.load_cache()
     application = app.Application()
     if options.action == 'updatesite':
-        logging.debug("In data setup")
+        log.debug("In data setup")
         updatesite(application)
     elif options.action == 'create_data':
         log.debug("in create_data call")

@@ -3,7 +3,7 @@ import datetime
 import json
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('demisauce')
 
 class QueryDict(dict):
     """Fake QueryDict like object, a Django monstrosity.

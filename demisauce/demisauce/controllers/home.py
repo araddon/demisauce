@@ -8,7 +8,7 @@ from demisauce.model import meta
 from demisauce.model.cms import *
 from demisauce.controllers import BaseHandler, RestMixin
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('demisauce')
 
 
 class HomeController(RestMixin,BaseHandler):

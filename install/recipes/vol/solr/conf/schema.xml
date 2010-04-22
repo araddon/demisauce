@@ -415,23 +415,25 @@
    <field name="object_id" type="string" indexed="false" stored="true" /> 
    <field name="region_id" type="int" indexed="true" stored="true" /> 
    <field name="many_id" type="int" indexed="true" stored="true" /> 
-   <field name="many_name" type="int" indexed="true" stored="true" /> 
+   <field name="many_name" type="text" indexed="true" stored="true" /> 
    <field name="category_id" type="int" indexed="true" stored="true" /> 
    <field name="in_stock" type="boolean" indexed="true" stored="true" />
    <field name="name" type="textgen" indexed="true" stored="true"/>
+   <!-- alternate storage of name with additional info: such as appending manufacturers name
+        to product name "Hero from HTC"  -->
+   <field name="name_alt" type="string" indexed="true" stored="true"/>
+   <field name="slug" type="string" indexed="false" stored="true"/>
    
    <!-- use type="string" so that it is exact match -->
    <field name="tags" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="cat" type="string" indexed="true" stored="true" multiValued="true" />
    <field name="meta" type="string" indexed="true" stored="true" multiValued="true"/>
-   <!-- Mark for deletion -->
-   <field name="producer_id" type="int" indexed="true" stored="true" /> 
-   <field name="producer" type="textgen" indexed="true" stored="true" omitNorms="true"/>
+
    
    <!-- non-tokenized version of item to make it easier to sort or group
-        results.  copied from "producer" via copyField -->
-   <field name="producer_exact" type="string" indexed="true" stored="false"/>
+        results.  copied from "name" via copyField -->
    <field name="name_exact" type="string" indexed="true" stored="false"/>
+   <field name="many_name_exact" type="string" indexed="true" stored="false"/>
    <field name="description" type="text" indexed="true" stored="true"/>
    <field name="comments" type="text" indexed="true" stored="true"/>
    
@@ -540,21 +542,18 @@
    <copyField source="cat" dest="text"/>
    <copyField source="description" dest="text"/>
    <copyField source="name" dest="text"/>
-   <copyField source="producer" dest="text"/>
    <copyField source="features" dest="text"/>
    <copyField source="tags" dest="text"/>
    <copyField source="includes" dest="text"/>
    
-   <copyField source="producer" dest="producer_exact"/>
    <copyField source="name" dest="name_exact"/>
+   <copyField source="many_name" dest="many_name_exact"/>
    
    <copyField source="cat" dest="textgen"/>
    <copyField source="name" dest="textgen"/>
-   <copyField source="producer" dest="textgen"/>
    <copyField source="features" dest="textgen"/>
    <copyField source="tags" dest="textgen"/>
    <copyField source="includes" dest="textgen"/>
-   <copyField source="producer" dest="textgen"/>
 	
    <!-- Above, multiple source fields are copied to the [text] field. 
 	  Another way to map multiple source fields to the same 

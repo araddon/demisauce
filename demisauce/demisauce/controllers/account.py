@@ -22,7 +22,7 @@ from demisauce.controllers import BaseHandler, RestMixin, SecureController, \
     send_emails, requires_admin
 from gearman.task import Task
 
-log = logging.getLogger("demisauce.web")
+log = logging.getLogger("demisauce")
 
 def google_auth_url(return_url):
     import urllib
@@ -64,7 +64,7 @@ class AccountController(RestMixin,BaseHandler):
             self.set_status(403)
     
     def options(self,action="",id=""):
-        logging.debug("in Account api OPTIONS action=%s" % action)
+        log.debug("in Account api OPTIONS action=%s" % action)
         if action in ['pre_init_user','init_user']:
             return
         else:
@@ -277,9 +277,9 @@ class AccountController(RestMixin,BaseHandler):
         User has selected to enter an email to be on waitinglist
         """
         
-        logging.debug(self.request.arguments)
+        log.debug(self.request.arguments)
         form = SignupForm(QueryDict(self.request.arguments))
-        logging.debug(form.data)
+        log.debug(form.data)
         if 'email' in self.request.arguments and form.validate():
             user = meta.DBSession.query(Person).filter_by(
                     email=self.get_argument("email").lower()).first()

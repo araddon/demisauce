@@ -9,7 +9,7 @@ from demisauce.model.activity import Activity
 from demisauce.model.site import Site
 from demisauce.controllers import BaseHandler, RestMixin, SecureController
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('demisauce')
 
 
 class DashboardController(RestMixin, SecureController):

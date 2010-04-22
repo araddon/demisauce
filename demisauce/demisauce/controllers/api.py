@@ -17,7 +17,8 @@ from gearman.task import Task
 from demisaucepy import cache, cache_setup
 from demisaucepy.serializer import is_json
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("demisauce")
+
 CACHE_DURATION = 600 if not options.debug else 10
 mailsrch = re.compile(r'[\w\-][\w\-\.]+@[\w\-][\w\-\.]+[a-zA-Z]{1,4}')
 
@@ -208,7 +209,7 @@ class ApiBaseHandler(BaseHandler):
             log.error("what went wrong, not valid %s" % o)
     
     def handle_post(self):
-        logging.debug("in handle post, args= %s, body=%s" % (self.request.arguments,self.request.body))
+        log.debug("in handle post, args= %s, body=%s" % (self.request.arguments,self.request.body))
         if self.is_json_post():
             log.debug("yes, json post")
             pyvals = json.loads(self.request.body)
@@ -230,10 +231,10 @@ class ApiBaseHandler(BaseHandler):
     
     def action_get_list(self,q=None):
         if not q:
-            logging.debug("In list.q limit = %s" % self.limit)
+            log.debug("In list.q limit = %s" % self.limit)
             qry = self.db.session.query(self.__class__.object_cls).limit(self.limit)
             if self.start > 0:
-                logging.debug("self.start = %s" % self.start)
+                log.debug("self.start = %s" % self.start)
                 qry = qry.offset(self.start)
         else:
             qry = self.db.session.query(self.__class__.object_cls).filter(
@@ -245,14 +246,14 @@ class ApiBaseHandler(BaseHandler):
             self.action_get_object(self.id)
         if self.object and hasattr(self.object,'delete'):
             url = self.cache_url()
-            logging.info("DELETE id=%s for url=%s" % (self.id,url))
+            log.info("DELETE id=%s for url=%s" % (self.id,url))
             self.object.delete()
             self.object = None
             self.qry = None
             self.set_status(204)
             cache.cache.delete(cache.cache_key(url))
         else:
-            logging.error("not found?   %s, %s" % (self.noun, self.id))
+            log.error("not found?   %s, %s" % (self.noun, self.id))
     
     def nonresponse(self,status_code):
         self.set_status(status_code)
@@ -265,13 +266,13 @@ class ApiBaseHandler(BaseHandler):
         if self.id and self.id == 'list' and self.action == 'list':
             self.action_get_list(q=self.q)
         elif self.id and self.action == 'get':
-            logging.debug("do_get, id=%s,action=%s" % (self.id,self.action))
+            log.debug("do_get, id=%s,action=%s" % (self.id,self.action))
             self.action_get_object(self.id)
         elif hasattr(self,self.action):
-            logging.debug("custom action = %s" % self.action)
+            log.debug("custom action = %s" % self.action)
             getattr(self,self.action)()
         else:
-            logging.debug("get_object %s" % self.id)
+            log.debug("get_object %s" % self.id)
             self.action_get_object(self.id)
         if self.object is None and self.qry == [] and self._status_code == 200:
             self.set_status(404)
@@ -281,7 +282,7 @@ class ApiBaseHandler(BaseHandler):
             getattr(self,"%s_POST" % self.action)()
         elif self.action not in ['list','get','post','all','json','delete'] and \
                 hasattr(self,self.action):
-            logging.debug("POST %s" % self.action)
+            log.debug("POST %s" % self.action)
             getattr(self,self.action)()
         else:
             self.handle_post()
@@ -339,25 +340,25 @@ class ApiBaseHandler(BaseHandler):
     
     def get(self,noun=None,requestid='all',action=None,format="json"):
         self.normalize_args(noun, requestid,action,format)
-        logging.debug("API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s, args=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit,str(self.request.arguments)))
+        log.debug("API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s, args=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit,str(self.request.arguments)))
         self.do_get()
-        logging.debug("in get status = %s" % (self._status_code))
+        log.debug("in get status = %s" % (self._status_code))
         self.render_to_format()
     
     def post(self,noun=None,requestid='all',action=None,format="json"):
         self.normalize_args(noun, requestid,action,format)
-        logging.debug("POST API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit))
+        log.debug("POST API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit))
         self.do_post()
         self.render_to_format()
     
     def put(self,noun=None,requestid='all',action=None,format="json"):
         self.normalize_args(noun, requestid,action,format)
-        logging.debug("PUT API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit))
+        log.debug("PUT API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit))
         self.do_post()
         self.render_to_format()
     
     def delete(self,noun=None,requestid='all',action=None,format="json"):
-        logging.info("in DELETE")
+        log.info("in DELETE")
         self.normalize_args(noun, requestid,action,format)
         self.do_delete()
         self.render_to_format()
@@ -414,7 +415,7 @@ class ActivityApiHandler(ApiBaseHandler):
         super(ActivityApiHandler,self).post('activity',requestid,'addupdate',format=format)
     
     def options(self,site_slug='',format='json'):
-        logging.debug("in activity api OPTIONS")
+        log.debug("in activity api OPTIONS")
     
 
 class TemplateApiHandler(ApiSecureHandler):
@@ -423,24 +424,24 @@ class TemplateApiHandler(ApiSecureHandler):
         if type(id) == int and id > 0:
             self.object = Template.get(site_id=self.site.id,id=id) 
         elif id == 0 and data_dict.has_key('slug'):
-            logging.debug("they asked for id = 0, lets ignore and doublecheck slug = %s" % data_dict['slug'])
+            log.debug("they asked for id = 0, lets ignore and doublecheck slug = %s" % data_dict['slug'])
             self.object = Template.by_slug(site_id=self.site.id,slug=data_dict['slug'])  
             if self.object:
-                logging.debug("found object, sweet!  %s" % self.object.id)
+                log.debug("found object, sweet!  %s" % self.object.id)
         else:
-            logging.debug("trying to get by slug %s" % (id))
+            log.debug("trying to get by slug %s" % (id))
             self.object = Template.by_slug(site_id=self.site.id,slug=id)  
         if self.object:
             self.qry = [self.object]
         else:
             self.set_status(404)
-            logging.error("no email %s, status=%s" % (self.id, self._status_code))
+            log.error("no email %s, status=%s" % (self.id, self._status_code))
     
     def send(self):
-        logging.error("in send of email api")
+        log.error("in send of email api")
         emailjson = json.loads(self.request.body)
         if emailjson and 'template_name' in emailjson:
-            logging.error("weehah, body json = %s" % emailjson)
+            log.error("weehah, body json = %s" % emailjson)
             #TODO:  revamp and use self.db.gearman_client
             gearman_client = GearmanClient(options.gearman_servers)
             gearman_client.do_task(Task("email_send",self.request.body, background=True))
@@ -459,7 +460,7 @@ class TemplateApiHandler(ApiSecureHandler):
                 Template.name.like('%' + q + '%'),Template.site_id==self.site.id))
         else:
             qry = Template.all(site_id=self.site.id)
-            logging.debug("in email list, qry = %s" % qry)
+            log.debug("in email list, qry = %s" % qry)
         self.qry = qry
     
 
@@ -469,21 +470,21 @@ class PersonAnonApi(ApiBaseHandler):
         # Need site?   
         ds_id = self.id
         site_key = self.db.cache.get(str(ds_id))
-        logging.debug("init_user ds_id,site_key = %s = %s" % (ds_id,site_key))
+        log.debug("init_user ds_id,site_key = %s = %s" % (ds_id,site_key))
         if site_key:
             site = Site.by_apikey(str(site_key))
             if site:
                 user = Person.get(site.id,ds_id)
                 if not user:
-                    logging.error("user not found? id = %s" % ds_id)
+                    log.error("user not found? id = %s" % ds_id)
             else:
-                logging.error("no site? %s" % ds_id)
+                log.error("no site? %s" % ds_id)
                 
             self.set_current_user(user,is_authenticated = True)
-            logging.debug("tried to init_user succeeded")
+            log.debug("tried to init_user succeeded")
             self.set_status(204) # succuess, no content
         else:
-            logging.error("tried to init_user failed ds_id = %s, url=%s" % (ds_id,self.request.full_url()))
+            log.error("tried to init_user failed ds_id = %s, url=%s" % (ds_id,self.request.full_url()))
             self.set_status(400)
             self.write("{'status':'failure'}")
     
@@ -527,7 +528,7 @@ class PersonApiHandler(ApiSecureHandler):
             self.qry = None
             self.set_status(204)
         else:
-            logging.error("not found?   %s, %s" % (self.noun, self.id))
+            log.error("not found?   %s, %s" % (self.noun, self.id))
     
     def action_get_object(self,id, data_dict = {}):
         if isinstance(self.id,int) and self.id > 0:
@@ -582,10 +583,10 @@ class PersonApiHandler(ApiSecureHandler):
                 user_dict = json.loads(self.request.body)
             else:
                 user_dict = self.args_todict()
-            logging.debug("Loaded data user_dict=%s" % user_dict)
+            log.debug("Loaded data user_dict=%s" % user_dict)
             self.action_get_object(self.id, user_dict)
             if not self.object:
-                logging.debug("creating new user, not found %s dict=%s" % (self.id,user_dict))
+                log.debug("creating new user, not found %s dict=%s" % (self.id,user_dict))
                 self.object = Person(site_id=self.site.id,foreign_id=self.id)
             if self.object:
                 self.object.from_dict(user_dict,allowed_keys=Person._allowed_api_keys)
@@ -596,16 +597,16 @@ class PersonApiHandler(ApiSecureHandler):
         
         if self.object:
             user_key = self.object.id
-            logging.debug("setting cache = %s, %s" % (str(user_key),self.site.key))
+            log.debug("setting cache = %s, %s" % (str(user_key),self.site.key))
             self.db.cache.set(str(user_key),self.site.key,120) # 2 minutes only
             site_key = self.db.cache.get(str(user_key))
-            logging.debug("site_key, self.site.key = %s, %s" % (site_key, self.site.key))
+            log.debug("site_key, self.site.key = %s, %s" % (site_key, self.site.key))
             assert site_key == self.site.key
             
             self.qry = [self.object]
     
     def options(self,site_slug='',format='json'):
-        logging.debug("in person api OPTIONS")
+        log.debug("in person api OPTIONS")
     
 
 class ServiceApiHandler(ApiSecureHandler):
@@ -622,7 +623,7 @@ class ServiceApiHandler(ApiSecureHandler):
             self.qry = [self.object]
         else:
             self.set_status(404)
-            logging.error("no service %s for %s" % (self.id,self.request.full_url()))
+            log.error("no service %s for %s" % (self.id,self.request.full_url()))
     
     def json_formatter(self,o):
         if o:
@@ -642,7 +643,7 @@ class ServiceApiHandler(ApiSecureHandler):
                 Service.name.like('%' + q + '%'),Service.list_public==True))
         else:
             qry = self.db.session.query(Service).filter(Service.list_public==True)
-            logging.debug("in services list, qry = %s" % qry)
+            log.debug("in services list, qry = %s" % qry)
         self.qry = qry
     
 
@@ -661,7 +662,7 @@ class AppApiHandler(ApiSecureHandler):
             self.qry = [self.object]
         else:
             self.set_status(404)
-            logging.error("no service %s" % self.id)
+            log.error("no service %s" % self.id)
     
     def json_formatter(self,o):
         if o:
@@ -681,7 +682,7 @@ class AppApiHandler(ApiSecureHandler):
                 App.name.like('%' + q + '%'),App.list_public==True))
         else:
             qry = self.db.session.query(App).filter(App.list_public==True)
-            logging.debug("in services list, qry = %s" % qry)
+            log.debug("in services list, qry = %s" % qry)
         self.qry = qry
     
 
@@ -698,16 +699,16 @@ class SiteApiHandler(ApiSecureHandler):
             if type(id) == int and id > 0:
                 self.object = Site.saget(id) 
             elif type(id) == int and id == 0 and 'slug' in data_dict:
-                logging.debug("they asked for id = 0, lets ignore and doublecheck slug = %s" % data_dict['slug'])
+                log.debug("they asked for id = 0, lets ignore and doublecheck slug = %s" % data_dict['slug'])
                 self.object = Site.by_slug(data_dict['slug'])
             else:
-                logging.debug("they asked for id = %s, lets ignore and doublecheck slug" % (self.id))
+                log.debug("they asked for id = %s, lets ignore and doublecheck slug" % (self.id))
                 self.object = Site.by_slug(self.id)   
             if self.object:
                 self.qry = [self.object]
             else:
                 self.set_status(404)
-                logging.error("no site %s, status=%s" % (self.id, self._status_code))
+                log.error("no site %s, status=%s" % (self.id, self._status_code))
         
     
     def json_formatter(self,o):
@@ -734,7 +735,7 @@ class SiteApiHandler(ApiSecureHandler):
                 Service.name.like('%' + q + '%'),Service.list_public==True))
         else:
             qry = self.db.session.query(Service).filter(Service.list_public==True)
-            logging.debug("in services list, qry = %s" % qry)
+            log.debug("in services list, qry = %s" % qry)
         self.qry = qry
     
 
@@ -749,7 +750,7 @@ class ObjectApiHandler(ApiSecureHandler):
             self.qry = None
             self.set_status(204)
         else:
-            logging.error("not found?   %s, %s" % (self.noun, self.id))
+            log.error("not found?   %s, %s" % (self.noun, self.id))
     
     def object_load_dict(self,o,data_dict):
         'http post handle args'
@@ -765,10 +766,10 @@ class ObjectApiHandler(ApiSecureHandler):
     
     def posts(self,q=None):
         if not q:
-            logging.debug("In posts.q limit = %s" % self.limit)
+            log.debug("In posts.q limit = %s" % self.limit)
             qry = self.db.session.query(Object).filter(Object.post_type=='post').options(eagerload('person')).limit(self.limit)
             if self.start > 0:
-                logging.debug("self.start = %s" % self.start)
+                log.debug("self.start = %s" % self.start)
                 qry = qry.offset(self.start)
         else:
             qry = self.db.session.query(self.__class__.object_cls).filter(
@@ -777,10 +778,10 @@ class ObjectApiHandler(ApiSecureHandler):
     
     def action_get_list(self,q=None):
         if not q:
-            logging.debug("In list.q limit = %s" % self.limit)
+            log.debug("In list.q limit = %s" % self.limit)
             qry = self.db.session.query(Object).options(eagerload('person')).limit(self.limit)
             if self.start > 0:
-                logging.debug("self.start = %s" % self.start)
+                log.debug("self.start = %s" % self.start)
                 qry = qry.offset(self.start)
         else:
             qry = self.db.session.query(self.__class__.object_cls).filter(
@@ -802,17 +803,17 @@ class ObjectApiHandler(ApiSecureHandler):
         elif isinstance(id,int) and id == 0:
             pass
         else:
-            logging.debug("calling by_slug = %s" % (id))
+            log.debug("calling by_slug = %s" % (id))
             self.object = Object.by_slug(site_id=self.site.id,slug=id)  
         
-        #logging.debug('METHOD: %s' % self.request)
+        #log.debug('METHOD: %s' % self.request)
         if self.object:
             self.qry = [self.object]
         elif self.request.method in ('POST','PUT','DELETE'):
             self.qry = []
         elif self.request.method == 'GET':
             self.set_status(404)
-            logging.error("no object %s" % self.id)
+            log.error("no object %s" % self.id)
     
 
 class GroupApiHandler(ApiSecureHandler):
@@ -838,13 +839,13 @@ class GroupApiHandler(ApiSecureHandler):
         if self.object:
             self.qry = [self.object]
         else:
-            logging.error("no Group %s" % self.id)
+            log.error("no Group %s" % self.id)
     
     def send(self):
-        logging.error("in send of email api")
+        log.error("in send of email api")
         emailjson = json.loads(self.request.body)
         if emailjson and 'template_name' in emailjson:
-            logging.error("weehah, body json = %s" % emailjson)
+            log.error("weehah, body json = %s" % emailjson)
             #TODO:  revamp and use self.db.gearman_client
             gearman_client = GearmanClient(options.gearman_servers)
             gearman_client.do_task(Task("email_send",self.request.body, background=True))
@@ -866,24 +867,24 @@ class GroupApiHandler(ApiSecureHandler):
                 Group.name.like('%' + q + '%'),Template.site_id==self.site.id))
         else:
             qry = self.db.session.query(Group).filter(Template.site_id==self.site.id)
-            logging.debug("in group list, qry = %s" % qry)
+            log.debug("in group list, qry = %s" % qry)
         self.qry = qry
     
 
 class HookApiHandler(BaseHandler):
     def _do_proxy(self,*args,**kwargs):
-        logging.debug("PROXY %s *args, **kwargs = %s, %s" % (kwargs['method'],args,kwargs))
-        logging.debug("PROXY %s %s, body=%s" % (kwargs['method'],self.request.arguments,self.request.body))
+        log.debug("PROXY %s *args, **kwargs = %s, %s" % (kwargs['method'],args,kwargs))
+        log.debug("PROXY %s %s, body=%s" % (kwargs['method'],self.request.arguments,self.request.body))
         http = tornado.httpclient.HTTPClient()
         response = http.fetch("http://192.168.1.43/blog/xmlrpc.php",
             method=kwargs['method'],
             headers=self.request.headers, 
             body=self.request.body)
-        logging.debug(str(response))
+        log.debug(str(response))
         self.write(response.body)
     
     def get(self,*args):
-        logging.debug("HOOK?PROXY GET *args, **kwargs = %s" % (str(args)))
+        log.debug("HOOK?PROXY GET *args, **kwargs = %s" % (str(args)))
         if args and len(args) > 0 and 'proxy' == args[0]:
             self._do_proxy(*args,method='GET')
         else:
@@ -893,7 +894,7 @@ class HookApiHandler(BaseHandler):
         if args and len(args) > 0 and 'proxy' == args[0]:
             self._do_proxy(*args,method="POST")
         else:
-            logging.debug("POST %s" % self.request.arguments)
+            log.debug("POST %s" % self.request.arguments)
         
     
 
@@ -905,7 +906,7 @@ class PubSubApiHandler(ApiBaseHandler):
         # http://www.smugmug.com/hack/feed.mg?Type=keyword&Data=locifood&format=atom10
         # http://api.flickr.com/services/feeds/photos_public.gne?tags=locifood&lang=en-us&format=rss_200
         
-        logging.debug("API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit))
+        log.debug("API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit))
         #http://dev.demisauce.com/api/pubsub/?apikey=c97933249d23a72362ec0f3da09b2c60
         action = self.get_argument("hub.mode",None)
         if action in ('subscribe','unsubscribe'):
@@ -919,7 +920,7 @@ class PubSubApiHandler(ApiBaseHandler):
         #hub.challenge=c5ee7a111126fdddc42e89ddf3fb3aad
         #hub.mode=subscribe
         pass
-        logging.debug("in get status = %s" % (self._status_code))
+        log.debug("in get status = %s" % (self._status_code))
         #self.render_to_format()
     
     def action_get_list(self,q=None):
@@ -928,10 +929,10 @@ class PubSubApiHandler(ApiBaseHandler):
     
     def posts(self,q=None):
         if not q:
-            logging.debug("In posts.q limit = %s" % self.limit)
+            log.debug("In posts.q limit = %s" % self.limit)
             qry = self.db.session.query(Object).filter(Object.post_type=='post').options(eagerload('person')).limit(self.limit)
             if self.start > 0:
-                logging.debug("self.start = %s" % self.start)
+                log.debug("self.start = %s" % self.start)
                 qry = qry.offset(self.start)
         else:
             qry = self.db.session.query(self.__class__.object_cls).filter(
@@ -944,17 +945,17 @@ class PubSubApiHandler(ApiBaseHandler):
         elif isinstance(id,int) and self.id == 0:
             pass
         else:
-            logging.debug("calling by_slug = %s" % (id))
+            log.debug("calling by_slug = %s" % (id))
             self.object = Object.by_slug(site_id=self.site.id,slug=id)  
         
-        logging.debug('METHOD: %s' % dir(self.request))
+        log.debug('METHOD: %s' % dir(self.request))
         if self.object:
             self.qry = [self.object]
         elif self.request.method in ('POST','PUT','DELETE'):
             self.qry = []
         elif self.request.method == 'GET':
             self.set_status(404)
-            logging.error("no object %s" % self.id)
+            log.error("no object %s" % self.id)
     
 
 

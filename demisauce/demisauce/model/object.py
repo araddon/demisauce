@@ -7,6 +7,8 @@ from demisauce.model import meta, ModelBase, site, SerializationMixin
 from datetime import datetime
 import json
 
+log = logging.getLogger("demisauce")
+
 # Define a table.
 object_table = Table("object", meta.metadata,
         Column("id", Integer, primary_key=True),
@@ -30,9 +32,10 @@ class Object(ModelBase,SerializationMixin):
     
     def from_dict(self,json_dict={},allowed_keys=None):
         new_dict = json_dict
-        new_dict.pop('apikey')
+        if 'apikey' in new_dict:
+            new_dict.pop('apikey')
         json_dict.update({'json':json.dumps(new_dict)})
-        super(Object, self).from_dict(json_dict=json_dict,allowed_keys=allowed_keys)
+        super(Object, self).from_dict(json_dict,allowed_keys=allowed_keys)
     
     @classmethod
     def all(cls,site_id=0):
@@ -41,6 +44,6 @@ class Object(ModelBase,SerializationMixin):
     @classmethod
     def by_slug(cls,site_id=0,slug=''):
         qry = meta.DBSession.query(Object).filter_by(site_id=site_id,slug=slug)
-        #logging.debug('qry = %s, slug="%s"' % (qry,slug))
+        #log.debug('qry = %s, slug="%s"' % (qry,slug))
         return qry.first()
     

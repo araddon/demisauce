@@ -14,19 +14,19 @@ from demisauce.model.user import Person
 from demisauce.model.site import Site
 from demisauce.model.template import Template
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('demisauce')
 
 class SiteForm(Form):
     def validate_email(form, field):
         s = meta.DBSession().query(Site).filter(Site.email == field.data).first()
         if s and s.id != int(form.id.data):
-            logging.debug("duplicate email in site s.email=%s, field.data=%s" % (s.email,field.data))
+            log.debug("duplicate email in site s.email=%s, field.data=%s" % (s.email,field.data))
             raise ValidationError(u'That Email is already in use, choose another')
     
     def validate_slug(form, field):
         f = meta.DBSession().query(Site).filter(Site.slug == field.data).first()
         if f and f.id != int(form.id.data):
-            logging.debug("dupe slug: form.slug.data:  %s, f.id=%s, field.data=%s" % (form.slug.data,f.id,field.data))
+            log.debug("dupe slug: form.slug.data:  %s, f.id=%s, field.data=%s" % (form.slug.data,f.id,field.data))
             raise ValidationError(u'That slug is already in use, choose another')
     
     email           = TextField('Email', [validators.Email()])
@@ -45,17 +45,16 @@ class SiteController(RestMixin,BaseHandler):
     
     def view(self,id = 0):
         id = int(id) if id is not None else 0
-        logging.debug("in site view id= %s" % (id))
+        log.debug("in site view id= %s" % (id))
         if id > 0 and (self.user is not None) and self.user.issysadmin:
             item = Site.saget(id)
-        elif (id is None or id == 0) or (self.user and self.user.site_id == id):
+        elif self.user and ((id is None or id == 0) or (self.user.site_id == id)):
             item = Site.get(-1,self.user.site_id)
         else:
             item = Site.get(-1,id)
             if not item.public:
                 item = None
-        user = Person.get(self.current_user.site_id,self.current_user.id)
-        self.render('site/site.html',viewing_user=user,item=item)
+        self.render('site/site.html',viewing_user=self.user,item=item)
     
     @requires_admin
     def cmntconfig(self):
@@ -79,7 +78,7 @@ class SiteController(RestMixin,BaseHandler):
         elif id > 0 and self.user.issysadmin:
             item = meta.DBSession.query(Site).get(id)
         form = SiteForm(QueryDict(self.request.arguments),item)
-        logging.debug("form.name.data %s" % (form.name.data))
+        log.debug("form.name.data %s" % (form.name.data))
         self.render('/site/site_edit.html',item=item,form=form)
     
     @requires_admin
@@ -98,7 +97,7 @@ class SiteController(RestMixin,BaseHandler):
                 
             else:
                 site.name = form.name.data
-                logging.debug("description pre sanitize = %s" % form.description.data)
+                log.debug("description pre sanitize = %s" % form.description.data)
                 site.description = sanitize.sanitize(form.description.data)
                 site.email = form.email.data
                 site.slug = self.get_argument('real_permalink')
@@ -115,8 +114,8 @@ class SiteController(RestMixin,BaseHandler):
                 
             
         else:
-            logging.error(form.errors)
-            logging.error("There was an Error site=%s  form.data%s" % (site,form.data))
+            log.error(form.errors)
+            log.error("There was an Error site=%s  form.data%s" % (site,form.data))
             self.add_error("There was an Error")
             return self.render('/site/site_edit.html',item=site,form=form)
         return self.redirect('/site/view?msg=Site+Updated')

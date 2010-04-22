@@ -24,6 +24,8 @@ from demisauce.lib import helpers
 from demisauce.appbase import AppBase
 
 
+log = logging.getLogger("demisauce")
+
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 PROJECT_ROOT = os.path.realpath(SITE_ROOT + '/../../' )
 if "/Users" in SITE_ROOT:
@@ -53,7 +55,7 @@ class Application(tornado.web.Application):
         memcache_cache = MemcacheCache(options.memcached_servers)
         self.db = model.get_database(cache=memcache_cache)
         
-        logging.debug("gearman_servers = %s" % options.gearman_servers)
+        log.debug("gearman_servers = %s" % options.gearman_servers)
         settings = {
             "title": u"Local 151",
             "template_path": template_path,

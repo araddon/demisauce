@@ -5,7 +5,7 @@ import json
 #from demisauce.model import mapping, meta
 #from demisauce.model.user import Person
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('demisauce')
 """
 ok, overall design:
 
@@ -117,7 +117,7 @@ class FilterList(object):
     
     def __getitem__(self, context):
         """Indexor to find a filter"""
-        logging.debug("in __getitem__ filters, context = %s, filters=%s" % (context,self.filters))
+        log.debug("in __getitem__ filters, context = %s, filters=%s" % (context,self.filters))
         if type(context) == int and context == 0:
             raise Exception("what the hell")
         if context in self.filters:

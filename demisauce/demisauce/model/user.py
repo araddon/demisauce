@@ -22,7 +22,7 @@ from demisauce.model.activity import Activity
 from demisauce.model import ModelBase, SerializationMixin
 from datetime import datetime
 
-log = logging.getLogger("demisauce.model")
+log = logging.getLogger("demisauce")
 
 # Person 
 person_table = Table("person", meta.metadata,
@@ -76,7 +76,7 @@ class SignupForm(Form):
     def validate_email(form, field):
         f = meta.DBSession().query(Person).filter(Person.email == field.data).first()
         if f:
-            logging.debug("f.email=%s, field.data=%s" % (f.email,field.data))
+            log.debug("f.email=%s, field.data=%s" % (f.email,field.data))
             raise ValidationError(u'That Email is already in use, choose another')
     email           = TextField('Email', [validators.Email()])
 
@@ -96,7 +96,7 @@ class ProducerForm(Form):
     def validate_slug(form, field):
         f = model.gsession().query(model.Producer).filter(model.Producer.slug == field.data).first()
         if f and f.id != int(form.id.data):
-            logging.debug("form.id.data:  %s, f.id=%s, field.data=%s" % (form.id.data,f.id,field.data))
+            log.debug("form.id.data:  %s, f.id=%s, field.data=%s" % (form.id.data,f.id,field.data))
             raise ValidationError(u'That slug is already in use, choose another')
     password        = PasswordField('New Password')
     password2       = PasswordField('Confirm Password', [validators.Required(), validators.EqualTo('password', message='Passwords must match')])

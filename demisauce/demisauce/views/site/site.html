@@ -40,7 +40,7 @@
                 </div>
             </div>
             <div class="yui-u">
-                   {% if viewing_user is defined and item.id == viewing_user.site.id %}
+                   {% if viewing_user and item.id == viewing_user.site.id %}
                         <div class="box box2">
                             <h3 style="">Users</h3>
                            {% if item and item.users %}

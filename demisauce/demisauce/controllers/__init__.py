@@ -19,7 +19,7 @@ import base64
 from functools import wraps
 from decorator import decorator
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('demisauce')
 
 def requires_authn(method):
     """Decorate methods with this to require that the user be logged in"""
@@ -47,7 +47,7 @@ def requires_admin(method):
                 url = self.get_login_url()
                 if "?" not in url:
                     url += "?" + urllib.urlencode(dict(next=self.request.uri))
-                logging.debug("not current_uesr, redirect to url %s" % url)
+                log.debug("not current_uesr, redirect to url %s" % url)
                 self.redirect(url)
                 return
             raise tornado.web.HTTPError(403)
@@ -69,7 +69,7 @@ def requires_sysadmin(method):
                 url = self.get_login_url()
                 if "?" not in url:
                     url += "?" + urllib.urlencode(dict(next=self.request.uri))
-                logging.debug("not current_uesr, redirect to url %s" % url)
+                log.debug("not current_uesr, redirect to url %s" % url)
                 self.redirect(url)
                 return
             raise tornado.web.HTTPError(403)
@@ -187,19 +187,19 @@ class BaseHandler(tornado.web.RequestHandler):
     #@print_timing
     def __init__(self, application, request, transforms=None):
         tornado.web.RequestHandler.__init__(self, application, request, transforms=transforms)
-        logging.debug("%s path %s class=%s__init__" % (self.request.method.upper(), 
+        log.debug("%s path %s class=%s__init__" % (self.request.method.upper(), 
             self.request.path,self.__class__))
-        #logging.debug('headers = %s' % self.request.headers)
+        #log.debug('headers = %s' % self.request.headers)
         self.session = {}
         self._messages = []
         self.msg_errors = []
         self.msg_alerts = []
         self.form_errors = []
         next = ""
-        #logging.debug("user-agent:  %s" % self.request.headers['User-Agent'])
-        #logging.debug("RemoteIP = %s" % request.remote_ip )
+        #log.debug("user-agent:  %s" % self.request.headers['User-Agent'])
+        #log.debug("RemoteIP = %s" % request.remote_ip )
         if self.get_argument("next",None) is not None:
-            logging.debug(urllib.urlencode({"next":self.get_argument("next","")}))
+            log.debug(urllib.urlencode({"next":self.get_argument("next","")}))
             next = urllib.urlencode({"next":self.get_argument("next","")})
         
         self.site = self.get_current_site()
@@ -229,7 +229,7 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         """get current user"""
         if not hasattr(self,"_current_user") or self.get_argument("reload",None):
-            #logging.debug("get_current_user:  no _current_user attr, finding")
+            #log.debug("get_current_user:  no _current_user attr, finding")
             user_cookie = self.get_secure_cookie("dsuser")
             if not user_cookie: return None
             self._user_json = tornado.escape.json_decode(user_cookie)
@@ -239,7 +239,7 @@ class BaseHandler(tornado.web.RequestHandler):
             if self.get_argument("reload",None):
                 redis_user_json = None
             else:
-                #logging.debug("get_current_user: found cookie, getting user from cache")
+                #log.debug("get_current_user: found cookie, getting user from cache")
                 redis_user_json = self.db.redis.get("DS-person-%s" % self._user_json['id'])
             
             if not redis_user_json:
@@ -258,9 +258,9 @@ class BaseHandler(tornado.web.RequestHandler):
                 self._current_user = p.from_json(redis_user_json)
             else:
                 self._current_user = None
-                logging.error("Critical error get_current_user() no redis_user_json user_json=%s" % self._user_json)
+                log.error("Critical error get_current_user() no redis_user_json user_json=%s" % self._user_json)
         
-        #logging.debug(self._user_json)
+        #log.debug(self._user_json)
         if not self._current_user: return None
         
         # set is authenticated/not flag, make sure not to persist this other than cookie
@@ -289,7 +289,7 @@ class BaseHandler(tornado.web.RequestHandler):
     
     def set_current_user(self,sauser,remember_me = False,is_authenticated = False, islogon=True):
         """Set the current user into current request and persistence"""
-        logging.debug("set_current_user ")
+        log.debug("set_current_user ")
         if islogon:
             sauser.last_login = datetime.datetime.now()
             sauser.save()
@@ -309,12 +309,12 @@ class BaseHandler(tornado.web.RequestHandler):
         
         # don't add this is_authenticated to redis!!! Or memcached, use cookie
         user_dict.update({"is_authenticated":is_authenticated})
-        logging.debug("set_current_user:  user_hash = %s" % user_dict)
+        log.debug("set_current_user:  user_hash = %s" % user_dict)
         self.set_secure_cookie("dsuser", tornado.escape.json_encode(user_dict)) #,domain=options.demisauce_domain
         self.set_secure_cookie("dsuser", tornado.escape.json_encode(user_dict),domain='blog.demisauce.com')
         self.set_cookie("dsuserkey",sauser.user_uniqueid)
         user_json = sauser.to_json()
-        #logging.error("set_current_user: about to put into redis:  %s" % user_json)
+        #log.error("set_current_user: about to put into redis:  %s" % user_json)
         self._current_user = Person().from_json(user_json)
         self.user = self._current_user
         self._user_json = user_dict
@@ -354,8 +354,8 @@ class BaseHandler(tornado.web.RequestHandler):
     
     def get_error_html(self, status_code,exception=None):
         """Custom UI error handler"""
-        logging.error("in get_error_html %s, method=%s" % (status_code,self.request.method))
-        logging.error("In get error template vals = %s" % self.template_vals)
+        log.error("in get_error_html %s, method=%s" % (status_code,self.request.method))
+        log.error("In get error template vals = %s" % self.template_vals)
         return self.render_string("error.html",code=status_code,
             message=httplib.responses[status_code],**self.template_vals)
     
@@ -455,11 +455,11 @@ class RestMixin(object):
             raise tornado.web.HTTPError(404)
     
     def get(self,action='default',id=0, **kwargs):
-        logging.debug("RestMixin.get  action %s" % (action))
+        log.debug("RestMixin.get  action %s" % (action))
         self._do_method(method="GET",action=action,id=id,**kwargs)
     
     def post(self,action='default',id=0,**kwargs):
-        logging.debug("POST action = %s" % action)
+        log.debug("POST action = %s" % action)
         self._do_method(method="POST",action=action,id=id,**kwargs)
     
 
@@ -506,7 +506,7 @@ class UploadHandler(BaseHandler):
     def post(self):
         if 'photo' in self.request.arguments:
             filewpath = assets.stash_file(self.get_argument('photo'))
-            logging.debug("Uploaded from mobile app: %s" % filewpath)
+            log.debug("Uploaded from mobile app: %s" % filewpath)
             self.write("{filename:'%s', status: 'success'}" % (filewpath))
         else:
             f = self.request.files['userfile'][0]
@@ -515,7 +515,7 @@ class UploadHandler(BaseHandler):
             #if 'crop' in self.request.arguments: args['crop'] self.get_argument("crop")
             if args != {}:
                 args = json.loads(args)
-            logging.debug("upladed file:  %s  type=%s, args=%s" % (f['filename'],f['content_type'],self.get_argument("args",{})))
+            log.debug("upladed file:  %s  type=%s, args=%s" % (f['filename'],f['content_type'],self.get_argument("args",{})))
             #TODO:  Check that it is image type first eh
             filewpath = assetmgr.stash_file(base64.encodestring(f['body']),f['filename'],
                     gearman_client=self.db.gearman_client,args=args)
@@ -537,7 +537,7 @@ class CustomErrorHandler(BaseHandler):
     
     def get(self):
         self.set_status(self.error_code)
-        logging.error("ErrorHandler:  code=%s, path=%s" % (self.error_code,self.request.path) )
+        log.error("ErrorHandler:  code=%s, path=%s" % (self.error_code,self.request.path) )
         self.render("error.html",code=self.error_code,
             message=httplib.responses[self.error_code])
     

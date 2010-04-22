@@ -75,7 +75,7 @@ class ServiceDefinition(object):
         if api_key == None:
             self.api_key = options.demisauce_api_key
         if base_url == None:
-            #logging.debug("setting base url == %s" % options.demisauce_url)
+            #log.debug("setting base url == %s" % options.demisauce_url)
             self.base_url = options.demisauce_url
     
     def substitute_args(self,pattern,data={},request=''):
@@ -149,7 +149,7 @@ class ServiceDefinition(object):
         if response.json and len(response.json) == 1:
             jsondata = response.json[0]
         else:
-            logging.error("Json return len sould be 1 %s" % response.json)
+            log.error("Json return len sould be 1 %s" % response.json)
             raise Exception("Json return len sould be 1 %s" % response.json)
         self.isdefined = True
         if jsondata and 'url' in jsondata:
@@ -268,11 +268,11 @@ class GAEXMLRPCTransport(object):
                                       headers={'Content-Type': 'text/xml'})
         except:
             msg = 'Failed to fetch %s' % url
-            logging.error(msg)
+            log.error(msg)
             raise xmlrpclib.ProtocolError(host + handler, 500, msg, {})
         
         if response.status_code != 200:
-            logging.error('%s returned status code %s' %
+            log.error('%s returned status code %s' %
                           (url, response.status_code))
             raise xmlrpclib.ProtocolError(host + handler,
                                           response.status_code,
@@ -478,7 +478,7 @@ class ServiceClient(ServiceClientBase):
                         #log.debug("loaded json data = %s" % (self.response.body))
                         self.response.load()
                     except:
-                        logging.error("error parsing json? %s" % self.response.body)
+                        log.error("error parsing json? %s" % self.response.body)
                         self.response.json = None
                 
                 if cache is not None and self.use_cache and self.response.status in SUCCESS_STATUS:

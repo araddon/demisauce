@@ -29,5 +29,5 @@ Television, Televisions, TV, TVs
 # Synonym mappings can be used for spelling correction too
 pixima => pixma
 #
-#csa, community supported agriculture, CSA
+csa, community supported agriculture, CSA
 

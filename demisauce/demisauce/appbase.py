@@ -8,6 +8,8 @@ from demisaucepy.cache import DummyCache, MemcacheCache
 import demisauce
 from demisauce import model
 
+log = logging.getLogger("demisauce")
+
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -23,5 +25,5 @@ class AppBase():
         memcache_cache = MemcacheCache(options.memcached_servers)
         # Have one global connection to the DB across app
         self.db = model.get_database(cache=memcache_cache)
-        logging.debug("gearman_servers = %s" % options.gearman_servers)
+        log.debug("gearman_servers = %s" % options.gearman_servers)
 

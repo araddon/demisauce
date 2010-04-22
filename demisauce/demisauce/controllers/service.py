@@ -17,7 +17,7 @@ from demisauce.model.site import Site
 from demisauce.model.template import Template
 from demisauce.model.service import Service, App
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('demisauce')
 
 
 class ServiceFilter(Filter):
@@ -54,12 +54,12 @@ def app_list(site_id):
 class ServiceController(RestMixin,BaseHandler):
     def __before__(self):
         super(ServiceController, self).__before__()
-        logging.debug("In __before__")
+        log.debug("In __before__")
         app_list = [['','']]
         self.other = []
         if not hasattr(self,'filters'):
             #self.db.cache.delete("filters-personid-%s" % self.current_user.id)
-            logging.debug("Creating filter list, passing info")
+            log.debug("Creating filter list, passing info")
             self.filters = FilterList(cache=self.db.cache,person_id=self.current_user.id if self.current_user else 0)
         self.filters.context = 'service'
         if self.filters.current() == None:
@@ -95,7 +95,7 @@ class ServiceController(RestMixin,BaseHandler):
     
     #@requires_admin
     def index(self,id=id):
-        logging.debug("in index start")
+        log.debug("in index start")
         services = Service.all().filter_by(list_public=1)
         recent = Service.recent_updates(5)
         self.render('service/service.html',services=services,recent=recent)
