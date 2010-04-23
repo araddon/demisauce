@@ -1,6 +1,7 @@
 # the Demisauce Tornado App
 upstream demisaucetornado {
         server 127.0.0.1:4950;
+        #server   127.0.0.1:4950          max_fails=5  fail_timeout=90s;
         #server 127.0.0.1:4951;
         #server 127.0.0.1:4952;
 }
@@ -17,7 +18,7 @@ server {
     server_name images.demisauce.com;
     server_name static.demisauce.com;
     
-    access_log  /vol/log/nginx/ds.clientassets.log;
+    access_log  /var/log/nginx/ds.clientassets.log;
     
     location /static {
         root   /var/www/ds;
@@ -46,24 +47,27 @@ server {
                         '"$request" $status $body_bytes_sent $upstream_response_time '
                         '"$http_referer" "$http_user_agent" $cookie_dsuserkey';
     
-    access_log  /vol/log/nginx/ds.access.log mainds;
+    access_log  /var/log/nginx/ds.access.log mainds;
     
     location /static {
         root   /var/www/ds;
-        access_log /vol/log/nginx/ds.static.log;
+        access_log /var/log/nginx/ds.static.log;
     }
     location = /favicon.ico {
         root   /var/www/ds/static;
-        log_not_found  off;
+        #log_not_found  off;
+        access_log   off;
     }
     location = /robots.txt {
         root   /var/www/ds/static;
-        log_not_found  off;
+        #log_not_found  off;
+        access_log   off;
     }
     
     location / {
         proxy_pass_header Server;
         proxy_set_header Host $http_host;
+        proxy_read_timeout 180;
         proxy_redirect off;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Scheme $scheme;

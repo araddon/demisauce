@@ -351,7 +351,6 @@ def _install_solr():
         sudo("mv apache-tomcat-6.0.20/ /usr/local/tomcat6/")
     
 
-
 def _install_solr_war(name):
     'copies example war to given name'
     with cd("/tmp"):
@@ -439,7 +438,7 @@ def _wordpress_updateconf():
 #   Tasks   =======================
 def fileconveyor():
     sudo("apt-get install python-pyinotify")
-    
+
 def update_config(mysql_user_pwd=None):
     'drops new config on said host'
     if mysql_user_pwd:
@@ -682,7 +681,6 @@ def solr_conf():
     rsync_project('/vol/',local_dir='%(local_path)s/install/recipes/vol/' % env)
     sudo("rsync  -pthrvz  /vol/solr/conf /usr/local/tomcat6/dssolr/")
     sudo("/etc/init.d/tomcat6 restart")
-
 
 def build_ec2():
     env.user = 'ubuntu'
