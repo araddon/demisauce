@@ -490,6 +490,9 @@ class App(RemoteObject):
 class Email(RemoteObject):
     service = 'email'
 
+class Template(RemoteObject):
+    service = 'template'
+
 class Activity(RemoteObject):
     service = 'activity'
 

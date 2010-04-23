@@ -35,17 +35,22 @@ def email_send(job_object):
         if response.success and response.json and len(response.json) ==1:
             emailjson = response.json[0]
             s = Template(emailjson['template'])
+            sh = Template(emailjson['template'])
+            if emailjson['template_html'] not in (None,''):
+                sh = Template(emailjson['template_html'])
             if 'template_data' in emailargs:
                 template = s.substitute(emailargs['template_data'])
-            elif 'template_data' in emailargs:
-                template = s.substitute(emailargs['template_data'])
+                templateh = sh.substitute(emailargs['template_data'])
             else:
                 template = s.substitute({})
+                templateh = sh.substitute({})
             #tuple:  (subject, body, to<to@email.com>, [recipient1@email.com,recipient2@email.com])
-            num_sent = mail.send_mail_toeach((emailjson['subject'],
-                template, 
-                '%s<%s>' % (emailjson['from_name'],emailjson['from_email']), 
-                emailargs['emails']))
+            data = {'subject': emailjson['subject'],
+                'message':template, 
+                'from_email':'%s<%s>' % (emailjson['from_name'],emailjson['from_email']), 
+                'recipient_list': emailargs['emails'],
+                'message_html': templateh}
+            num_sent = mail.send_mail_toeach(data)
             logging.info('sent email to %s, num_sent = %s' % (emailargs['emails'], num_sent))
             return num_sent
         else:

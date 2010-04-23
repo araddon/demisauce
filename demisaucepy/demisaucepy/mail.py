@@ -1,5 +1,6 @@
 # email helper, from django
 from email.MIMEText import MIMEText
+from email.mime.multipart import MIMEMultipart
 from email.Header import Header
 import smtplib, rfc822, logging
 import tornado
@@ -107,12 +108,13 @@ def get_smtp_server(smtp_server=None, smtp_port=None):
         return smtphelper(smtp_server, smtp_port)
     
 
-def send_email(datatuple, fail_silently=False, auth_user=None,
+def send_email(data, fail_silently=False, auth_user=None,
                    auth_password=None, to_each=False,
                    server=None):
     """
-    Given a datatuple of (subject, message, from_email, recipient_list), sends
-    each message to recipient list. Returns the number of e-mails sent.
+    Given a dictionary of (subject, message, message_html, from_email, 
+    recipient_list), sends each message to recipient list. 
+    Returns the number of e-mails sent.
     
     Can specifiy to_each, if True will break up recipient list to each user
     
@@ -131,32 +133,40 @@ def send_email(datatuple, fail_silently=False, auth_user=None,
             return
         raise
     num_sent = 0
-    def process_send_email(subject, message, from_email, recipient_list):
-        from_email = from_email or options.email_from
-        msg = SafeMIMEText(message, 'plain', DEFAULT_CHARSET)
-        msg['Subject'] = subject
+    def process_send_email(data):
+        'subject, message, message_html, from_email, recipient_list'
+        assert 'subject' in data
+        assert 'message' in data
+        assert 'recipient_list' in data
+        msg_html = data['message_html'] if 'message_html' in data else data['message']
+        from_email = data['from_email'] if 'from_email' in data else options.email_from
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = data['subject']
         msg['From'] = from_email
-        msg['To'] = ', '.join(recipient_list)
+        msg['To'] = ', '.join(data['recipient_list'])
         msg['Date'] = rfc822.formatdate()
+        msg.attach(SafeMIMEText(data['message'], 'plain', DEFAULT_CHARSET))
+        msg.attach(MIMEText(msg_html, 'html'))
         try:
-            server.send(from_email, recipient_list, msg.as_string())
+            server.send(from_email, data['recipient_list'], msg.as_string())
             return 1
         except:
             if not fail_silently:
                 raise
             return 0
     
-    #logging.debug("Unpacking datatuple = %s, %s, %s, %s" % datatuple)
-    subject, message, from_email, recipient_list = datatuple
-    if not recipient_list:
+    if not 'recipient_list' in data:
         pass
-    elif to_each and type(recipient_list) == list:
+    elif to_each and type(data['recipient_list']) == list:
+        recipient_list = data['recipient_list']
         for email_recipient in recipient_list:
-            num_sent += process_send_email(subject, message, from_email, [email_recipient])
+            data['recipient_list'] = [email_recipient]
+            num_sent += process_send_email(data)
     elif type(recipient_list) == list:
-        num_sent += process_send_email(subject, message, from_email, recipient_list)
+        num_sent += process_send_email(data)
     else:
-        num_sent += process_send_email(subject, message, from_email, [recipient_list])
+        data['recipient_list'] = [email_recipient]
+        num_sent += process_send_email(data)
     
     if close:
         try:
@@ -168,36 +178,32 @@ def send_email(datatuple, fail_silently=False, auth_user=None,
     
     return num_sent
 
-def send_mail_toeach(datatuple, fail_silently=False, 
+def send_mail_toeach(data, fail_silently=False, 
                    auth_user=None, 
                    auth_password=None):
     """
-    Given a datatuple of (subject, message, from_email, recipient_list), sends
-    each message to each recipient list. Returns the number of e-mails sent.
+    Given a dictionary of (subject, message, message_html, from_email, 
+    recipient_list), sends each message to each recipient list. 
+    Returns the number of e-mails sent.
 
     If from_email is None, the DEFAULT_FROM_EMAIL setting is used.
     If auth_user and auth_password are set, they're used to log in.
     """
     auth_user = options.smtp_username if not auth_user else auth_user
     auth_password = options.smtp_password if not auth_password else auth_password
-    return send_email(datatuple, fail_silently, auth_user, auth_password, True)
+    return send_email(data, fail_silently, auth_user, auth_password, True)
 
-def send_mass_mail(datatuple, fail_silently=False, 
+def send_mass_mail(data, fail_silently=False, 
                    auth_user=None, 
                    auth_password=None):
     """
-    Given a datatuple of (subject, message, from_email, recipient_list), sends
-    each message to each recipient list. Returns the number of e-mails sent.
+    Given a dictionary of (subject, message, message_html, from_email, 
+    recipient_list),sends each message to each recipient list. 
+    Returns the number of e-mails sent.
 
     If from_email is None, the DEFAULT_FROM_EMAIL setting is used.
     If auth_user and auth_password are set, they're used to log in.
     """
     auth_user = options.smtp_username if not auth_user else auth_user
     auth_password = options.smtp_password if not auth_password else auth_password
-    return send_email(datatuple, fail_silently, auth_user, auth_password, False)
-
-def main():
-    print("Running test .....")
-
-if __name__ == "__main__":
-    main()
+    return send_email(data, fail_silently, auth_user, auth_password, False)

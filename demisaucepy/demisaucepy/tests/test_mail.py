@@ -15,25 +15,21 @@ log = logging.getLogger("dspy.tests")
 def test_email():
     "test if we can send an email"
     #options.'smtp_server'] == 'mockserver.com' # force mock smtp connect
-    num_sent = mail.send_mail_toeach(('test email',
-        'test body', 
-        'Test Sender<test@fake.com>', 
-        'tester@email.com'))
+    data = {'subject':'test email',
+        'message':'test body', 
+        "from_email":'Test Sender<test@fake.com>', 
+        "recipient_list":'tester@email.com')
+    num_sent = mail.send_mail_toeach(data)
     assert num_sent == 1
     
-    num_sent = mail.send_mail_toeach(('test email',
-        'test body', 
-        'Test Sender<test@fake.com>', 
-        ['tester@email.com','teste2r@email.com']))
+    data['recipient_list'] = ['tester@email.com','teste2r@email.com']
+    num_sent = mail.send_mail_toeach(data)
     assert num_sent == 2
     
     mockserver = mail.get_smtp_server('mockserver.com')
     assert type(mockserver) == mail.mocksmtp
     assert mockserver.server_address == 'mockserver.com'
-    num_sent = mail.send_email(('test email',
-        'test body', 
-        'Test Sender<test@fake.com>', 
-        ['tester@email.com','teste2r@email.com']), 
+    num_sent = mail.send_email(data), 
             to_each=True,server=mockserver)
     assert num_sent == 2
     assert len(mockserver.messages) == 2

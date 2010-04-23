@@ -118,7 +118,7 @@ class ApiBaseHandler(BaseHandler):
             # /api/noun/list/selector(action).format
             self.id = 'list'
             #action = 'list'
-            if action == None:
+            if action == None or action == '.json':
                 action = 'list'
         else:
             # /api/noun/id/action.format?apikey=key&limit=100&start=101

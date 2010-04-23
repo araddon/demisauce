@@ -19,6 +19,8 @@ import base64
 from functools import wraps
 from decorator import decorator
 
+from demisaucepy import Template, mail
+
 log = logging.getLogger('demisauce')
 
 def requires_authn(method):
@@ -87,17 +89,13 @@ def send_emails(email_template,recipient_list,substitution_dict=None):
     to recipient list using scheduler which runs in the background
     allowing this current request to continue processing
     """
-    from demisaucepy import mail
-    from demisaucepy import demisauce_ws_get
-    import urllib
-    
-    resource_id = urllib.quote_plus(email_template)
-    response = demisauce_ws_get('email',resource_id,format='xml',cache=False)
-    if response.success:
-        t = response.model
+    raise NotImplemented("refactor needed")
+    email = Template.GET(email_template)
+    if email:
         from string import Template
-        if hasattr(t,'template'):
-            s = Template(t.template)
+        if email.template:
+            s = Template(email.template)
+            sh = Template(email.template_html)
             template = s.substitute(substitution_dict)
             mail.send_mail_toeach((t.subject,
                 template, '%s<%s>' % (t.from_name,t.from_email), recipient_list))
