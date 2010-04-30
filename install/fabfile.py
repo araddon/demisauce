@@ -627,6 +627,8 @@ def db_sqldump(mysql_root_pwd=None):
     sudo("rm /tmp/*.sql")
 
 def build(mysql_root_pwd=None,mysql_user_pwd=None,host=None,local=False):
+    if local in ('true','True'):
+        local = True
     if mysql_root_pwd:
         env.mysql_root_pwd = mysql_root_pwd
     if mysql_user_pwd:
@@ -638,7 +640,7 @@ def build(mysql_root_pwd=None,mysql_user_pwd=None,host=None,local=False):
     sudo("mkdir -p /vol; chown -R %s:%s /vol" % (env.user,env.user))
     sudo("chmod -R 770 /vol")
     sudo("usermod -a -G www-data ubuntu; usermod -a -G www-data demisauce")
-    push_recipes() # do this first to force rsynch/ssh pwd at beginning to it doesn't 255 error timeout
+    push_recipes(local=local) # do this first to force rsynch/ssh pwd at beginning to it doesn't 255 error timeout
     add_sources()
     _linux_base()
     _gearman()

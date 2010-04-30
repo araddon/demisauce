@@ -108,7 +108,7 @@ git clone git://github.com/araddon/demisauce.git
 chown -R demisauce:demisauce /home/demisauce/src
 cd /home/demisauce/src/demisauce/install
 if [ $SERVER_ROLE = "all" ] ; then
-  fab vmlocal build:mysql_root_pwd="$MYSQL_ROOT_PWD",mysql_user_pwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME" -p $ROOT_PWD
+  fab vmlocal build:mysql_root_pwd="$MYSQL_ROOT_PWD",mysql_user_pwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME",local=Tru -p $ROOT_PWD
   fab vmlocal release:mysql_user_pwd="$DEMISAUCE_MYSQL_PWD",host="$HOSTNAME" -p $ROOT_PWD
   fab vmlocal restart_web
 fi
