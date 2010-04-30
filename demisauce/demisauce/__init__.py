@@ -5,6 +5,7 @@ import demisaucepy.options
 
 __version__ = '0.1.1'
 
+define("demisauce_secret",help="Secret for hashing",default="tbd")
 
 define("facebook_api_key", help="your Facebook application API key",
         default="1c9724431c6a5ebb2167b87862373776")

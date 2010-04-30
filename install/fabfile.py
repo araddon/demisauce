@@ -287,6 +287,7 @@ def _demisauce_pre_reqs():
         sudo("pip install suds")
         sudo("pip install Jinja2")
         sudo("pip install wtforms")
+        sudo("apt-get install python-crypto")
         sudo("pip install decorator")
         sudo("pip install feedparser")
         sudo("pip install http://python-twitter.googlecode.com/files/python-twitter-0.6.tar.gz")
@@ -580,8 +581,8 @@ def release_simple(mysql_user_pwd=None):
 def push_recipes(local=False):
     """Configuration Sync"""
     if local:
-        pass # already retrieved from install.sh git clone
-        rsync_project('/vol/',local_dir='%(local_path)s/install/recipes/vol/' % env)
+        return # already retrieved from install.sh git clone
+        #rsync_project('/vol/',local_dir='%(local_path)s/install/recipes/vol/' % env)
     else:
         # in dev, get from dev machine
         sudo("mkdir -p /home/demisauce/src/demisauce/install/recipes/etc")
@@ -629,6 +630,7 @@ def db_sqldump(mysql_root_pwd=None):
 def build(mysql_root_pwd=None,mysql_user_pwd=None,host=None,local=False):
     if local in ('true','True'):
         local = True
+    print("local = %s" % local)
     if mysql_root_pwd:
         env.mysql_root_pwd = mysql_root_pwd
     if mysql_user_pwd:

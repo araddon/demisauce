@@ -1,4 +1,7 @@
 import logging, json
+import string
+from random import choice
+from Crypto.Cipher import AES
 from sqlalchemy import Column, MetaData, ForeignKey, Table, \
     func, UniqueConstraint
 from sqlalchemy import Integer, String as DBString, DateTime, Boolean, \
@@ -43,6 +46,7 @@ person_table = Table("person", meta.metadata,
         Column("url", DBString(255),default="http://yourapp.wordpress.com",nullable=False),
         Column("random_salt", DBString(120)),
         Column("hashed_password", DBString(120)),
+        Column("password", DBString(60)),
         Column("extra_json", DBText),
         UniqueConstraint('hashedemail','site_id'),
     )
@@ -204,8 +208,6 @@ class Person(ModelBase,SerializationMixin):
         """
         Generates a password and returns it
         """
-        import string
-        from random import choice
         return ''.join([choice(string.letters + string.digits) for i in range(size)])
     
     @classmethod
@@ -244,14 +246,25 @@ class Person(ModelBase,SerializationMixin):
         self.hashedemail = hashlib.md5(email.lower()).hexdigest()
     
     def create_user_salt(self):
-        """
-        creates random salt
-        """
+        "creates random salt"
         self.random_salt = hashlib.md5(str(random.random())).hexdigest()[:15]
+    
+    def pwd_encrypt(self,raw_password):
+        'encrypt the pwd'
+        encobj = AES.new(options.demisauce_secret + self.random_salt,, AES.MODE_CFB)
+        ciphertext = encobj.encrypt(raw_password)
+        self.password = ciphertext
+    
+    def pwd_decrypt(self):
+        encobj = AES.new(options.demisauce_secret + self.random_salt, AES.MODE_CFB)
+        plaintext = encobj.decrypt(self.password)
+        return plaintext
     
     def set_password(self, raw_password):
         if self.random_salt == None or len(self.random_salt) < 5:
             self.create_user_salt()
+        #TODO: this should be site specific setting
+        self.pwd_encrypt(raw_password)
         self.hashed_password = hashlib.sha1(self.random_salt+raw_password).hexdigest()
     
     def is_authenticated(self, supplied_pwd):

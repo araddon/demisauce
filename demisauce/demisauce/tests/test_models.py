@@ -58,6 +58,7 @@ def test_person():
     assert p2.email == email
     assert p.id == p2.id
     assert p.displayname == p2.displayname
+    assert 'admin' == p2.pwd_decrypt()
     p2.add_attribute('betauser',True,object_type='segment',
             encoding='str',category='segment')
     p2.save()
