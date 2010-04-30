@@ -283,6 +283,8 @@ def _demisauce_pre_reqs():
         sudo("easy_install eventlet")
         sudo('pip install http://github.com/samuel/python-gearman/tarball/master')
         sudo("pip install http://github.com/samuel/python-scrubber/tarball/master")
+        # required for SalesForce?  Install separately?
+        sudo("pip install suds")
         sudo("pip install Jinja2")
         sudo("pip install wtforms")
         sudo("pip install decorator")
