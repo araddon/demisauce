@@ -15,7 +15,7 @@ import demisauce
 tornado.options.parse_command_line() # must force load of options for metaclass
 from demisaucepy import cache_setup
 from demisaucepy.cache import DummyCache, MemcacheCache
-cache_setup.load_cache()
+
 import demisauce
 from demisauce import model
 from demisauce.lib.cacheextension import FragmentCacheExtension
@@ -47,11 +47,8 @@ class Application(tornado.web.Application):
     def __init__(self):
         template_path = os.path.join(os.path.dirname(__file__), "demisauce/views")
         
-        # create scheduler
-        from demisauce.lib import scheduler
-        self.scheduler = scheduler.start()
-        
         # Have one global connection to the DB across app
+        cache_setup.load_cache()
         memcache_cache = MemcacheCache(options.memcached_servers)
         self.db = model.get_database(cache=memcache_cache)
         

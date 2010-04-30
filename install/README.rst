@@ -1,4 +1,4 @@
-This is the main installer and it is assumed you are doing a server install, or on a VMWare/KVM/EC2.   As Demisauce is meant to be services used by your app, the recommended install is in vm/kvm/ec2 for development, not onto your actual machine. 
+Demisauce is a collection of services, background processes and is implemented as an appliance.  To run it you will need VMWare/KVM or run on Amazon EC2.  
 
 Simple Workflow:  Setup a KVM/VM/EC2 image for trial of Demisauce
 ===============================================================================
@@ -11,7 +11,7 @@ I find the easiest vm install is to use VMBuilder for KVM on Ubuntu. Run this co
         --arch i386 -o --mem=512 \
         --libvirt qemu:///system --bridge=br0 \
         --user demisauce --name Demisauce --pass demisauce \
-        --addpkg openssh-server --addpkg git-core \
+        --addpkg openssh-server --addpkg git-core --addpkg wget \
         --mirror http://192.168.1.4:9999/ubuntu --tmpfs -  \
         --hostname=demisauce1 --dest ~/vm/demisauce1
     sudo virsh -c qemu:///system

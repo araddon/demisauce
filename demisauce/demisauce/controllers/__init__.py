@@ -185,8 +185,7 @@ class BaseHandler(tornado.web.RequestHandler):
     #@print_timing
     def __init__(self, application, request, transforms=None):
         tornado.web.RequestHandler.__init__(self, application, request, transforms=transforms)
-        log.debug("%s path %s class=%s__init__" % (self.request.method.upper(), 
-            self.request.path,self.__class__))
+        #log.debug("%s path %s class=%s__init__" % (self.request.method.upper(), self.request.path,self.__class__))
         #log.debug('headers = %s' % self.request.headers)
         self.session = {}
         self._messages = []
@@ -222,6 +221,10 @@ class BaseHandler(tornado.web.RequestHandler):
     @property
     def db(self):
         return self.application.db
+    
+    def _after_finish(self):
+        'override this for work post'
+        self.db.finish()
     
     requires_auth = False
     def get_current_user(self):
@@ -347,7 +350,6 @@ class BaseHandler(tornado.web.RequestHandler):
         self._messages.append((msg,msgtype))
     
     def finish(self, chunk=None):
-        self.db.finish()
         tornado.web.RequestHandler.finish(self,chunk)
     
     def get_error_html(self, status_code,exception=None):
@@ -474,6 +476,20 @@ class CrossDomain(BaseHandler):
         self.render("crossdomain.xml")
     
 
+class WebHookDemo(BaseHandler):
+    def get(self):
+        self.write('in get')
+    
+    def post(self):
+        if self.request.body:
+            jsond = json.loads(self.request.body)
+            log.debug(self.request.body)
+            if 'echo' in jsond:
+                self.write(jsond['echo'])
+                return
+        self.write("hello")
+    
+
 class XsrfDemo(BaseHandler):
     def get(self):
         name=self.get_cookie('name',"")
@@ -496,6 +512,7 @@ class XsrfDemo(BaseHandler):
         # using get_argument instead of get_cookie as get_cookie reads browser cookies
         # not to-be written cookies
         self.write(str(self.get_argument("name")))
+    
 
 class UploadHandler(BaseHandler):
     def get(self):
@@ -540,9 +557,11 @@ class CustomErrorHandler(BaseHandler):
             message=httplib.responses[self.error_code])
     
 
+
 _controllers = [
     (r"/hello", HelloHandler),
     (r"/xsrfdemo", XsrfDemo),
+    (r"/testwebhook", WebHookDemo),
     (r"/upload(?:\/)?", UploadHandler),
     (r"/crossdomain\.xml", CrossDomain),
 ] 

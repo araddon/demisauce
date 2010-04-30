@@ -26,7 +26,7 @@ object_table = Table("object", meta.metadata,
 
 class Object(ModelBase,SerializationMixin):
     schema = object_table
-    _allowed_api_keys = ['slug','description','json','is_published','foreign_id']
+    _allowed_api_keys = ['slug','description','extra_json','is_published','foreign_id']
     def __init__(self, **kwargs):
         super(Object, self).__init__(**kwargs)
     

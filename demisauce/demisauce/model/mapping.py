@@ -17,8 +17,16 @@ from demisauce.model.activity import Activity, activity_table
 from demisauce.model.service import App, app_table, Service, service_table
 from demisauce.model.tag import Tag, TagAssoc, taggable, tag_table, \
     tag_map_table
+from demisauce.model.config import ConfigAttribute, configattribute_table, \
+    config_keyable
+from demisauce.model.version import Version, version, versionable
 
 mapper(Site, site_table)
+mapper(ConfigAttribute, configattribute_table)
+mapper(Version, version) 
+
+config_keyable(Site,name="settings")
+versionable(Site, 'versions')
 
 mapper(Group, group_table, properties={
     'site':relation(Site, backref='groups')
@@ -44,35 +52,9 @@ mapper(Person, person_table, properties={
 
 userlistable(Group,name="members")
 
-"""
-'groups':relation(Group, lazy=True, secondary=userattribute_table,
-        primaryjoin=person_table.c.id==userattribute_table.c.person_id,
-        secondaryjoin=and_(userattribute_table.c.group_id==group_table.c.id), 
-                    backref='members'),
-mapper(WhereAssoc, where_assoc, properties={
-    'producer':relation(Producer, primaryjoin= where_assoc.c.producer_id==producer.c.id, 
-            lazy=True,backref="venues"),
-    'venue':relation(Producer, primaryjoin= where_assoc.c.venue_id==producer.c.id, 
-            lazy=False,backref="providers"),
-})
-"""
-'''
 
-mapper(Help, help_table, properties={
-    'site':relation(Site, lazy=True, order_by=help_table.c.created.desc(),
-        backref='helptickets'),
-})
-mapper(HelpResponse, help_response_table, properties={
-    'site':relation(Site, lazy=True, order_by=help_response_table.c.created.desc(),
-        backref='helpreponses'),
-    'person':relation(Person, lazy=True, backref='helpreponses'),
-    'helpticket':relation(Help, backref='helpresponses'),
-})
-taggable(Help, 'tags', uselist=True)
-mapper(Comment, comment_table, properties={
-    'site':relation(Site, backref='comments')
-})
-'''
+#versionable(Producer, 'versions')
+
 mapper(Template, template_table, properties={
     'site':relation(Site),
 })

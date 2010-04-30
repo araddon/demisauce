@@ -6,7 +6,34 @@ from tornado.options import options
 from demisaucepy import demisauce_ws, Object, Activity, Email, Site
 from demisaucepy import objectwrapper
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('demisaucepy')
+
+def test_mailchimp():
+    'test mailchimp integration'
+    """
+    For more info about setting config settings see demisauce/manage.py
+    """
+    from gearman import GearmanClient
+    from gearman.task import Task
+    gearman_client = GearmanClient(options.gearman_servers)
+    #send emails
+    list_id, mc_apikey = '0',''
+    site = Site.GET(1)
+    assert site.has_attribute('mailchimp_api_key')
+    assert site.has_attribute('mailchimp_listid')
+    list_id = site.get_attribute('mailchimp_listid').value
+    mc_apikey = site.get_attribute('mailchimp_api_key').value
+    jsondict = {
+        'template_name':'thank_you_for_registering_with_demisauce',
+        'user':{"email":"araddon+4@gmail.com"},
+        'mailchimp_listid':list_id,
+        'mailchimp_api_key':mc_apikey,
+        'attributes':[{"name":"BetaUsers","category":"event"},{"name":"NewSegment3","category":"event"}]
+    }
+    #'BetaUsers',"NewSegment","NewSegment2"
+    num_sent = gearman_client.do_task(Task("mailchimp_addtolist",json.dumps(jsondict), background=False))
+    logging.debug("test emailsend num_sent = %s" % (num_sent))
+    assert num_sent == '1'
 
 def test_connection():
     "test base api connectivity, auth"
@@ -62,23 +89,32 @@ def test_site():
     assert site._response.success == True
     assert site._response.status == 201
     assert site.id > 0
+    log.debug("created site.id=%s" % (site.id))
     assert site.name == site_dict['name']
     assert site.extra_json['this_is_extra'] == site_dict['this_is_extra']
-    #return
     # ok, now lets add different extra
     site2 = Site(id=site.id)
     assert site2.id == site.id
+    site2.settings = []
+    site2.settings.append({'name':'mailchimp_api_key','value':'1234'})
+    site2.settings.append({'name':'testing_webhook','value':'http://localhost:4950/testwebhook','category':'event','event_type':'webhook','requires':['id','name']})
     site2.extra_json = {'more_extra':'testing'}
     site2.POST()
     assert site.id == site2.id
     assert site.name == site2.name
     assert site2.extra_json['this_is_extra'] == site_dict['this_is_extra']
     assert site2.extra_json['more_extra'] == 'testing'
+    attr = site2.get_attribute('mailchimp_api_key')
+    assert attr.name == 'mailchimp_api_key'
+    assert attr.value == '1234'
+    hook = site2.get_attribute('testing_webhook')
+    assert hook.category == 'event'
     site.DELETE()
     site3 = Site.GET(site2.id)
     assert site3 is None
 
-def test_extra_json():
+def test_webhook():
+    'test webhook api'
     pass
 
 def test_json_body():

@@ -11,12 +11,14 @@ import logging
 import tornado
 import demisaucepy.options
 from demisaucepy import mail # mail options
-import demisauce
 from tornado.options import options, define
 define("asset_root", default="/var/www/ds/static", help="Root Path of images to be saved")
+import demisauce
+from demisauce import model
 
 tornado.options.parse_command_line() # must force load of options for metaclass
 
+log = logging.getLogger("demisauce.plugins")
 
 import dsplugins
 from dsplugins import emailer, assets, echo
@@ -43,6 +45,9 @@ def main():
     worker.register_function("email_send", emailer.email_send)
     worker.register_function("image_resize", assets.image_resize)
     worker.register_function("echo", echo)
+    
+    from demisauce.model import actions
+    actions.register_workers(worker)
     worker.work()
 
 if __name__ == "__main__":

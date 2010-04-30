@@ -9,13 +9,16 @@
 
 <div><h1>Demisauce is an Open Source Integration Appliance</h1> 
     <h3 style="line-height:1.5em;">
-        Provision users to common services (Google Apps, Salesforce, 37 Signals)
-        or apps (Wordpress, etc).  It also provides the pre-integrated services necessary
-        to integrate apps today (Queuing, Logging, Analytics/Reporting).  Unlike 
-        most appliances Demisauce focus's
-        on integration at the data-level, not just operations/deployment automation.
+        The goal of Demisauce is to provide plugin's similar to Wordpress plugin's but <i>as a service</i>. 
+        In order to provide plugin's as a service requires integrated services (Configuration, 
+        Background Work/Queuing, Logging, Analytics/Reporting, Caching) so
+        it is implemented as an appliance.
+        <br /><br />
+        Similar to Wordpress/Rails/Django-contrib plugin's the serivces 
+        either make it easier integrate applications, such as provision users to common 
+        services (Google Apps, Salesforce, 37 Signals) or apps (Wordpress, etc).  
+        Or, they provide new services to your app.  
     </h3> 
-
 </div>
 <br />
 <style type="text/css">
@@ -29,49 +32,60 @@ list-style-type:disc;
 }
 </style>
 <div id="mainpage">
-    <div class="yui-gb" >
-        <div class="yui-u first" style="border-right: 1px solid #666666;height:165px">
-            <h3 style="">User Provisioning</h3>
-            <p style="">
-                Call an <i>AddUser API</i> and Demisauce has hooks to add
-                that user to LDAP, Google Apps, Salesforce, Wordpress, Memcached.
-            </p>
-        </div>
-        <div class="yui-u" style="background-color:#ddd;border-right: 1px solid #666666;height:165px">
-            <h3 style="">Network Plugin Architecture</h3>
-            <p style="">
-                Inspired by the Wordpress <i>add_action(), do_action()</i> plugin architecture, except
-                for network oriented.  A pub-sub type plugin system built
-                on top of <a href="http://www.gearman.org">Gearman</a>.
-            </p>
-        </div>
-        <div class="yui-u">
-            <h3 style="">Data Services</h3>
-            <p style="">
-                Do you need to take your content and import tags from Twitter, flickr, etc?  Or
-                check links to get their title?  Get RSS feeds and then index them and make them
-                searchable instead of just showing in Javascript on client side?
-
-            </p>
-        </div>
-    </div>
     <div class="yui-g" >
-        <div class="yui-u first" style="background-color:#ddd;border-right: 1px solid #666666;height:142px;margin-right:-1px;">
-            <h3 style="">Appliance at the Data Level</h3>
-                This appliance is trying to integrate at the data level:  for instance, all your users are together in LDAP, 
-                and provisioned to apps such as Wordpress, Google Apps, Salesforce.  
-                Also, logging from web logs is available in reporting.
-                Events logged from apps get moved to reporting engine.   
+        <div class="yui-u first" style="background-color:#ddd;border-right: 1px solid #666666;margin-right:-1px;">
+            <h3 style="">Applications and 3rd party service Integrations</h3>
+                <ul class="summary">
+                    <li><b>Mailchimp</b>: newsletter service (provision users, 
+                        call mailchimp api upon event's)</li>
+                    <li><b>Wordpress</b>:  Allow content to be used in other apps, cache it 
+                        and make available through API.  Wordpress Multi User edition. 
+                        Integrate Identity/Single Sign on, provision users.</li>
+                    <li>Plugins:  plugin to integrate with your service.</li>
+                </ul>
+            </p>
+            <h3 style="">Appliance Features</h3>
+            <p style="">
+                <ul class="summary">
+                    <li><b>Gearman</b>:   The great aid to cross-language integration, along with the ability to
+                        run work in the background.</li>
+                    <li><b>MySql</b>: MySql Server </li>
+                    <li><b>Tornado</b>:  <a href="http://tornadoweb.org">Tornado (Python)</a> webserver.</li>
+                    <li><b>Solr</b>:  <a href="http://wiki.apache.org/solr/FrontPage">Apache Solr</a> Search Server. </li>
+                    <li><b>Supervisor</b>: Ensure process's are running with <a href="http://supervisord.org/">supervisord</a></li>
+                    <li><b>Caching</b>: Memcache/Redis</li>
+                    <li><b>Nginx</b>: web server</li>
+                    <li><b>Postfix</b>: email server</li>
+                    <li><b>Configuration</b>: Uses <a href="">Fabric</a> for configuration.</li>
+                </ul>
             </p>
         </div>
         <div class="yui-u">
-            <h3 style="">Data Integration Reporting</h3>
+            <h3 style="">Services:  Features of Demisauce Services</h3>
             <img src="http://demisaucepub.s3.amazonaws.com/s3/activity_t.jpg" style="float:right;" width="100" height="59" border="0" />
             <p style="">
-                By integrating at a data level, we can move events such 
-                as user-logon's, nginx/apache log files (for a specific user), etc over to
-                reporting.  Then filter these events to build segments (all users
-                that use wordpress at least 20 times, all users never used wordpress).
+                <ul class="summary">
+                    <li><b>Image management (upload, serve, resize)</b>:   A jquery image uploader plugin (optional) along with
+                        a server component to accept uploads, and a background process to re-size them
+                        and nginx image serving.</li>
+                    <li><b>Email sending & templating</b>: An api to store email templates and a webhook
+                        or Gearman event api to trigger sending of emails in a background process.
+                        Includes Postfix configuration.  </li>
+                    <li><b>User/Group Api</b>:  Api to define users/groups, after defining 
+                        subscribed events users/groups can be synced to apps (mailchimp, google apps, etc)</li>
+                    <li><b>Charting plugin's</b>:  Events captured can be logged and available
+                        for charting and graphing.  </li>
+                    <li><b>Notify Service</b>: Based on user preferences, sends notification via channels 
+                        (email, newsletter plugin, Stream, Inbox)  
+                        <a href="/static/doc/notifiyservice.html">See More..</a></li>
+                    <li><b>Pub-Sub & Webhooks</b>:  This is a very light wrapper on-top of Gearman
+                        that provides an api to register events, and listen for them.  Delivery via
+                        <a href="http://www.webhooks.org/">Webhooks</a> or <a href="http://www.gearman.org">Gearman</a>
+                        channels. </li>
+                    <li><b>Api Tools</b>: Api Security, Tracking, Reporting, Key management. </li>
+                    <li><b>Stream Service</b>: a service to manage a <i>Stream</i> similar to 
+                        Facebook or Twitter.  </li>
+                </ul>
             </p>
         </div>
     </div>
@@ -79,13 +93,12 @@ list-style-type:disc;
         <div class="yui-u first" style="border-right: 1px solid #666666;height:142px">
             <h3 style="">Why?</h3>
             <p style="">
+                
                 <ul class="summary">
-                    <li>With move to Cloud Services such as Google Apps/Salesforce
-                        many companies are needing to integrate with these services, this 
-                        appliance makes it easier.</li>
-                    <li>Existing appliances focus on deploying software,
-                        not integrating that software so events in one piece are
-                        available in reporting etc.</li>
+                    <li>Pre-done integrations speed integration.</li>
+                    <li>Services such as background workers that 
+                        improve integrations.</li>
+                    <li>Plugin-architecture, add your integration</li>
                 </ul>
             </p>
         </div>

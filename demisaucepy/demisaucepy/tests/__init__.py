@@ -5,12 +5,14 @@ import tornado
 from tornado.options import options, define, enable_pretty_logging
 import demisaucepy.options
 
+log = logging.getLogger("demisaucepy")
+
 TEST_ROOT = os.path.dirname(os.path.realpath(__file__))
 config_file = os.path.realpath(TEST_ROOT + '/../../../demisauce/dev.conf' )
 tornado.options.parse_command_line([0,"--config=%s" % config_file, '--logging=debug'])
-logging.debug("about to setup cache = %s" % options.demisauce_cache)
-logging.debug("about to demisauce_url = %s" % options.demisauce_url)
-logging.debug("about to demisauce_api_key = %s" % options.demisauce_api_key)
+log.debug("about to setup cache = %s" % options.demisauce_cache)
+log.debug("about to demisauce_url = %s" % options.demisauce_url)
+log.debug("about to demisauce_api_key = %s" % options.demisauce_api_key)
 
 
 from demisaucepy import cache_setup

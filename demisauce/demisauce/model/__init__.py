@@ -1,5 +1,3 @@
-"""
-"""
 import logging, re, time, json, datetime
 from tornado import escape
 from sqlalchemy import create_engine
@@ -14,7 +12,12 @@ import redis
 from pythonsolr.pysolr import Solr
 from gearman import GearmanClient
 
-log = logging.getLogger('demisauce')
+from demisaucepy import cache, cache_setup
+
+log = logging.getLogger('demisauce.model')
+
+CACHE_DURATION = 3600
+
 
 def slugify(name):
     """
@@ -83,6 +86,7 @@ def get_database(cache=None):
     gearman_client = GearmanClient(options.gearman_servers)
     #creator=connect,  , 
     #pool_recycle=True # performance was horrible with this
+    #cache_setup.load_memcache()
     meta.engine = create_engine(options.sqlalchemy_default_url,
             echo=options.sqlalchemy_default_echo, pool_recycle=3600)
     log.debug("Setting up db with connection = %s" % options.sqlalchemy_default_url)
@@ -143,20 +147,24 @@ class ModelBase(object):
     __all_schema_keys__ = None
     def __init__(self,**kwargs):
         self._is_cache = False
+        self.is_new = False
         for key in kwargs:
-            if hasattr(self,key):
-                setattr(self,key,kwargs[key])
+            #if hasattr(self,key):
+            setattr(self,key,kwargs[key])
         self.on_new()
     
     @orm.reconstructor
     def init_on_load(self):
+        self.on_new()
         self._is_cache = False
+        self.is_new = False
     
     def get_keys(self):
         if hasattr(self.__class__,"__all_schema_keys__"):
             if self.__class__.__all_schema_keys__ == None:
-                log.debug("getting all keys from schema?  %s" % self.__class__)
-                self.__class__.__all_schema_keys__ = [c.name for c in self.__class__.schema.c]
+                keys = []
+                keys = [c.name for c in self.__class__.schema.c]
+                self.__class__.__all_schema_keys__ = keys
             return self.__class__.__all_schema_keys__
         return []
     
@@ -175,16 +183,16 @@ class ModelBase(object):
     def isvalid(self):
         return True
     
-    def delete(self):
-        meta.DBSession.delete(self)
-        meta.DBSession.commit()
-    
     def save_extra(self):
         if hasattr(self,'extra_json') and isinstance(self.extra_json,(list,dict)):
             json_str = json.dumps(self.extra_json)
             self.extra_json = json_str
     
     def save(self):
+        if self.id > 0:
+            self.is_new = False
+        else:
+            self.is_new = True
         self.save_extra()
         meta.DBSession.add(self)
         meta.DBSession.commit()
@@ -215,4 +223,112 @@ class ModelBase(object):
         """Class method to get by id"""
         return meta.DBSession.query(cls).get(id)
     
-
+    def delete(self):
+        try: 
+            log.debug("in delete %s" % self.__class__)
+            meta.DBSession.delete(self)
+            meta.DBSession.commit()
+        except:
+            meta.DBSession.rollback() #.close()
+            logging.error("Error in ModelBase.delete():  %s" % traceback.print_exc())
+    
+    def delete_cache(self):
+        try: 
+            log.debug("in delete cache %s" % self.__class__)
+            jsons = cache.cache.get(self.__class__.cache_key(self.id))
+            if jsons and jsons.find("{") == -1:  # if not json, must be cache key
+                cache.cache.delete(self.__class__.cache_key(jsons))
+            cache.cache.delete(self.__class__.cache_key(self.id))
+        except:
+            logging.error("Error in ModelBase.delete_cache():  %s" % traceback.print_exc())
+    
+    def update_cache(self,jsons=None):
+        'Update and save json to mc'
+        if not jsons:
+            jsons = self.to_json()
+        ptr = self.id
+        if hasattr(self,'pointer'):
+            ptr = self.pointer
+            if self.id != ptr:
+                cache.cache.set(self.__class__.cache_key(self.id),ptr)
+        log.debug("saving key=%s, val=%s" % (self.__class__.cache_key(ptr),'jsons'))
+        cache.cache.set(self.__class__.cache_key(ptr),jsons,CACHE_DURATION)
+        return jsons
+    
+    def after_load(self):
+        pass
+    
+    @classmethod
+    def cache_key(cls,id):
+        'simple cachkey of DS-classname-id '
+        cls_name = str(cls)
+        cls_name = cls_name[cls_name.rfind('.')+1:cls_name.rfind('\'')].lower()
+        return re.sub('(\s)','',str("DS-%s-%s" % (cls_name,id)))
+    
+    @classmethod 
+    def get_manymc(cls,ids):
+        cls_name = str(cls)
+        cls_name = cls_name[cls_name.rfind('.')+1:cls_name.rfind('\'')].lower()
+        keys = [cls.cache_key(id) for id in ids]
+        vals = cache.cache.get_many(keys)
+        logging.debug("getmanymc = %s, %s" % (keys,'vals'))
+        objects = []
+        for id in ids:
+            key = cls.cache_key(id)
+            if vals.has_key(key):
+                val = vals[key]
+                if val and val.find("{") == -1:
+                    v = cache.cache.get(cls.cache_key(val))
+                    if not v:
+                        o = cls.get(id)
+                        if o:
+                            v = o.update_cache()
+                        else:
+                            log.error("no item found for id = %s" % id)
+                    #log.debug("id = %s, val=%s, k = %s, v=%s" % (id, val, cls.cache_key(val),v == None))
+                    vals[key] = v
+            else:
+                o = cls.saget(id)
+                if o:
+                    logging.debug("Updating Cache in %s - %s" % (key,id))
+                    jsons = o.update_cache()
+                    vals.update({key:jsons})
+                else:
+                    log.error("wtf?  no o? key = %s id=%s" % (key,id))
+        for k,v in vals.iteritems():
+            if v in (None,''):
+                log.error("missing cache entry for %s" % key)
+            obj = cls().from_json(v)
+            objects.append(obj)
+        return objects
+    
+    @classmethod
+    def get_cache(cls,id=0,reload=False):
+        """Class method to get from cache by id"""
+        jsons = None
+        cache_key = cls.cache_key(id)
+        if reload == True:
+            o = cls.saget(id)
+        else:
+            jsons = cache.cache.get(cls.cache_key(id))
+            if jsons and jsons.find("{") == -1:  # if not json, must be cache key
+                log.debug('jsons find == -1  %s' % jsons)
+                try: 
+                    cache_key = cls.cache_key(jsons)
+                    jsons = cache.cache.get(cache_key)
+                except:
+                    logging.error("Error in ModelBase.get_cache():  %s" % cache_key)
+                
+            if not jsons:
+                o = cls.saget(id)
+        if not jsons and o:
+            log.debug('cache not found, updating cache %s' % (cache_key))
+            jsons = o.update_cache()
+        if jsons:
+            o = cls()
+            o.from_json(jsons)
+            o._is_cache = True
+        else:
+            logging.error("no jsons? %s" % cache_key)
+        return o
+    

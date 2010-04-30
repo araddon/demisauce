@@ -433,7 +433,7 @@ class ServiceClient(ServiceClientBase):
         #cache.delete(cache_key)
         cacheval = cache.cache.get(cache_key)
         if cacheval != None:
-            log.debug('cache found for =url = %s, key = %s' % (self.response.url,cache_key))
+            #log.debug('cache found for =url = %s, key = %s' % (self.response.url,cache_key))
             #self.response.data = cacheval.data
             self.response.load(cacheval)
             self.response.was_cache = True
@@ -448,7 +448,7 @@ class ServiceClient(ServiceClientBase):
         #self.authorize()
         request = str(request)
         if not self.service.isdefined and self.service.needs_service_def == True:
-            log.debug('ServiceClient:  calling service definition load %s/%s' % (self.service.app_slug,self.service.name))
+            #log.debug('ServiceClient:  calling service definition load %s/%s' % (self.service.app_slug,self.service.name))
             self.service.load_definition(request_key=request)
         
         if request is None:

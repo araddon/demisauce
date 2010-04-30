@@ -29,10 +29,7 @@ log = logging.getLogger("demisaucepy")
 
 __version__ = '0.1.1'
 
-
 DATETIME_REGEX = re.compile('^(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})T(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})(\.\d+)?Z$')
-
-
 
 def hash_email(email):
     return hashlib.md5(email.lower()).hexdigest()
@@ -40,7 +37,6 @@ def hash_email(email):
 def demisauce_ws_get(noun,resource_id,data={},format='json',extra_headers={},qs={},api_key=None,cache=True):
     return demisauce_ws(noun,resource_id,action='get',data=data,api_key=api_key,
                 format=format,extra_headers=extra_headers,qs=qs,cache=cache)
-
 
 def demisauce_ws(noun,resource_id,action=None,data={},format='json',apikey=None,servicedef=None,
         extra_headers={},load_def=False,app='demisauce',http_method='GET',qs={},cache=False,cache_time=900):
@@ -60,14 +56,15 @@ def demisauce_ws(noun,resource_id,action=None,data={},format='json',apikey=None,
         - (post=add/update, get=read, delete=delete)
     returns
     """
-    servicedef = ServiceDefinition(
-        name=noun,
-        format=format,
-        app_slug=app,
-        cache=cache,
-        api_key=apikey,
-        cache_time=cache_time
-    )
+    if not servicedef:
+        servicedef = ServiceDefinition(
+            name=noun,
+            format=format,
+            app_slug=app,
+            cache=cache,
+            api_key=apikey,
+            cache_time=cache_time
+        )
     servicedef.isdefined = False if load_def else True
     client = ServiceClient(service=servicedef)
     client.use_cache = cache
@@ -343,6 +340,7 @@ class objectwrapper(dict):
 class RemoteObject(objectwrapper):
     'remote object'
     service = 'tbd'
+    servicedef = None
     id_field = 'id'
     def __init__(self,*args,**kwargs):
         if 'apikey' in kwargs:
@@ -384,7 +382,7 @@ class RemoteObject(objectwrapper):
     def _get_method(self,id=0,action=None,limit=None,cache=True):
         qs = {} if not limit else {'limit':limit}
         self._response = demisauce_ws(self._service,str(id),action,qs=qs,
-            cache=cache,apikey=self._apikey)
+            cache=cache,apikey=self._apikey,servicedef=self.servicedef)
         if self._response.success and self._response.status in SUCCESS_STATUS:
             #log.debug("RESPONSE.STATUS = %s, %s" % (self._response.status,self._response.json))
             if not self._response.json in (None,''):
@@ -507,3 +505,39 @@ class Site(RemoteObject):
     service = 'site'
     avroschema = site_schema
     serializer = JsonSerializer(site_schema)
+    def get_attribute(self,name):
+        """Returns the ConfigAttribute settings object for given name"""
+        if not self.settings:
+            return None
+        for attribute in self.settings:
+            if attribute.name == name:
+                if attribute.encoding == 'json' and isinstance(attribute.value,(str,unicode)):
+                    attribute.value = json.loads(attribute.value)
+                return attribute
+        return None
+    
+    def get_val(self,name):
+        attr = self.get_attribute(name)
+        if attr:
+            return attr.value
+        return None
+    
+    def has_attribute(self,name):
+        """Returns True/False if it has given key attribute"""
+        if not self.settings:
+            return None
+        for attribute in self.settings:
+            if attribute.name == name:
+                return True
+        return False
+    
+    def has_attribute_value(self,name,value):
+        """Returns True/False if it has given key/value pair attribute"""
+        if not self.settings:
+            return False
+        for attribute in self.settings:
+            if attribute.name == name and value == attribute.value:
+                return True
+        return False
+    
+    

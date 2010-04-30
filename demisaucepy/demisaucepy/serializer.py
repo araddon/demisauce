@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-import sys, logging, os, re, datetime, time
+import sys, logging, os, re, time, datetime
+from datetime import datetime as dt
 import avro
 from avro import schema
 from avro import io
@@ -65,14 +65,22 @@ class SerializationMixin(object):
         return []
     
     def get_ignore_keys(self):
-        return self.__class__._ignore_keys
+        if hasattr(self.__class__,"_ignore_keys"):
+            return self.__class__._ignore_keys
+        return []
     
     def get_readonly_keys(self):
         return self.__class__._readonly_keys
     
     def to_dict(self,keys=None):
-        """serializes to dictionary, converting non serializeable fields
-        to some other format or ignoring them"""
+        """
+        serializes to dictionary, converting non serializeable fields
+            to some other format or ignoring them.  
+        :_ignore_keys: which fields to ignore and not serialize
+        :_readonly_keys: which fields to read, but not write
+        :_allowed_api_keys:  which fields to allow from api
+        :__all_schema_keys__: list of all fields of this obj
+        """
         # cs = time.mktime(self.created.timetuple()) # convert to seconds
         # to get back:  datetime.datetime.fromtimestamp(cs)
         dout = {}
@@ -81,8 +89,7 @@ class SerializationMixin(object):
         if not keys:
             keys = self.get_keys()
         
-        if hasattr(self.__class__,"_ignore_keys"):
-            ignore_keys = self.get_ignore_keys()
+        ignore_keys = self.get_ignore_keys()
         
         for key in keys:
             if key not in ignore_keys and key.find("_") != 0 and hasattr(self,key):
@@ -120,12 +127,15 @@ class SerializationMixin(object):
             keys = allowed_keys
         rokeys = self.get_readonly_keys()
         
+        json_key = 'extra_json'
+        json_attr = None
         extra_json = {}
         self._json = py_dict # save decoded json
         for key in py_dict:
-            if key in keys:
-                if key == 'extra_json' or key.find('json_') == 0:
-                    log.debug('extra_json type=%s' % (type(py_dict[key])))
+            if key in keys or key.find('datetime') >= 0:
+                if key.find('json') >= 0:
+                    json_key = key
+                    #log.debug('jsonkey=%s type=%s' % (key,type(py_dict[key])))
                     if py_dict[key] in(None,'None','null'):
                         pass
                     elif isinstance(py_dict[key],(str,unicode)):
@@ -134,7 +144,7 @@ class SerializationMixin(object):
                     else:
                         extra_json.update(py_dict[key])
                 elif key.find('datetime_') == 0:
-                    setattr(self,key[9:],datetime.fromtimestamp(float(py_dict[key])))
+                    setattr(self,key[9:],dt.fromtimestamp(float(py_dict[key])))
                 else:
                     setattr(self,key,self._to_python(py_dict[key]))
             elif not key in rokeys:
@@ -144,19 +154,22 @@ class SerializationMixin(object):
         if len(extra_json) > 0 and 'apikey' in extra_json:
             extra_json.pop('apikey')
         if len(extra_json) > 0:
-            if hasattr(self,'extra_json') and isinstance(self.extra_json,dict):
-                self.extra_json.update(extra_json)
-            elif hasattr(self,'extra_json') and isinstance(self.extra_json,(str,unicode)):
-                #log.debug(self.extra_json)
-                tmpjson = json.loads(self.extra_json)
+            #log.debug("json_key=%s" % json_key)
+            if hasattr(self,json_key):
+                json_attr = getattr(self,json_key)
+            if json_attr and isinstance(json_attr,dict):
+                setattr(self,json_key, json_attr.update(extra_json))
+            elif json_attr and isinstance(json_attr,(str,unicode)):
+                #log.debug(json_attr)
+                tmpjson = json.loads(json_attr)
                 tmpjson.update(extra_json)
-                self.extra_json = tmpjson
-            elif hasattr(self,'extra_json') and self.extra_json == None:
-                self.extra_json = extra_json
+                setattr(self,json_key, tmpjson)
+            elif hasattr(self,json_key) and json_attr == None:
+                setattr(self,json_key, extra_json)
             else:
                 log.error("type = , val=%s" % (extra_json))
         elif len(extra_json) == 0:
-            self.extra_json = None
+            setattr(self,json_key, None)
         return self
     
     def from_json(self,json_string):

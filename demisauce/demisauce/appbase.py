@@ -18,10 +18,6 @@ class AppBase():
         # setup demisauce server config
         options.site_root = SITE_ROOT
         
-        # create scheduler
-        from demisauce.lib import scheduler
-        self.scheduler = scheduler.start()
-        
         memcache_cache = MemcacheCache(options.memcached_servers)
         # Have one global connection to the DB across app
         self.db = model.get_database(cache=memcache_cache)

@@ -11,6 +11,7 @@ define("demisauce_server_url",default="http://1270.0.01:4950",
 define("demisauce_api_key",default="5c427992131479acb17bcd3e1069e679",help="api key")
 define("demisauce_admin",default="demisauce@demisauce.org",help='email address of demisauce admin')
 define("demisauce_domain",default="localhost",help='Domain to set cookie on')
+define("demisauce_slug",default="demisauce",help='the "name" of the site you are connecting to')
 
 
 define("memcached_servers", default=["127.0.0.1:11211"],multiple=True, help="list of memcached servers")

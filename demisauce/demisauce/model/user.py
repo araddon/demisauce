@@ -1,4 +1,4 @@
-import logging
+import logging, json
 from sqlalchemy import Column, MetaData, ForeignKey, Table, \
     func, UniqueConstraint
 from sqlalchemy import Integer, String as DBString, DateTime, Boolean, \
@@ -59,6 +59,7 @@ group_table = Table("group", meta.metadata,
         Column("description", DBString(500)),
         Column("contacts", DBText),
         Column("public", Boolean, default=False),
+        Column("extra_json", DBText),
     )
 userattribute_table = Table('userattribute', meta.metadata,
     Column('id', Integer, primary_key=True),
@@ -91,29 +92,6 @@ class GroupForm(Form):
     name        = TextField('Name of your Group')
     members        = TextField('list of members')
 
-"""
-class ProducerForm(Form):
-    def validate_slug(form, field):
-        f = model.gsession().query(model.Producer).filter(model.Producer.slug == field.data).first()
-        if f and f.id != int(form.id.data):
-            log.debug("form.id.data:  %s, f.id=%s, field.data=%s" % (form.id.data,f.id,field.data))
-            raise ValidationError(u'That slug is already in use, choose another')
-    password        = PasswordField('New Password')
-    password2       = PasswordField('Confirm Password', [validators.Required(), validators.EqualTo('password', message='Passwords must match')])
-    id              = HiddenField('id',default="0")
-    name            = TextField('Name', [validators.length(min=4, max=128)])
-    description     = TextAreaField('Producer Description')
-    short_description = TextAreaField('Short Description')
-    address         = TextField('Address', [validators.length(min=4, max=256)])
-    email           = TextField('Email')
-    slug            = TextField('slug')
-    website         = TextField('Site Url')
-    profile_pic     = TextField('Profile Photo')
-    zipcode         = TextField('Zipcode')
-    regionzipid     = HiddenField('regionzip_id',default=2)
-    geopt_address   = HiddenField('geopt_address')
-    accepted_terms  = IntegerField('Accept Terms')
-"""
 from formencode import Invalid, validators
 from formencode.validators import *
 
@@ -186,6 +164,7 @@ class Person(ModelBase,SerializationMixin):
     """
     __jsonkeys__ = ['email','displayname','url','site_id', 'raw_password','created']
     _readonly_keys = ['id','hashedemail','profile_url']
+    _api_keys = ['name','displayname','id','email','profile_url','url','hashedemail','foreign_id','authn','extra_json']
     _allowed_api_keys = ['isadmin','email','displayname','url','raw_password','authn','user_uniqueid','foreign_id','extra_json']
     schema = person_table
     def __init__(self, **kwargs):
@@ -219,7 +198,7 @@ class Person(ModelBase,SerializationMixin):
         if not hasattr(self,'displayname') and self.email != None:
             self.displayname = self.email
         if hasattr(self,'raw_password'): 
-             self.set_password(self.raw_password)
+            self.set_password(self.raw_password)
     
     def create_password(self, size=7):
         """
@@ -305,6 +284,16 @@ class Person(ModelBase,SerializationMixin):
     recent_activities = property(get_recent_activities)
     
     # =====  Serialization
+    def to_dict_api(self):
+        output = self.to_dict(keys=self._api_keys)
+        if self.attributes:
+            attributes = []
+            for attr in self.attributes:
+                attributes.append(attr.to_dict(keys=['name','value','encoding','category','id','object_type','object_id']))
+            if len(attributes) > 0:
+                output['attributes'] = attributes
+        return output
+    
     def to_dict_basic(self):
         "Basic User info to dict"
         return self.to_dict(keys=['id','displayname','email','user_uniqueid'])
@@ -329,8 +318,9 @@ class Person(ModelBase,SerializationMixin):
         json_dict = escape.json_decode(json_string)
         self.from_dict(json_dict)
         if 'attributes' in json_dict:
+            #self.attributes = []
             for attribute in json_dict['attributes']:
-                self.attributes.append(PersonAttribute().from_dict(attribute))
+                self.attributes.append(UserAttribute().from_dict(attribute))
         if 'session' in json_dict:
             self.session = json_dict['session']
         
@@ -368,7 +358,6 @@ class Person(ModelBase,SerializationMixin):
                 if attribute.encoding == 'json' and isinstance(attribute.value,(str,unicode)):
                     attribute.value = json.loads(attribute.value)
                 return attribute
-        log.debug("found none? for get_attribute name = %s" % name)
         return None
     
     def get_val(self,name):
@@ -440,7 +429,6 @@ class Person(ModelBase,SerializationMixin):
         """Get the user by foreignid"""
         return meta.DBSession.query(Person).filter_by(site_id=site_id,foreign_id=id).first()
     
-    
     @classmethod
     def by_email(self,site_id=0,email=''):
         """Get the user by hashed email"""
@@ -457,10 +445,20 @@ class Group(ModelBase,SerializationMixin):
     """
     __jsonkeys__ = ['name','members','site_id','created']
     _allowed_api_keys = ['name','members','extra_json']
+    _readonly_keys = ['emails']
     schema = group_table
     def __init__(self,**kwargs):
         super(Group, self).__init__(**kwargs)
         self.init_on_load()
+    
+    def XXfrom_dict(self,json_dict={},allowed_keys=None):
+        new_dict = json_dict
+        if 'apikey' in new_dict:
+            new_dict.pop('apikey')
+        if 'emails' in new_dict:
+            new_dict.pop('emails')
+        #json_dict['extra_json'] = new_dict
+        super(Group, self).from_dict(json_dict,allowed_keys=allowed_keys)
     
     @orm.reconstructor
     def init_on_load(self):
@@ -562,18 +560,6 @@ class GroupUserAttribute(UserAttribute):
         self.object_type = 'group'
     
 
-"""
-'groups':relation(Group, lazy=True, secondary=userattribute_table,
-        primaryjoin=person_table.c.id==userattribute_table.c.person_id,
-        secondaryjoin=and_(userattribute_table.c.group_id==group_table.c.id), 
-                    backref='members'),
-mapper(UserAttribute, where_assoc, properties={
-    'producer':relation(Producer, primaryjoin= where_assoc.c.producer_id==producer.c.id, 
-            lazy=True,backref="venues"),
-    'venue':relation(Producer, primaryjoin= where_assoc.c.venue_id==producer.c.id, 
-            lazy=False,backref="providers"),
-})
-"""
 def userlistable(cls,name="users"):
     """User - List Mixin/Mutator"""
     mapper = class_mapper(cls)

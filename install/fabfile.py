@@ -436,6 +436,16 @@ def _wordpress_updateconf():
 
 
 #   Tasks   =======================
+def example_settings():
+    "A FAKE (do not use) example of settings"
+    local('python %s/demisauce/manage.py --config=%s/demisauce/dev.conf --action=setconfig --logging=debug --json=\'[{"name": "mailchimp_api_key", "value": "1234-us1"}, {"name": "mailchimp_listid", "value": "1234"}]\'' % (PROJECT_ROOT,PROJECT_ROOT),capture=False)
+    
+    jsons = json.dumps([{'name':'new_user','value':'mailchimp_addtolist','category':'event','event_type':'gearman','requires':['mailchimp_api_key','mailchimp_listid']}])
+    local('python %s/demisauce/manage.py --config=%s/demisauce/dev.conf --action=setconfig --logging=debug --json=\'%s\'' % (PROJECT_ROOT,PROJECT_ROOT,jsons),capture=False)
+    
+    jsons = json.dumps([{'name':'testing_webhook','value':'%(ds_url)s/testwebhook' % env,'category':'event','event_type':'webhook','requires':['mailchimp_api_key','mailchimp_listid']}])
+    local('python %s/demisauce/manage.py --config=%s/demisauce/dev.conf --action=setconfig --logging=debug --json=\'%s\'' % (PROJECT_ROOT,PROJECT_ROOT,jsons),capture=False)
+
 def fileconveyor():
     sudo("apt-get install python-pyinotify")
 
@@ -445,8 +455,11 @@ def update_config(mysql_user_pwd=None):
         env.mysql_user_pwd = mysql_user_pwd
     with settings(hide('warnings', 'stderr'),warn_only=True):
         sudo("rm -f /home/demisauce/ds/web/demisauce.conf")
+        sudo("rm -f /home/demisauce/ds/current/plugins/php/config.php")
     s = Template(open('%(local_path)s/demisauce/conf.tmpl' % env).read())
     run("echo '%s' > /home/demisauce/ds/web/demisauce.conf" % s.substitute(env))
+    s = Template(open('%(local_path)s/plugins/php/config.php.tmpl' % env).read())
+    run("echo '%s' > /home/demisauce/ds/current/plugins/php/config.php" % s.substitute(env))
 
 def wordpress(mysql_root_pwd=None,mysql_user_pwd=None,standalone=False):
     "Install wordpress"

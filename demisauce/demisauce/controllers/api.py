@@ -12,6 +12,7 @@ from demisauce.model.user import Person, Group
 from demisauce.model.activity import Activity
 from demisauce.model.service import Service, App
 from demisauce.model.object import Object
+from demisauce.model import actions
 from gearman import GearmanClient
 from gearman.task import Task
 from demisaucepy import cache, cache_setup
@@ -74,6 +75,7 @@ class ApiBaseHandler(BaseHandler):
     def __init__(self, application, request, transforms=None):
         super(ApiBaseHandler, self).__init__(application, request, transforms=transforms)
         self.set_status(200)
+        self._queue_actions = {}
     
     def cache_url(self):
         url = self.request.full_url()
@@ -109,6 +111,7 @@ class ApiBaseHandler(BaseHandler):
         self.qry = []
         self.object = None
         self._result = None
+        self._queue_actions = {}
         #log.debug("in normalize:  noun=%s, requestid=%s, action=%s" % (noun,requestid,action))
         if requestid is None or requestid in ['',None,'all','list']:
             # /api/noun.format 
@@ -211,7 +214,7 @@ class ApiBaseHandler(BaseHandler):
     def handle_post(self):
         log.debug("in handle post, args= %s, body=%s" % (self.request.arguments,self.request.body))
         if self.is_json_post():
-            log.debug("yes, json post")
+            #log.debug("yes, json post")
             pyvals = json.loads(self.request.body)
             if pyvals and isinstance(pyvals,dict):
                 self._add_object(pyvals)
@@ -252,8 +255,10 @@ class ApiBaseHandler(BaseHandler):
             self.qry = None
             self.set_status(204)
             cache.cache.delete(cache.cache_key(url))
+            result = cache.cache.get(cache.cache_key(url))
         else:
             log.error("not found?   %s, %s" % (self.noun, self.id))
+        
     
     def nonresponse(self,status_code):
         self.set_status(status_code)
@@ -266,15 +271,13 @@ class ApiBaseHandler(BaseHandler):
         if self.id and self.id == 'list' and self.action == 'list':
             self.action_get_list(q=self.q)
         elif self.id and self.action == 'get':
-            log.debug("do_get, id=%s,action=%s" % (self.id,self.action))
             self.action_get_object(self.id)
         elif hasattr(self,self.action):
-            log.debug("custom action = %s" % self.action)
             getattr(self,self.action)()
         else:
-            log.debug("get_object %s" % self.id)
             self.action_get_object(self.id)
         if self.object is None and self.qry == [] and self._status_code == 200:
+            log.debug("setting status = 404")
             self.set_status(404)
     
     def do_post(self):
@@ -300,8 +303,9 @@ class ApiBaseHandler(BaseHandler):
         if not 'cache' in self.request.arguments:
             url = self.request.full_url()
             result = cache.cache.get(cache.cache_key(url))
+            log.debug(cache.cache_key(url))
             if result:
-                log.debug("found cache")
+                log.debug("found cache for url=%s" % url)
                 self._result = result
                 return True
         return False
@@ -324,8 +328,9 @@ class ApiBaseHandler(BaseHandler):
             else: 
                 _stringout = self.json()
         # objectid
-        if self.request.method in ('POST','PUT','DELETE') and self.object:
+        if self.object:
             self.set_header("X-Demisauce-ID", str(self.object.id))
+        self.set_header("X-Demisauce-SITEID", str(self.site.id))
         
         # ==== Serialization Format
         if self.format == 'json':
@@ -340,9 +345,9 @@ class ApiBaseHandler(BaseHandler):
     
     def get(self,noun=None,requestid='all',action=None,format="json"):
         self.normalize_args(noun, requestid,action,format)
-        log.debug("API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s, args=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit,str(self.request.arguments)))
+        log.debug("GET API: noun=%s, id=%s, action=%s, format=%s, url=%s, start=%s, limit=%s, args=%s" % (self.noun,self.id,self.action,self.format,self.request.path,self.start,self.limit,str(self.request.arguments)))
         self.do_get()
-        log.debug("in get status = %s" % (self._status_code))
+        #log.debug("in get status = %s" % (self._status_code))
         self.render_to_format()
     
     def post(self,noun=None,requestid='all',action=None,format="json"):
@@ -358,10 +363,19 @@ class ApiBaseHandler(BaseHandler):
         self.render_to_format()
     
     def delete(self,noun=None,requestid='all',action=None,format="json"):
-        log.info("in DELETE")
         self.normalize_args(noun, requestid,action,format)
         self.do_delete()
         self.render_to_format()
+    
+    def _after_finish(self):
+        'override this for work post'
+        q = self._queue_actions
+        for key in q.keys():
+            d = q[key]
+            d.update({'site_id':self.site.id})
+            actions.do_action(key,**d)
+            log.debug("in after finish key=%s, val=%s" % (key,d))
+        super(ApiBaseHandler, self)._after_finish()
     
 
 class ApiSecureHandler(ApiBaseHandler):
@@ -491,6 +505,10 @@ class PersonAnonApi(ApiBaseHandler):
 
 class PersonApiHandler(ApiSecureHandler):
     object_cls = Person
+    def after_save(self,data_dict):
+        if hasattr(self.object,'is_new') and self.object.is_new:
+            self._queue_actions.update({'new_user':{'user_id':self.object.id}})
+    
     def object_load_dict(self,o,data_dict):
         'http post handle args'
         if 'attributes' in data_dict:
@@ -525,18 +543,18 @@ class PersonApiHandler(ApiSecureHandler):
             self.object.delete()
             cache.cache.delete(cache.cache_key(url))
             self.object = None
-            self.qry = None
+            self.qry = []
             self.set_status(204)
         else:
             log.error("not found?   %s, %s" % (self.noun, self.id))
     
     def action_get_object(self,id, data_dict = {}):
         if isinstance(self.id,int) and self.id > 0:
-            log.debug('calling get(%s,%s)' % (self.site.id,self.id))
-            meta.DBSession.close()
-            meta.DBSession()
+            #meta.DBSession.close()
+            #meta.DBSession()
             self.object = Person.get(self.site.id,self.id)
             if not self.object:
+                # ??
                 self.object = Person.by_foreignid(self.site.id,self.id)
         elif isinstance(self.id,int) and self.id == 0 and 'email' in data_dict:
             self.object = Person.by_email(self.site.id,data_dict['email'].lower())
@@ -554,15 +572,7 @@ class PersonApiHandler(ApiSecureHandler):
     
     def json_formatter(self,o):
         if o:
-            output = o.to_dict(keys=['name','displayname','id','email','profile_url','url',
-                'hashedemail','foreign_id','authn','extra_json'])
-            if o.attributes:
-                attributes = []
-                for attr in o.attributes:
-                    attributes.append(attr.to_dict(keys=['name','value','encoding','category','id','object_type','object_id']))
-                if len(attributes) > 0:
-                    output['attributes'] = attributes
-            return output
+            return o.to_dict_api()
         return None
     
     def action_get_list(self,q=None):
@@ -588,9 +598,12 @@ class PersonApiHandler(ApiSecureHandler):
             if not self.object:
                 log.debug("creating new user, not found %s dict=%s" % (self.id,user_dict))
                 self.object = Person(site_id=self.site.id,foreign_id=self.id)
+            
             if self.object:
                 self.object.from_dict(user_dict,allowed_keys=Person._allowed_api_keys)
                 self.object.save()
+                if hasattr(self.object,'is_new') and self.object.is_new:
+                    self._queue_actions.update({'new_user':{'user_id':self.object.id}})
             
         else:
             self.action_get_object(self.id)
@@ -688,6 +701,34 @@ class AppApiHandler(ApiSecureHandler):
 
 class SiteApiHandler(ApiSecureHandler):
     object_cls = Site
+    def object_load_dict(self,o,data_dict):
+        'http post handle args'
+        if 'settings' in data_dict:
+            attr_list = []
+            if isinstance(data_dict['settings'],list):
+                attr_list = data_dict['settings']
+            elif isinstance(data_dict['settings'],dict):
+                attr_list = [data_dict['settings']]
+            for attr in attr_list:
+                object_type = "site" if not 'object_type' in attr else attr['object_type']
+                category = "config"  if not 'category' in attr else attr['category']
+                encoding = 'str' if not 'encoding' in attr else attr['encoding']
+                event_type = None if not 'event_type' in attr else attr['event_type']
+                requires = None if not 'requires' in attr else attr['requires']
+                if requires and isinstance(requires,(dict,list)):
+                    requires = json.dumps(requires)
+                log.debug('requires=%s' % requires)
+                o.add_attribute(attr['name'],attr['value'],event_type=event_type,
+                    encoding=encoding,category=category,requires=requires)
+            data_dict.pop('settings')
+        if 'delete_settings' in data_dict:
+            for attr in data_dict['delete_settings']:
+                a = o.get_attribute(attr['name'])
+                log.debug('deletting settings = id=%s, name=%s' % (ua.id, ua.name))
+                a.delete()
+            data_dict.pop('delete_settings')
+        return data_dict
+    
     def _add_object(self,data_dict):
         if self.site.is_sysadmin == True or self.site.id == self.id:
             super(SiteApiHandler, self)._add_object(data_dict=data_dict)
@@ -695,7 +736,7 @@ class SiteApiHandler(ApiSecureHandler):
             self.set_status(403)
     
     def action_get_object(self,id, data_dict = {}):
-        if self.site.is_sysadmin == True or self.site.id == self.id:
+        if self.site.is_sysadmin == True or (self.site.id == self.id or self.site.slug == self.id):
             if type(id) == int and id > 0:
                 self.object = Site.saget(id) 
             elif type(id) == int and id == 0 and 'slug' in data_dict:
@@ -726,17 +767,23 @@ class SiteApiHandler(ApiSecureHandler):
                         appd['services'].append(svc.to_dict(keys=['key','name','format','url',
                             'views','id','method_url','cache_time','description']) )
                     output['apps'].append(appd)
+            if o.settings:
+                output['settings'] = []
+                for attr in o.settings:
+                    output['settings'].append(attr.to_dict(keys=['id','name',
+                        'value','category','event_type','object_type','encoding']) )
             return output
         return None
     
     def action_get_list(self,q=None):
-        if q:
-            qry = self.db.session.query(Service).filter(and_(
-                Service.name.like('%' + q + '%'),Service.list_public==True))
-        else:
-            qry = self.db.session.query(Service).filter(Service.list_public==True)
-            log.debug("in services list, qry = %s" % qry)
-        self.qry = qry
+        if self.site.is_sysadmin:
+            if q:
+                qry = self.db.session.query(Site).filter(and_(
+                    Service.name.like('%' + q + '%'),Service.list_public==True))
+            else:
+                qry = self.db.session.query(Service).filter(Service.list_public==True)
+                log.debug("in services list, qry = %s" % qry)
+            self.qry = qry
     
 
 class ObjectApiHandler(ApiSecureHandler):
@@ -852,7 +899,7 @@ class GroupApiHandler(ApiSecureHandler):
     
     def json_formatter(self,o):
         if o:
-            output = o.to_dict(keys=['name','slug','id','url'])
+            output = o.to_dict(keys=['name','slug','id','url','extra_json'])
             if o.members:
                 members = []
                 for m in o.members:

@@ -29,26 +29,26 @@ extensions = ['sphinx.ext.autodoc']
 
 
 # Add any paths that contain templates here, relative to this directory.
-#templates_path = ['_templates']
+templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
 
-html_index = 'index.html'
+#html_index = 'index.html'
 # The master toctree document.
 master_doc = 'index'
 
 # General substitutions.
 project = 'Demisauce'
-copyright = '2008,2009, Aaron Raddon'
+copyright = '2010, Aaron Raddon'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.1.1'
+version = '0.16'
 # The full version, including alpha/beta/rc tags.
-release = '0.1.1'
+release = '0.16'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -81,10 +81,25 @@ pygments_style = 'sphinx'
 # Options for HTML output
 # -----------------------
 
+# The theme to use for HTML and HTML Help pages.  Major themes that come with
+# Sphinx are currently 'default' and 'sphinxdoc'.
+#html_theme = 'default'
+html_theme = 'snow'
+
+# Add any paths that contain custom themes here, relative to this directory.
+#html_theme_path = []
+html_theme_path = ['.']
+
+
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+html_theme_options = {"sidebaronindex": True}
+
 # The style sheet to use for HTML and HTML Help pages. A file of that name
 # must exist either in Sphinx' static/ path, or in one of the custom paths
 # given in html_static_path.
-html_style = 'default.css'
+#html_style = 'default.css'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -97,7 +112,7 @@ html_style = 'default.css'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ['static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.

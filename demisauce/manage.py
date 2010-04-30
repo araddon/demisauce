@@ -13,14 +13,19 @@ Example usage::
         --adminpwd=admin_password \
         --adminemail=email@email.com \
         --base_url=http://ds.yourdomain.com
+    
+    # create configuration settings
+    python manage.py --config=dev.conf --action=setconfig --logging=debug \
+--json='[{"name": "mailchimp_api_key", "value": "xyz"}, {"name": "mailchimp_listid", "value": "1234"}]'
+    
 """
 import logging, sys, os, json
 import tornado
 from tornado.options import options, define
-import app
-from demisauce import model
-from demisauce.model import meta
-from demisauce.model import email, site, user, service, tag
+
+#from demisauce import model
+#from demisauce.model import meta
+#from demisauce.model import email, site, user, service, tag
 
 log = logging.getLogger('demisauce')
 
@@ -36,6 +41,9 @@ define('new_url',
 define('seed_data_file', 
         default='db/seed_data.json',
         help="Enter the path to seed_data json file")
+define('json', 
+        default='{}',
+        help="Json string value")
 
 def print_help():
     print(__doc__)
@@ -126,14 +134,25 @@ def create_data(app,drop_tables=False):
     create_fixture_data('service',seed_data)
 
 
+def config_setting(jsons):
+    from demisaucepy import Site
+    jsond = json.loads(str(jsons))
+    site = Site.GET(options.demisauce_slug)
+    assert site is not None
+    site.settings = jsond
+    site.POST()
+
 if __name__ == "__main__":
-    tornado.options.parse_command_line()
+    #tornado.options.parse_command_line()
+    import app
     from demisaucepy import cache_setup
-    cache_setup.load_cache()
+    #cache_setup.load_cache()
     application = app.Application()
     if options.action == 'updatesite':
         log.debug("In data setup")
         updatesite(application)
+    elif options.action == 'setconfig':
+        config_setting(options.json)
     elif options.action == 'create_data':
         log.debug("in create_data call")
         create_data(application)

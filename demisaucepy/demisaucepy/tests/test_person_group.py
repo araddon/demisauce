@@ -52,7 +52,7 @@ def test_crud():
         'url':'http://testingurls.com',
         'authn':'local',
         'foreign_id': 515,
-        'attributes':[{'name':'notify_follow','value':'all','category':'notification'}],
+        'attributes':[{'name':'FollowNotification','value':'all','category':'notification'}],
         'extra_json':{
             'segment1':'value1',
             'age':99
@@ -69,7 +69,7 @@ def test_crud():
     assert user.email == email
     assert user.displayname == 'library testing user'
     attr = user.attributes[0]
-    assert attr.name == 'notify_follow'
+    assert attr.name == 'FollowNotification'
     assert attr.value == 'all'
     assert user.authn == 'local'
     assert user.extra_json.age == 99
@@ -83,7 +83,7 @@ def test_crud():
     assert user2.displayname == 'library testing user v2'
     assert len(user2.attributes) == 2
     attr2 = user2.attributes[1]
-    assert attr.name == 'notify_weekly' or attr.name == 'notify_follow'
+    assert attr.name == 'notify_weekly' or attr.name == 'FollowNotification'
     assert attr.category == 'notification'
     assert attr.encoding == 'str'
     user.attributes = [{'name':'notify_weekly2','value':'all','category':'notification'}]
@@ -158,6 +158,7 @@ def test_extra_json():
         'an_extra_key':'aaron'
     })
     user.POST()
+    assert user.id > 0
     user = DSUser.GET(user.id)
     assert user._response.success
     assert user.extra_json.age == 99
@@ -202,11 +203,17 @@ def test_group():
     """test creation of groups remotely, and update"""
     group_data = {
         'emails':['11ghty65@demisauce.org','abc12589@demisauce.org'],
-        'name':'group added by web service'
+        'name':'group added by web service',
+        'extra_json':{
+            'mailchimp_listid':99
+        },
     }
     group = DSGroup(group_data)
     group.POST()
     assert group._response.success == True
+    assert group.extra_json.mailchimp_listid == 99
+    assert group.extra_json.emails == None
+    assert group.mailchimp_listid == 99
     user = DSUser.GET('11ghty65@demisauce.org',cache=False)
     assert user.email == '11ghty65@demisauce.org'
     assert user.id > 0

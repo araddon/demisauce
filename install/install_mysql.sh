@@ -120,11 +120,11 @@ perl -pi -e "s/\/var\/log\/mysql\//\/vol\/log\/mysql\//g" /etc/apparmor.d/usr.sb
 perl -pi -e "s/network tcp,/network tcp,\n\n  \/vol\/tmp\/ rw,\n  \/vol\/tmp\/* rw,/g" /etc/apparmor.d/usr.sbin.mysqld || die "problems with apparmor.d/usr.sbin.mysqld"
 
 
-/vol/tmp/ rw,
-/vol/tmp/* rw,
+#/vol/tmp/ rw,
+#/vol/tmp/* rw,
 echo "---- making changes to /etc/mysql/my.cnf  "
 # update datadir=/vol/lib/mysql and tmpdir=/vol/tmp/
-perl -pi -e "s/\/var\/lib\/mysql/$escaped_mysql_home/g" /etc/mysql/my.cnf || die "could not change my.cnf"
+perl -pi -e "s/\/var\/lib\/mysql/$escaped_mysql_home\/mysql/g" /etc/mysql/my.cnf || die "could not change my.cnf"
 perl -pi -e "s/\/tmp/\/vol\/tmp/g" /etc/mysql/my.cnf || die "could not change my.cnf"
 perl -pi -e "s/skip\-external\-locking/skip\-external\-locking\nlog\-bin/g" /etc/mysql/my.cnf || die "could not change my.cnf"
 cat > /etc/mysql/conf.d/demisauce.cnf <<EOM
